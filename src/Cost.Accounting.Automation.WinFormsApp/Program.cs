@@ -51,7 +51,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
             DevExpressLocalizers.Register();
 
             BonusSkins.Register();
-            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.Sharp);
+            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.Bezier);
 
             ApplicationConfiguration.Initialize();
 

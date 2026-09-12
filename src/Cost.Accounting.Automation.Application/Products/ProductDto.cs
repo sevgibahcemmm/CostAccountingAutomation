@@ -92,6 +92,12 @@ public static class ProductExtensions
 
                 StockQuantity = s.Entity.Movements.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity),
 
+                Images = s.Entity.Images.Select(i => new ProductImageDto
+                {
+                    Id = i.Id,
+                    Path = i.Path,
+                    IsPrimary = i.IsPrimary
+                }).ToList(),
                 CreatedAt = s.Entity.CreatedAt,
                 CreatedBy = s.Entity.CreatedBy,
                 IsActive = s.Entity.IsActive,

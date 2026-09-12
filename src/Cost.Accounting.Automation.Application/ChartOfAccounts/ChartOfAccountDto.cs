@@ -21,6 +21,7 @@ public sealed class ChartOfAccountDto : EntityDto
         ChartOfAccountType.Warehouse => "Depo",
         ChartOfAccountType.Category => "Kategori",
         ChartOfAccountType.Workshop => "Atölye",
+        ChartOfAccountType.Stok => "Stok",
         _ => "Anagrup"
     };
 }

@@ -104,7 +104,7 @@ internal sealed class ProductCreateCommandHandler(
             new AccountCode(nodeCode),
             new Name(request.Name),
             category.Level + 1,
-            ChartOfAccountType.Workshop);
+            ChartOfAccountType.Stok);
 
         node.SetParent(category.Id);
         await chartOfAccountRepository.AddAsync(node, cancellationToken);

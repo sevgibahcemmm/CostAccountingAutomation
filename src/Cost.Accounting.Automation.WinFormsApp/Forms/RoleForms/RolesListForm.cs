@@ -25,6 +25,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             nameof(RoleDto.Name)
         ];
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            foreach (Control ctrl in Controls)
+            {
+                if (ctrl is Panel panel && panel.Dock == DockStyle.Top)
+                {
+                    panel.Height = 100;
+                    break;
+                }
+            }
+        }
+
         protected override void ConfigureColumns()
         {
             View.Columns.Clear();
@@ -95,6 +109,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
                 if (e.Column?.FieldName == nameof(RolePermissionDto.Key) && e.Value is string key && !string.IsNullOrEmpty(key))
                 {
                     e.DisplayText = RolePermissionLabels.GetLabel(key);
+                }
+            };
+
+            View.MasterRowEmpty += (_, e) =>
+            {
+                if (View.GetRow(e.RowHandle) is RoleDto role)
+                {
+                    e.IsEmpty = role.PermissionCount == 0;
                 }
             };
 

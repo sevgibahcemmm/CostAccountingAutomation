@@ -12,10 +12,13 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.LookAndFeel;
 using DevExpress.Utils;
+using DevExpress.Utils.Colors;
 using DevExpress.XtraCharts;
 using DevExpress.XtraEditors;
+using DevExpress.XtraEditors.Controls;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Drawing;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -25,249 +28,415 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
     {
         private sealed record ChartPoint(string Label, int Count);
 
-        private static readonly (string Title, string Icon, Color Accent)[] KpiDefs =
-        {
-            ("Şirket", "🏢", Color.FromArgb(37, 99, 235)),
-            ("Kullanıcı", "👤", Color.FromArgb(22, 163, 74)),
-            ("Rol", "🔑", Color.FromArgb(217, 119, 6)),
-            ("Aktif Oturum", "🕐", Color.FromArgb(8, 145, 178)),
-            ("Müşteri", "🤝", Color.FromArgb(13, 148, 136)),
-            ("Tedarikçi", "🚚", Color.FromArgb(124, 58, 237)),
-            ("Hesap Planı", "📒", Color.FromArgb(234, 88, 12)),
-            ("Fotoğraf", "📷", Color.FromArgb(219, 39, 119))
-        };
-
         private readonly SessionClaimContext _session;
-        private readonly Dictionary<int, LabelControl> _kpiValues = new();
-        private LabelControl _lblSub = null!;
-        private LabelControl _lblDate = null!;
-        private ChartControl _chartRoles = null!;
-        private ChartControl _chartCompanies = null!;
-        private ChartControl _chartAccounts = null!;
+        private readonly Dictionary<int, Label> _kpiValues = new();
+
+        private Color SkinPrimaryColor =>
+            DXSkinColorHelper.GetDXSkinColor(
+                DXSkinColors.FillColors.Primary,
+                LookAndFeel.ActiveSkinName,
+                LookAndFeel.ActiveSvgPaletteName);
+
+        private Color SkinSuccessColor =>
+            DXSkinColorHelper.GetDXSkinColor(
+                DXSkinColors.FillColors.Success,
+                LookAndFeel.ActiveSkinName,
+                LookAndFeel.ActiveSvgPaletteName);
+
+        private Color SkinWarningColor =>
+            DXSkinColorHelper.GetDXSkinColor(
+                DXSkinColors.FillColors.Warning,
+                LookAndFeel.ActiveSkinName,
+                LookAndFeel.ActiveSvgPaletteName);
+
+        private Color SkinDangerColor =>
+            DXSkinColorHelper.GetDXSkinColor(
+                DXSkinColors.FillColors.Danger,
+                LookAndFeel.ActiveSkinName,
+                LookAndFeel.ActiveSvgPaletteName);
+
+        private Color SkinQuestionColor =>
+            DXSkinColorHelper.GetDXSkinColor(
+                DXSkinColors.FillColors.Question,
+                LookAndFeel.ActiveSkinName,
+                LookAndFeel.ActiveSvgPaletteName);
+
+        private Color SkinTextColor =>
+            DXSkinColorHelper.GetDXSkinColor(
+                DXSkinColors.ForeColors.WindowText,
+                LookAndFeel.ActiveSkinName,
+                LookAndFeel.ActiveSvgPaletteName);
+
+        private Color SkinSecondaryTextColor =>
+            DXSkinColorHelper.GetDXSkinColor(
+                DXSkinColors.ForeColors.DisabledText,
+                LookAndFeel.ActiveSkinName,
+                LookAndFeel.ActiveSvgPaletteName);
 
         public DashboardMdiForm() : base("Dashboard")
         {
-            _session = Program.Services.GetRequiredService<SessionClaimContext>();
-            Size = new Size(1280, 720);
-            MinimumSize = new Size(1024, 640);
-            IconOptions.SvgImage = SvgIcons.Modules[0];
-            BuildLayout();
+            _session =
+                Program.Services
+                    .GetRequiredService<SessionClaimContext>();
+
+            Size =
+                new Size(1280, 720);
+
+            MinimumSize =
+                new Size(1024, 640);
+
+            IconOptions.SvgImage =
+                SvgIcons.Modules[0];
+
+            InitializeComponent();
+
+            _kpiValues[1] = lblKpi1Value;
+            _kpiValues[2] = lblKpi2Value;
+            _kpiValues[3] = lblKpi3Value;
+            _kpiValues[4] = lblKpi4Value;
+            _kpiValues[5] = lblKpi5Value;
+            _kpiValues[6] = lblKpi6Value;
+            _kpiValues[7] = lblKpi7Value;
+            _kpiValues[8] = lblKpi8Value;
+
+            LookAndFeel.StyleChanged += LookAndFeel_StyleChanged;
+
+            BuildDashboardAppearance();
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+
+            BuildDashboardAppearance();
+
             LoadSessionInfo();
+
             _ = LoadDashboardDataAsync();
         }
 
-        private void BuildLayout()
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
-            Panel pnlHeader = new() { Dock = DockStyle.Top, Height = 118 };
-            pnlHeader.Paint += PnlHeader_Paint;
+            LookAndFeel.StyleChanged -= LookAndFeel_StyleChanged;
 
-            LabelControl lblWelcome = new()
-            {
-                AutoSize = false,
-                Location = new Point(34, 22),
-                Size = new Size(560, 48),
-                Text = "Hoş Geldiniz!",
-                Appearance = { Font = new Font("Segoe UI", 24F, FontStyle.Bold), ForeColor = Color.White }
-            };
-
-            _lblSub = new LabelControl
-            {
-                AutoSize = false,
-                Location = new Point(36, 82),
-                Size = new Size(700, 26),
-                Text = "-",
-                Appearance = { Font = new Font("Segoe UI", 11F), ForeColor = Color.FromArgb(226, 232, 240) }
-            };
-
-            _lblDate = new LabelControl
-            {
-                AutoSize = false,
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(0, 46),
-                Size = new Size(700, 28),
-                Text = "-",
-                Appearance = { Font = new Font("Segoe UI", 11F), ForeColor = Color.FromArgb(226, 232, 240) }
-            };
-            _lblDate.Appearance.TextOptions.HAlignment = HorzAlignment.Far;
-
-            pnlHeader.Controls.Add(lblWelcome);
-            pnlHeader.Controls.Add(_lblSub);
-            pnlHeader.Controls.Add(_lblDate);
-
-            Panel pnlBody = new() { Dock = DockStyle.Fill, Padding = new Padding(24) };
-
-            TableLayoutPanel tblLayout = new() { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
-            tblLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tblLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 38F));
-            tblLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 62F));
-
-            TableLayoutPanel tblKpi = CreateKpiGrid();
-            TableLayoutPanel tblCharts = CreateChartsGrid();
-
-            tblLayout.Controls.Add(tblKpi, 0, 0);
-            tblLayout.Controls.Add(tblCharts, 0, 1);
-
-            pnlBody.Controls.Add(tblLayout);
-
-            Controls.Add(pnlBody);
-            Controls.Add(pnlHeader);
+            base.OnFormClosed(e);
         }
 
-        private TableLayoutPanel CreateKpiGrid()
+        private void LookAndFeel_StyleChanged(object? sender, EventArgs e)
         {
-            TableLayoutPanel tbl = new() { Dock = DockStyle.Fill, ColumnCount = 4, RowCount = 2, Margin = new Padding(0) };
-            for (int i = 0; i < 4; i++)
+            if (IsDisposed || Disposing)
+                return;
+
+            if (!IsHandleCreated)
+                return;
+
+            BeginInvoke(new Action(() =>
             {
-                tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+                if (IsDisposed || Disposing)
+                    return;
+
+                BuildDashboardAppearance();
+            }));
+        }
+
+        private void BuildDashboardAppearance()
+        {
+            Color primary =
+                SkinPrimaryColor;
+
+            Color success =
+                SkinSuccessColor;
+
+            Color warning =
+                SkinWarningColor;
+
+            Color danger =
+                SkinDangerColor;
+
+            Color question =
+                SkinQuestionColor;
+
+            Color textColor =
+                SkinTextColor;
+
+            Color secondaryTextColor =
+                SkinSecondaryTextColor;
+
+            pnlHeader.BackColor =
+                primary;
+
+            pnlBody.BackColor =
+                Color.Transparent;
+
+            lblWelcome.ForeColor =
+                Color.White;
+
+            lblSub.ForeColor =
+                Color.White;
+
+            lblDate.ForeColor =
+                Color.White;
+
+            Color[] accents =
+            {
+                primary,
+                success,
+                warning,
+                primary,
+                question,
+                danger,
+                success,
+                warning
+            };
+
+            PanelControl[] cards =
+            {
+                kpi1,
+                kpi2,
+                kpi3,
+                kpi4,
+                kpi5,
+                kpi6,
+                kpi7,
+                kpi8
+            };
+
+            Panel[] accentPanels =
+            {
+                acc1,
+                acc2,
+                acc3,
+                acc4,
+                acc5,
+                acc6,
+                acc7,
+                acc8
+            };
+
+            Panel[] iconBadges =
+            {
+                pnlKpi1IconBadge,
+                pnlKpi2IconBadge,
+                pnlKpi3IconBadge,
+                pnlKpi4IconBadge,
+                pnlKpi5IconBadge,
+                pnlKpi6IconBadge,
+                pnlKpi7IconBadge,
+                pnlKpi8IconBadge
+            };
+
+            Label[] valueLabels =
+            {
+                lblKpi1Value,
+                lblKpi2Value,
+                lblKpi3Value,
+                lblKpi4Value,
+                lblKpi5Value,
+                lblKpi6Value,
+                lblKpi7Value,
+                lblKpi8Value
+            };
+
+            Label[] titleLabels =
+            {
+                lblKpi1Title,
+                lblKpi2Title,
+                lblKpi3Title,
+                lblKpi4Title,
+                lblKpi5Title,
+                lblKpi6Title,
+                lblKpi7Title,
+                lblKpi8Title
+            };
+
+            for (int i = 0; i < cards.Length; i++)
+            {
+                Color accent =
+                    accents[i];
+
+                // Kartları belirgin kılmak için Simple border ve aralarında boşluk için Margin
+                cards[i].BorderStyle =
+                    DevExpress.XtraEditors.Controls.BorderStyles.Simple;
+
+                cards[i].Margin =
+                    new Padding(8);
+
+                cards[i].Appearance.Options.UseBackColor =
+                    false;
+
+                cards[i].Appearance.Options.UseForeColor =
+                    false;
+
+                accentPanels[i].BackColor =
+                    accent;
+
+                iconBadges[i].BackColor =
+                    CreateTransparentColor(
+                        accent,
+                        32);
+
+                valueLabels[i].ForeColor =
+                    textColor;
+
+                titleLabels[i].ForeColor =
+                    secondaryTextColor;
             }
-            for (int i = 0; i < 2; i++)
-            {
-                tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            }
 
-            int index = 0;
-            for (int row = 0; row < 2; row++)
-            {
-                for (int col = 0; col < 4; col++)
-                {
-                    (string title, string icon, Color accent) = KpiDefs[index];
-                    tbl.Controls.Add(CreateKpiCard(title, icon, accent, index + 1), col, row);
-                    index++;
-                }
-            }
+            ConfigureChartAppearance(
+                pnlChartRoles,
+                lblChartRolesTitle,
+                chartRoles,
+                "Rol Dağılımı");
 
-            return tbl;
+            ConfigureChartAppearance(
+                pnlChartCompanies,
+                lblChartCompaniesTitle,
+                chartCompanies,
+                "Şirket Bazlı Kullanıcılar");
+
+            ConfigureChartAppearance(
+                pnlChartAccounts,
+                lblChartAccountsTitle,
+                chartAccounts,
+                "Hesap Planı Türleri");
+
+            Refresh();
         }
 
-        private PanelControl CreateKpiCard(string title, string icon, Color accent, int index)
+        private static Color CreateTransparentColor(
+            Color color,
+            int alpha)
         {
-            PanelControl card = new() { Dock = DockStyle.Fill, Margin = new Padding(3), Padding = new Padding(0, 0, 0, 4) };
-
-            Panel acc = new() { Dock = DockStyle.Left, Width = 6, BackColor = accent };
-
-            LabelControl lblValue = new()
-            {
-                AutoSize = false,
-                Location = new Point(22, 14),
-                Size = new Size(200, 42),
-                Text = "-",
-                Appearance = { Font = new Font("Segoe UI", 21F, FontStyle.Bold) }
-            };
-
-            LabelControl lblTitle = new()
-            {
-                AutoSize = false,
-                Location = new Point(24, 60),
-                Size = new Size(200, 20),
-                Text = title,
-                Appearance = { Font = new Font("Segoe UI", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(100, 116, 139) }
-            };
-
-            LabelControl lblIcon = new()
-            {
-                AutoSize = false,
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(0, 18),
-                Size = new Size(44, 40),
-                Text = icon,
-                Font = new Font("Segoe UI Emoji", 15F)
-            };
-            lblIcon.Appearance.TextOptions.HAlignment = HorzAlignment.Center;
-            lblIcon.Appearance.TextOptions.VAlignment = VertAlignment.Center;
-
-            card.Controls.Add(acc);
-            card.Controls.Add(lblValue);
-            card.Controls.Add(lblTitle);
-            card.Controls.Add(lblIcon);
-
-            _kpiValues[index] = lblValue;
-            return card;
+            return Color.FromArgb(
+                alpha,
+                color.R,
+                color.G,
+                color.B);
         }
 
-        private TableLayoutPanel CreateChartsGrid()
+        private void ConfigureChartAppearance(
+            PanelControl panel,
+            Label title,
+            ChartControl chart,
+            string caption)
         {
-            TableLayoutPanel tbl = new() { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, Margin = new Padding(0, 3, 0, 0) };
-            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+            var textColor =
+                DXSkinColorHelper.GetDXSkinColor(
+                    DXSkinColors.ForeColors.WindowText,
+                    this.LookAndFeel.ActiveSkinName,
+                    this.LookAndFeel.ActiveSvgPaletteName);
 
-            tbl.Controls.Add(CreateChartPanel("Rol Dağılımı", out _chartRoles), 0, 0);
-            tbl.Controls.Add(CreateChartPanel("Şirket Bazlı Kullanıcılar", out _chartCompanies), 1, 0);
-            tbl.Controls.Add(CreateChartPanel("Hesap Planı Türleri", out _chartAccounts), 2, 0);
+            // Grafik panellerini de belirgin kartlar haline getirip aralarına boşluk ekledik
+            panel.BorderStyle = BorderStyles.Simple;
+            panel.Margin = new Padding(8);
+            panel.Appearance.Options.UseBackColor = false;
+            panel.Appearance.Options.UseForeColor = false;
 
-            return tbl;
-        }
+            title.Text = caption;
+            title.ForeColor = textColor;
+            title.BackColor = Color.Transparent;
+            title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
 
-        private static Panel CreateChartPanel(string title, out ChartControl chart)
-        {
-            Panel panel = new() { Dock = DockStyle.Fill, Margin = new Padding(3), Padding = new Padding(16, 38, 16, 12) };
-
-            LabelControl lblTitle = new()
-            {
-                AutoSize = false,
-                Location = new Point(18, 12),
-                Size = new Size(300, 24),
-                Text = title,
-                Appearance = { Font = new Font("Segoe UI", 11F, FontStyle.Bold) }
-            };
-
-            chart = new ChartControl { Dock = DockStyle.Fill };
-
-            panel.Controls.Add(chart);
-            panel.Controls.Add(lblTitle);
-            return panel;
+            chart.BackColor = Color.Transparent;
+            chart.BorderOptions.Visibility = DefaultBoolean.False;
+            chart.Legend.EnableAntialiasing = DefaultBoolean.True;
         }
 
         private void LoadSessionInfo()
         {
             string roleName;
+
             try
             {
-                roleName = _session.GetRoleName();
+                roleName =
+                    _session.GetRoleName();
             }
             catch
             {
-                roleName = "Kullanıcı";
+                roleName =
+                    "Kullanıcı";
             }
 
-            string companyName = "-";
+            string companyName =
+                "-";
+
             try
             {
-                string? token = _session.Token;
-                if (!string.IsNullOrEmpty(token))
+                string? token =
+                    _session.Token;
+
+                if (!string.IsNullOrWhiteSpace(token))
                 {
-                    JwtSecurityToken jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
-                    companyName = jwt.Claims.FirstOrDefault(c => c.Type == "company")?.Value ?? "-";
+                    JwtSecurityToken jwt =
+                        new JwtSecurityTokenHandler()
+                            .ReadJwtToken(token);
+
+                    companyName =
+                        jwt.Claims
+                            .FirstOrDefault(
+                                c => c.Type == "company")
+                            ?.Value
+                        ?? "-";
                 }
             }
             catch
             {
+                companyName =
+                    "-";
             }
 
-            _lblSub.Text = $"Rol: {roleName}   •   Kurum: {companyName}";
-            _lblDate.Text = DateTime.Now.ToString("dddd, dd MMMM yyyy", CultureInfo.GetCultureInfo("tr-TR"));
+            lblSub.Text =
+                $"Rol: {roleName}   •   Kurum: {companyName}";
+
+            lblDate.Text =
+                DateTime.Now.ToString(
+                    "dddd, dd MMMM yyyy",
+                    CultureInfo.GetCultureInfo("tr-TR"));
         }
 
         private async Task LoadDashboardDataAsync()
         {
             try
             {
-                using IServiceScope scope = Program.Services.CreateScope();
-                ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                using IServiceScope scope =
+                    Program.Services.CreateScope();
 
-                int companyCount = await db.Set<Company>().CountAsync();
-                int userCount = await db.Set<User>().CountAsync();
-                int roleCount = await db.Set<Role>().CountAsync();
-                int activeSessionCount = await db.Set<LoginToken>().CountAsync(t => t.IsActive.Value);
-                int customerCount = await db.Set<Customer>().CountAsync();
-                int supplierCount = await db.Set<Supplier>().CountAsync();
-                int accountCount = await db.Set<ChartOfAccount>().CountAsync();
-                int photoCount = await db.Set<Photo>().CountAsync();
+                ApplicationDbContext db =
+                    scope.ServiceProvider
+                        .GetRequiredService<ApplicationDbContext>();
+
+                int companyCount =
+                    await db.Set<Company>()
+                        .CountAsync();
+
+                int userCount =
+                    await db.Set<User>()
+                        .CountAsync();
+
+                int roleCount =
+                    await db.Set<Role>()
+                        .CountAsync();
+
+                int activeSessionCount =
+                    await db.Set<LoginToken>()
+                        .CountAsync(
+                            t => t.IsActive.Value);
+
+                int customerCount =
+                    await db.Set<Customer>()
+                        .CountAsync();
+
+                int supplierCount =
+                    await db.Set<Supplier>()
+                        .CountAsync();
+
+                int accountCount =
+                    await db.Set<ChartOfAccount>()
+                        .CountAsync();
+
+                int photoCount =
+                    await db.Set<Photo>()
+                        .CountAsync();
 
                 SetKpi(1, companyCount);
                 SetKpi(2, userCount);
@@ -278,13 +447,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 SetKpi(7, accountCount);
                 SetKpi(8, photoCount);
 
-                List<ChartPoint> roleData = await LoadRoleDistributionAsync(db);
-                List<ChartPoint> companyData = await LoadCompanyDistributionAsync(db);
-                List<ChartPoint> accountData = await LoadAccountTypeDistributionAsync(db);
+                List<ChartPoint> roleData =
+                    await LoadRoleDistributionAsync(db);
 
-                LoadDoughnut(_chartRoles, roleData);
-                LoadBar(_chartCompanies, companyData);
-                LoadDoughnut(_chartAccounts, accountData);
+                List<ChartPoint> companyData =
+                    await LoadCompanyDistributionAsync(db);
+
+                List<ChartPoint> accountData =
+                    await LoadAccountTypeDistributionAsync(db);
+
+                LoadDoughnut(chartRoles, roleData);
+                LoadBar(chartCompanies, companyData);
+                LoadDoughnut(chartAccounts, accountData);
+
+                BuildDashboardAppearance();
             }
             catch
             {
@@ -295,95 +471,229 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
         }
 
-        private void SetKpi(int index, int? value)
+        private void SetKpi(
+            int index,
+            int? value)
         {
-            if (_kpiValues.TryGetValue(index, out LabelControl? label))
+            if (_kpiValues.TryGetValue(
+                    index,
+                    out Label? label))
             {
-                label.Text = value?.ToString("N0") ?? "-";
+                label.Text =
+                    value?.ToString("N0")
+                    ?? "-";
             }
         }
 
-        private static async Task<List<ChartPoint>> LoadRoleDistributionAsync(ApplicationDbContext db)
+        private static async Task<List<ChartPoint>>
+            LoadRoleDistributionAsync(
+                ApplicationDbContext db)
         {
-            var rows = await (from u in db.Set<User>()
-                              join r in db.Set<Role>() on u.RoleId equals r.Id
-                              group u by r.Name.Value into g
-                              select new { Label = g.Key, Count = g.Count() })
-                             .ToListAsync();
-
-            return rows.Select(x => new ChartPoint(x.Label, x.Count)).ToList();
-        }
-
-        private static async Task<List<ChartPoint>> LoadCompanyDistributionAsync(ApplicationDbContext db)
-        {
-            var rows = await (from u in db.Set<User>()
-                              join c in db.Set<Company>() on u.CompanyId equals c.Id
-                              group u by c.Name.Value into g
-                              orderby g.Count() descending
-                              select new { Label = g.Key, Count = g.Count() })
-                             .ToListAsync();
-
-            return rows.Select(x => new ChartPoint(x.Label, x.Count)).ToList();
-        }
-
-        private static async Task<List<ChartPoint>> LoadAccountTypeDistributionAsync(ApplicationDbContext db)
-        {
-            var rows = await (from a in db.Set<ChartOfAccount>()
-                              group a by a.Type into g
-                              select new { Type = g.Key, Count = g.Count() })
-                             .ToListAsync();
+            var rows =
+                await
+                (
+                    from u in db.Set<User>()
+                    join r in db.Set<Role>()
+                        on u.RoleId equals r.Id
+                    group u by r.Name.Value
+                    into g
+                    select new
+                    {
+                        Label = g.Key,
+                        Count = g.Count()
+                    }
+                ).ToListAsync();
 
             return rows
-                .Select(x => new ChartPoint(AccountTypeText(x.Type), x.Count))
+                .Select(
+                    x =>
+                        new ChartPoint(
+                            x.Label,
+                            x.Count))
                 .ToList();
         }
 
-        private static string AccountTypeText(ChartOfAccountType type) => type switch
+        private static async Task<List<ChartPoint>>
+            LoadCompanyDistributionAsync(
+                ApplicationDbContext db)
         {
-            ChartOfAccountType.MainGroup => "Ana Grup",
-            ChartOfAccountType.Warehouse => "Depo",
-            ChartOfAccountType.Category => "Kategori",
-            ChartOfAccountType.Workshop => "Atölye",
-            _ => type.ToString()
-        };
+            var rows =
+                await
+                (
+                    from u in db.Set<User>()
+                    join c in db.Set<Company>()
+                        on u.CompanyId equals c.Id
+                    group u by c.Name.Value
+                    into g
+                    orderby g.Count() descending
+                    select new
+                    {
+                        Label = g.Key,
+                        Count = g.Count()
+                    }
+                ).ToListAsync();
 
-        private static void LoadDoughnut(ChartControl chart, List<ChartPoint> data)
-        {
-            chart.Series.Clear();
-
-            Series series = new("Dağılım", ViewType.Doughnut)
-            {
-                DataSource = data,
-                ArgumentDataMember = nameof(ChartPoint.Label)
-            };
-            series.ValueDataMembers.AddRange(nameof(ChartPoint.Count));
-            series.LabelsVisibility = DefaultBoolean.False;
-
-            chart.Series.Add(series);
-            chart.Legend.Visibility = DefaultBoolean.True;
+            return rows
+                .Select(
+                    x =>
+                        new ChartPoint(
+                            x.Label,
+                            x.Count))
+                .ToList();
         }
 
-        private static void LoadBar(ChartControl chart, List<ChartPoint> data)
+        private static async Task<List<ChartPoint>>
+            LoadAccountTypeDistributionAsync(
+                ApplicationDbContext db)
+        {
+            var rows =
+                await
+                (
+                    from a in db.Set<ChartOfAccount>()
+                    group a by a.Type
+                    into g
+                    select new
+                    {
+                        Type = g.Key,
+                        Count = g.Count()
+                    }
+                ).ToListAsync();
+
+            return rows
+                .Select(
+                    x =>
+                        new ChartPoint(
+                            AccountTypeText(x.Type),
+                            x.Count))
+                .ToList();
+        }
+
+        private static string AccountTypeText(
+            ChartOfAccountType type)
+        {
+            return type switch
+            {
+                ChartOfAccountType.MainGroup =>
+                    "Ana Grup",
+
+                ChartOfAccountType.Warehouse =>
+                    "Depo",
+
+                ChartOfAccountType.Category =>
+                    "Kategori",
+
+                ChartOfAccountType.Workshop =>
+                    "Atölye",
+
+                _ =>
+                    type.ToString()
+            };
+        }
+
+        private static void LoadDoughnut(
+            ChartControl chart,
+            List<ChartPoint> data)
         {
             chart.Series.Clear();
 
-            Series series = new("Kullanıcı", ViewType.Bar)
+            if (data.Count == 0)
             {
-                DataSource = data,
-                ArgumentDataMember = nameof(ChartPoint.Label)
-            };
-            series.ValueDataMembers.AddRange(nameof(ChartPoint.Count));
+                chart.Legend.Visibility =
+                    DefaultBoolean.False;
+
+                return;
+            }
+
+            Series series =
+                new Series(
+                    "Dağılım",
+                    ViewType.Doughnut)
+                {
+                    DataSource = data,
+                    ArgumentDataMember =
+                        nameof(ChartPoint.Label)
+                };
+
+            series.ValueDataMembers.AddRange(
+                nameof(ChartPoint.Count));
+
+            series.LabelsVisibility =
+                DefaultBoolean.False;
+
+            if (series.View is DoughnutSeriesView view)
+            {
+                view.HoleRadiusPercent =
+                    65;
+            }
 
             chart.Series.Add(series);
-            chart.Legend.Visibility = DefaultBoolean.False;
+
+            chart.Legend.Visibility =
+                DefaultBoolean.True;
+
+            chart.Legend.AlignmentHorizontal =
+                LegendAlignmentHorizontal.Center;
+
+            chart.Legend.AlignmentVertical =
+                LegendAlignmentVertical.Bottom;
+
+            if (chart.Diagram is SimpleDiagram diagram)
+            {
+                chart.Legend.EnableAntialiasing = DefaultBoolean.True;
+            }
+        }
+
+        private static void LoadBar(
+            ChartControl chart,
+            List<ChartPoint> data)
+        {
+            chart.Series.Clear();
+
+            if (data.Count == 0)
+            {
+                chart.Legend.Visibility =
+                    DefaultBoolean.False;
+
+                return;
+            }
+
+            Series series =
+                new Series(
+                    "Kullanıcı",
+                    ViewType.Bar)
+                {
+                    DataSource = data,
+                    ArgumentDataMember =
+                        nameof(ChartPoint.Label)
+                };
+
+            series.ValueDataMembers.AddRange(
+                nameof(ChartPoint.Count));
+
+            chart.Series.Add(series);
+
+            chart.Legend.Visibility =
+                DefaultBoolean.False;
 
             if (chart.Diagram is XYDiagram diagram)
             {
-                diagram.Rotated = false;
-                diagram.AxisX.Title.Visibility = DefaultBoolean.True;
-                diagram.AxisX.Title.Text = "Şirket";
-                diagram.AxisY.Title.Visibility = DefaultBoolean.True;
-                diagram.AxisY.Title.Text = "Kullanıcı Sayısı";
+                diagram.Rotated =
+                    false;
+
+                diagram.AxisX.Title.Visibility =
+                    DefaultBoolean.False;
+
+                diagram.AxisY.Title.Visibility =
+                    DefaultBoolean.False;
+
+                diagram.AxisX.Label.TextPattern =
+                    "{A}";
+
+                diagram.AxisY.Label.TextPattern =
+                    "{V:N0}";
+
+                diagram.AxisY.WholeRange.Auto =
+                    true;
             }
         }
     }

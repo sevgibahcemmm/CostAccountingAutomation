@@ -14,7 +14,6 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
-
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
 using DevExpress.XtraEditors.Controls;
@@ -33,7 +32,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
     public partial class ProductEditForm : XtraForm
     {
         private readonly ProductDto? _editing;
-
         private readonly BindingList<PriceRowVm> _prices = [];
         private readonly BindingList<ImageRowVm> _images = [];
         private readonly List<ProductMovementDto> _movements = [];
@@ -58,11 +56,52 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
             gridPrices.DataSource = _prices;
             gridImages.DataSource = _images;
+            ConfigureImageColumns();
 
             ApplyIcons();
             WireEvents();
-            FitToWorkArea();
-            fixFooterButtons();
+        }
+
+        private void ConfigureImageColumns()
+        {
+            gridImageView.Columns.Clear();
+
+            RepositoryItemPictureEdit riPicture = new()
+            {
+                SizeMode = PictureSizeMode.Zoom,
+                AllowZoom = DefaultBoolean.True,
+                ShowZoomSubMenu = DefaultBoolean.True
+            };
+
+            GridColumn colImage = new()
+            {
+                Caption = "Resim",
+                FieldName = nameof(ImageRowVm.Image),
+                Visible = true,
+                Width = 80,
+                ColumnEdit = riPicture
+            };
+            colImage.OptionsColumn.FixedWidth = true;
+
+            GridColumn colPath = new()
+            {
+                Caption = "Resim Yolu",
+                FieldName = nameof(ImageRowVm.Path),
+                Visible = true,
+                Width = 280
+            };
+
+            GridColumn colIsPrimary = new()
+            {
+                Caption = "Ana Resim",
+                FieldName = nameof(ImageRowVm.IsPrimary),
+                Visible = true,
+                Width = 90,
+                ColumnEdit = riCheck
+            };
+
+            gridImageView.Columns.AddRange([colImage, colPath, colIsPrimary]);
+            gridImageView.RowHeight = 65;
         }
 
         private static void SetButtonImage(SimpleButton btn, SvgImage icon, int size)
@@ -110,28 +149,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnAddPrice.Click += BtnAddPrice_Click;
             btnRemovePrice.Click += (_, _) => { if (gridPriceView.FocusedRowHandle >= 0) _prices.RemoveAt(gridPriceView.FocusedRowHandle); };
             btnAddImage.Click += BtnAddImage_Click;
-            btnRemoveImage.Click += (_, _) => { if (gridImageView.FocusedRowHandle >= 0) _images.RemoveAt(gridImageView.FocusedRowHandle); };
+            btnRemoveImage.Click += (_, _) =>
+            {
+                if (gridImageView.FocusedRowHandle >= 0)
+                {
+                    _images.RemoveAt(gridImageView.FocusedRowHandle);
+                    EnsureSinglePrimary();
+                }
+            };
             btnSetPrimary.Click += BtnSetPrimary_Click;
             gridMovementView.CustomColumnDisplayText += GridMovementView_CustomColumnDisplayText;
+            gridImageView.CellValueChanging += GridImageView_CellValueChanging;
             Load += ProductEditForm_Load;
-        }
-
-        private void FitToWorkArea()
-        {
-            Rectangle workArea = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1920, 1080);
-            int fitW = Math.Min(ClientSize.Width, workArea.Width - 16);
-            int fitH = Math.Min(ClientSize.Height, workArea.Height - 24);
-            if (fitW < ClientSize.Width || fitH < ClientSize.Height)
-            {
-                ClientSize = new Size(fitW, fitH);
-            }
-        }
-
-        private void fixFooterButtons()
-        {
-            pnlFooter.Size = new Size(ClientSize.Width, 64);
-            btnSave.Location = new Point(ClientSize.Width - 14 - btnSave.Width, 15);
-            btnCancel.Location = new Point(btnSave.Left - 6 - btnCancel.Width, 15);
         }
 
         private async void ProductEditForm_Load(object? sender, EventArgs e)
@@ -321,11 +350,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
             foreach (ProductImageDto img in full.Images)
             {
-                _images.Add(new ImageRowVm { Path = img.Path, IsPrimary = img.IsPrimary });
+                _images.Add(new ImageRowVm
+                {
+                    Path = img.Path,
+                    IsPrimary = img.IsPrimary,
+                    Image = LoadImageSafe(img.Path)
+                });
             }
 
+            EnsureSinglePrimary();
             gridPriceView.BestFitColumns();
-            gridImageView.BestFitColumns();
+        }
+
+        private static Image? LoadImageSafe(string relativePath)
+        {
+            try
+            {
+                string fullPath = Path.Combine(AppContext.BaseDirectory, relativePath);
+                if (File.Exists(fullPath))
+                {
+                    using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+                    using var ms = new MemoryStream();
+                    fs.CopyTo(ms);
+                    return SafeBitmap(ms);
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        private static Image? SafeBitmap(MemoryStream ms)
+        {
+            try { return new Bitmap(ms); } catch { return null; }
         }
 
         private async void CmbCategory_EditValueChanged(object? sender, EventArgs e)
@@ -407,27 +463,91 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 string fileName = Guid.NewGuid().ToString("N") + Path.GetExtension(file);
                 string dest = Path.Combine(imagesDir, fileName);
                 File.Copy(file, dest, true);
+
                 _images.Add(new ImageRowVm
                 {
                     Path = "ProductImages\\" + fileName,
-                    IsPrimary = _images.Count == 0
+                    IsPrimary = false,
+                    Image = LoadImageSafe("ProductImages\\" + fileName)
                 });
             }
 
-            gridImageView.BestFitColumns();
+            EnsureSinglePrimary();
         }
 
         private void BtnSetPrimary_Click(object? sender, EventArgs e)
         {
-            if (gridImageView.FocusedRowHandle < 0 || gridImageView.GetFocusedRow() is not ImageRowVm vm)
+            int focusedRow = gridImageView.FocusedRowHandle;
+            if (focusedRow < 0)
             {
                 ToastHelper.Show("Önce bir resim seçin", ToastType.Warning);
                 return;
             }
 
+            gridImageView.CloseEditor();
+
             for (int i = 0; i < _images.Count; i++)
             {
-                _images[i].IsPrimary = (i == gridImageView.FocusedRowHandle);
+                _images[i].IsPrimary = (i == focusedRow);
+            }
+
+            EnsureSinglePrimary();
+        }
+
+        private void GridImageView_CellValueChanging(object? sender, CellValueChangedEventArgs e)
+        {
+            if (e.Column.FieldName == nameof(ImageRowVm.IsPrimary))
+            {
+                gridImageView.CloseEditor();
+                bool newValue = Convert.ToBoolean(e.Value);
+
+                if (newValue)
+                {
+                    int focusedRow = e.RowHandle;
+                    for (int i = 0; i < _images.Count; i++)
+                    {
+                        _images[i].IsPrimary = (i == focusedRow);
+                    }
+                }
+                else
+                {
+                    _images[e.RowHandle].IsPrimary = true;
+                }
+
+                gridImages.RefreshDataSource();
+            }
+        }
+
+        private void EnsureSinglePrimary()
+        {
+            if (_images.Count == 0)
+            {
+                return;
+            }
+
+            int primaryCount = _images.Count(x => x.IsPrimary);
+
+            if (primaryCount == 0)
+            {
+                _images[0].IsPrimary = true;
+            }
+            else if (primaryCount > 1)
+            {
+                bool firstFound = false;
+                foreach (var img in _images)
+                {
+                    if (img.IsPrimary)
+                    {
+                        if (!firstFound)
+                        {
+                            firstFound = true;
+                        }
+                        else
+                        {
+                            img.IsPrimary = false;
+                        }
+                    }
+                }
             }
 
             gridImages.RefreshDataSource();
@@ -533,6 +653,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         {
             public string Path { get; set; } = default!;
             public bool IsPrimary { get; set; }
+            public Image? Image { get; set; }
         }
     }
 }

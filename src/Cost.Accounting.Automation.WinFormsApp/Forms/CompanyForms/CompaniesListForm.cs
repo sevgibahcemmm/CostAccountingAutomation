@@ -27,6 +27,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             nameof(CompanyDto.Email)
         ];
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            foreach (Control ctrl in Controls)
+            {
+                if (ctrl is Panel panel && panel.Dock == DockStyle.Top)
+                {
+                    panel.Height = 100;
+                    break;
+                }
+            }
+        }
+
         protected override void ConfigureColumns()
         {
             View.Columns.Clear();

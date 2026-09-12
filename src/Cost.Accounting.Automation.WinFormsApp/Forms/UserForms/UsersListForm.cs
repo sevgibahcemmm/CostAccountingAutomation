@@ -5,11 +5,13 @@ using Cost.Accounting.Automation.Application.Users;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Data;
+using DevExpress.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
 using DevExpress.XtraGrid.Views.Grid;
+using DevExpress.XtraGrid.Views.Grid.ViewInfo;
 using TS.MediatR;
 using TS.Result;
 
@@ -34,6 +36,60 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             nameof(UserDto.RoleName)
         ];
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            foreach (Control ctrl in Controls)
+            {
+                if (ctrl is Panel panel && panel.Dock == DockStyle.Top)
+                {
+                    panel.Height = 100;
+                    break;
+                }
+            }
+
+            if (View.GridControl != null)
+            {
+                ToolTipController toolTipController = new ToolTipController();
+                toolTipController.GetActiveObjectInfo += ToolTipController_GetActiveObjectInfo;
+                View.GridControl.ToolTipController = toolTipController;
+            }
+        }
+
+        private void ToolTipController_GetActiveObjectInfo(object? sender, ToolTipControllerGetActiveObjectInfoEventArgs e)
+        {
+            if (e.SelectedControl is DevExpress.XtraGrid.GridControl grid)
+            {
+                if (grid.MainView is GridView view)
+                {
+                    Point pt = grid.PointToClient(Control.MousePosition);
+                    GridHitInfo hi = view.CalcHitInfo(pt);
+                    if (hi.InRowCell && hi.Column.FieldName == "PhotoPreview")
+                    {
+                        if (view.GetRow(hi.RowHandle) is UserDto user)
+                        {
+                            Image img = BuildUserImage(user);
+                            if (img != null)
+                            {
+                                SuperToolTip superTip = new();
+                                ToolTipTitleItem titleItem = new() { Text = user.FullName };
+
+                                ToolTipItem item = new();
+                                item.Image = new Bitmap(img, new Size(120, 120));
+
+                                superTip.Items.Add(titleItem);
+                                superTip.Items.Add(item);
+
+                                e.Info = new ToolTipControlInfo(hi.RowHandle.ToString() + hi.Column.FieldName, string.Empty);
+                                e.Info.SuperTip = superTip;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         protected override void ConfigureColumns()
         {
             View.Columns.Clear();
@@ -45,7 +101,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
                 UnboundType = UnboundColumnType.Object,
                 Visible = true,
                 Width = 60,
-                ColumnEdit = new RepositoryItemPictureEdit { SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom }
+                ColumnEdit = new RepositoryItemPictureEdit
+                {
+                    SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom,
+                    AllowZoom = DefaultBoolean.True,
+                    ShowZoomSubMenu = DefaultBoolean.True
+                }
             };
             View.Columns.AddRange([colPhoto]);
             colPhoto.VisibleIndex = 0;

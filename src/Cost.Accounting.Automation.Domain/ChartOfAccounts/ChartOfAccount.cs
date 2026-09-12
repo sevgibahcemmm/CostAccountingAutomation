@@ -8,7 +8,8 @@ public enum ChartOfAccountType
     MainGroup = 0,
     Warehouse = 1,
     Category = 2,
-    Workshop = 3
+    Workshop = 3,
+    Stok = 4,   
 }
 
 public sealed class ChartOfAccount : Entity, IHardDeletable

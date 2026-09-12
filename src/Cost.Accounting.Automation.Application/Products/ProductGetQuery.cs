@@ -31,16 +31,17 @@ internal sealed class ProductGetQueryHandler(
             MinimumProductLevel = product.MinimumProductLevel,
             TaxRate = product.TaxRate,
 
+            // Sadece null gelme ihtimali olan navigation nesnelerine güvenlik eklendi
             WarehouseId = product.WarehouseId,
-            WarehouseCode = product.Warehouse!.Code.Value,
-            WarehouseName = product.Warehouse.Name.Value,
+            WarehouseCode = product.Warehouse?.Code.Value ?? string.Empty,
+            WarehouseName = product.Warehouse?.Name.Value ?? string.Empty,
 
             CategoryId = product.CategoryId,
-            CategoryCode = product.Category!.Code.Value,
-            CategoryName = product.Category.Name.Value,
+            CategoryCode = product.Category?.Code.Value ?? string.Empty,
+            CategoryName = product.Category?.Name.Value ?? string.Empty,
 
             ProductUnitTypeId = product.ProductUnitTypeId,
-            ProductUnitTypeName = product.ProductUnitType!.Name.Value,
+            ProductUnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
 
             ChartOfAccountId = product.ChartOfAccountId == null ? null : product.ChartOfAccountId.Value,
             Description = product.Description.Value,
