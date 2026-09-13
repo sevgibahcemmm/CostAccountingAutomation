@@ -1,5 +1,3 @@
-using System.Drawing;
-using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -15,7 +13,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         public ProductUnitTypesListForm() : base("Birim Cinsleri")
         {
             InitializeComponent();
-            IncreaseHeaderHeight();
         }
 
         protected override SvgImage ModuleIcon => SvgIcons.TagIcon;
@@ -24,15 +21,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         [
             nameof(ProductUnitTypeDto.Name)
         ];
-
-        private void IncreaseHeaderHeight()
-        {
-            // Sadece üst başlık alanının yüksekliği artırıldı, başka hiçbir ayara dokunulmadı.
-            if (Controls.Find("pnlHeader", true).FirstOrDefault() is Control headerPanel)
-            {
-                headerPanel.Height = 88;
-            }
-        }
 
         protected override void ConfigureColumns()
         {

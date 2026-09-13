@@ -1,6 +1,8 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.Photos;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -25,9 +27,7 @@ public sealed record ProductImageRow(
 [Permission("product:create")]
 public sealed record ProductCreateCommand(
     string Name,
-    string? Barcode,
-    string? QRCode,
-    decimal TaxRate,
+    Guid TaxRateId,
     decimal? MinimumProductLevel,
     Guid WarehouseId,
     Guid CategoryId,
@@ -45,9 +45,8 @@ public sealed class ProductCreateCommandValidator : AbstractValidator<ProductCre
             .NotEmpty().WithMessage("Geçerli bir ürün adı girin")
             .MaximumLength(300).WithMessage("Ürün adı en fazla 300 karakter olabilir");
 
-        RuleFor(x => x.TaxRate)
-            .GreaterThanOrEqualTo(0).WithMessage("KDV oranı sıfırdan küçük olamaz")
-            .LessThanOrEqualTo(1).WithMessage("KDV oranı %100'den büyük olamaz");
+        RuleFor(x => x.TaxRateId)
+            .NotEmpty().WithMessage("KDV oranı seçmelisiniz");
 
         RuleFor(x => x.WarehouseId)
             .NotEmpty().WithMessage("Depo seçmelisiniz");
@@ -66,7 +65,9 @@ public sealed class ProductCreateCommandValidator : AbstractValidator<ProductCre
 internal sealed class ProductCreateCommandHandler(
     IProductRepository productRepository,
     IChartOfAccountRepository chartOfAccountRepository,
-    IProductUnitTypeRepository unitTypeRepository) : IRequestHandler<ProductCreateCommand, Result<string>>
+    IProductUnitTypeRepository unitTypeRepository,
+    ITaxRateRepository taxRateRepository,
+    IBarcodeGeneratorService barcodeGeneratorService) : IRequestHandler<ProductCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductCreateCommand request, CancellationToken cancellationToken)
     {
@@ -84,12 +85,20 @@ internal sealed class ProductCreateCommandHandler(
             return Result<string>.Failure("Seçilen depo hesap planında bulunamadı");
         }
 
-        bool unitExists = await unitTypeRepository.AnyAsync(
+        ProductUnitType? unitType = await unitTypeRepository.FirstOrDefaultAsync(
             u => u.Id == new IdentityId(request.ProductUnitTypeId),
             cancellationToken);
-        if (!unitExists)
+        if (unitType is null)
         {
             return Result<string>.Failure("Geçerli bir birim cinsi seçmelisiniz");
+        }
+
+        TaxRate? taxRate = await taxRateRepository.FirstOrDefaultAsync(
+            t => t.Id == new IdentityId(request.TaxRateId),
+            cancellationToken);
+        if (taxRate is null)
+        {
+            return Result<string>.Failure("Geçerli bir KDV oranı seçmelisiniz");
         }
 
         List<string> productCodes = (await productRepository.GetAllIncludingDeletedAsync(cancellationToken))
@@ -98,6 +107,16 @@ internal sealed class ProductCreateCommandHandler(
         List<string> accountCodes = accounts.Select(a => a.Code.Value).ToList();
 
         (string productCode, string nodeCode) = ProductCodeHelper.BuildNextCodes(category.Code.Value, productCodes, accountCodes);
+
+        string gtin = barcodeGeneratorService.GenerateGtin(ProductBarcodeDefaults.CompanyGtinPrefix, productCode);
+        string qrContent = ProductQrContentBuilder.Build(
+            productCode,
+            gtin,
+            request.Name,
+            taxRate.Rate,
+            warehouse.Name.Value,
+            category.Name.Value,
+            unitType.Name.Value);
 
         // Ürün kartı = hesap planında kategorinin altında açılan atölye/cilt düğümü
         ChartOfAccount node = new(
@@ -112,10 +131,10 @@ internal sealed class ProductCreateCommandHandler(
         Product product = new(
             new Name(request.Name),
             new ProductCode(productCode),
-            new Barcode(string.IsNullOrWhiteSpace(request.Barcode) ? string.Empty : request.Barcode.Trim()),
-            new QRCode(string.IsNullOrWhiteSpace(request.QRCode) ? string.Empty : request.QRCode.Trim()),
+            new Barcode(gtin),
+            new QRCode(qrContent),
             request.MinimumProductLevel,
-            request.TaxRate,
+            new IdentityId(request.TaxRateId),
             warehouse.Id,
             category.Id,
             new IdentityId(request.ProductUnitTypeId),
@@ -127,10 +146,30 @@ internal sealed class ProductCreateCommandHandler(
             new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
 
         product.ReplaceImages(request.ImagePaths
-            .Select((path, index) => new ProductImage(path, index == 0)));
+            .Select((path, index) => new Photo(
+                PhotoOwnerType.Product,
+                product.Id,
+                System.IO.Path.GetFileName(path),
+                GetContentType(path),
+                path,
+                index == 0)));
 
         await productRepository.AddAsync(product, cancellationToken);
 
         return "Ürün başarıyla kaydedildi";
+    }
+
+    private static string GetContentType(string path)
+    {
+        string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
     }
 }

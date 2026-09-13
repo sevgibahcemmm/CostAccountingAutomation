@@ -19,7 +19,7 @@ internal sealed class UserGetPhotosQueryHandler(
             .Where(p => p.UserId == new IdentityId(request.UserId))
             .OrderBy(p => p.IsDefault ? 0 : 1)
             .ThenBy(p => p.CreatedAt)
-            .Select(p => new PhotoDto(p.FileName, p.ContentType, p.Data, p.IsDefault))
+            .Select(p => new PhotoDto(p.FileName, p.ContentType, p.Path, p.IsDefault))
             .ToListAsync(cancellationToken);
 
         return photos;

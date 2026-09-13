@@ -17,6 +17,23 @@ internal sealed class ProductUnitTypeConfiguration : IEntityTypeConfiguration<Pr
     }
 }
 
+internal sealed class TaxRateConfiguration : IEntityTypeConfiguration<TaxRate>
+{
+    public void Configure(EntityTypeBuilder<TaxRate> builder)
+    {
+        builder.ToTable("TaxRates");
+
+        builder.HasKey(x => x.Id);
+
+        builder.OwnsOne(x => x.Name, name =>
+            name.Property(x => x.Value).HasColumnName("Name").HasMaxLength(120));
+
+        builder.Property(x => x.Rate)
+            .HasColumnName("Rate")
+            .HasColumnType("decimal(18,4)");
+    }
+}
+
 internal sealed class ProductPriceConfiguration : IEntityTypeConfiguration<ProductPrice>
 {
     public void Configure(EntityTypeBuilder<ProductPrice> builder)
@@ -46,19 +63,6 @@ internal sealed class ProductMovementConfiguration : IEntityTypeConfiguration<Pr
         builder.OwnsOne(x => x.Description, description =>
             description.Property(x => x.Value).HasColumnName("Description"));
 
-        builder.HasIndex("ProductId");
-    }
-}
-
-internal sealed class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
-{
-    public void Configure(EntityTypeBuilder<ProductImage> builder)
-    {
-        builder.ToTable("ProductImages");
-
-        builder.HasKey(x => x.Id);
-
-        builder.Property(x => x.Path).HasColumnName("Path");
         builder.HasIndex("ProductId");
     }
 }

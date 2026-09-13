@@ -10,8 +10,10 @@ internal sealed class PhotoConfiguration : IEntityTypeConfiguration<Photo>
     {
         builder.ToTable("Photos");
         builder.HasKey(i => i.Id);
+
+        builder.Property(i => i.OwnerType).HasMaxLength(20).HasConversion<string>();
         builder.Property(i => i.FileName).HasMaxLength(255);
         builder.Property(i => i.ContentType).HasMaxLength(100);
-        builder.Property(i => i.Data).HasColumnType("varbinary(max)");
+        builder.Property(i => i.Path).HasColumnName("Path").HasMaxLength(500);
     }
 }

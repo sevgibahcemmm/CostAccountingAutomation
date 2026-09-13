@@ -33,6 +33,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmMaliyetRaporlari"] = 6,
             ["elmUrunler"] = 2,
             ["elmBirimCinsleri"] = 12,
+            ["elmKdvOranlari"] = 12,
             ["elmStokGirisi"] = 11,
             ["elmStokCikisi"] = 12,
             ["elmSatinAlmaSiparisleri"] = 3,
@@ -201,6 +202,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     return;
                 }
 
+                if (element.Text == "KDV Oranları")
+                {
+                    OpenKdvRates();
+                    return;
+                }
+
                 OpenModule(element.Text, groupName, index);
             }
         }
@@ -243,6 +250,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void OpenUnitTypes()
         {
             MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
+        }
+
+        private void OpenKdvRates()
+        {
+            MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
         }
 
         private void OpenDashboard()

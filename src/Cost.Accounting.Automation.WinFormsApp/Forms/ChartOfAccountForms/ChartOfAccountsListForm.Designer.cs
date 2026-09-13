@@ -205,6 +205,10 @@ public sealed partial class ChartOfAccountsListForm
         Controls.Add(_pnlToolbar);
         Controls.Add(_pnlHeader);
 
+        IconOptions.SvgImage = SvgIcons.Modules[6];
+        Size = new Size(1240, 740);
+        MinimumSize = new Size(860, 520);
+
         ((System.ComponentModel.ISupportInitialize)_picHeaderIcon.Properties).EndInit();
         ((System.ComponentModel.ISupportInitialize)_tree).EndInit();
         ResumeLayout(false);

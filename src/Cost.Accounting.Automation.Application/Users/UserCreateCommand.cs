@@ -42,6 +42,7 @@ public sealed class UserCreateCommandValidator : AbstractValidator<UserCreateCom
 internal sealed class UserCreateCommandHandler(
     IUserRepository userRepository,
     IPhotoRepository photoRepository,
+    IFileStorageService fileStorage,
     IClaimContext claimContext) : IRequestHandler<UserCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UserCreateCommand request, CancellationToken cancellationToken)
@@ -97,7 +98,11 @@ internal sealed class UserCreateCommandHandler(
             {
                 var photo = request.Photos[i];
                 bool isDefault = photo.IsDefault || (!anyDefault && i == 0);
-                photoRepository.Add(new Photo(user.Id, photo.FileName, photo.ContentType, photo.Data, isDefault));
+
+                string relativePath = await fileStorage.SaveAsync(
+                    photo.Data, photo.FileName, "UserImages", cancellationToken);
+
+                photoRepository.Add(new Photo(PhotoOwnerType.User, user.Id, photo.FileName, photo.ContentType, relativePath, isDefault));
             }
         }
 

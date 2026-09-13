@@ -1,7 +1,5 @@
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
-using DevExpress.XtraEditors;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -27,25 +25,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             pnlHeader.Paint += PnlHeader_Paint;
             pnlBody.Resize += (s, e) => CenterContent();
-            CenterContent();
-            AddCloseButton();
-        }
-
-        private void AddCloseButton()
-        {
-            SimpleButton btnClosePage = new()
-            {
-                Text = "Kapat",
-                Size = new Size(92, 36),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(pnlHeader.ClientSize.Width - 118, 42),
-                Appearance = { Font = new Font("Segoe UI", 10F, FontStyle.Bold) }
-            };
-            btnClosePage.ImageOptions.SvgImage = SvgIcons.CloseIcon;
-            btnClosePage.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnClosePage.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
             btnClosePage.Click += (_, _) => Close();
-            pnlHeader.Controls.Add(btnClosePage);
+            CenterContent();
         }
 
         private void CenterContent()

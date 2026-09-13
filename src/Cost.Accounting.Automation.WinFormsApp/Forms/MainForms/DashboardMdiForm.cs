@@ -28,8 +28,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
     {
         private sealed record ChartPoint(string Label, int Count);
 
+        private const int DashboardAutoRefreshIntervalMs = 30_000;
+
         private readonly SessionClaimContext _session;
         private readonly Dictionary<int, Label> _kpiValues = new();
+        private readonly System.Windows.Forms.Timer _refreshTimer;
+        private bool _refreshing;
+        private bool _hasLoadedOnce;
 
         private Color SkinPrimaryColor =>
             DXSkinColorHelper.GetDXSkinColor(
@@ -101,6 +106,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             LookAndFeel.StyleChanged += LookAndFeel_StyleChanged;
 
+            _refreshTimer =
+                new System.Windows.Forms.Timer
+                {
+                    Interval = DashboardAutoRefreshIntervalMs
+                };
+
+            _refreshTimer.Tick +=
+                RefreshDashboardTimer_Tick;
+
             BuildDashboardAppearance();
         }
 
@@ -113,13 +127,37 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             LoadSessionInfo();
 
             _ = LoadDashboardDataAsync();
+
+            _refreshTimer.Start();
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
+            _refreshTimer.Stop();
+            _refreshTimer.Tick -= RefreshDashboardTimer_Tick;
+            _refreshTimer.Dispose();
+
             LookAndFeel.StyleChanged -= LookAndFeel_StyleChanged;
 
             base.OnFormClosed(e);
+        }
+
+        private async void RefreshDashboardTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_refreshing || Disposing || IsDisposed)
+            {
+                return;
+            }
+
+            _refreshing = true;
+            try
+            {
+                await LoadDashboardDataAsync(quiet: true);
+            }
+            finally
+            {
+                _refreshing = false;
+            }
         }
 
         private void LookAndFeel_StyleChanged(object? sender, EventArgs e)
@@ -394,7 +432,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     CultureInfo.GetCultureInfo("tr-TR"));
         }
 
-        private async Task LoadDashboardDataAsync()
+        private async Task LoadDashboardDataAsync(bool quiet = false)
         {
             try
             {
@@ -447,6 +485,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 SetKpi(7, accountCount);
                 SetKpi(8, photoCount);
 
+                _hasLoadedOnce =
+                    true;
+
+                UpdateLastUpdatedStamp();
+
                 List<ChartPoint> roleData =
                     await LoadRoleDistributionAsync(db);
 
@@ -464,11 +507,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
             catch
             {
-                for (int i = 1; i <= 8; i++)
+                // İlk yükleme başarısızsa kartlar boş gösterilir;
+                // arka plandaki otomatik yenileme başarısızsa mevcut değerler korunur.
+                if (!quiet || !_hasLoadedOnce)
                 {
-                    SetKpi(i, null);
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        SetKpi(i, null);
+                    }
                 }
             }
+        }
+
+        private void UpdateLastUpdatedStamp()
+        {
+            lblDate.Text =
+                $"{DateTime.Now.ToString("dddd, dd MMMM yyyy", CultureInfo.GetCultureInfo("tr-TR"))}   •   Son güncelleme: {DateTime.Now:HH:mm:ss}";
         }
 
         private void SetKpi(

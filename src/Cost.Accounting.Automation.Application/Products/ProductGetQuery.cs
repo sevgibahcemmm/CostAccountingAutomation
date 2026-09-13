@@ -29,7 +29,9 @@ internal sealed class ProductGetQueryHandler(
             Barcode = product.Barcode.Value,
             QRCode = product.QRCode.Value,
             MinimumProductLevel = product.MinimumProductLevel,
-            TaxRate = product.TaxRate,
+            TaxRateId = product.TaxRateId,
+            TaxRateName = product.TaxRate?.Name.Value ?? string.Empty,
+            TaxRateRate = product.TaxRate?.Rate ?? 0m,
 
             // Sadece null gelme ihtimali olan navigation nesnelerine güvenlik eklendi
             WarehouseId = product.WarehouseId,
@@ -78,7 +80,7 @@ internal sealed class ProductGetQueryHandler(
                 {
                     Id = i.Id,
                     Path = i.Path,
-                    IsPrimary = i.IsPrimary
+                    IsPrimary = i.IsDefault
                 })
                 .ToList()
         };

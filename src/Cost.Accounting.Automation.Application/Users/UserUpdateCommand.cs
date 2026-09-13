@@ -44,6 +44,7 @@ public sealed class UserUpdateCommandValidator : AbstractValidator<UserUpdateCom
 internal sealed class UserUpdateCommandHandler(
     IUserRepository userRepository,
     IPhotoRepository photoRepository,
+    IFileStorageService fileStorage,
     IClaimContext claimContext) : IRequestHandler<UserUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UserUpdateCommand request, CancellationToken cancellationToken)
@@ -98,8 +99,11 @@ internal sealed class UserUpdateCommandHandler(
         List<Photo> existingPhotos = await photoRepository
             .Where(p => p.UserId == user.Id)
             .ToListAsync(cancellationToken);
+
+        List<string> removedPaths = [];
         if (existingPhotos is { Count: > 0 })
         {
+            removedPaths.AddRange(existingPhotos.Select(p => p.Path));
             photoRepository.SoftDeleteRange(existingPhotos);
         }
 
@@ -110,8 +114,17 @@ internal sealed class UserUpdateCommandHandler(
             {
                 var photo = request.Photos[i];
                 bool isDefault = photo.IsDefault || (!anyDefault && i == 0);
-                photoRepository.Add(new Photo(user.Id, photo.FileName, photo.ContentType, photo.Data, isDefault));
+
+                string relativePath = await fileStorage.SaveAsync(
+                    photo.Data, photo.FileName, "UserImages", cancellationToken);
+
+                photoRepository.Add(new Photo(PhotoOwnerType.User, user.Id, photo.FileName, photo.ContentType, relativePath, isDefault));
             }
+        }
+
+        foreach (string path in removedPaths)
+        {
+            await fileStorage.DeleteAsync(path, cancellationToken);
         }
 
         return "Kullanıcı başarıyla güncellendi";

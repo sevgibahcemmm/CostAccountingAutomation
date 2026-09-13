@@ -32,7 +32,7 @@ public sealed class ProductUnitType : Entity
     public void SetName(Name name) => Name = name;
 }
 
-public sealed class ProductPrice : Entity
+public sealed class ProductPrice : Entity, IHardDeletable
 {
     private ProductPrice()
     {
@@ -52,7 +52,7 @@ public sealed class ProductPrice : Entity
     public DateOnly? EndDate { get; private set; }
 }
 
-public sealed class ProductMovement : Entity
+public sealed class ProductMovement : Entity, IHardDeletable
 {
     private ProductMovement()
     {
@@ -80,20 +80,4 @@ public sealed class ProductMovement : Entity
     public DateOnly Date { get; private set; }
     public string? ReferenceNo { get; private set; }
     public Description Description { get; private set; } = default!;
-}
-
-public sealed class ProductImage : Entity
-{
-    private ProductImage()
-    {
-    }
-
-    public ProductImage(string path, bool isPrimary)
-    {
-        Path = path;
-        IsPrimary = isPrimary;
-    }
-
-    public string Path { get; private set; } = default!;
-    public bool IsPrimary { get; private set; }
 }

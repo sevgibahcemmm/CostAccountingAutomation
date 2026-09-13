@@ -1,6 +1,8 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.Photos;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -14,9 +16,7 @@ namespace Cost.Accounting.Automation.Application.Products;
 public sealed record ProductUpdateCommand(
     Guid Id,
     string Name,
-    string? Barcode,
-    string? QRCode,
-    decimal TaxRate,
+    Guid TaxRateId,
     decimal? MinimumProductLevel,
     Guid WarehouseId,
     Guid CategoryId,
@@ -37,9 +37,8 @@ public sealed class ProductUpdateCommandValidator : AbstractValidator<ProductUpd
             .NotEmpty().WithMessage("Geçerli bir ürün adı girin")
             .MaximumLength(300).WithMessage("Ürün adı en fazla 300 karakter olabilir");
 
-        RuleFor(x => x.TaxRate)
-            .GreaterThanOrEqualTo(0).WithMessage("KDV oranı sıfırdan küçük olamaz")
-            .LessThanOrEqualTo(1).WithMessage("KDV oranı %100'den büyük olamaz");
+        RuleFor(x => x.TaxRateId)
+            .NotEmpty().WithMessage("KDV oranı seçmelisiniz");
 
         RuleFor(x => x.WarehouseId)
             .NotEmpty().WithMessage("Depo seçmelisiniz");
@@ -55,7 +54,9 @@ public sealed class ProductUpdateCommandValidator : AbstractValidator<ProductUpd
 internal sealed class ProductUpdateCommandHandler(
     IProductRepository productRepository,
     IChartOfAccountRepository chartOfAccountRepository,
-    IProductUnitTypeRepository unitTypeRepository) : IRequestHandler<ProductUpdateCommand, Result<string>>
+    IProductUnitTypeRepository unitTypeRepository,
+    ITaxRateRepository taxRateRepository,
+    IBarcodeGeneratorService barcodeGeneratorService) : IRequestHandler<ProductUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -79,12 +80,20 @@ internal sealed class ProductUpdateCommandHandler(
             return Result<string>.Failure("Seçilen depo hesap planında bulunamadı");
         }
 
-        bool unitExists = await unitTypeRepository.AnyAsync(
+        ProductUnitType? unitType = await unitTypeRepository.FirstOrDefaultAsync(
             u => u.Id == new IdentityId(request.ProductUnitTypeId),
             cancellationToken);
-        if (!unitExists)
+        if (unitType is null)
         {
             return Result<string>.Failure("Geçerli bir birim cinsi seçmelisiniz");
+        }
+
+        TaxRate? taxRate = await taxRateRepository.FirstOrDefaultAsync(
+            t => t.Id == new IdentityId(request.TaxRateId),
+            cancellationToken);
+        if (taxRate is null)
+        {
+            return Result<string>.Failure("Geçerli bir KDV oranı seçmelisiniz");
         }
 
         ChartOfAccount? node = product.ChartOfAccountId is { } nodeId
@@ -108,6 +117,9 @@ internal sealed class ProductUpdateCommandHandler(
 
             product.SetProductCode(new ProductCode(productCode));
 
+            string gtin = barcodeGeneratorService.GenerateGtin(ProductBarcodeDefaults.CompanyGtinPrefix, productCode);
+            product.SetBarcode(new Barcode(gtin));
+
             if (node is not null)
             {
                 node.SetCode(new AccountCode(nodeCode));
@@ -116,15 +128,30 @@ internal sealed class ProductUpdateCommandHandler(
         }
 
         product.SetName(new Name(request.Name));
-        product.SetBarcode(new Barcode(string.IsNullOrWhiteSpace(request.Barcode) ? string.Empty : request.Barcode.Trim()));
-        product.SetQRCode(new QRCode(string.IsNullOrWhiteSpace(request.QRCode) ? string.Empty : request.QRCode.Trim()));
-        product.SetTaxRate(request.TaxRate);
+        product.SetTaxRate(new IdentityId(request.TaxRateId));
         product.SetMinimumProductLevel(request.MinimumProductLevel);
         product.SetWarehouse(warehouse.Id);
         product.SetCategory(category.Id);
         product.SetProductUnitType(new IdentityId(request.ProductUnitTypeId));
         product.SetDescription(new Description(request.Description));
         product.SetStatus(request.IsActive);
+
+        // Eski kayıtlarda boş kalmış olabilecek barkodu eksikse yeniden üret
+        if (string.IsNullOrWhiteSpace(product.Barcode.Value))
+        {
+            string gtin = barcodeGeneratorService.GenerateGtin(ProductBarcodeDefaults.CompanyGtinPrefix, product.ProductCode.Value);
+            product.SetBarcode(new Barcode(gtin));
+        }
+
+        string qrContent = ProductQrContentBuilder.Build(
+            product.ProductCode.Value,
+            product.Barcode.Value!,
+            request.Name,
+            taxRate.Rate,
+            warehouse.Name.Value,
+            category.Name.Value,
+            unitType.Name.Value);
+        product.SetQRCode(new QRCode(qrContent));
 
         if (node is not null)
         {
@@ -135,10 +162,44 @@ internal sealed class ProductUpdateCommandHandler(
         product.ReplacePrices(request.Prices.Select(p => new ProductPrice(
             new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
 
-        product.ReplaceImages(request.Images.Select(i => new ProductImage(i.Path, i.IsPrimary)));
+        product.ReplaceImages(request.Images.Select(i => new Photo(
+            PhotoOwnerType.Product,
+            product.Id,
+            System.IO.Path.GetFileName(i.Path),
+            GetContentType(i.Path),
+            i.Path,
+            i.IsPrimary)));
 
-        productRepository.Update(product);
+
+
+        try
+        {
+            productRepository.Update(product);
+            chartOfAccountRepository.Update(node!); // Eğer node varsa
+
+            // UnitOfWork enjekte edilmişse:
+            // await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+        {
+            var innerMessage = ex.InnerException?.Message ?? ex.Message;
+            return Result<string>.Failure($"Veritabanı kayıt hatası: {innerMessage}");
+        }
 
         return "Ürün başarıyla güncellendi";
+    }
+
+    private static string GetContentType(string path)
+    {
+        string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
     }
 }

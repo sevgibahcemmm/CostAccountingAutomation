@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
@@ -36,19 +37,18 @@ public static class DatabaseInitializer
         await dbContext.Database.MigrateAsync();
 
         // 2. Eski seed'lerin CreatedBy alanında, hiçbir kullanıcıya işaret etmeyen
-        // 'yetim' audit id'leri kalabilir. Bunları admin kullanıcıya bağlayarak
-        // GetAllWithAudit tabanlı liste sorgularının boş dönmesini engelle.
+ 
         await RepairOrphanAuditReferencesAsync(dbContext);
 
         // 3. Veritabanı boş mu? (Şirket yoksa seed yapılacak demektir)
         bool isEmpty = !await companyRepository.AnyAsync(i => i.Id != null);
 
         await SeedProductUnitTypesIfMissingAsync(dbContext, sp);
+        await SeedTaxRatesIfMissingAsync(dbContext, sp);
         if (!isEmpty)
         {
-            // Veritabanı önceden seed edilmişse müşteri/tedarikçi örneklerini
-            // ayrıca (idempotent olarak) ekle ve çık.
             await SeedCustomersAndSuppliersIfMissingAsync(dbContext, sp);
+            await EnsureAdminRolePermissionsAsync(dbContext, sp);
             return;
         }
 
@@ -161,6 +161,35 @@ public static class DatabaseInitializer
 
             // ---------- ÖRNEK MÜŞTERİLER / TEDARİKÇİLER ----------
             await SeedCustomersAndSuppliersAsync(dbContext, customerRepository, supplierRepository, unitOfWork);
+            await EnsureAdminRolePermissionsAsync(dbContext, sp);
+        }
+        finally
+        {
+            dbContext.ClearSeedAdminUserId();
+        }
+    }
+
+    private static async Task EnsureAdminRolePermissionsAsync(ApplicationDbContext dbContext, IServiceProvider sp)
+    {
+        PermissionService permissionService = sp.GetRequiredService<PermissionService>();
+        IRoleRepository roleRepository = sp.GetRequiredService<IRoleRepository>();
+        IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
+
+        Guid? adminId = await dbContext.Set<User>()
+            .Where(u => u.UserName.Value == "admin")
+            .Select(u => (Guid?)u.Id.Value)
+            .FirstOrDefaultAsync();
+
+        if (adminId is null)
+        {
+            return;
+        }
+
+        // Yeni Permission kayıtlarının CreatedBy alanını müşterek admin olarak işaretle
+        dbContext.SetSeedAdminUserId(adminId.Value);
+        try
+        {
+            await permissionService.EnsureAdminRoleHasAllPermissionsAsync(roleRepository, unitOfWork);
         }
         finally
         {
@@ -197,6 +226,47 @@ public static class DatabaseInitializer
             })
             {
                 await unitTypeRepository.AddAsync(new ProductUnitType(new Name(unitName), true));
+            }
+
+            await unitOfWork.SaveChangesAsync();
+        }
+        finally
+        {
+            dbContext.ClearSeedAdminUserId();
+        }
+    }
+
+    private static async Task SeedTaxRatesIfMissingAsync(ApplicationDbContext dbContext, IServiceProvider sp)
+    {
+        ITaxRateRepository taxRateRepository = sp.GetRequiredService<ITaxRateRepository>();
+        IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
+
+        if (await taxRateRepository.AnyAsync(i => i.Id != null))
+        {
+            return;
+        }
+
+        Guid? adminId = await dbContext.Set<User>()
+            .Where(u => u.UserName.Value == "admin")
+            .Select(u => (Guid?)u.Id.Value)
+            .FirstOrDefaultAsync();
+
+        if (adminId is null)
+        {
+            return;
+        }
+
+        dbContext.SetSeedAdminUserId(adminId.Value);
+        try
+        {
+            foreach ((string name, decimal rate) in new[]
+            {
+                ("KDV %0", 0m),
+                ("KDV %10", 0.10m),
+                ("KDV %20", 0.20m)
+            })
+            {
+                await taxRateRepository.AddAsync(new TaxRate(new Name(name), rate, true));
             }
 
             await unitOfWork.SaveChangesAsync();

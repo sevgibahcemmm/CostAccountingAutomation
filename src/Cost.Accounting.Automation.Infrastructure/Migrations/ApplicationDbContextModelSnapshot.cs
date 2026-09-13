@@ -183,10 +183,6 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -207,16 +203,32 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(MAX)")
+                        .HasColumnName("Path");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("UserId");
 
@@ -272,12 +284,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Property<string>("QRCode")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
                         .HasColumnName("QRCode");
 
-                    b.Property<decimal>("TaxRate")
-                        .HasColumnType("money");
+                    b.Property<Guid>("TaxRateId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -299,56 +311,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("ProductUnitTypeId");
 
+                    b.HasIndex("TaxRateId");
+
                     b.HasIndex("WarehouseId");
 
                     b.ToTable("Products", (string)null);
-                });
-
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.ProductImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(MAX)")
-                        .HasColumnName("Path");
-
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductImages", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.ProductMovement", b =>
@@ -482,6 +449,44 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProductUnitTypes", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("Rate");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TaxRates", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Roles.Role", b =>
@@ -1083,11 +1088,15 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Photos.Photo", b =>
                 {
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", null)
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Cost.Accounting.Automation.Domain.Users.User", "User")
                         .WithMany("Photos")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("User");
                 });
@@ -1108,6 +1117,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasOne("Cost.Accounting.Automation.Domain.Products.ProductUnitType", "ProductUnitType")
                         .WithMany()
                         .HasForeignKey("ProductUnitTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.TaxRate", "TaxRate")
+                        .WithMany()
+                        .HasForeignKey("TaxRateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1164,15 +1179,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Navigation("ProductUnitType");
 
-                    b.Navigation("Warehouse");
-                });
+                    b.Navigation("TaxRate");
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.ProductImage", b =>
-                {
-                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", null)
-                        .WithMany("Images")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.ProductMovement", b =>
@@ -1270,6 +1279,31 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductUnitTypeId");
+                        });
+
+                    b.Navigation("Name")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRate", b =>
+                {
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Name", "Name", b1 =>
+                        {
+                            b1.Property<Guid>("TaxRateId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(120)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Name");
+
+                            b1.HasKey("TaxRateId");
+
+                            b1.ToTable("TaxRates");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TaxRateId");
                         });
 
                     b.Navigation("Name")

@@ -19,9 +19,6 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
 
     public ChartOfAccountsListForm() : base("Hesap Planı")
     {
-        Size = new Size(1240, 740);
-        MinimumSize = new Size(860, 520);
-        IconOptions.SvgImage = SvgIcons.Modules[6];
         InitializeComponent();
     }
 

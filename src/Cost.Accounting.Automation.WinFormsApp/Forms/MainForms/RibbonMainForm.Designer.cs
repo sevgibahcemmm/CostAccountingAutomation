@@ -39,6 +39,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             grpStok = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmUrunler = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmBirimCinsleri = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmKdvOranlari = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmStokGirisi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmStokCikisi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             grpSatinAlma = new DevExpress.XtraBars.Navigation.AccordionControlElement();
@@ -198,7 +199,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpStok
             // 
-            grpStok.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmUrunler, elmBirimCinsleri, elmStokGirisi, elmStokCikisi });
+            grpStok.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmUrunler, elmBirimCinsleri, elmKdvOranlari, elmStokGirisi, elmStokCikisi });
             grpStok.Expanded = true;
             grpStok.Name = "grpStok";
             grpStok.Tag = 2;
@@ -217,6 +218,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmBirimCinsleri.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmBirimCinsleri.Tag = 2;
             elmBirimCinsleri.Text = "Birim Cinsleri";
+            // 
+            // elmKdvOranlari
+            // 
+            elmKdvOranlari.Name = "elmKdvOranlari";
+            elmKdvOranlari.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmKdvOranlari.Tag = 2;
+            elmKdvOranlari.Text = "KDV Oranları";
             // 
             // elmStokGirisi
             // 
@@ -433,7 +441,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmMaliyetRaporlari;
         private DevExpress.XtraBars.Navigation.AccordionControlElement grpStok;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmUrunler;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmBirimCinsleri;
+private DevExpress.XtraBars.Navigation.AccordionControlElement elmBirimCinsleri;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmKdvOranlari;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmStokGirisi;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmStokCikisi;
         private DevExpress.XtraBars.Navigation.AccordionControlElement grpSatinAlma;

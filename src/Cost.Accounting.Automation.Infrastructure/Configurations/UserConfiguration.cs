@@ -26,6 +26,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasMany(i => i.Photos)
             .WithOne(i => i.User)
-            .HasForeignKey(i => i.UserId);
+            .HasForeignKey(i => i.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

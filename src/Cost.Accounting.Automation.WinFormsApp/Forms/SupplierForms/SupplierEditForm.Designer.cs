@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
 {
     partial class SupplierEditForm
@@ -40,6 +42,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
         private DevExpress.XtraEditors.TextEdit txtEmail;
         private DevExpress.XtraEditors.LabelControl lblFullAddress;
         private DevExpress.XtraEditors.MemoEdit memoAddress;
+
+        // Alan simgeleri
+        private DevExpress.XtraEditors.LabelControl lblIconName;
+        private DevExpress.XtraEditors.LabelControl lblIconTaxOffice;
+        private DevExpress.XtraEditors.LabelControl lblIconTaxNumber;
+        private DevExpress.XtraEditors.LabelControl lblIconPhone1;
+        private DevExpress.XtraEditors.LabelControl lblIconEmail;
 
         // Footer
         private DevExpress.XtraEditors.PanelControl pnlFooter;
@@ -91,6 +100,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             lblFullAddress = new DevExpress.XtraEditors.LabelControl();
             memoAddress = new DevExpress.XtraEditors.MemoEdit();
 
+            lblIconName = new DevExpress.XtraEditors.LabelControl();
+            lblIconTaxOffice = new DevExpress.XtraEditors.LabelControl();
+            lblIconTaxNumber = new DevExpress.XtraEditors.LabelControl();
+            lblIconPhone1 = new DevExpress.XtraEditors.LabelControl();
+            lblIconEmail = new DevExpress.XtraEditors.LabelControl();
+
             pnlFooter = new DevExpress.XtraEditors.PanelControl();
             pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
             btnSave = new DevExpress.XtraEditors.SimpleButton();
@@ -140,6 +155,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(32, 32);
             lblHeaderIcon.TabIndex = 2;
+            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.TruckIcon;
+            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             //
             // lblTitle
             //
@@ -188,6 +205,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             //
             // tabBasic
             //
+            tabBasic.Controls.Add(lblIconTaxNumber);
+            tabBasic.Controls.Add(lblIconTaxOffice);
+            tabBasic.Controls.Add(lblIconName);
             tabBasic.Controls.Add(memoDescription);
             tabBasic.Controls.Add(lblDescription);
             tabBasic.Controls.Add(chkActive);
@@ -197,6 +217,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             tabBasic.Controls.Add(lblTaxOffice);
             tabBasic.Controls.Add(txtName);
             tabBasic.Controls.Add(lblName);
+            tabBasic.ImageOptions.SvgImage = SvgIcons.TruckIcon;
+            tabBasic.ImageOptions.SvgImageSize = new Size(16, 16);
             tabBasic.Name = "tabBasic";
             tabBasic.Size = new Size(474, 297);
             tabBasic.Text = "Temel Bilgiler";
@@ -223,6 +245,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             txtName.Properties.Appearance.Options.UseFont = true;
             txtName.Properties.MaxLength = 200;
             txtName.Properties.NullText = "Örn. Anadolu Tedarik A.Ş.";
+            txtName.Properties.Padding = new Padding(26, 2, 2, 2);
             txtName.Size = new Size(434, 26);
             txtName.TabIndex = 1;
             //
@@ -247,6 +270,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             txtTaxOffice.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtTaxOffice.Properties.Appearance.Options.UseFont = true;
             txtTaxOffice.Properties.NullText = "Opsiyonel";
+            txtTaxOffice.Properties.Padding = new Padding(26, 2, 2, 2);
             txtTaxOffice.Size = new Size(207, 26);
             txtTaxOffice.TabIndex = 3;
             //
@@ -272,6 +296,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             txtTaxNumber.Properties.Appearance.Options.UseFont = true;
             txtTaxNumber.Properties.MaxLength = 11;
             txtTaxNumber.Properties.NullText = "Opsiyonel";
+            txtTaxNumber.Properties.Padding = new Padding(26, 2, 2, 2);
             txtTaxNumber.Size = new Size(207, 26);
             txtTaxNumber.TabIndex = 5;
             //
@@ -312,6 +337,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             //
             // tabContact
             //
+            tabContact.Controls.Add(lblIconEmail);
+            tabContact.Controls.Add(lblIconPhone1);
             tabContact.Controls.Add(memoAddress);
             tabContact.Controls.Add(lblFullAddress);
             tabContact.Controls.Add(txtEmail);
@@ -324,6 +351,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             tabContact.Controls.Add(lblDistrict);
             tabContact.Controls.Add(txtCity);
             tabContact.Controls.Add(lblCity);
+            tabContact.ImageOptions.SvgImage = SvgIcons.AtIcon;
+            tabContact.ImageOptions.SvgImageSize = new Size(16, 16);
             tabContact.Name = "tabContact";
             tabContact.Size = new Size(474, 297);
             tabContact.Text = "Adres & İletişim";
@@ -397,6 +426,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             txtPhone1.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtPhone1.Properties.Appearance.Options.UseFont = true;
             txtPhone1.Properties.NullText = "0(5xx) xxx xx xx";
+            txtPhone1.Properties.Padding = new Padding(26, 2, 2, 2);
             txtPhone1.Size = new Size(207, 26);
             txtPhone1.TabIndex = 5;
             //
@@ -445,6 +475,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             txtEmail.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtEmail.Properties.Appearance.Options.UseFont = true;
             txtEmail.Properties.NullText = "info@firma.com";
+            txtEmail.Properties.Padding = new Padding(26, 2, 2, 2);
             txtEmail.Size = new Size(434, 26);
             txtEmail.TabIndex = 9;
             //
@@ -471,6 +502,61 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             memoAddress.Properties.NullText = "Mahalle, cadde, no, kat...";
             memoAddress.Size = new Size(434, 72);
             memoAddress.TabIndex = 11;
+            //
+            // lblIconName
+            //
+            lblIconName.Cursor = Cursors.Default;
+            lblIconName.Location = new Point(24, 44);
+            lblIconName.Name = "lblIconName";
+            lblIconName.Size = new Size(18, 18);
+            lblIconName.ImageOptions.SvgImage = SvgIcons.TruckIcon;
+            lblIconName.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconName.Tag = txtName;
+            lblIconName.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconTaxOffice
+            //
+            lblIconTaxOffice.Cursor = Cursors.Default;
+            lblIconTaxOffice.Location = new Point(24, 102);
+            lblIconTaxOffice.Name = "lblIconTaxOffice";
+            lblIconTaxOffice.Size = new Size(18, 18);
+            lblIconTaxOffice.ImageOptions.SvgImage = SvgIcons.StarIcon;
+            lblIconTaxOffice.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconTaxOffice.Tag = txtTaxOffice;
+            lblIconTaxOffice.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconTaxNumber
+            //
+            lblIconTaxNumber.Cursor = Cursors.Default;
+            lblIconTaxNumber.Location = new Point(251, 102);
+            lblIconTaxNumber.Name = "lblIconTaxNumber";
+            lblIconTaxNumber.Size = new Size(18, 18);
+            lblIconTaxNumber.ImageOptions.SvgImage = SvgIcons.StarIcon;
+            lblIconTaxNumber.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconTaxNumber.Tag = txtTaxNumber;
+            lblIconTaxNumber.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconPhone1
+            //
+            lblIconPhone1.Cursor = Cursors.Default;
+            lblIconPhone1.Location = new Point(24, 102);
+            lblIconPhone1.Name = "lblIconPhone1";
+            lblIconPhone1.Size = new Size(18, 18);
+            lblIconPhone1.ImageOptions.SvgImage = SvgIcons.MailIcon;
+            lblIconPhone1.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconPhone1.Tag = txtPhone1;
+            lblIconPhone1.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconEmail
+            //
+            lblIconEmail.Cursor = Cursors.Default;
+            lblIconEmail.Location = new Point(24, 160);
+            lblIconEmail.Name = "lblIconEmail";
+            lblIconEmail.Size = new Size(18, 18);
+            lblIconEmail.ImageOptions.SvgImage = SvgIcons.AtIcon;
+            lblIconEmail.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconEmail.Tag = txtEmail;
+            lblIconEmail.MouseDown += FieldIcon_MouseDown;
             //
             // pnlFooter
             //
@@ -507,6 +593,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             btnCancel.Size = new Size(104, 32);
             btnCancel.TabIndex = 1;
             btnCancel.Text = "İptal";
+            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
             // btnSave
             //
@@ -523,6 +612,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             btnSave.Size = new Size(148, 32);
             btnSave.TabIndex = 2;
             btnSave.Text = "Kaydet";
+            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
             // SupplierEditForm
             //
@@ -538,6 +630,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             MinimizeBox = false;
             Name = "SupplierEditForm";
             StartPosition = FormStartPosition.CenterParent;
+            IconOptions.SvgImage = SvgIcons.TruckIcon;
             Text = "Tedarikçi";
             ((System.ComponentModel.ISupportInitialize)pnlHeader).EndInit();
             pnlHeader.ResumeLayout(false);

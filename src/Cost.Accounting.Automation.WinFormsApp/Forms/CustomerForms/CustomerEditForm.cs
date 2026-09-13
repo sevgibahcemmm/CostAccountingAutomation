@@ -1,11 +1,9 @@
-using System.Drawing;
 using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Customers;
 using Cost.Accounting.Automation.Domain.Shared;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
 using FluentValidation.Results;
 using TS.MediatR;
@@ -25,7 +23,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
         {
             InitializeComponent();
             _editing = existing;
-            IconOptions.SvgImage = SvgIcons.HeaderUserIcon;
 
             Text = _editing is null ? "Yeni Müşteri" : "Müşteri Düzenle";
             lblTitle.Text = Text;
@@ -34,55 +31,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
                 : "Müşteri bilgilerini güncelleyin";
             chkActive.Checked = _editing?.IsActive ?? true;
 
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.HeaderUserIcon;
-            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
-
-            StyleTabs();
-            StyleButtons();
-
-            AddFieldIcon(tabBasic, txtName, SvgIcons.UserIcon);
-            AddFieldIcon(tabBasic, txtTaxOffice, SvgIcons.StarIcon);
-            AddFieldIcon(tabBasic, txtTaxNumber, SvgIcons.StarIcon);
-            AddFieldIcon(tabContact, txtPhone1, SvgIcons.MailIcon);
-            AddFieldIcon(tabContact, txtEmail, SvgIcons.AtIcon);
-
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
             Load += CustomerEditForm_Load;
         }
 
-        private static void AddFieldIcon(Control parent, TextEdit editor, SvgImage icon)
+        private void FieldIcon_MouseDown(object? sender, MouseEventArgs e)
         {
-            editor.Properties.Padding = new Padding(26, 2, 2, 2);
-            var label = new LabelControl
+            if (sender is LabelControl icon && icon.Tag is Control editor)
             {
-                Parent = parent,
-                Name = "Icon_" + editor.Name,
-                Location = new Point(editor.Left + 4, editor.Top + 4),
-                Size = new Size(18, 18),
-                Cursor = Cursors.Default,
-            };
-            label.ImageOptions.SvgImage = icon;
-            label.ImageOptions.SvgImageSize = new Size(18, 18);
-            label.MouseDown += (_, _) => editor.Focus();
-        }
-
-        private void StyleTabs()
-        {
-            tabBasic.ImageOptions.SvgImage = SvgIcons.UserIcon;
-            tabBasic.ImageOptions.SvgImageSize = new Size(16, 16);
-            tabContact.ImageOptions.SvgImage = SvgIcons.AtIcon;
-            tabContact.ImageOptions.SvgImageSize = new Size(16, 16);
-        }
-
-        private void StyleButtons()
-        {
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
-            btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
-            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
-            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+                editor.Focus();
+            }
         }
 
         private void CustomerEditForm_Load(object? sender, EventArgs e)

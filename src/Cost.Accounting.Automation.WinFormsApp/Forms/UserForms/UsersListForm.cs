@@ -3,6 +3,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using Cost.Accounting.Automation.Application.Users;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Data;
 using DevExpress.Utils;
@@ -69,21 +70,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
                     {
                         if (view.GetRow(hi.RowHandle) is UserDto user)
                         {
-                            Image img = BuildUserImage(user);
-                            if (img != null)
-                            {
-                                SuperToolTip superTip = new();
-                                ToolTipTitleItem titleItem = new() { Text = user.FullName };
+                            SuperToolTip superTip = new();
+                            ToolTipTitleItem titleItem = new() { Text = user.FullName };
+                            superTip.Items.Add(titleItem);
 
-                                ToolTipItem item = new();
-                                item.Image = new Bitmap(img, new Size(120, 120));
-
-                                superTip.Items.Add(titleItem);
-                                superTip.Items.Add(item);
-
-                                e.Info = new ToolTipControlInfo(hi.RowHandle.ToString() + hi.Column.FieldName, string.Empty);
-                                e.Info.SuperTip = superTip;
-                            }
+                            e.Info = new ToolTipControlInfo(hi.RowHandle.ToString() + hi.Column.FieldName, string.Empty);
+                            e.Info.SuperTip = superTip;
                         }
                     }
                 }
@@ -156,14 +148,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 
         private static Image? TryLoadPhoto(UserDto user)
         {
-            if (user.DefaultPhoto is not { Length: > 0 })
+            if (string.IsNullOrWhiteSpace(user.DefaultPhotoPath))
             {
                 return null;
             }
 
             try
             {
-                using var ms = new MemoryStream(user.DefaultPhoto);
+                string fullPath = StorageRoot.Resolve(user.DefaultPhotoPath);
+                if (!File.Exists(fullPath))
+                {
+                    return null;
+                }
+
+                using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+                using var ms = new MemoryStream();
+                fs.CopyTo(ms);
                 return new Bitmap(ms);
             }
             catch

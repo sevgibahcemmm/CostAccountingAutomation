@@ -6,9 +6,7 @@ using Cost.Accounting.Automation.Application.Roles;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
-using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraTreeList;
 using DevExpress.XtraTreeList.Nodes;
 using FluentValidation.Results;
@@ -41,7 +39,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             _editing = existing;
             _isSysAdmin = existing is not null && string.Equals(existing.Name, "sys_admin", StringComparison.OrdinalIgnoreCase);
 
-            IconOptions.SvgImage = SvgIcons.ShieldIcon;
             Text = _editing is null ? "Yeni Rol" : "Rol Düzenle";
             lblTitle.Text = Text;
 
@@ -64,22 +61,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             }
 
             chkActive.Checked = _editing?.IsActive ?? true;
-
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.ShieldIcon;
-            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
-
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
-            btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
-            btnSave.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
-            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnCancel.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnGroupSelectAll.ImageOptions.SvgImage = SvgIcons.CheckIcon;
-            btnGroupSelectAll.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnGroupSelectAll.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnGroupClear.ImageOptions.SvgImage = SvgIcons.CloseIcon;
-            btnGroupClear.ImageOptions.SvgImageSize = new Size(14, 14);
-            btnGroupClear.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
 
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();

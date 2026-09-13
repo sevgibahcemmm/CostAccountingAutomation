@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
     public partial class ProductEditForm
@@ -20,11 +22,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private DevExpress.XtraEditors.LabelControl lblName;
         private DevExpress.XtraEditors.TextEdit txtProductCode;
         private DevExpress.XtraEditors.LabelControl lblCode;
+private DevExpress.XtraEditors.LabelControl lblQrValue;
+        private DevExpress.XtraEditors.LabelControl lblBarcodeValue;
         private DevExpress.XtraEditors.LabelControl lblBarcode;
         private DevExpress.XtraEditors.PictureEdit picBarcode;
         private DevExpress.XtraEditors.LabelControl lblQR;
         private DevExpress.XtraEditors.PictureEdit picQR;
-        private DevExpress.XtraEditors.SpinEdit spinTaxRate;
+        private DevExpress.XtraEditors.SearchLookUpEdit lookUpTaxRate;
         private DevExpress.XtraEditors.LabelControl lblTax;
         private DevExpress.XtraEditors.SpinEdit spinMinLevel;
         private DevExpress.XtraEditors.LabelControl lblMinLevel;
@@ -76,6 +80,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProductEditForm));
             pnlHeader = new DevExpress.XtraEditors.PanelControl();
             lblSubtitle = new DevExpress.XtraEditors.LabelControl();
             lblTitle = new DevExpress.XtraEditors.LabelControl();
@@ -102,7 +107,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             lblQR = new DevExpress.XtraEditors.LabelControl();
             picBarcode = new DevExpress.XtraEditors.PictureEdit();
             lblBarcode = new DevExpress.XtraEditors.LabelControl();
-            spinTaxRate = new DevExpress.XtraEditors.SpinEdit();
+            lblBarcodeValue = new DevExpress.XtraEditors.LabelControl();
+            lblQrValue = new DevExpress.XtraEditors.LabelControl();
+            lookUpTaxRate = new DevExpress.XtraEditors.SearchLookUpEdit();
             lblTax = new DevExpress.XtraEditors.LabelControl();
             txtProductCode = new DevExpress.XtraEditors.TextEdit();
             lblCode = new DevExpress.XtraEditors.LabelControl();
@@ -157,7 +164,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             ((System.ComponentModel.ISupportInitialize)spinMinLevel.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picQR.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picBarcode.Properties).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)spinTaxRate.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpTaxRate.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtProductCode.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtName.Properties).BeginInit();
             tabPrices.SuspendLayout();
@@ -223,6 +230,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(0, 13);
             lblHeaderIcon.TabIndex = 0;
+            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.BarcodeIcon;
+            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             // 
             // pnlHeaderLine
             // 
@@ -256,6 +265,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnCancel.Size = new Size(112, 34);
             btnCancel.TabIndex = 0;
             btnCancel.Text = "Vazgeç";
+            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnSave
             // 
@@ -270,6 +282,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnSave.Size = new Size(110, 34);
             btnSave.TabIndex = 1;
             btnSave.Text = "Kaydet";
+            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // tabMain
             // 
@@ -301,7 +316,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             tabBasic.Controls.Add(lblQR);
             tabBasic.Controls.Add(picBarcode);
             tabBasic.Controls.Add(lblBarcode);
-            tabBasic.Controls.Add(spinTaxRate);
+            tabBasic.Controls.Add(lblBarcodeValue);
+            tabBasic.Controls.Add(lblQrValue);
+            tabBasic.Controls.Add(lookUpTaxRate);
             tabBasic.Controls.Add(lblTax);
             tabBasic.Controls.Add(txtProductCode);
             tabBasic.Controls.Add(lblCode);
@@ -310,6 +327,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             tabBasic.Name = "tabBasic";
             tabBasic.Size = new Size(751, 553);
             tabBasic.Text = "Temel Bilgiler";
+            tabBasic.ImageOptions.SvgImage = SvgIcons.Modules[2];
+            tabBasic.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // chkActive
             // 
@@ -350,9 +369,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             // 
             btnAddUnitType.Location = new Point(629, 147);
             btnAddUnitType.Name = "btnAddUnitType";
-            btnAddUnitType.Size = new Size(52, 30);
+            btnAddUnitType.Size = new Size(79, 20);
             btnAddUnitType.TabIndex = 18;
             btnAddUnitType.Text = "Yeni";
+            btnAddUnitType.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddUnitType.ImageOptions.SvgImageSize = new Size(14, 14);
+            btnAddUnitType.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // cmbCategory
             // 
@@ -459,14 +481,44 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             lblBarcode.TabIndex = 6;
             lblBarcode.Text = "Barkod";
             // 
-            // spinTaxRate
+            // lblBarcodeValue
             // 
-            spinTaxRate.EditValue = new decimal(new int[] { 0, 0, 0, 0 });
-            spinTaxRate.Location = new Point(628, 94);
-            spinTaxRate.Name = "spinTaxRate";
-            spinTaxRate.Properties.MaxValue = new decimal(new int[] { 100, 0, 0, 0 });
-            spinTaxRate.Size = new Size(80, 20);
-            spinTaxRate.TabIndex = 5;
+            lblBarcodeValue.Appearance.Font = new Font("Segoe UI", 8.5F);
+            lblBarcodeValue.Appearance.ForeColor = Color.FromArgb(80, 90, 105);
+            lblBarcodeValue.Appearance.Options.UseFont = true;
+            lblBarcodeValue.Appearance.Options.UseForeColor = true;
+            lblBarcodeValue.Appearance.Options.UseTextOptions = true;
+            lblBarcodeValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+            lblBarcodeValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblBarcodeValue.Location = new Point(28, 458);
+            lblBarcodeValue.Name = "lblBarcodeValue";
+            lblBarcodeValue.Size = new Size(393, 15);
+            lblBarcodeValue.TabIndex = 22;
+            lblBarcodeValue.Text = "--";
+            // 
+            // lblQrValue
+            // 
+            lblQrValue.Appearance.Font = new Font("Segoe UI", 8F);
+            lblQrValue.Appearance.ForeColor = Color.FromArgb(80, 90, 105);
+            lblQrValue.Appearance.Options.UseFont = true;
+            lblQrValue.Appearance.Options.UseForeColor = true;
+            lblQrValue.Appearance.Options.UseTextOptions = true;
+            lblQrValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+            lblQrValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblQrValue.Location = new Point(501, 526);
+            lblQrValue.Name = "lblQrValue";
+            lblQrValue.Size = new Size(207, 15);
+            lblQrValue.TabIndex = 23;
+            lblQrValue.Text = "--";
+            // 
+            // lookUpTaxRate
+            // 
+            lookUpTaxRate.Location = new Point(628, 94);
+            lookUpTaxRate.Name = "lookUpTaxRate";
+            lookUpTaxRate.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
+            lookUpTaxRate.Properties.NullText = "";
+            lookUpTaxRate.Size = new Size(120, 20);
+            lookUpTaxRate.TabIndex = 5;
             // 
             // lblTax
             // 
@@ -521,8 +573,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             tabPrices.Controls.Add(gridPrices);
             tabPrices.Controls.Add(pnlPriceButtons);
             tabPrices.Name = "tabPrices";
-            tabPrices.Size = new Size(961, 553);
+            tabPrices.Size = new Size(751, 553);
             tabPrices.Text = "Fiyatlar";
+            tabPrices.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            tabPrices.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // gridPrices
             // 
@@ -531,7 +585,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             gridPrices.MainView = gridPriceView;
             gridPrices.Name = "gridPrices";
             gridPrices.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] { riCombo, riSpin, riDate, riDateNull });
-            gridPrices.Size = new Size(961, 503);
+            gridPrices.Size = new Size(751, 503);
             gridPrices.TabIndex = 1;
             gridPrices.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridPriceView });
             // 
@@ -586,7 +640,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             pnlPriceButtons.Dock = DockStyle.Top;
             pnlPriceButtons.Location = new Point(0, 0);
             pnlPriceButtons.Name = "pnlPriceButtons";
-            pnlPriceButtons.Size = new Size(961, 50);
+            pnlPriceButtons.Size = new Size(751, 50);
             pnlPriceButtons.TabIndex = 0;
             // 
             // btnRemovePrice
@@ -596,6 +650,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnRemovePrice.Size = new Size(110, 32);
             btnRemovePrice.TabIndex = 1;
             btnRemovePrice.Text = "Seçiliyi Sil";
+            btnRemovePrice.ImageOptions.SvgImage = SvgIcons.TrashIcon;
+            btnRemovePrice.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnRemovePrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnAddPrice
             // 
@@ -604,13 +661,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnAddPrice.Size = new Size(110, 32);
             btnAddPrice.TabIndex = 0;
             btnAddPrice.Text = "Fiyat Ekle";
+            btnAddPrice.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddPrice.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnAddPrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // tabMovements
             // 
             tabMovements.Controls.Add(gridMovements);
             tabMovements.Name = "tabMovements";
-            tabMovements.Size = new Size(961, 553);
+            tabMovements.Size = new Size(751, 553);
             tabMovements.Text = "Stok Hareketleri";
+            tabMovements.ImageOptions.SvgImage = SvgIcons.TrendBlueIcon;
+            tabMovements.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // gridMovements
             // 
@@ -618,7 +680,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             gridMovements.Location = new Point(0, 0);
             gridMovements.MainView = gridMovementView;
             gridMovements.Name = "gridMovements";
-            gridMovements.Size = new Size(961, 553);
+            gridMovements.Size = new Size(751, 553);
             gridMovements.TabIndex = 0;
             gridMovements.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridMovementView });
             // 
@@ -659,8 +721,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             tabImages.Controls.Add(gridImages);
             tabImages.Controls.Add(pnlImageButtons);
             tabImages.Name = "tabImages";
-            tabImages.Size = new Size(961, 553);
+            tabImages.Size = new Size(751, 553);
             tabImages.Text = "Resimler";
+            tabImages.ImageOptions.SvgImage = SvgIcons.PhotoIcon;
+            tabImages.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // gridImages
             // 
@@ -669,7 +733,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             gridImages.MainView = gridImageView;
             gridImages.Name = "gridImages";
             gridImages.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] { riCheck });
-            gridImages.Size = new Size(961, 503);
+            gridImages.Size = new Size(751, 503);
             gridImages.TabIndex = 1;
             gridImages.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridImageView });
             // 
@@ -701,7 +765,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             pnlImageButtons.Dock = DockStyle.Top;
             pnlImageButtons.Location = new Point(0, 0);
             pnlImageButtons.Name = "pnlImageButtons";
-            pnlImageButtons.Size = new Size(961, 50);
+            pnlImageButtons.Size = new Size(751, 50);
             pnlImageButtons.TabIndex = 0;
             // 
             // btnSetPrimary
@@ -711,6 +775,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnSetPrimary.Size = new Size(80, 32);
             btnSetPrimary.TabIndex = 2;
             btnSetPrimary.Text = "Ana Yap";
+            btnSetPrimary.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSetPrimary.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnSetPrimary.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnRemoveImage
             // 
@@ -719,6 +786,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnRemoveImage.Size = new Size(80, 32);
             btnRemoveImage.TabIndex = 1;
             btnRemoveImage.Text = "Kaldır";
+            btnRemoveImage.ImageOptions.SvgImage = SvgIcons.TrashIcon;
+            btnRemoveImage.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnRemoveImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnAddImage
             // 
@@ -727,6 +797,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnAddImage.Size = new Size(110, 32);
             btnAddImage.TabIndex = 0;
             btnAddImage.Text = "Resim Ekle";
+            btnAddImage.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddImage.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnAddImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // ProductEditForm
             // 
@@ -761,7 +834,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             ((System.ComponentModel.ISupportInitialize)spinMinLevel.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)picQR.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)picBarcode.Properties).EndInit();
-            ((System.ComponentModel.ISupportInitialize)spinTaxRate.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpTaxRate.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtProductCode.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtName.Properties).EndInit();
             tabPrices.ResumeLayout(false);

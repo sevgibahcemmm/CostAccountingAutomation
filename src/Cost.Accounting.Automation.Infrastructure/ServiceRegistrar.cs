@@ -1,5 +1,7 @@
-﻿using Cost.Accounting.Automation.Infrastructure.Context;
+﻿using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Infrastructure.Context;
 using Cost.Accounting.Automation.Infrastructure.Options;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using GenericRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +23,8 @@ public static class ServiceRegistrar
         });
 
         services.AddScoped<IUnitOfWork>(srv => srv.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IBarcodeGeneratorService, BarcodeGeneratorService>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         services.Scan(action => action
             .FromAssemblies(typeof(ServiceRegistrar).Assembly)

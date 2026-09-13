@@ -3,6 +3,12 @@ using Cost.Accounting.Automation.Domain.Users;
 
 namespace Cost.Accounting.Automation.Domain.Photos;
 
+public enum PhotoOwnerType
+{
+    User = 1,
+    Product = 2
+}
+
 public sealed class Photo : Entity
 {
     private Photo()
@@ -10,29 +16,32 @@ public sealed class Photo : Entity
     }
 
     public Photo(
-        IdentityId userId,
+        PhotoOwnerType ownerType,
+        IdentityId ownerId,
         string fileName,
         string contentType,
-        byte[] data,
+        string path,
         bool isDefault)
     {
-        SetUserId(userId);
+        OwnerType = ownerType;
+        SetOwnerId(ownerId);
         SetFileName(fileName);
         SetContentType(contentType);
-        SetData(data);
+        SetPath(path);
         SetDefault(isDefault);
     }
 
-    public IdentityId UserId { get; private set; } = default!;
-    public User User { get; private set; } = default!;
+    public PhotoOwnerType OwnerType { get; private set; }
+    public IdentityId? UserId { get; private set; }
+    public User? User { get; private set; }
     public string FileName { get; private set; } = default!;
     public string ContentType { get; private set; } = default!;
-    public byte[] Data { get; private set; } = default!;
+    public string Path { get; private set; } = default!;
     public bool IsDefault { get; private set; }
 
-    public void SetUserId(IdentityId userId)
+    private void SetOwnerId(IdentityId ownerId)
     {
-        UserId = userId;
+        UserId = OwnerType == PhotoOwnerType.User ? ownerId : null;
     }
 
     public void SetFileName(string fileName)
@@ -45,9 +54,9 @@ public sealed class Photo : Entity
         ContentType = contentType;
     }
 
-    public void SetData(byte[] data)
+    public void SetPath(string path)
     {
-        Data = data;
+        Path = path;
     }
 
     public void SetDefault(bool isDefault)

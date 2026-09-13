@@ -36,7 +36,7 @@ public sealed class UserDto : EntityDto
     public Guid CompanyId { get; set; }
     public Guid RoleId { get; set; }
     public int PhotoCount { get; set; }
-    public byte[]? DefaultPhoto { get; set; }
+    public string? DefaultPhotoPath { get; set; }
 }
 
 public static class UserExtensions
@@ -73,10 +73,10 @@ public static class UserExtensions
                 UpdatedFullName = s.UpdatedUser != null ? s.UpdatedUser.FullName.Value : null,
                 TRIdentityNumber = s.Entity.TRIdentityNumber != null ? s.Entity.TRIdentityNumber.Value : null,
                 PhotoCount = s.Entity.Photos.Count(),
-                DefaultPhoto = s.Entity.Photos
+                DefaultPhotoPath = s.Entity.Photos
                     .OrderByDescending(p => p.IsDefault)
                     .ThenBy(p => p.CreatedAt)
-                    .Select(p => p.Data)
+                    .Select(p => p.Path)
                     .FirstOrDefault(),
             });
 

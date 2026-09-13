@@ -7,7 +7,6 @@ using Cost.Accounting.Automation.Application.Users;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
 using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraGrid.Columns;
@@ -33,7 +32,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         {
             InitializeComponent();
             _editing = existing;
-            IconOptions.SvgImage = SvgIcons.Modules[5];
 
             Text = _editing is null ? "Yeni Kullanıcı" : "Kullanıcı Düzenle";
             lblTitle.Text = Text;
@@ -43,20 +41,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblPasswordNote.Visible = _editing is null;
             chkActive.Checked = _editing?.IsActive ?? true;
 
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.HeaderUserIcon;
-            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
-
-            StyleTabs();
-            StyleButtons();
-
-            AddFieldIcon(tabPersonal, txtFirstName, SvgIcons.UserIcon);
-            AddFieldIcon(tabPersonal, txtLastName, SvgIcons.UserIcon);
-            AddFieldIcon(tabPersonal, txtUserName, SvgIcons.AtIcon);
-            AddFieldIcon(tabPersonal, txtEmail, SvgIcons.MailIcon);
-            AddFieldIcon(tabAccount, txtTcNo, SvgIcons.IdCardIcon);
-            AddFieldIcon(tabAccount, cmbCompany, SvgIcons.BuildingIcon);
-            AddFieldIcon(tabAccount, cmbRole, SvgIcons.KeyIcon);
-
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
             btnAddPhoto.Click += BtnAddPhoto_Click;
@@ -65,60 +49,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             Load += UserEditForm_Load;
         }
 
-        private static void AddFieldIcon(Control parent, TextEdit editor, SvgImage icon)
+        private void FieldIcon_MouseDown(object? sender, MouseEventArgs e)
         {
-            editor.Properties.Padding = new Padding(26, 2, 2, 2);
-            AddFieldIconCore(parent, editor, icon);
-        }
-
-        private static void AddFieldIcon(Control parent, SearchLookUpEdit editor, SvgImage icon)
-        {
-            editor.Properties.Padding = new Padding(26, 2, 2, 2);
-            AddFieldIconCore(parent, editor, icon);
-        }
-
-        private static void AddFieldIconCore(Control parent, Control editor, SvgImage icon)
-        {
-            var label = new LabelControl
+            if (sender is LabelControl icon && icon.Tag is Control editor)
             {
-                Parent = parent,
-                Name = "Icon_" + editor.Name,
-                Location = new Point(editor.Left + 4, editor.Top + 4),
-                Size = new Size(18, 18),
-                Cursor = Cursors.Default,
-            };
-            label.ImageOptions.SvgImage = icon;
-            label.ImageOptions.SvgImageSize = new Size(18, 18);
-            label.MouseDown += (_, _) => editor.Focus();
-        }
-
-        private void StyleTabs()
-        {
-            tabPersonal.ImageOptions.SvgImage = SvgIcons.UserIcon;
-            tabPersonal.ImageOptions.SvgImageSize = new Size(16, 16);
-            tabAccount.ImageOptions.SvgImage = SvgIcons.ShieldIcon;
-            tabAccount.ImageOptions.SvgImageSize = new Size(16, 16);
-            tabPhotos.ImageOptions.SvgImage = SvgIcons.PhotoIcon;
-            tabPhotos.ImageOptions.SvgImageSize = new Size(16, 16);
-        }
-
-        private void StyleButtons()
-        {
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
-            btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
-            btnSave.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
-            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnCancel.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnAddPhoto.ImageOptions.SvgImage = SvgIcons.PlusIcon;
-            btnAddPhoto.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnAddPhoto.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnSetDefault.ImageOptions.SvgImage = SvgIcons.StarIcon;
-            btnSetDefault.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnSetDefault.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnRemovePhoto.ImageOptions.SvgImage = SvgIcons.TrashIcon;
-            btnRemovePhoto.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnRemovePhoto.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
+                editor.Focus();
+            }
         }
 
         private async void UserEditForm_Load(object? sender, EventArgs e)
@@ -156,7 +92,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 
             foreach (PhotoDto photo in photos.Data)
             {
-                _photos.Add(new PhotoInput(photo.FileName, photo.ContentType, photo.Data, photo.IsDefault));
+                string fullPath = StorageRoot.Resolve(photo.Path);
+                if (!File.Exists(fullPath))
+                {
+                    continue;
+                }
+
+                byte[] data = await File.ReadAllBytesAsync(fullPath);
+                _photos.Add(new PhotoInput(photo.FileName, photo.ContentType, data, photo.IsDefault));
             }
             RefreshPhotoList();
         }

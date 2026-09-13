@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Products;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
-using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
 using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraEditors.Mask;
@@ -36,9 +36,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private readonly BindingList<ImageRowVm> _images = [];
         private readonly List<ProductMovementDto> _movements = [];
         private List<ProductUnitTypeDto> _unitTypes = [];
+        private List<TaxRateDto> _taxRates = [];
         private List<ChartOfAccountLookUpDto> _accounts = [];
-        private string _nextProductCode = "";
+        private string _productCode = string.Empty;
+
         private bool _isPopulating;
+        private readonly System.Windows.Forms.Timer _previewDebounce = new() { Interval = 500 };
 
         public ProductEditForm() : this(null)
         {
@@ -52,13 +55,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             Text = _editing is null ? "Yeni Ürün" : "Ürün Düzenle";
             lblTitle.Text = Text;
             lblSubtitle.Text = _editing is null ? "Yeni ürün kartı oluşturmak için bilgileri doldurun" : "Ürün bilgilerini güncelleyin";
-            IconOptions.SvgImage = SvgIcons.Modules[2];
 
             gridPrices.DataSource = _prices;
             gridImages.DataSource = _images;
             ConfigureImageColumns();
 
-            ApplyIcons();
             WireEvents();
         }
 
@@ -104,41 +105,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             gridImageView.RowHeight = 65;
         }
 
-        private static void SetButtonImage(SimpleButton btn, SvgImage icon, int size)
-        {
-            btn.ImageOptions.SvgImage = icon;
-            btn.ImageOptions.SvgImageSize = new Size(size, size);
-            btn.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-        }
-
-        private void ApplyIcons()
-        {
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.BarcodeIcon;
-            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
-            picBarcode.SvgImage = SvgIcons.BarcodeIcon;
-            picBarcode.SvgImageSize = new Size(56, 22);
-            picQR.SvgImage = SvgIcons.QRIcon;
-            picQR.SvgImageSize = new Size(32, 22);
-
-            SetButtonImage(btnSave, SvgIcons.CheckIcon, 20);
-            SetButtonImage(btnCancel, SvgIcons.CloseIcon, 16);
-            SetButtonImage(btnAddUnitType, SvgIcons.PlusIcon, 14);
-            SetButtonImage(btnAddPrice, SvgIcons.PlusIcon, 18);
-            SetButtonImage(btnRemovePrice, SvgIcons.TrashIcon, 18);
-            SetButtonImage(btnAddImage, SvgIcons.PlusIcon, 18);
-            SetButtonImage(btnRemoveImage, SvgIcons.TrashIcon, 18);
-            SetButtonImage(btnSetPrimary, SvgIcons.CheckIcon, 18);
-
-            tabBasic.ImageOptions.SvgImage = SvgIcons.Modules[2];
-            tabBasic.ImageOptions.SvgImageSize = new Size(16, 16);
-            tabPrices.ImageOptions.SvgImage = SvgIcons.TagIcon;
-            tabPrices.ImageOptions.SvgImageSize = new Size(16, 16);
-            tabMovements.ImageOptions.SvgImage = SvgIcons.TrendBlueIcon;
-            tabMovements.ImageOptions.SvgImageSize = new Size(16, 16);
-            tabImages.ImageOptions.SvgImage = SvgIcons.PhotoIcon;
-            tabImages.ImageOptions.SvgImageSize = new Size(16, 16);
-        }
-
         private void WireEvents()
         {
             btnSave.Click += BtnSave_Click;
@@ -146,6 +112,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnAddUnitType.Click += BtnAddUnitType_Click;
             cmbWarehouse.EditValueChanged += CmbWarehouse_EditValueChanged;
             cmbCategory.EditValueChanged += CmbCategory_EditValueChanged;
+            txtName.EditValueChanged += (_, _) => RestartPreviewDebounce();
+            lookUpTaxRate.EditValueChanged += (_, _) => RestartPreviewDebounce();
+            cmbUnitType.EditValueChanged += (_, _) => RestartPreviewDebounce();
+            _previewDebounce.Tick += async (_, _) =>
+            {
+                _previewDebounce.Stop();
+                await GenerateBarcodePreviewAsync();
+            };
             btnAddPrice.Click += BtnAddPrice_Click;
             btnRemovePrice.Click += (_, _) => { if (gridPriceView.FocusedRowHandle >= 0) _prices.RemoveAt(gridPriceView.FocusedRowHandle); };
             btnAddImage.Click += BtnAddImage_Click;
@@ -170,6 +144,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 cmbWarehouse.Properties.View.Columns.Clear();
                 cmbCategory.Properties.View.Columns.Clear();
                 cmbUnitType.Properties.View.Columns.Clear();
+                lookUpTaxRate.Properties.View.Columns.Clear();
 
                 await LoadLookupsAsync();
 
@@ -195,6 +170,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
             _unitTypes = (await mediator.Send(new ProductUnitTypeGetAllQuery(), CancellationToken.None)).ToList();
+            _taxRates = (await mediator.Send(new TaxRateGetAllQuery(), CancellationToken.None)).ToList();
             _accounts = (await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [];
 
             List<ChartOfAccountLookUpDto> warehouses = _accounts.Where(a => a.Type == ChartOfAccountType.Warehouse).ToList();
@@ -203,6 +179,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             ConfigureLookUp(cmbCategory, new List<ChartOfAccountLookUpDto>(), nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Kategori", 200);
             cmbCategory.Enabled = false;
             ConfigureLookUp(cmbUnitType, _unitTypes, nameof(ProductUnitTypeDto.Id), nameof(ProductUnitTypeDto.Name), "Birim Cinsi", 120);
+            ConfigureLookUp(lookUpTaxRate, _taxRates, nameof(TaxRateDto.Id), nameof(TaxRateDto.Display), "KDV Oranı", 120);
         }
 
         private static void ConfigureLookUp(SearchLookUpEdit editor, object dataSource, string valueMember, string displayMember, string caption, int width)
@@ -311,16 +288,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 return;
             }
 
-            txtName.Text = full.Name;
             txtProductCode.Text = full.ProductCode;
-            _nextProductCode = full.ProductCode;
+            _productCode = full.ProductCode;
             picBarcode.ToolTip = string.IsNullOrWhiteSpace(full.Barcode) ? "Barkod" : "Barkod: " + full.Barcode;
-            picQR.ToolTip = string.IsNullOrWhiteSpace(full.QRCode) ? "Karekod" : "Karekod: " + full.QRCode;
-            spinTaxRate.EditValue = full.TaxRate * 100;
-            spinMinLevel.EditValue = full.MinimumProductLevel;
+            picQR.ToolTip = string.IsNullOrWhiteSpace(full.QRCode) ? "Karekod" : full.QRCode;
             _isPopulating = true;
             try
             {
+                txtName.Text = full.Name;
+                lookUpTaxRate.EditValue = full.TaxRateId;
+                spinMinLevel.EditValue = full.MinimumProductLevel;
+                cmbUnitType.EditValue = full.ProductUnitTypeId;
                 cmbWarehouse.EditValue = full.WarehouseId;
                 LoadCategoriesForWarehouse(full.WarehouseId);
                 cmbCategory.EditValue = full.CategoryId;
@@ -329,7 +307,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             {
                 _isPopulating = false;
             }
-            cmbUnitType.EditValue = full.ProductUnitTypeId;
             memoDescription.Text = full.Description;
             chkActive.Checked = full.IsActive;
 
@@ -366,7 +343,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         {
             try
             {
-                string fullPath = Path.Combine(AppContext.BaseDirectory, relativePath);
+                string fullPath = StorageRoot.Resolve(relativePath);
                 if (File.Exists(fullPath))
                 {
                     using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
@@ -393,7 +370,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
             if (_editing is not null && catId == _editing.CategoryId)
             {
-                txtProductCode.Text = _editing.ProductCode;
+                _productCode = _editing.ProductCode;
+                txtProductCode.Text = _productCode;
+                await GenerateBarcodePreviewAsync();
                 return;
             }
 
@@ -404,14 +383,132 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 string? nextCode = (await mediator.Send(new ProductGetNextProductCodeQuery(catId), CancellationToken.None)).Data;
                 if (nextCode is not null)
                 {
-                    _nextProductCode = nextCode;
-                    txtProductCode.Text = _nextProductCode;
+                    _productCode = nextCode;
+                    txtProductCode.Text = _productCode;
+                    await GenerateBarcodePreviewAsync();
+                }
+                else
+                {
+                    _productCode = "";
+                    txtProductCode.Text = "";
+                    ClearBarcodePreview();
                 }
             }
             catch
             {
+                _productCode = "";
                 txtProductCode.Text = "";
+                ClearBarcodePreview();
             }
+        }
+
+        private void RestartPreviewDebounce()
+        {
+            if (_isPopulating)
+            {
+                return;
+            }
+
+            _previewDebounce.Stop();
+            _previewDebounce.Start();
+        }
+
+        private async Task GenerateBarcodePreviewAsync()
+        {
+            string? productCode = _productCode;
+            if (string.IsNullOrWhiteSpace(productCode))
+            {
+                ClearBarcodePreview();
+                return;
+            }
+
+            string productName = txtName.Text?.Trim() ?? string.Empty;
+            decimal taxRate = lookUpTaxRate.EditValue is Guid taxRateId
+                ? _taxRates.FirstOrDefault(t => t.Id == taxRateId)?.Rate ?? 0m
+                : 0m;
+            string warehouseName = cmbWarehouse.EditValue is Guid whId
+                ? _accounts.FirstOrDefault(a => a.Id == whId)?.Display ?? string.Empty
+                : string.Empty;
+            string categoryName = cmbCategory.EditValue is Guid catId
+                ? _accounts.FirstOrDefault(a => a.Id == catId)?.Display ?? string.Empty
+                : string.Empty;
+            string unitTypeName = cmbUnitType.EditValue is Guid unitId
+                ? _unitTypes.FirstOrDefault(u => u.Id == unitId)?.Name ?? string.Empty
+                : string.Empty;
+
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                ProductBarcodePreviewDto? preview = (await mediator.Send(
+                    new ProductBarcodePreviewQuery(productCode, productName, taxRate, warehouseName, categoryName, unitTypeName),
+                    CancellationToken.None)).Data;
+
+                if (preview is not null)
+                {
+                    SetPictureSafely(picBarcode, ByteArrayToImage(preview.BarcodeImage));
+                    SetPictureSafely(picQR, ByteArrayToImage(preview.QrImage));
+                    picBarcode.ToolTip = "Barkod: " + preview.Gtin;
+                    picQR.ToolTip = preview.QrContent;
+                    SetBarcodeValue(preview.Gtin);
+                    SetQrValue(preview.QrContent);
+                }
+                else
+                {
+                    ClearBarcodePreview();
+                }
+            }
+            catch
+            {
+                ClearBarcodePreview();
+            }
+        }
+
+        private void ClearBarcodePreview()
+        {
+            SetPictureSafely(picBarcode, null);
+            SetPictureSafely(picQR, null);
+            picBarcode.ToolTip = "Barkod";
+            picQR.ToolTip = "Karekod";
+            SetBarcodeValue(null);
+            SetQrValue(null);
+        }
+
+        private void SetBarcodeValue(string? gtin)
+        {
+            lblBarcodeValue.Text = string.IsNullOrWhiteSpace(gtin) ? "--" : gtin;
+            lblBarcodeValue.Appearance.Options.UseTextOptions = true;
+            lblBarcodeValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+        }
+
+        private void SetQrValue(string? qrContent)
+        {
+            if (string.IsNullOrWhiteSpace(qrContent))
+            {
+                lblQrValue.Text = "--";
+                return;
+            }
+
+            string singleLine = qrContent.Replace('\n', ' ').Replace('\r', ' ').Trim();
+            lblQrValue.Text = singleLine.Length > 32 ? singleLine[..32] + "…" : singleLine;
+        }
+
+        private static void SetPictureSafely(PictureEdit pictureEdit, Image? newImage)
+        {
+            Image? oldImage = pictureEdit.Image;
+            pictureEdit.Image = newImage;
+            oldImage?.Dispose();
+        }
+
+        private static Image? ByteArrayToImage(byte[]? bytes)
+        {
+            if (bytes is null || bytes.Length == 0)
+            {
+                return null;
+            }
+
+            using var ms = new MemoryStream(bytes);
+            return Image.FromStream(ms);
         }
 
         private void GridMovementView_CustomColumnDisplayText(object? sender, CustomColumnDisplayTextEventArgs e)
@@ -441,7 +538,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             gridPriceView.FocusedRowHandle = _prices.Count - 1;
         }
 
-        private void BtnAddImage_Click(object? sender, EventArgs e)
+        private async void BtnAddImage_Click(object? sender, EventArgs e)
         {
             using var dialog = new OpenFileDialog
             {
@@ -455,20 +552,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 return;
             }
 
-            string imagesDir = Path.Combine(AppContext.BaseDirectory, "ProductImages");
-            Directory.CreateDirectory(imagesDir);
+            using var scope = Program.Services.CreateScope();
+            IFileStorageService storage = scope.ServiceProvider.GetRequiredService<IFileStorageService>();
 
             foreach (string file in dialog.FileNames)
             {
-                string fileName = Guid.NewGuid().ToString("N") + Path.GetExtension(file);
-                string dest = Path.Combine(imagesDir, fileName);
-                File.Copy(file, dest, true);
+                string relativePath = await storage.SaveAsync(
+                    await File.ReadAllBytesAsync(file),
+                    Path.GetFileName(file),
+                    "ProductImages");
 
                 _images.Add(new ImageRowVm
                 {
-                    Path = "ProductImages\\" + fileName,
+                    Path = relativePath,
                     IsPrimary = false,
-                    Image = LoadImageSafe("ProductImages\\" + fileName)
+                    Image = LoadImageSafe(relativePath)
                 });
             }
 
@@ -555,9 +653,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         private async void BtnSave_Click(object? sender, EventArgs e)
         {
+            try
+            {
+                await BtnSaveCoreAsync();
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Kaydetme sırasında bir hata oluştu: " + ex.Message, ToastType.Error, 5000);
+            }
+        }
+
+        private async Task BtnSaveCoreAsync()
+        {
             string name = txtName.Text.Trim();
             string description = memoDescription.Text.Trim();
-            decimal taxRate = decimal.Round(Convert.ToDecimal(spinTaxRate.EditValue ?? 0m) / 100m, 4);
+            Guid? taxRateId = lookUpTaxRate.EditValue as Guid?;
             decimal? minLevel = spinMinLevel.EditValue is null ? null : Convert.ToDecimal(spinMinLevel.EditValue);
             Guid? warehouseId = cmbWarehouse.EditValue as Guid?;
             Guid? categoryId = cmbCategory.EditValue as Guid?;
@@ -574,8 +684,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             List<ProductImageRow> imageRows = _images.Select(i => new ProductImageRow(null, i.Path, i.IsPrimary)).ToList();
 
             IRequest<Result<string>> command = _editing is null
-                ? new ProductCreateCommand(name, null, null, taxRate, minLevel, warehouseId!.Value, categoryId!.Value, unitTypeId!.Value, description, isActive, priceRows, _images.Select(i => i.Path).ToList())
-                : new ProductUpdateCommand(_editing.Id, name, _editing.Barcode, _editing.QRCode, taxRate, minLevel, warehouseId!.Value, categoryId!.Value, unitTypeId!.Value, description, isActive, priceRows, imageRows);
+                ? new ProductCreateCommand(name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, priceRows, _images.Select(i => i.Path).ToList())
+                : new ProductUpdateCommand(_editing.Id, name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, priceRows, imageRows);
 
             if (!RunApplicationValidator(command))
             {
@@ -620,7 +730,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             (string Property, BaseEdit Editor)[] map =
             [
                 (nameof(ProductCreateCommand.Name), txtName),
-                (nameof(ProductCreateCommand.TaxRate), spinTaxRate),
+                (nameof(ProductCreateCommand.TaxRateId), lookUpTaxRate),
                 (nameof(ProductCreateCommand.WarehouseId), cmbWarehouse),
                 (nameof(ProductCreateCommand.CategoryId), cmbCategory),
                 (nameof(ProductCreateCommand.ProductUnitTypeId), cmbUnitType)
@@ -635,7 +745,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private void ClearFieldErrors()
         {
             txtName.ErrorText = string.Empty;
-            spinTaxRate.ErrorText = string.Empty;
+            lookUpTaxRate.ErrorText = string.Empty;
             cmbWarehouse.ErrorText = string.Empty;
             cmbCategory.ErrorText = string.Empty;
             cmbUnitType.ErrorText = string.Empty;

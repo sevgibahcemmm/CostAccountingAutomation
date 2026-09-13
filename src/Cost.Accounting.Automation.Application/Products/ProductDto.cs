@@ -37,7 +37,10 @@ public sealed class ProductDto : EntityDto
     public string? Barcode { get; set; }
     public string? QRCode { get; set; }
     public decimal? MinimumProductLevel { get; set; }
-    public decimal TaxRate { get; set; }
+
+    public Guid TaxRateId { get; set; }
+    public string TaxRateName { get; set; } = default!;
+    public decimal TaxRateRate { get; set; }
 
     public Guid WarehouseId { get; set; }
     public string WarehouseCode { get; set; } = default!;
@@ -74,7 +77,9 @@ public static class ProductExtensions
                 Barcode = s.Entity.Barcode.Value,
                 QRCode = s.Entity.QRCode.Value,
                 MinimumProductLevel = s.Entity.MinimumProductLevel,
-                TaxRate = s.Entity.TaxRate,
+                TaxRateId = s.Entity.TaxRateId,
+                TaxRateName = s.Entity.TaxRate!.Name.Value,
+                TaxRateRate = s.Entity.TaxRate!.Rate,
 
                 WarehouseId = s.Entity.WarehouseId,
                 WarehouseCode = s.Entity.Warehouse!.Code.Value,
@@ -96,7 +101,7 @@ public static class ProductExtensions
                 {
                     Id = i.Id,
                     Path = i.Path,
-                    IsPrimary = i.IsPrimary
+                    IsPrimary = i.IsDefault
                 }).ToList(),
                 CreatedAt = s.Entity.CreatedAt,
                 CreatedBy = s.Entity.CreatedBy,

@@ -1,5 +1,7 @@
 using Cost.Accounting.Automation.Application.Products;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
 using DevExpress.Utils.Svg;
@@ -9,6 +11,7 @@ using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
 using DevExpress.XtraGrid.Views.Grid;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -22,6 +25,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
     public sealed partial class ProductsListForm : CrudListFormBase<ProductGetAllQuery, ProductDto, ProductEditForm>
     {
         private readonly Dictionary<string, Image?> _imageCache = [];
+        private readonly Dictionary<string, Image?> _barcodeImageCache = [];
+        private readonly Dictionary<string, Image?> _qrImageCache = [];
+        private IBarcodeGeneratorService? _barcodeService;
 
         public ProductsListForm() : base("Ürünler")
         {
@@ -72,6 +78,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 NullText = "Yok"
             };
 
+            RepositoryItemPictureEdit riBarcodePicture = new()
+            {
+                SizeMode = PictureSizeMode.Zoom,
+                AllowZoom = DefaultBoolean.True,
+                ShowZoomSubMenu = DefaultBoolean.True,
+                NullText = "Yok"
+            };
+
+            RepositoryItemPictureEdit riQrPicture = new()
+            {
+                SizeMode = PictureSizeMode.Zoom,
+                AllowZoom = DefaultBoolean.True,
+                ShowZoomSubMenu = DefaultBoolean.True,
+                NullText = "Yok"
+            };
+
             GridColumn colImage = new()
             {
                 Caption = "Resim",
@@ -83,15 +105,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             };
             colImage.OptionsColumn.FixedWidth = true;
 
+            GridColumn colBarcodeImage = new()
+            {
+                Caption = "Barkod",
+                FieldName = "BarcodeImageUnbound",
+                UnboundDataType = typeof(Image),
+                Visible = true,
+                Width = 90,
+                ColumnEdit = riBarcodePicture
+            };
+            colBarcodeImage.OptionsColumn.FixedWidth = true;
+
+            GridColumn colQrImage = new()
+            {
+                Caption = "Karekod",
+                FieldName = "QrImageUnbound",
+                UnboundDataType = typeof(Image),
+                Visible = true,
+                Width = 70,
+                ColumnEdit = riQrPicture
+            };
+            colQrImage.OptionsColumn.FixedWidth = true;
+
             GridColumn[] columns =
             [
                 colImage,
                 new() { Caption = "Ürün Adı", FieldName = nameof(ProductDto.Name), Visible = true, Width = 240 },
-                new() { Caption = "Barkod", FieldName = nameof(ProductDto.Barcode), Visible = true, Width = 130 },
+                colBarcodeImage,
+                colQrImage,
                 new() { Caption = "Kategori", FieldName = nameof(ProductDto.CategoryName), Visible = true, Width = 150 },
                 new() { Caption = "Depo", FieldName = nameof(ProductDto.WarehouseName), Visible = true, Width = 130 },
                 new() { Caption = "Birim", FieldName = nameof(ProductDto.ProductUnitTypeName), Visible = true, Width = 70 },
-                new() { Caption = "KDV", FieldName = nameof(ProductDto.TaxRate), Visible = true, Width = 70, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "p0" } },
+                new() { Caption = "KDV", FieldName = nameof(ProductDto.TaxRateRate), Visible = true, Width = 70, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "p0" } },
                 new() { Caption = "Stok", FieldName = nameof(ProductDto.StockQuantity), Visible = true, Width = 90, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "n2" } },
                 new() { Caption = "Hesap Planı No", FieldName = nameof(ProductDto.ChartOfAccountCode), Visible = true, Width = 170 }
             ];
@@ -109,7 +154,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             codeColumn.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Far;
             View.Columns.Add(codeColumn);
 
-            View.RowHeight = 38;
+            View.RowHeight = 55;
             View.CustomUnboundColumnData += View_CustomUnboundColumnData;
             View.MasterRowEmpty += View_MasterRowEmpty;
 
@@ -188,31 +233,94 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         private void View_CustomUnboundColumnData(object? sender, DevExpress.XtraGrid.Views.Base.CustomColumnDataEventArgs e)
         {
-            if (e.Column.FieldName == "PrimaryImageUnbound" && e.IsGetData)
+            if (!e.IsGetData)
             {
-                ProductDto? product = null;
-                if (View.DataSource is System.Collections.IList list && e.ListSourceRowIndex >= 0 && e.ListSourceRowIndex < list.Count)
-                {
-                    product = list[e.ListSourceRowIndex] as ProductDto;
-                }
-                else
-                {
-                    int rowHandle = View.GetRowHandle(e.ListSourceRowIndex);
-                    if (rowHandle >= 0)
-                    {
-                        product = View.GetRow(rowHandle) as ProductDto;
-                    }
-                }
+                return;
+            }
 
-                if (product != null)
-                {
+            ProductDto? product = GetProductFromRow(e.ListSourceRowIndex);
+            if (product is null)
+            {
+                return;
+            }
+
+            switch (e.Column.FieldName)
+            {
+                case "PrimaryImageUnbound":
                     string? imagePath = GetPrimaryImagePath(product);
                     if (!string.IsNullOrWhiteSpace(imagePath))
                     {
                         e.Value = GetOrLoadImage(imagePath);
                     }
-                }
+                    break;
+
+                case "BarcodeImageUnbound":
+                    if (!string.IsNullOrWhiteSpace(product.Barcode))
+                    {
+                        e.Value = GetOrGenerateBarcodeImage(product.Barcode);
+                    }
+                    break;
+
+                case "QrImageUnbound":
+                    if (!string.IsNullOrWhiteSpace(product.QRCode))
+                    {
+                        e.Value = GetOrGenerateQrImage(product.QRCode);
+                    }
+                    break;
             }
+        }
+
+        private ProductDto? GetProductFromRow(int listSourceRowIndex)
+        {
+            if (View.DataSource is System.Collections.IList list && listSourceRowIndex >= 0 && listSourceRowIndex < list.Count)
+            {
+                return list[listSourceRowIndex] as ProductDto;
+            }
+
+            int rowHandle = View.GetRowHandle(listSourceRowIndex);
+            return rowHandle >= 0 ? View.GetRow(rowHandle) as ProductDto : null;
+        }
+
+        private Image? GetOrGenerateBarcodeImage(string gtin)
+        {
+            if (_barcodeImageCache.TryGetValue(gtin, out Image? cached))
+            {
+                return cached;
+            }
+
+            Image? img = null;
+            try
+            {
+                IBarcodeGeneratorService svc = _barcodeService ??= Program.Services.CreateScope().ServiceProvider.GetRequiredService<IBarcodeGeneratorService>();
+                byte[] bytes = svc.GenerateEan13Barcode(gtin);
+                using var ms = new MemoryStream(bytes);
+                img = new Bitmap(ms);
+            }
+            catch { }
+
+            _barcodeImageCache[gtin] = img;
+            return img;
+        }
+
+        private Image? GetOrGenerateQrImage(string qrContent)
+        {
+            if (_qrImageCache.TryGetValue(qrContent, out Image? cached))
+            {
+                return cached;
+            }
+
+            Image? img = null;
+            try
+            {
+                IBarcodeGeneratorService svc = _barcodeService ??= Program.Services.CreateScope().ServiceProvider.GetRequiredService<IBarcodeGeneratorService>();
+                byte[] bytes = svc.GenerateQrCode(qrContent);
+                using var ms = new MemoryStream(bytes);
+                img = new Bitmap(ms);
+            }
+            catch { }
+
+            _qrImageCache[qrContent] = img;
+            return img;
         }
 
         private static string? GetPrimaryImagePath(ProductDto product)
@@ -238,7 +346,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             Image? img = null;
             try
             {
-                string fullPath = Path.Combine(AppContext.BaseDirectory, relativePath);
+                string fullPath = StorageRoot.Resolve(relativePath);
                 if (File.Exists(fullPath))
                 {
                     using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
@@ -255,62 +363,90 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         private void ToolTipController_GetActiveObjectInfo(object? sender, ToolTipControllerGetActiveObjectInfoEventArgs e)
         {
-            if (e.SelectedControl == View.GridControl)
+            if (e.SelectedControl != View.GridControl)
             {
-                if (View.GridControl.GetViewAt(e.ControlMousePosition) is GridView hitView)
+                return;
+            }
+
+            if (View.GridControl.GetViewAt(e.ControlMousePosition) is not GridView hitView)
+            {
+                return;
+            }
+
+            var hitInfo = hitView.CalcHitInfo(e.ControlMousePosition);
+            if (!hitInfo.InRowCell || hitInfo.Column is null)
+            {
+                return;
+            }
+
+            int rowHandle = hitView.GetRowHandle(hitInfo.RowHandle);
+            if (rowHandle < 0)
+            {
+                return;
+            }
+
+            if (hitView == View && hitView.GetRow(rowHandle) is ProductDto product)
+            {
+                SuperToolTip? stp = hitInfo.Column.FieldName switch
                 {
-                    var hitInfo = hitView.CalcHitInfo(e.ControlMousePosition);
-                    if (hitInfo.InRowCell && hitInfo.Column != null)
+                    "PrimaryImageUnbound" => BuildImageToolTip(product),
+                    "BarcodeImageUnbound" => BuildBarcodeToolTip(product),
+                    "QrImageUnbound" => BuildQrToolTip(product),
+                    _ => null
+                };
+
+                if (stp is not null)
+                {
+                    e.Info = new ToolTipControlInfo(new CellToolTipInfo(hitInfo.RowHandle, hitInfo.Column, "cell"), "")
                     {
-                        if (hitView == View && hitInfo.Column.FieldName == "PrimaryImageUnbound")
-                        {
-                            int rowHandle = hitView.GetRowHandle(hitInfo.RowHandle);
-                            if (rowHandle >= 0 && hitView.GetRow(rowHandle) is ProductDto product)
-                            {
-                                string? imagePath = GetPrimaryImagePath(product);
-                                Image? img = imagePath != null ? GetOrLoadImage(imagePath) : null;
-                                if (img != null)
-                                {
-                                    Image largeImg = new Bitmap(img, new Size(200, 200));
-                                    SuperToolTip stp = new();
-                                    ToolTipItem item = new();
-                                    item.ImageOptions.Image = largeImg;
-                                    item.Text = product.Name;
-                                    stp.Items.Add(item);
-
-                                    e.Info = new ToolTipControlInfo(new CellToolTipInfo(hitInfo.RowHandle, hitInfo.Column, "cell"), "")
-                                    {
-                                        SuperTip = stp
-                                    };
-                                }
-                            }
-                        }
-                        else if (hitView.Name == "ImagesDetailView" && hitInfo.Column.FieldName == "DetailImageUnbound")
-                        {
-                            int rowHandle = hitView.GetRowHandle(hitInfo.RowHandle);
-                            if (rowHandle >= 0 && hitView.GetRow(rowHandle) is ProductImageDto imgDto)
-                            {
-                                string? imagePath = imgDto.Path;
-                                Image? img = !string.IsNullOrWhiteSpace(imagePath) ? GetOrLoadImage(imagePath) : null;
-                                if (img != null)
-                                {
-                                    Image largeImg = new Bitmap(img, new Size(200, 200));
-                                    SuperToolTip stp = new();
-                                    ToolTipItem item = new();
-                                    item.ImageOptions.Image = largeImg;
-                                    item.Text = imgDto.IsPrimary ? "Ana Resim" : "Ürün Resmi";
-                                    stp.Items.Add(item);
-
-                                    e.Info = new ToolTipControlInfo(new CellToolTipInfo(hitInfo.RowHandle, hitInfo.Column, "cell"), "")
-                                    {
-                                        SuperTip = stp
-                                    };
-                                }
-                            }
-                        }
-                    }
+                        SuperTip = stp
+                    };
                 }
             }
+            else if (hitView.Name == "ImagesDetailView" && hitInfo.Column.FieldName == "DetailImageUnbound"
+                     && hitView.GetRow(rowHandle) is ProductImageDto imgDto)
+            {
+                SuperToolTip stp = new();
+                ToolTipItem item = new();
+                item.Text = imgDto.IsPrimary ? "Ana Resim" : "Ürün Resmi";
+                stp.Items.Add(item);
+
+                e.Info = new ToolTipControlInfo(new CellToolTipInfo(hitInfo.RowHandle, hitInfo.Column, "cell"), "")
+                {
+                    SuperTip = stp
+                };
+            }
+        }
+
+        private static SuperToolTip BuildImageToolTip(ProductDto product)
+        {
+            SuperToolTip stp = new();
+            ToolTipItem item = new();
+            item.Text = product.Name;
+            stp.Items.Add(item);
+            return stp;
+        }
+
+        private SuperToolTip BuildBarcodeToolTip(ProductDto product)
+        {
+            SuperToolTip stp = new();
+
+            ToolTipItem textItem = new();
+            textItem.Text = "Barkod: " + (product.Barcode ?? "-");
+            stp.Items.Add(textItem);
+
+            return stp;
+        }
+
+        private SuperToolTip BuildQrToolTip(ProductDto product)
+        {
+            SuperToolTip stp = new();
+
+            ToolTipItem textItem = new();
+            textItem.Text = product.QRCode ?? "-";
+            stp.Items.Add(textItem);
+
+            return stp;
         }
 
         protected override IRequest<Result<string>> BuildDeleteCommand(ProductDto item)

@@ -29,18 +29,21 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Barcode)
             .HasConversion(v => v.Value, v => new Barcode(v))
             .HasColumnName("Barcode")
-            .HasMaxLength(120);
+            .HasMaxLength(120)
+            .IsRequired();
 
         builder.Property(p => p.QRCode)
             .HasConversion(v => v.Value, v => new QRCode(v))
             .HasColumnName("QRCode")
-            .HasMaxLength(120);
+            .HasMaxLength(500)
+            .IsRequired();
 
         builder.HasIndex(p => p.ProductCode).IsUnique();
         builder.HasIndex(p => p.WarehouseId);
         builder.HasIndex(p => p.CategoryId);
         builder.HasIndex(p => p.ProductUnitTypeId);
         builder.HasIndex(p => p.ChartOfAccountId);
+        builder.HasIndex(p => p.TaxRateId);
 
         builder.HasOne(p => p.Warehouse)
             .WithMany()
@@ -55,6 +58,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasOne(p => p.ProductUnitType)
             .WithMany()
             .HasForeignKey(p => p.ProductUnitTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(p => p.TaxRate)
+            .WithMany()
+            .HasForeignKey(p => p.TaxRateId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<ChartOfAccount>()

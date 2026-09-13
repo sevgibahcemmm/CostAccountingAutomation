@@ -1,12 +1,8 @@
 using System;
-using System.Drawing;
-using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
-using DevExpress.XtraEditors.Controls;
 using FluentValidation.Results;
 using TS.MediatR;
 using TS.Result;
@@ -25,7 +21,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         {
             InitializeComponent();
             _editing = existing;
-            IconOptions.SvgImage = SvgIcons.TagIcon;
 
             Text = _editing is null ? "Yeni Birim Cinsi" : "Birim Cinsi Düzenle";
             lblTitle.Text = Text;
@@ -34,46 +29,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 : "Mevcut birim cinsi bilgilerini güncelleyin.";
             chkActive.Checked = _editing?.IsActive ?? true;
 
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.TagIcon;
-            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(24, 24);
-
-            StyleButtons();
-            ApplyModernStyles();
-
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
             Load += Form_Load;
-        }
-
-
-        private void ApplyModernStyles()
-        {
-            // Alanlar için modern iç boşluk ve tipografi iyileştirmeleri
-            txtName.Properties.Padding = new Padding(8, 4, 8, 4);
-            pnlHeader.Appearance.BackColor = Color.FromArgb(248, 249, 250);
-            pnlHeader.Appearance.Options.UseBackColor = true;
-
-            pnlFooter.Appearance.BackColor = Color.FromArgb(248, 249, 250);
-            pnlFooter.Appearance.Options.UseBackColor = true;
-        }
-
-        private void StyleButtons()
-        {
-            // Kaydet Butonu (Modern Yeşil Vurgu)
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
-            btnSave.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnSave.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnSave.Appearance.BackColor = Color.FromArgb(16, 185, 129);
-            btnSave.Appearance.ForeColor = Color.White;
-            btnSave.Appearance.Options.UseBackColor = true;
-            btnSave.Appearance.Options.UseForeColor = true;
-
-            // Vazgeç Butonu
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
-            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnCancel.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnCancel.Appearance.ForeColor = Color.FromArgb(75, 85, 99);
-            btnCancel.Appearance.Options.UseForeColor = true;
         }
 
         private void Form_Load(object? sender, EventArgs e)

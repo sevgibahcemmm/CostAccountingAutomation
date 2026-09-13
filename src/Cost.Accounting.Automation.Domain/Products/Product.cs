@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.Photos;
 using Cost.Accounting.Automation.Domain.Products.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
 
@@ -9,7 +10,7 @@ public sealed class Product : Entity, IHardDeletable
 {
     private readonly List<ProductPrice> _prices = [];
     private readonly List<ProductMovement> _movements = [];
-    private readonly List<ProductImage> _images = [];
+    private readonly List<Photo> _images = [];
 
     private Product()
     {
@@ -21,7 +22,7 @@ public sealed class Product : Entity, IHardDeletable
         Barcode barcode,
         QRCode qrCode,
         decimal? minimumProductLevel,
-        decimal taxRate,
+        IdentityId taxRateId,
         IdentityId warehouseId,
         IdentityId categoryId,
         IdentityId productUnitTypeId,
@@ -34,7 +35,7 @@ public sealed class Product : Entity, IHardDeletable
         SetBarcode(barcode);
         SetQRCode(qrCode);
         SetMinimumProductLevel(minimumProductLevel);
-        SetTaxRate(taxRate);
+        SetTaxRate(taxRateId);
         SetWarehouse(warehouseId);
         SetCategory(categoryId);
         SetProductUnitType(productUnitTypeId);
@@ -48,7 +49,9 @@ public sealed class Product : Entity, IHardDeletable
     public Barcode Barcode { get; private set; } = default!;
     public QRCode QRCode { get; private set; } = default!;
     public decimal? MinimumProductLevel { get; private set; }
-    public decimal TaxRate { get; private set; }
+
+    public IdentityId TaxRateId { get; private set; } = default!;
+    public TaxRate? TaxRate { get; private set; }
 
     public IdentityId WarehouseId { get; private set; } = default!;
     public IdentityId CategoryId { get; private set; } = default!;
@@ -62,7 +65,7 @@ public sealed class Product : Entity, IHardDeletable
     public ProductUnitType? ProductUnitType { get; private set; }
     public IReadOnlyCollection<ProductPrice> Prices => _prices;
     public IReadOnlyCollection<ProductMovement> Movements => _movements;
-    public IReadOnlyCollection<ProductImage> Images => _images;
+    public ICollection<Photo> Images => _images;
 
     public void SetName(Name name) => Name = name;
 
@@ -74,7 +77,7 @@ public sealed class Product : Entity, IHardDeletable
 
     public void SetMinimumProductLevel(decimal? minimumProductLevel) => MinimumProductLevel = minimumProductLevel;
 
-    public void SetTaxRate(decimal taxRate) => TaxRate = taxRate;
+    public void SetTaxRate(IdentityId taxRateId) => TaxRateId = taxRateId;
 
     public void SetWarehouse(IdentityId warehouseId) => WarehouseId = warehouseId;
 
@@ -94,7 +97,7 @@ public sealed class Product : Entity, IHardDeletable
         _prices.AddRange(prices);
     }
 
-    public void ReplaceImages(IEnumerable<ProductImage> images)
+    public void ReplaceImages(IEnumerable<Photo> images)
     {
         _images.Clear();
         _images.AddRange(images);

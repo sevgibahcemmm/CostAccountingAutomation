@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
     partial class ModulePlaceholderMdiForm
@@ -6,6 +8,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private System.Windows.Forms.Panel pnlHeader;
         private DevExpress.XtraEditors.PictureEdit picIcon;
+        private DevExpress.XtraEditors.SimpleButton btnClosePage;
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Label lblSub;
         private System.Windows.Forms.Panel pnlBody;
@@ -27,6 +30,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             this.lblSub = new System.Windows.Forms.Label();
             this.lblTitle = new System.Windows.Forms.Label();
             this.picIcon = new DevExpress.XtraEditors.PictureEdit();
+            btnClosePage = new DevExpress.XtraEditors.SimpleButton();
             this.pnlBody = new System.Windows.Forms.Panel();
             this.lblNote = new System.Windows.Forms.Label();
             this.lblDesc = new System.Windows.Forms.Label();
@@ -40,6 +44,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             this.pnlHeader.Controls.Add(this.lblSub);
             this.pnlHeader.Controls.Add(this.lblTitle);
             this.pnlHeader.Controls.Add(this.picIcon);
+            this.pnlHeader.Controls.Add(this.btnClosePage);
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Name = "pnlHeader";
@@ -81,6 +86,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             this.picIcon.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.None;
             this.picIcon.Size = new System.Drawing.Size(72, 72);
             this.picIcon.TabIndex = 0;
+            // 
+            // btnClosePage
+            // 
+            this.btnClosePage.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            this.btnClosePage.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnClosePage.Appearance.Options.UseFont = true;
+            this.btnClosePage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            this.btnClosePage.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            this.btnClosePage.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnClosePage.Location = new System.Drawing.Point(906, 42);
+            this.btnClosePage.Name = "btnClosePage";
+            this.btnClosePage.Size = new System.Drawing.Size(92, 36);
+            this.btnClosePage.TabIndex = 3;
+            this.btnClosePage.Text = "Kapat";
             // 
             // pnlBody
             // 

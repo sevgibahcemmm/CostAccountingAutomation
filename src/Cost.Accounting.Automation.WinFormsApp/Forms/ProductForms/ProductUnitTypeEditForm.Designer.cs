@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
     public partial class ProductUnitTypeEditForm
@@ -74,6 +76,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             // 
             // lblHeaderIcon
             // 
+            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            lblHeaderIcon.ImageOptions.SvgImageSize = new System.Drawing.Size(24, 24);
             lblHeaderIcon.Location = new System.Drawing.Point(20, 20);
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new System.Drawing.Size(28, 28);
@@ -151,6 +155,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             txtName.Properties.Appearance.Font = new System.Drawing.Font("Segoe UI", 10.5F);
             txtName.Properties.Appearance.Options.UseFont = true;
             txtName.Properties.NullText = "Örn. Adet, Kilogram, Metre...";
+            txtName.Properties.Padding = new System.Windows.Forms.Padding(8, 4, 8, 4);
             txtName.Size = new System.Drawing.Size(412, 30);
             txtName.TabIndex = 1;
 
@@ -199,9 +204,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             // 
             btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             btnCancel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            btnCancel.Appearance.ForeColor = System.Drawing.Color.FromArgb(75, 85, 99);
             btnCancel.Appearance.Options.UseFont = true;
+            btnCancel.Appearance.Options.UseForeColor = true;
             btnCancel.Cursor = System.Windows.Forms.Cursors.Hand;
             btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             btnCancel.Location = new System.Drawing.Point(252, 13);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new System.Drawing.Size(90, 34);
@@ -212,9 +222,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             // btnSave
             // 
             btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            btnSave.Appearance.BackColor = System.Drawing.Color.FromArgb(16, 185, 129);
             btnSave.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F);
+            btnSave.Appearance.ForeColor = System.Drawing.Color.White;
+            btnSave.Appearance.Options.UseBackColor = true;
             btnSave.Appearance.Options.UseFont = true;
+            btnSave.Appearance.Options.UseForeColor = true;
             btnSave.Cursor = System.Windows.Forms.Cursors.Hand;
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnSave.Location = new System.Drawing.Point(348, 13);
             btnSave.Name = "btnSave";
             btnSave.Size = new System.Drawing.Size(90, 34);

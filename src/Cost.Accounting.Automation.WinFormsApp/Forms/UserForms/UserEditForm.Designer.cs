@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 {
     partial class UserEditForm
@@ -43,6 +45,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         private DevExpress.XtraEditors.SimpleButton btnAddPhoto;
         private DevExpress.XtraEditors.SimpleButton btnSetDefault;
         private DevExpress.XtraEditors.SimpleButton btnRemovePhoto;
+
+        // Alan simgeleri
+        private DevExpress.XtraEditors.LabelControl lblIconFirstName;
+        private DevExpress.XtraEditors.LabelControl lblIconLastName;
+        private DevExpress.XtraEditors.LabelControl lblIconUserName;
+        private DevExpress.XtraEditors.LabelControl lblIconEmail;
+        private DevExpress.XtraEditors.LabelControl lblIconTcNo;
+        private DevExpress.XtraEditors.LabelControl lblIconCompany;
+        private DevExpress.XtraEditors.LabelControl lblIconRole;
 
         // Footer
         private DevExpress.XtraEditors.PanelControl pnlFooter;
@@ -96,6 +107,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnSetDefault = new DevExpress.XtraEditors.SimpleButton();
             btnRemovePhoto = new DevExpress.XtraEditors.SimpleButton();
 
+            lblIconFirstName = new DevExpress.XtraEditors.LabelControl();
+            lblIconLastName = new DevExpress.XtraEditors.LabelControl();
+            lblIconUserName = new DevExpress.XtraEditors.LabelControl();
+            lblIconEmail = new DevExpress.XtraEditors.LabelControl();
+            lblIconTcNo = new DevExpress.XtraEditors.LabelControl();
+            lblIconCompany = new DevExpress.XtraEditors.LabelControl();
+            lblIconRole = new DevExpress.XtraEditors.LabelControl();
+
             pnlFooter = new DevExpress.XtraEditors.PanelControl();
             pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
             btnSave = new DevExpress.XtraEditors.SimpleButton();
@@ -145,6 +164,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(32, 32);
             lblHeaderIcon.TabIndex = 2;
+            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.HeaderUserIcon;
+            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             //
             // lblTitle
             //
@@ -193,6 +214,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             //
             // tabPersonal
             //
+            tabPersonal.Controls.Add(lblIconEmail);
+            tabPersonal.Controls.Add(lblIconUserName);
+            tabPersonal.Controls.Add(lblIconLastName);
+            tabPersonal.Controls.Add(lblIconFirstName);
             tabPersonal.Controls.Add(txtEmail);
             tabPersonal.Controls.Add(lblEmail);
             tabPersonal.Controls.Add(txtUserName);
@@ -201,6 +226,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabPersonal.Controls.Add(lblLastName);
             tabPersonal.Controls.Add(txtFirstName);
             tabPersonal.Controls.Add(lblFirstName);
+            tabPersonal.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            tabPersonal.ImageOptions.SvgImageSize = new Size(16, 16);
             tabPersonal.Name = "tabPersonal";
             tabPersonal.Size = new Size(474, 297);
             tabPersonal.Text = "Kişisel Bilgiler";
@@ -226,6 +253,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtFirstName.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtFirstName.Properties.Appearance.Options.UseFont = true;
             txtFirstName.Properties.NullText = "Ahmet";
+            txtFirstName.Properties.Padding = new Padding(26, 2, 2, 2);
             txtFirstName.Size = new Size(207, 26);
             txtFirstName.TabIndex = 1;
             //
@@ -250,6 +278,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtLastName.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtLastName.Properties.Appearance.Options.UseFont = true;
             txtLastName.Properties.NullText = "Yılmaz";
+            txtLastName.Properties.Padding = new Padding(26, 2, 2, 2);
             txtLastName.Size = new Size(207, 26);
             txtLastName.TabIndex = 3;
             //
@@ -274,6 +303,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtUserName.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtUserName.Properties.Appearance.Options.UseFont = true;
             txtUserName.Properties.NullText = "ayilmaz";
+            txtUserName.Properties.Padding = new Padding(26, 2, 2, 2);
             txtUserName.Size = new Size(207, 26);
             txtUserName.TabIndex = 5;
             //
@@ -298,11 +328,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtEmail.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtEmail.Properties.Appearance.Options.UseFont = true;
             txtEmail.Properties.NullText = "ahmet@firma.com";
+            txtEmail.Properties.Padding = new Padding(26, 2, 2, 2);
             txtEmail.Size = new Size(207, 26);
             txtEmail.TabIndex = 7;
             //
             // tabAccount
             //
+            tabAccount.Controls.Add(lblIconRole);
+            tabAccount.Controls.Add(lblIconCompany);
+            tabAccount.Controls.Add(lblIconTcNo);
             tabAccount.Controls.Add(lblPasswordNote);
             tabAccount.Controls.Add(chkActive);
             tabAccount.Controls.Add(cmbRole);
@@ -311,6 +345,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabAccount.Controls.Add(lblCompany);
             tabAccount.Controls.Add(txtTcNo);
             tabAccount.Controls.Add(lblTcNo);
+            tabAccount.ImageOptions.SvgImage = SvgIcons.ShieldIcon;
+            tabAccount.ImageOptions.SvgImageSize = new Size(16, 16);
             tabAccount.Name = "tabAccount";
             tabAccount.Size = new Size(474, 297);
             tabAccount.Text = "Hesap ve Yetki";
@@ -339,6 +375,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtTcNo.Properties.Mask.EditMask = "000-0000-0000";
             txtTcNo.Properties.Mask.UseMaskAsDisplayFormat = true;
             txtTcNo.Properties.NullText = "12345678901";
+            txtTcNo.Properties.Padding = new Padding(26, 2, 2, 2);
             txtTcNo.Size = new Size(434, 26);
             txtTcNo.TabIndex = 1;
             //
@@ -365,6 +402,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             cmbCompany.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             cmbCompany.Properties.NullText = "Şirket ara / seç (boş = kendi şirketiniz)";
             cmbCompany.Properties.PopupFilterMode = DevExpress.XtraEditors.PopupFilterMode.Contains;
+            cmbCompany.Properties.Padding = new Padding(26, 2, 2, 2);
             cmbCompany.Size = new Size(434, 26);
             cmbCompany.TabIndex = 3;
             //
@@ -391,6 +429,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             cmbRole.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             cmbRole.Properties.NullText = "Rol ara / seç";
             cmbRole.Properties.PopupFilterMode = DevExpress.XtraEditors.PopupFilterMode.Contains;
+            cmbRole.Properties.Padding = new Padding(26, 2, 2, 2);
             cmbRole.Size = new Size(434, 26);
             cmbRole.TabIndex = 5;
             //
@@ -418,6 +457,83 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblPasswordNote.TabIndex = 7;
             lblPasswordNote.Text = "İlk giriş şifresi: 123";
             //
+            // lblIconFirstName
+            //
+            lblIconFirstName.Cursor = Cursors.Default;
+            lblIconFirstName.Location = new Point(24, 44);
+            lblIconFirstName.Name = "lblIconFirstName";
+            lblIconFirstName.Size = new Size(18, 18);
+            lblIconFirstName.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            lblIconFirstName.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconFirstName.Tag = txtFirstName;
+            lblIconFirstName.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconLastName
+            //
+            lblIconLastName.Cursor = Cursors.Default;
+            lblIconLastName.Location = new Point(251, 44);
+            lblIconLastName.Name = "lblIconLastName";
+            lblIconLastName.Size = new Size(18, 18);
+            lblIconLastName.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            lblIconLastName.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconLastName.Tag = txtLastName;
+            lblIconLastName.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconUserName
+            //
+            lblIconUserName.Cursor = Cursors.Default;
+            lblIconUserName.Location = new Point(24, 102);
+            lblIconUserName.Name = "lblIconUserName";
+            lblIconUserName.Size = new Size(18, 18);
+            lblIconUserName.ImageOptions.SvgImage = SvgIcons.AtIcon;
+            lblIconUserName.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconUserName.Tag = txtUserName;
+            lblIconUserName.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconEmail
+            //
+            lblIconEmail.Cursor = Cursors.Default;
+            lblIconEmail.Location = new Point(251, 102);
+            lblIconEmail.Name = "lblIconEmail";
+            lblIconEmail.Size = new Size(18, 18);
+            lblIconEmail.ImageOptions.SvgImage = SvgIcons.MailIcon;
+            lblIconEmail.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconEmail.Tag = txtEmail;
+            lblIconEmail.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconTcNo
+            //
+            lblIconTcNo.Cursor = Cursors.Default;
+            lblIconTcNo.Location = new Point(24, 44);
+            lblIconTcNo.Name = "lblIconTcNo";
+            lblIconTcNo.Size = new Size(18, 18);
+            lblIconTcNo.ImageOptions.SvgImage = SvgIcons.IdCardIcon;
+            lblIconTcNo.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconTcNo.Tag = txtTcNo;
+            lblIconTcNo.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconCompany
+            //
+            lblIconCompany.Cursor = Cursors.Default;
+            lblIconCompany.Location = new Point(24, 102);
+            lblIconCompany.Name = "lblIconCompany";
+            lblIconCompany.Size = new Size(18, 18);
+            lblIconCompany.ImageOptions.SvgImage = SvgIcons.BuildingIcon;
+            lblIconCompany.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconCompany.Tag = cmbCompany;
+            lblIconCompany.MouseDown += FieldIcon_MouseDown;
+            //
+            // lblIconRole
+            //
+            lblIconRole.Cursor = Cursors.Default;
+            lblIconRole.Location = new Point(24, 160);
+            lblIconRole.Name = "lblIconRole";
+            lblIconRole.Size = new Size(18, 18);
+            lblIconRole.ImageOptions.SvgImage = SvgIcons.KeyIcon;
+            lblIconRole.ImageOptions.SvgImageSize = new Size(18, 18);
+            lblIconRole.Tag = cmbRole;
+            lblIconRole.MouseDown += FieldIcon_MouseDown;
+            //
             // tabPhotos
             //
             tabPhotos.Controls.Add(btnRemovePhoto);
@@ -425,6 +541,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabPhotos.Controls.Add(btnAddPhoto);
             tabPhotos.Controls.Add(picPhoto);
             tabPhotos.Controls.Add(lstPhotos);
+            tabPhotos.ImageOptions.SvgImage = SvgIcons.PhotoIcon;
+            tabPhotos.ImageOptions.SvgImageSize = new Size(16, 16);
             tabPhotos.Name = "tabPhotos";
             tabPhotos.Size = new Size(474, 297);
             tabPhotos.Text = "Fotoğraflar";
@@ -460,6 +578,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnAddPhoto.Size = new Size(136, 28);
             btnAddPhoto.TabIndex = 2;
             btnAddPhoto.Text = "Fotoğraf Ekle";
+            btnAddPhoto.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddPhoto.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnAddPhoto.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
             // btnSetDefault
             //
@@ -471,6 +592,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnSetDefault.Size = new Size(136, 28);
             btnSetDefault.TabIndex = 3;
             btnSetDefault.Text = "Varsayılan Yap";
+            btnSetDefault.ImageOptions.SvgImage = SvgIcons.StarIcon;
+            btnSetDefault.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnSetDefault.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
             // btnRemovePhoto
             //
@@ -482,6 +606,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnRemovePhoto.Size = new Size(146, 28);
             btnRemovePhoto.TabIndex = 4;
             btnRemovePhoto.Text = "Kaldır";
+            btnRemovePhoto.ImageOptions.SvgImage = SvgIcons.TrashIcon;
+            btnRemovePhoto.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnRemovePhoto.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
             // pnlFooter
             //
@@ -518,6 +645,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnCancel.Size = new Size(104, 32);
             btnCancel.TabIndex = 1;
             btnCancel.Text = "İptal";
+            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
             // btnSave
             //
@@ -534,6 +664,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnSave.Size = new Size(148, 32);
             btnSave.TabIndex = 2;
             btnSave.Text = "Kaydet";
+            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
             // UserEditForm
             //
@@ -549,6 +682,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             MinimizeBox = false;
             Name = "UserEditForm";
             StartPosition = FormStartPosition.CenterParent;
+            IconOptions.SvgImage = SvgIcons.Modules[5];
             Text = "Kullanıcı";
             ((System.ComponentModel.ISupportInitialize)pnlHeader).EndInit();
             pnlHeader.ResumeLayout(false);
