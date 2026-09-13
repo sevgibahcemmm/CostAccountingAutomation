@@ -74,10 +74,31 @@ public sealed class ProductMovement : Entity, IHardDeletable
         Description = description;
     }
 
+    public ProductMovement(
+        IdentityId productId,
+        ProductMovementType movementType,
+        decimal quantity,
+        Price? unitPrice,
+        DateOnly date,
+        string? referenceNo,
+        Description description,
+        IdentityId? invoiceId = null)
+        : this(movementType, quantity, unitPrice, date, referenceNo, description)
+    {
+        ProductId = productId;
+        InvoiceId = invoiceId;
+    }
+
+    public IdentityId ProductId { get; private set; } = default!;
+    public Product? Product { get; private set; }
+    public IdentityId? InvoiceId { get; private set; }
     public ProductMovementType MovementType { get; private set; }
     public decimal Quantity { get; private set; }
     public Price? UnitPrice { get; private set; }
     public DateOnly Date { get; private set; }
     public string? ReferenceNo { get; private set; }
     public Description Description { get; private set; } = default!;
+
+    public void SetProduct(IdentityId productId) => ProductId = productId;
+    public void SetInvoiceId(IdentityId? invoiceId) => InvoiceId = invoiceId;
 }

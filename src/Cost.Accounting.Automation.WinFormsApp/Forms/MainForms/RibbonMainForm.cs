@@ -1,8 +1,13 @@
-﻿using Cost.Accounting.Automation.Infrastructure.Services;
+using Cost.Accounting.Automation.Domain.Invoices;
+using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.UserForms;

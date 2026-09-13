@@ -76,8 +76,8 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(p => p.Movements)
-            .WithOne()
-            .HasForeignKey("ProductId")
+            .WithOne(m => m.Product)
+            .HasForeignKey(m => m.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(p => p.Images)

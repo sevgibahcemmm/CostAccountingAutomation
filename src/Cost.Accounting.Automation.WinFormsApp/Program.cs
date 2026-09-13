@@ -2,7 +2,6 @@ using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Infrastructure;
 using Cost.Accounting.Automation.Infrastructure.Services;
-using Cost.Accounting.Automation.WinFormsApp.Forms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -74,7 +73,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
 
             InstallCrashLogHandlers();
             InstallSessionFileLogging();
-DatabaseInitializer.InitializeAsync(Services).GetAwaiter().GetResult();
+            DatabaseInitializer.InitializeAsync(Services).GetAwaiter().GetResult();
 
             var loginForm = Services.GetRequiredService<XtraLoginForm>();
             System.Windows.Forms.Application.Run(loginForm);
