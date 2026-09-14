@@ -33,27 +33,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private static readonly Dictionary<string, int> _menuIconIndex = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["elmMaliyetMerkezleri"] = 10,
-            ["elmMaliyetHesaplama"] = 1,
-            ["elmMaliyetRaporlari"] = 6,
             ["elmUrunler"] = 2,
             ["elmBirimCinsleri"] = 12,
             ["elmKdvOranlari"] = 12,
             ["elmStokGirisi"] = 11,
             ["elmStokCikisi"] = 12,
-            ["elmSatinAlmaSiparisleri"] = 3,
+            ["elmStokHareketleri"] = 24,
+            ["elmFiyatStokListesi"] = 6,
             ["elmSatinAlmaFaturalari"] = 4,
-            ["elmSatisSiparisleri"] = 23,
+            ["elmFaturaOnaylama"] = 1,
             ["elmSatisFaturalari"] = 4,
             ["elmMusteriler"] = 5,
             ["elmTedarikciler"] = 14,
+            ["elmCariHareketler"] = 24,
+            ["elmCariBorcAlacakOzeti"] = 13,
             ["elmHesapPlani"] = 13,
             ["elmOdemeTahsilat"] = 17,
-            ["elmBankaIslemleri"] = 16,
-            ["elmMizan"] = 15,
-            ["elmGelirGider"] = 19,
-            ["elmKasa"] = 18,
-            ["elmRaporlar"] = 6,
             ["elmSirketAyarlari"] = 22,
             ["elmKullanicilar"] = 20,
             ["elmRoller"] = 21
@@ -69,10 +64,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             InitializeAccordion();
             IconOptions.SvgImage = _moduleIcons[7];
             accordionControl.OptionsMinimizing.State = AccordionControlState.Minimized;
+            accordionControl.OptionsMinimizing.NormalWidth = 260;
 
             Load += RibbonMainForm_Load;
             FormClosing += RibbonMainForm_FormClosing;
             FormClosed += RibbonMainForm_FormClosed;
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000;
+                return cp;
+            }
         }
 
         private void RibbonMainForm_Load(object? sender, EventArgs e)
@@ -88,52 +94,55 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             foreach (AccordionControlElement element in accordionControl.Elements)
             {
-                if (element.Tag is int tag)
+                if (element.Tag is not int tag)
                 {
-                    if (tag >= 1 && tag <= 8)
+                    continue;
+                }
+
+                if (tag >= 1 && tag <= 8)
+                {
+                    element.ImageOptions.SvgImage = _moduleIcons[Math.Min(tag, _moduleIcons.Length - 1)];
+                    element.ImageOptions.SvgImageSize = new Size(30, 30);
+                    element.Appearance.Normal.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+                    _groupNames[tag] = element.Text;
+                }
+                else if (tag == 0)
+                {
+                    element.ImageOptions.SvgImage = _moduleIcons[0];
+                    element.ImageOptions.SvgImageSize = new Size(26, 26);
+                }
+                else if (tag == 99)
+                {
+                    element.ImageOptions.SvgImage = _moduleIcons[9];
+                    element.ImageOptions.SvgImageSize = new Size(26, 26);
+                }
+
+                element.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.True;
+
+                WireElementClick(element);
+
+                foreach (AccordionControlElement child in element.Elements)
+                {
+                    if (_menuIconIndex.TryGetValue(child.Name, out int iconIndex))
                     {
-                        element.ImageOptions.SvgImage = SvgIcons.MenuIcons[tag];
-                        element.ImageOptions.SvgImageSize = new Size(24, 24);
-                        _groupNames[tag] = element.Text;
-                    }
-                    else if (tag == 0)
-                    {
-                        element.ImageOptions.SvgImage = SvgIcons.MenuIcons[0];
-                        element.ImageOptions.SvgImageSize = new Size(20, 20);
-                    }
-                    else if (tag == 99)
-                    {
-                        element.ImageOptions.SvgImage = SvgIcons.MenuIcons[9];
-                        element.ImageOptions.SvgImageSize = new Size(20, 20);
+                        child.ImageOptions.SvgImage = SvgIcons.MenuIcons[Math.Min(iconIndex, SvgIcons.MenuIcons.Length - 1)];
+                        child.ImageOptions.SvgImageSize = new Size(22, 22);
+                        child.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.True;
                     }
 
-                    WireElementClick(element);
-
-                    foreach (AccordionControlElement child in element.Elements)
-                    {
-                        if (_menuIconIndex.TryGetValue(child.Name, out int iconIndex))
-                        {
-                            child.ImageOptions.SvgImage = SvgIcons.MenuIcons[iconIndex];
-                            child.ImageOptions.SvgImageSize = new Size(16, 16);
-                        }
-
-                        WireElementClick(child);
-                    }
+                    WireElementClick(child);
                 }
             }
         }
 
         private void WireElementClick(AccordionControlElement element)
         {
-            if (element.Style == ElementStyle.Item)
+            if (element.Style != ElementStyle.Item)
             {
-                element.Click += (s, e) => HandleMenuClick((AccordionControlElement)s!);
+                return;
             }
 
-            foreach (AccordionControlElement child in element.Elements)
-            {
-                WireElementClick(child);
-            }
+            element.Click += (s, e) => HandleMenuClick((AccordionControlElement)s!);
         }
 
         private void HandleMenuClick(AccordionControlElement element)
@@ -186,6 +195,66 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 if (element.Text == "Tedarikçiler")
                 {
                     OpenSuppliers();
+                    return;
+                }
+
+                if (element.Text == "Cari Hareketler")
+                {
+                    OpenCurrentAccountMovements();
+                    return;
+                }
+
+                if (element.Text == "Cari Borç/Alacak Özeti")
+                {
+                    OpenCurrentAccountBalance();
+                    return;
+                }
+
+                if (element.Text == "Ödeme / Tahsilat")
+                {
+                    OpenPaymentCollection();
+                    return;
+                }
+
+                if (element.Text == "Satın Alma Faturaları")
+                {
+                    OpenInvoices(InvoiceType.Purchase);
+                    return;
+                }
+
+                if (element.Text == "Fatura Onaylama")
+                {
+                    OpenInvoiceApproval();
+                    return;
+                }
+
+                if (element.Text == "Satış Faturaları")
+                {
+                    OpenInvoices(InvoiceType.Sales);
+                    return;
+                }
+
+                if (element.Text == "Stok Girişi")
+                {
+                    OpenProductMovements(ProductMovementType.Input);
+                    return;
+                }
+
+                if (element.Text == "Stok Çıkışı")
+                {
+                    OpenProductMovements(ProductMovementType.Output);
+                    return;
+                }
+
+                if (element.Text == "Stok Hareketleri")
+                {
+                    OpenProductMovements(null);
+                    return;
+                }
+
+                if (element.Text == "Fiyat & Stok Listesi")
+                {
+                    OpenProductPriceStockList();
                     return;
                 }
 
@@ -262,6 +331,48 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
         }
 
+        private void OpenCurrentAccountMovements()
+        {
+            MdiFormManager.Instance.OpenForm<CurrentAccountMovementsListForm>(this, "Cari Hareketler");
+        }
+
+        private void OpenCurrentAccountBalance()
+        {
+            MdiFormManager.Instance.OpenForm<CurrentAccountBalanceForm>(this, "Cari Borç/Alacak Özeti");
+        }
+
+        private void OpenPaymentCollection()
+        {
+            MdiFormManager.Instance.OpenForm<PaymentCollectionListForm>(this, "Ödeme / Tahsilat");
+        }
+
+        private void OpenInvoiceApproval()
+        {
+            MdiFormManager.Instance.OpenForm<InvoiceApprovalForm>(this, "Fatura Onaylama");
+        }
+
+        private void OpenProductPriceStockList()
+        {
+            MdiFormManager.Instance.OpenForm<ProductPriceStockListForm>(this, "Fiyat & Stok Listesi");
+        }
+
+        private void OpenInvoices(InvoiceType type)
+        {
+            string title = type == InvoiceType.Purchase ? "Satın Alma Faturaları" : "Satış Faturaları";
+            MdiFormManager.Instance.OpenForm<InvoicesListForm>(this, title, () => new InvoicesListForm(type));
+        }
+
+        private void OpenProductMovements(ProductMovementType? type)
+        {
+            string title = type switch
+            {
+                ProductMovementType.Input => "Stok Girişleri",
+                ProductMovementType.Output => "Stok Çıkışları",
+                _ => "Stok Hareketleri"
+            };
+            MdiFormManager.Instance.OpenForm<ProductMovementsListForm>(this, title, () => new ProductMovementsListForm(type));
+        }
+
         private void OpenDashboard()
         {
             MdiFormManager.Instance.OpenForm<DashboardMdiForm>(this);
@@ -325,20 +436,39 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             DateTime now = DateTime.Now;
             CultureInfo tr = CultureInfo.GetCultureInfo("tr-TR");
 
-            barButtonItemTime.Caption = $"🕐  {now:HH:mm:ss}";
-            barButtonItemLongDate.Caption = $"📅  {now.ToString("dddd, dd MMMM yyyy", tr)}";
+            string timeText = $"🕐  {now:HH:mm:ss}";
+            string dateText = $"📅  {now.ToString("dddd, dd MMMM yyyy", tr)}";
+
+            if (barButtonItemTime.Caption != timeText)
+            {
+                barButtonItemTime.Caption = timeText;
+            }
+
+            if (barButtonItemLongDate.Caption != dateText)
+            {
+                barButtonItemLongDate.Caption = dateText;
+            }
 
             if (_tokenExpiry != default)
             {
                 TimeSpan remaining = _tokenExpiry - DateTime.UtcNow;
                 if (remaining.TotalSeconds <= 0)
                 {
-                    barButtonItemExpTime.Caption = "⏳  Oturum süresi doldu";
+                    string expiredText = "⏳  Oturum süresi doldu";
+                    if (barButtonItemExpTime.Caption != expiredText)
+                    {
+                        barButtonItemExpTime.Caption = expiredText;
+                    }
+
                     RestartToLogin();
                     return;
                 }
 
-                barButtonItemExpTime.Caption = $"⏳  Kalan Süre: {remaining:hh\\:mm\\:ss}";
+                string expText = $"⏳  Kalan Süre: {remaining:hh\\:mm\\:ss}";
+                if (barButtonItemExpTime.Caption != expText)
+                {
+                    barButtonItemExpTime.Caption = expText;
+                }
             }
         }
 

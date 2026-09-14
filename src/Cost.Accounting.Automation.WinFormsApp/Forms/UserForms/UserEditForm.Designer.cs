@@ -652,12 +652,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             // btnSave
             //
             btnSave.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnSave.Appearance.BackColor = DevExpress.LookAndFeel.DXSkinColors.FillColors.Primary;
             btnSave.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            btnSave.Appearance.ForeColor = Color.White;
-            btnSave.Appearance.Options.UseBackColor = true;
             btnSave.Appearance.Options.UseFont = true;
-            btnSave.Appearance.Options.UseForeColor = true;
             btnSave.Location = new Point(312, 13);
             btnSave.Margin = new Padding(3, 2, 3, 2);
             btnSave.Name = "btnSave";

@@ -1,12 +1,9 @@
 ﻿using Cost.Accounting.Automation.Application.Services;
-using Cost.Accounting.Automation.Domain.Shared;
-using Cost.Accounting.Automation.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Cost.Accounting.Automation.Infrastructure;
+namespace Cost.Accounting.Automation.Infrastructure.Context;
 
 public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {

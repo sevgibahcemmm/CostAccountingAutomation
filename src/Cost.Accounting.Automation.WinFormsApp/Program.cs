@@ -50,7 +50,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
             DevExpressLocalizers.Register();
 
             BonusSkins.Register();
-            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.Bezier);
+            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.DarkSide);
 
             ApplicationConfiguration.Initialize();
 

@@ -4,17 +4,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
     {
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.Panel pnlHeader;
-        private System.Windows.Forms.Label lblTitle;
-        private System.Windows.Forms.Label lblSub;
+        private DevExpress.XtraEditors.PanelControl pnlHeader;
+        private DevExpress.XtraEditors.LabelControl lblTitle;
+        private DevExpress.XtraEditors.LabelControl lblSub;
         private DevExpress.XtraEditors.SimpleButton btnClosePage;
         private DevExpress.XtraEditors.PanelControl pnlToolbar;
         private DevExpress.XtraEditors.SimpleButton btnNew;
         private DevExpress.XtraEditors.SimpleButton btnEdit;
         private DevExpress.XtraEditors.SimpleButton btnDelete;
         private DevExpress.XtraEditors.SimpleButton btnRefresh;
+        private DevExpress.XtraEditors.SimpleButton btnApprove;
         private DevExpress.XtraEditors.CheckButton btnDeleted;
         private DevExpress.XtraEditors.SimpleButton btnRestore;
+        private DevExpress.XtraEditors.LabelControl lblFilter;
+        private DevExpress.XtraEditors.SearchLookUpEdit cmbFilter;
+        private DevExpress.XtraGrid.Views.Grid.GridView cmbFilterView;
         private DevExpress.XtraEditors.TextEdit txtSearch;
         private DevExpress.XtraGrid.GridControl gridControl;
         private DevExpress.XtraGrid.Views.Grid.GridView gridView;
@@ -31,58 +35,60 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            pnlHeader = new System.Windows.Forms.Panel();
-            lblTitle = new System.Windows.Forms.Label();
-            lblSub = new System.Windows.Forms.Label();
+            pnlHeader = new DevExpress.XtraEditors.PanelControl();
+            lblTitle = new DevExpress.XtraEditors.LabelControl();
+            lblSub = new DevExpress.XtraEditors.LabelControl();
             btnClosePage = new DevExpress.XtraEditors.SimpleButton();
             pnlToolbar = new DevExpress.XtraEditors.PanelControl();
             btnRefresh = new DevExpress.XtraEditors.SimpleButton();
             btnDelete = new DevExpress.XtraEditors.SimpleButton();
             btnEdit = new DevExpress.XtraEditors.SimpleButton();
             btnNew = new DevExpress.XtraEditors.SimpleButton();
+            btnApprove = new DevExpress.XtraEditors.SimpleButton();
             btnDeleted = new DevExpress.XtraEditors.CheckButton();
             btnRestore = new DevExpress.XtraEditors.SimpleButton();
+            lblFilter = new DevExpress.XtraEditors.LabelControl();
+            cmbFilter = new DevExpress.XtraEditors.SearchLookUpEdit();
+            cmbFilterView = new DevExpress.XtraGrid.Views.Grid.GridView();
             txtSearch = new DevExpress.XtraEditors.TextEdit();
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             pnlHeader.SuspendLayout();
             pnlToolbar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)txtSearch.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)cmbFilter.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)cmbFilterView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridView).BeginInit();
             SuspendLayout();
             // 
             // pnlHeader
             // 
-            pnlHeader.BackColor = System.Drawing.Color.Transparent;
+            pnlHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlHeader.Controls.Add(btnClosePage);
             pnlHeader.Controls.Add(lblSub);
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             pnlHeader.Location = new System.Drawing.Point(0, 0);
             pnlHeader.Name = "pnlHeader";
-            pnlHeader.Size = new System.Drawing.Size(1100, 92);
+            pnlHeader.Size = new System.Drawing.Size(1280, 110);
             pnlHeader.TabIndex = 0;
             // 
             // lblTitle
             // 
-            lblTitle.AutoSize = true;
-            lblTitle.Font = new System.Drawing.Font("Segoe UI", 20F, System.Drawing.FontStyle.Bold);
-            lblTitle.ForeColor = System.Drawing.Color.White;
-            lblTitle.Location = new System.Drawing.Point(28, 20);
+            lblTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 20F, System.Drawing.FontStyle.Bold);
+            lblTitle.Appearance.Options.UseFont = true;
+            lblTitle.Location = new System.Drawing.Point(28, 16);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new System.Drawing.Size(230, 45);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "-";
             // 
             // lblSub
             // 
-            lblSub.AutoSize = true;
-            lblSub.Font = new System.Drawing.Font("Segoe UI", 10F);
-            lblSub.ForeColor = System.Drawing.Color.FromArgb(226, 232, 240);
-            lblSub.Location = new System.Drawing.Point(30, 62);
+            lblSub.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            lblSub.Appearance.Options.UseFont = true;
+            lblSub.Location = new System.Drawing.Point(30, 68);
             lblSub.Name = "lblSub";
-            lblSub.Size = new System.Drawing.Size(180, 23);
             lblSub.TabIndex = 1;
             lblSub.Text = "Yükleniyor...";
             // 
@@ -91,7 +97,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnClosePage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             btnClosePage.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             btnClosePage.Appearance.Options.UseFont = true;
-            btnClosePage.Location = new System.Drawing.Point(980, 27);
+            btnClosePage.Location = new System.Drawing.Point(1170, 37);
             btnClosePage.Name = "btnClosePage";
             btnClosePage.Size = new System.Drawing.Size(94, 36);
             btnClosePage.TabIndex = 2;
@@ -100,17 +106,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // pnlToolbar
             // 
             pnlToolbar.Controls.Add(txtSearch);
+            pnlToolbar.Controls.Add(cmbFilter);
+            pnlToolbar.Controls.Add(lblFilter);
             pnlToolbar.Controls.Add(btnRestore);
             pnlToolbar.Controls.Add(btnDeleted);
+            pnlToolbar.Controls.Add(btnApprove);
             pnlToolbar.Controls.Add(btnRefresh);
             pnlToolbar.Controls.Add(btnDelete);
             pnlToolbar.Controls.Add(btnEdit);
             pnlToolbar.Controls.Add(btnNew);
             pnlToolbar.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlToolbar.Location = new System.Drawing.Point(0, 92);
+            pnlToolbar.Location = new System.Drawing.Point(0, 110);
             pnlToolbar.Name = "pnlToolbar";
             pnlToolbar.Padding = new System.Windows.Forms.Padding(16, 10, 16, 10);
-            pnlToolbar.Size = new System.Drawing.Size(1100, 56);
+            pnlToolbar.Size = new System.Drawing.Size(1280, 56);
             pnlToolbar.TabIndex = 1;
             // 
             // btnNew
@@ -153,11 +162,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnRefresh.TabIndex = 3;
             btnRefresh.Text = "";
             // 
+            // btnApprove
+            // 
+            btnApprove.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            btnApprove.Appearance.Options.UseFont = true;
+            btnApprove.Location = new System.Drawing.Point(470, 10);
+            btnApprove.Name = "btnApprove";
+            btnApprove.Size = new System.Drawing.Size(100, 36);
+            btnApprove.TabIndex = 7;
+            btnApprove.Text = "Onayla";
+            // 
             // btnDeleted
             // 
             btnDeleted.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnDeleted.Appearance.Options.UseFont = true;
-            btnDeleted.Location = new System.Drawing.Point(470, 10);
+            btnDeleted.Location = new System.Drawing.Point(596, 10);
             btnDeleted.Name = "btnDeleted";
             btnDeleted.Size = new System.Drawing.Size(120, 36);
             btnDeleted.TabIndex = 5;
@@ -167,21 +186,46 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnRestore.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnRestore.Appearance.Options.UseFont = true;
-            btnRestore.Location = new System.Drawing.Point(596, 10);
+            btnRestore.Location = new System.Drawing.Point(722, 10);
             btnRestore.Name = "btnRestore";
             btnRestore.Size = new System.Drawing.Size(115, 36);
             btnRestore.TabIndex = 6;
             btnRestore.Text = "Geri Yükle";
             // 
+            // lblFilter
+            // 
+            lblFilter.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            lblFilter.Appearance.Options.UseFont = true;
+            lblFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            lblFilter.Location = new System.Drawing.Point(850, 18);
+            lblFilter.Name = "lblFilter";
+            lblFilter.Size = new System.Drawing.Size(46, 19);
+            lblFilter.Text = "Filtre:";
+            lblFilter.Visible = false;
+            // 
+            // cmbFilter
+            // 
+            cmbFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            cmbFilter.Location = new System.Drawing.Point(902, 13);
+            cmbFilter.Name = "cmbFilter";
+            cmbFilter.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
+            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
+            cmbFilter.Properties.NullText = "Tümü";
+            cmbFilter.Properties.PopupView = cmbFilterView;
+            cmbFilter.Properties.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
+            cmbFilter.Size = new System.Drawing.Size(170, 30);
+            cmbFilter.TabIndex = 8;
+            cmbFilter.Visible = false;
+            // 
             // txtSearch
             // 
             txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            txtSearch.Location = new System.Drawing.Point(856, 13);
+            txtSearch.Location = new System.Drawing.Point(1082, 13);
             txtSearch.Name = "txtSearch";
             txtSearch.Properties.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             txtSearch.Properties.Appearance.Options.UseFont = true;
             txtSearch.Properties.NullText = "Ara...";
-            txtSearch.Size = new System.Drawing.Size(228, 30);
+            txtSearch.Size = new System.Drawing.Size(182, 30);
             txtSearch.TabIndex = 4;
             // 
             // gridControl
@@ -203,16 +247,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(1100, 680);
+            ClientSize = new System.Drawing.Size(1280, 680);
             Controls.Add(gridControl);
             Controls.Add(pnlToolbar);
             Controls.Add(pnlHeader);
-            MinimumSize = new System.Drawing.Size(900, 600);
+            MinimumSize = new System.Drawing.Size(1000, 600);
             Name = "CrudListFormBase";
             pnlHeader.ResumeLayout(false);
             pnlHeader.PerformLayout();
             pnlToolbar.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)txtSearch.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)cmbFilter.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)cmbFilterView).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridControl).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridView).EndInit();
             ResumeLayout(false);

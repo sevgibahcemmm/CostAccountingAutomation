@@ -2,6 +2,7 @@ using Cost.Accounting.Automation.Application.CurrentAccountMovements;
 using Cost.Accounting.Automation.Application.Customers;
 using Cost.Accounting.Automation.Application.Suppliers;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -11,7 +12,7 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 {
-    public partial class CurrentAccountMovementEditForm : DevExpress.XtraEditors.XtraForm
+    public partial class CurrentAccountMovementEditForm : SkinSensitiveForm
     {
         private readonly CurrentAccountMovementDto? _editing;
         private readonly CurrentAccountType? _preselectedType;

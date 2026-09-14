@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
@@ -58,8 +59,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Region = new Region(AuthFormStyles.GetRoundedRectPath(new Rectangle(0, 0, Width, Height), CornerRadius));
 
             _btnClose.Click += (_, _) => Dismiss();
-            _btnClose.MouseHover += (_, _) => _btnClose.Appearance.ForeColor = Color.FromArgb(15, 23, 42);
-            _btnClose.MouseLeave += (_, _) => _btnClose.Appearance.ForeColor = Color.FromArgb(148, 163, 184);
+            _btnClose.MouseHover += (_, _) => _btnClose.Appearance.ForeColor = SkinTheme.Text;
+            _btnClose.MouseLeave += (_, _) => _btnClose.Appearance.ForeColor = SkinTheme.SecondaryText;
+            _btnClose.Appearance.ForeColor = SkinTheme.SecondaryText;
 
             _timer = new System.Windows.Forms.Timer();
             _timer.Tick += OnAnimationTick;
@@ -80,6 +82,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             _lblTitle.Text = GetTitle(type);
             _lblMessage.Text = message;
+            _lblTitle.Appearance.ForeColor = SkinTheme.Text;
+            _lblMessage.Appearance.ForeColor = SkinTheme.SecondaryText;
+            _btnClose.Appearance.ForeColor = SkinTheme.SecondaryText;
 
             _progressStartWidth = _progressTrack.Width;
             _durationMs = Math.Max(600, durationMs);
@@ -224,11 +229,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private static Color GetThemeColor(ToastType type) => type switch
         {
-            ToastType.Success => Color.FromArgb(16, 185, 129),  // Emerald Yeşil
-            ToastType.Warning => Color.FromArgb(245, 158, 11),  // Amber Sarı
-            ToastType.Error => Color.FromArgb(239, 68, 68),    // Rose Kırmızı
-            ToastType.Info => Color.FromArgb(59, 130, 246),     // Royal Mavi
-            _ => Color.FromArgb(107, 114, 128)
+            ToastType.Success => SkinTheme.Success,
+            ToastType.Warning => SkinTheme.Warning,
+            ToastType.Error => SkinTheme.Danger,
+            ToastType.Info => SkinTheme.Question,
+            _ => SkinTheme.SecondaryText
         };
     }
 }

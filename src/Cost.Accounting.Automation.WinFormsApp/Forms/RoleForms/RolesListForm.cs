@@ -41,42 +41,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 
         protected override void ConfigureColumns()
         {
-            View.Columns.Clear();
+            AddColumnsFromAttributes();
 
-            GridColumn colName = new()
-            {
-                Caption = "Rol Adı",
-                FieldName = nameof(RoleDto.Name),
-                Visible = true,
-                Width = 220
-            };
+            GridColumn colName = View.Columns[nameof(RoleDto.Name)]!;
             colName.AppearanceCell.TextOptions.HAlignment = HorzAlignment.Near;
 
-            GridColumn colPermissionCount = new()
-            {
-                Caption = "Yetki Sayısı",
-                FieldName = nameof(RoleDto.PermissionCount),
-                Visible = true,
-                Width = 120
-            };
-            colPermissionCount.AppearanceCell.TextOptions.HAlignment = HorzAlignment.Center;
-            colPermissionCount.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Center;
-
-            GridColumn colIsActive = CreateBooleanColumn("Durum", nameof(RoleDto.IsActive));
-
-            GridColumn colCreatedAt = new()
-            {
-                Caption = "Kayıt Tarihi",
-                FieldName = nameof(RoleDto.CreatedAt),
-                Visible = true,
-                Width = 140
-            };
+            GridColumn colCreatedAt = View.Columns[nameof(RoleDto.CreatedAt)]!;
+            colCreatedAt.Caption = "Kayıt Tarihi";
             colCreatedAt.DisplayFormat.FormatType = FormatType.Custom;
             colCreatedAt.DisplayFormat.FormatString = "dd/MMMMM/yyyy";
             colCreatedAt.AppearanceCell.TextOptions.HAlignment = HorzAlignment.Center;
             colCreatedAt.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Center;
 
-            View.Columns.AddRange([colName, colPermissionCount, colIsActive, colCreatedAt]);
+            View.Columns[nameof(RoleDto.IsActive)]!.Caption = "Durum";
         }
 
         private void InitializeDetailView()

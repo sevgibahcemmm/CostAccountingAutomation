@@ -15,7 +15,8 @@ public sealed record InvoiceCreateLineModel(
     decimal Quantity,
     decimal UnitPrice,
     decimal TaxRateRate,
-    string? Description);
+    string? Description,
+    decimal DiscountRate = 0);
 
 [Permission("invoice:create")]
 public sealed record InvoiceCreateCommand(
@@ -25,7 +26,9 @@ public sealed record InvoiceCreateCommand(
     Guid? CustomerId,
     Guid? SupplierId,
     string Description,
-    List<InvoiceCreateLineModel> Lines) : IRequest<Result<string>>;
+    List<InvoiceCreateLineModel> Lines,
+    bool IsApproved = false,
+    StockCostingMethod CostingMethod = StockCostingMethod.Fifo) : IRequest<Result<string>>;
 
 public sealed class InvoiceCreateCommandValidator : AbstractValidator<InvoiceCreateCommand>
 {
@@ -37,6 +40,10 @@ public sealed class InvoiceCreateCommandValidator : AbstractValidator<InvoiceCre
 
         RuleFor(x => x.Lines)
             .NotEmpty().WithMessage("Faturada en az bir kalem bulunmalıdır.");
+
+        RuleFor(x => x.Lines)
+            .Must(lines => lines.GroupBy(l => l.ProductId).All(g => g.Count() == 1))
+            .WithMessage("Aynı ürün faturada yalnızca bir kez yer alabilir.");
 
         When(x => x.InvoiceType == InvoiceType.Sales, () =>
         {
@@ -59,7 +66,10 @@ public sealed class InvoiceCreateCommandValidator : AbstractValidator<InvoiceCre
                 .GreaterThan(0).WithMessage("Miktar sıfırdan büyük olmalıdır.");
 
             line.RuleFor(l => l.UnitPrice)
-                .GreaterThanOrEqualTo(0).WithMessage("Birim fiyat negatif olamaz.");
+                .GreaterThan(0).WithMessage("Birim fiyat sıfırdan büyük olmalıdır.");
+
+            line.RuleFor(l => l.DiscountRate)
+                .InclusiveBetween(0, 100).WithMessage("İskonto oranı %0 ile %100 arasında olmalıdır.");
         });
     }
 }
@@ -94,13 +104,16 @@ internal sealed class InvoiceCreateCommandHandler(
         foreach (var lineItem in request.Lines)
         {
             decimal lineSubTotal = lineItem.Quantity * lineItem.UnitPrice;
-            decimal taxAmount = Math.Round(lineSubTotal * (lineItem.TaxRateRate > 1 ? lineItem.TaxRateRate / 100m : lineItem.TaxRateRate), 2);
-            decimal totalAmount = lineSubTotal + taxAmount;
+            decimal discountAmount = Math.Round(lineSubTotal * (lineItem.DiscountRate > 1 && lineItem.DiscountRate <= 100 ? lineItem.DiscountRate / 100m : lineItem.DiscountRate), 2);
+            decimal netAmount = lineSubTotal - discountAmount;
+            decimal taxAmount = Math.Round(netAmount * (lineItem.TaxRateRate > 1 ? lineItem.TaxRateRate / 100m : lineItem.TaxRateRate), 2);
+            decimal totalAmount = netAmount + taxAmount;
 
             InvoiceLine line = new(
                 new IdentityId(lineItem.ProductId),
                 lineItem.Quantity,
                 lineItem.UnitPrice,
+                lineItem.DiscountRate,
                 lineItem.TaxRateRate,
                 taxAmount,
                 totalAmount,
@@ -111,61 +124,19 @@ internal sealed class InvoiceCreateCommandHandler(
 
         await invoiceRepository.AddAsync(invoice, cancellationToken);
 
-        // 1. Otomatik Stok Hareketleri (Ürün bazlı giriş/çıkış)
-        ProductMovementType movementType = request.InvoiceType == InvoiceType.Purchase
-            ? ProductMovementType.Input
-            : ProductMovementType.Output;
-
-        string movementPrefix = request.InvoiceType == InvoiceType.Purchase ? "Satın Alma Faturası" : "Satış Faturası";
-
-        foreach (var line in invoice.Lines)
+        if (request.IsApproved)
         {
-            ProductMovement movement = new(
-                productId: line.ProductId,
-                movementType: movementType,
-                quantity: line.Quantity,
-                unitPrice: new Price(line.UnitPrice),
-                date: invoice.Date,
-                referenceNo: invoice.InvoiceNumber,
-                description: new Description($"{movementPrefix} - {invoice.InvoiceNumber}"),
-                invoiceId: invoice.Id);
+            invoice.Approve();
+            await InvoiceLedgerHelper.CreateLedgerMovementsAsync(
+                invoice,
+                productMovementRepository,
+                currentAccountMovementRepository,
+                request.CostingMethod,
+                cancellationToken);
 
-            await productMovementRepository.AddAsync(movement, cancellationToken);
+            return Result<string>.Succeed("Fatura, stok hareketleri ve cari hareketleri başarıyla kaydedildi.");
         }
 
-        // 2. Otomatik Cari Hareketi (Müşteri/Tedarikçi borç/alacak)
-        CurrentAccountMovement currentAccountMovement;
-        if (request.InvoiceType == InvoiceType.Sales)
-        {
-            currentAccountMovement = new CurrentAccountMovement(
-                currentAccountType: CurrentAccountType.Customer,
-                customerId: customerId,
-                supplierId: null,
-                date: invoice.Date,
-                movementType: CurrentAccountMovementType.SalesInvoice,
-                documentNo: invoice.InvoiceNumber,
-                debit: invoice.GrandTotal, // Satışta müşteri borçlanır
-                credit: 0,
-                description: new Description($"Satış Faturası - {invoice.InvoiceNumber}"),
-                invoiceId: invoice.Id);
-        }
-        else
-        {
-            currentAccountMovement = new CurrentAccountMovement(
-                currentAccountType: CurrentAccountType.Supplier,
-                customerId: null,
-                supplierId: supplierId,
-                date: invoice.Date,
-                movementType: CurrentAccountMovementType.PurchaseInvoice,
-                documentNo: invoice.InvoiceNumber,
-                debit: 0,
-                credit: invoice.GrandTotal, // Alışta tedarikçi alacaklanır
-                description: new Description($"Satın Alma Faturası - {invoice.InvoiceNumber}"),
-                invoiceId: invoice.Id);
-        }
-
-        await currentAccountMovementRepository.AddAsync(currentAccountMovement, cancellationToken);
-
-        return Result<string>.Succeed("Fatura, stok hareketleri ve cari hareketleri başarıyla kaydedildi.");
+        return Result<string>.Succeed("Fatura taslak olarak kaydedildi. Onaylanınca stok ve cari hareketleri oluşturulacak.");
     }
 }

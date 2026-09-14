@@ -4,7 +4,6 @@ using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
-using DevExpress.XtraGrid.Columns;
 using TS.MediatR;
 using TS.Result;
 
@@ -35,22 +34,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         protected override void ConfigureColumns()
         {
-            View.Columns.Clear();
-
-            GridColumn[] columns =
-            [
-                new() { Caption = "KDV Adı", FieldName = nameof(TaxRateDto.Name), Visible = true, Width = 240 },
-                new()
-                {
-                    Caption = "Oran (%)",
-                    FieldName = nameof(TaxRateDto.Rate),
-                    Visible = true,
-                    Width = 110,
-                    DisplayFormat = { FormatType = DevExpress.Utils.FormatType.Numeric, FormatString = "p1" }
-                }
-            ];
-
-            View.Columns.AddRange(columns);
             AddColumnsFromAttributes();
         }
 

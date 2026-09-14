@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Application.ProductMovements;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -11,7 +12,7 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
 {
-    public partial class ProductMovementEditForm : XtraForm
+    public partial class ProductMovementEditForm : SkinSensitiveForm
     {
         private readonly ProductMovementListDto? _editing;
         private readonly ProductMovementType? _preselectedType;

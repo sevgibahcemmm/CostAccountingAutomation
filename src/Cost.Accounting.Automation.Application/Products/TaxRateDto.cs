@@ -5,9 +5,13 @@ namespace Cost.Accounting.Automation.Application.Products;
 
 public sealed class TaxRateDto : EntityDto
 {
+    [Column("KDV Adı", Order = 10, Width = 200)]
     public string Name { get; set; } = default!;
+
+    [Column("Oran (%)", Order = 20, Width = 90, Format = "p1", Alignment = "Right")]
     public decimal Rate { get; set; }
 
+    [Column("Görünen", IsVisible = false)]
     public string Display => $"{Name} (%{Rate * 100:0.###})";
 }
 

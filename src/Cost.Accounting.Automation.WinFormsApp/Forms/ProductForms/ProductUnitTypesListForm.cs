@@ -2,7 +2,6 @@ using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
-using DevExpress.XtraGrid.Columns;
 using TS.MediatR;
 using TS.Result;
 
@@ -24,14 +23,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         protected override void ConfigureColumns()
         {
-            View.Columns.Clear();
-
-            GridColumn[] columns =
-            [
-                new() { Caption = "Birim Cinsi", FieldName = nameof(ProductUnitTypeDto.Name), Visible = true, Width = 240 }
-            ];
-
-            View.Columns.AddRange(columns);
             AddColumnsFromAttributes();
         }
 

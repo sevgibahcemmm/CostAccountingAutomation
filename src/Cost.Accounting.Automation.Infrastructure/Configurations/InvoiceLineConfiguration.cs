@@ -18,6 +18,9 @@ internal sealed class InvoiceLineConfiguration : IEntityTypeConfiguration<Invoic
         builder.Property(x => x.UnitPrice)
             .HasColumnType("money");
 
+        builder.Property(x => x.DiscountRate)
+            .HasColumnType("decimal(18,4)");
+
         builder.Property(x => x.TaxRateRate)
             .HasColumnType("decimal(18,4)");
 

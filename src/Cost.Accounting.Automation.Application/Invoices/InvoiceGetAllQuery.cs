@@ -8,9 +8,10 @@ namespace Cost.Accounting.Automation.Application.Invoices;
 [Permission("invoice:view")]
 public sealed record InvoiceGetAllQuery(
     InvoiceType? InvoiceType = null,
-    bool OnlyDeleted = false) : IRequest<IQueryable<InvoiceDto>>
+    bool OnlyDeleted = false,
+    InvoiceStatus? Status = null) : IRequest<IQueryable<InvoiceDto>>
 {
-    public InvoiceGetAllQuery() : this(null, false) { }
+    public InvoiceGetAllQuery() : this(null, false, null) { }
 }
 
 internal sealed class InvoiceGetAllQueryHandler(
@@ -25,6 +26,11 @@ internal sealed class InvoiceGetAllQueryHandler(
         if (request.InvoiceType.HasValue)
         {
             source = source.Where(i => i.Entity.InvoiceType == request.InvoiceType.Value);
+        }
+
+        if (request.Status.HasValue)
+        {
+            source = source.Where(i => i.Entity.Status == request.Status.Value);
         }
 
         return Task.FromResult(source.MapTo().AsQueryable());

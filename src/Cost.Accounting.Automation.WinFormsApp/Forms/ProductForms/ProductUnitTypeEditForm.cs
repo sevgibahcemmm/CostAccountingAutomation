@@ -1,5 +1,6 @@
 using System;
 using Cost.Accounting.Automation.Application.Products;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using DevExpress.XtraEditors;
@@ -9,7 +10,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
-    public partial class ProductUnitTypeEditForm : XtraForm
+    public partial class ProductUnitTypeEditForm : SkinSensitiveForm
     {
         private readonly ProductUnitTypeDto? _editing;
 

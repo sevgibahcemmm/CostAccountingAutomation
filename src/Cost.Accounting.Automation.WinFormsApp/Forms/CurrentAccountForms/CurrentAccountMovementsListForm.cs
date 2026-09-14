@@ -2,9 +2,7 @@ using Cost.Accounting.Automation.Application.CurrentAccountMovements;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-using DevExpress.Utils;
 using DevExpress.Utils.Svg;
-using DevExpress.XtraGrid.Columns;
 using TS.MediatR;
 using TS.Result;
 
@@ -44,23 +42,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
         protected override void ConfigureColumns()
         {
-            View.Columns.Clear();
-
-            GridColumn[] columns =
-            [
-                new() { Caption = "Tarih", FieldName = nameof(CurrentAccountMovementDto.Date), Visible = true, Width = 95, DisplayFormat = { FormatType = FormatType.DateTime, FormatString = "dd.MM.yyyy" } },
-                new() { Caption = "Cari Türü", FieldName = nameof(CurrentAccountMovementDto.CurrentAccountTypeName), Visible = !_accountType.HasValue, Width = 85 },
-                new() { Caption = "Cari Adı", FieldName = nameof(CurrentAccountMovementDto.CurrentAccountName), Visible = true, Width = 220 },
-                new() { Caption = "İşlem Türü", FieldName = nameof(CurrentAccountMovementDto.MovementTypeName), Visible = true, Width = 130 },
-                new() { Caption = "Belge / Fatura No", FieldName = nameof(CurrentAccountMovementDto.DocumentNo), Visible = true, Width = 120 },
-                new() { Caption = "Borç", FieldName = nameof(CurrentAccountMovementDto.Debit), Visible = true, Width = 100, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
-                new() { Caption = "Alacak", FieldName = nameof(CurrentAccountMovementDto.Credit), Visible = true, Width = 100, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
-                new() { Caption = "Bakiye", FieldName = nameof(CurrentAccountMovementDto.Balance), Visible = true, Width = 110, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
-                new() { Caption = "Açıklama", FieldName = nameof(CurrentAccountMovementDto.Description), Visible = true, Width = 200 }
-            ];
-
-            View.Columns.AddRange(columns);
             AddColumnsFromAttributes();
+            View.Columns[nameof(CurrentAccountMovementDto.CurrentAccountTypeName)]!.Visible = !_accountType.HasValue;
+            View.Columns[nameof(CurrentAccountMovementDto.DocumentNo)]!.Caption = "Belge / Fatura No";
         }
 
         protected override CurrentAccountMovementGetAllQuery BuildListQuery()

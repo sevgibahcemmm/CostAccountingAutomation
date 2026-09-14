@@ -264,12 +264,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             // btnSave
             // 
             btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            btnSave.Appearance.BackColor = System.Drawing.Color.FromArgb(16, 185, 129);
             btnSave.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F);
-            btnSave.Appearance.ForeColor = System.Drawing.Color.White;
-            btnSave.Appearance.Options.UseBackColor = true;
             btnSave.Appearance.Options.UseFont = true;
-            btnSave.Appearance.Options.UseForeColor = true;
             btnSave.Cursor = System.Windows.Forms.Cursors.Hand;
             btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;

@@ -1,6 +1,7 @@
 using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Domain.Shared;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -11,7 +12,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
 {
-    public partial class CompanyEditForm : XtraForm
+    public partial class CompanyEditForm : SkinSensitiveForm
     {
         private readonly CompanyDto? _editing;
 

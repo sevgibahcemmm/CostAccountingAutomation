@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Roles;
 using Cost.Accounting.Automation.Application.Users;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -18,7 +19,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 {
-    public partial class UserEditForm : XtraForm
+    public partial class UserEditForm : SkinSensitiveForm
     {
         private readonly UserDto? _editing;
         private List<RoleDto> _roles = [];

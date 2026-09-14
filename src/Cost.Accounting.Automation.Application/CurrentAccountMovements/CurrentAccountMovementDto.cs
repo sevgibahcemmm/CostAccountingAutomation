@@ -5,21 +5,36 @@ namespace Cost.Accounting.Automation.Application.CurrentAccountMovements;
 
 public sealed class CurrentAccountMovementDto : EntityDto
 {
+    [Column("Cari Türü", IsVisible = false)]
     public CurrentAccountType CurrentAccountType { get; set; }
+
+    [Column("Cari Türü", Order = 15, Width = 80, Alignment = "Center")]
     public string CurrentAccountTypeName => CurrentAccountType == CurrentAccountType.Customer ? "Müşteri" : "Tedarikçi";
 
-    public Guid? CustomerId { get; set; }
-    public string? CustomerName { get; set; }
-
-    public Guid? SupplierId { get; set; }
-    public string? SupplierName { get; set; }
-
+    [Column("Cari Adı", Order = 20, Width = 180)]
     public string CurrentAccountName => CurrentAccountType == CurrentAccountType.Customer
         ? (CustomerName ?? "-")
         : (SupplierName ?? "-");
 
+    [Column("Müşteri Id", IsVisible = false)]
+    public Guid? CustomerId { get; set; }
+
+    [Column("Müşteri Adı", IsVisible = false)]
+    public string? CustomerName { get; set; }
+
+    [Column("Tedarikçi Id", IsVisible = false)]
+    public Guid? SupplierId { get; set; }
+
+    [Column("Tedarikçi Adı", IsVisible = false)]
+    public string? SupplierName { get; set; }
+
+    [Column("Tarih", Order = 10, Width = 90, Format = "dd.MM.yyyy", Alignment = "Center")]
     public DateOnly Date { get; set; }
+
+    [Column("İşlem Türü", IsVisible = false)]
     public CurrentAccountMovementType MovementType { get; set; }
+
+    [Column("İşlem Türü", Order = 30, Width = 100, Alignment = "Center")]
     public string MovementTypeName => MovementType switch
     {
         CurrentAccountMovementType.SalesInvoice => "Satış Faturası",
@@ -32,11 +47,22 @@ public sealed class CurrentAccountMovementDto : EntityDto
         _ => MovementType.ToString()
     };
 
+    [Column("Belge No", Order = 40, Width = 110)]
     public string? DocumentNo { get; set; }
+
+    [Column("Borç", Order = 50, Width = 110, Format = "n2", Alignment = "Right")]
     public decimal Debit { get; set; }
+
+    [Column("Alacak", Order = 60, Width = 110, Format = "n2", Alignment = "Right")]
     public decimal Credit { get; set; }
+
+    [Column("Bakiye", Order = 70, Width = 110, Format = "n2", Alignment = "Right")]
     public decimal Balance => Debit - Credit;
+
+    [Column("Açıklama", Order = 80, Width = 180)]
     public string Description { get; set; } = default!;
+
+    [Column("Fatura Id", IsVisible = false)]
     public Guid? InvoiceId { get; set; }
 }
 

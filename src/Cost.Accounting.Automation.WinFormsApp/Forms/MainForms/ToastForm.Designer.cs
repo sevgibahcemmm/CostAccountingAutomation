@@ -62,8 +62,7 @@
             _pnlContentArea.Name = "_pnlContentArea";
             _pnlContentArea.Size = new System.Drawing.Size(354, 88);
             _pnlContentArea.TabIndex = 1;
-            _pnlContentArea.Appearance.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
-            _pnlContentArea.Appearance.Options.UseBackColor = true;
+            _pnlContentArea.Appearance.Options.UseBackColor = false;
 
             // 
             // _lblIcon
@@ -83,9 +82,7 @@
             // _lblTitle
             // 
             _lblTitle.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F);
-            _lblTitle.Appearance.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
             _lblTitle.Appearance.Options.UseFont = true;
-            _lblTitle.Appearance.Options.UseForeColor = true;
             _lblTitle.Location = new System.Drawing.Point(56, 16);
             _lblTitle.Name = "_lblTitle";
             _lblTitle.Size = new System.Drawing.Size(260, 20);
@@ -95,9 +92,7 @@
             // _lblMessage
             // 
             _lblMessage.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
-            _lblMessage.Appearance.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
             _lblMessage.Appearance.Options.UseFont = true;
-            _lblMessage.Appearance.Options.UseForeColor = true;
             _lblMessage.Appearance.TextOptions.WordWrap = DevExpress.Utils.WordWrap.Wrap;
             _lblMessage.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             _lblMessage.Location = new System.Drawing.Point(56, 40);
@@ -109,9 +104,7 @@
             // _btnClose
             // 
             _btnClose.Appearance.Font = new System.Drawing.Font("Segoe UI", 11F);
-            _btnClose.Appearance.ForeColor = System.Drawing.Color.FromArgb(148, 163, 184);
             _btnClose.Appearance.Options.UseFont = true;
-            _btnClose.Appearance.Options.UseForeColor = true;
             _btnClose.Cursor = System.Windows.Forms.Cursors.Hand;
             _btnClose.Location = new System.Drawing.Point(332, 8);
             _btnClose.Name = "_btnClose";
@@ -127,8 +120,7 @@
             _progressTrack.Name = "_progressTrack";
             _progressTrack.Size = new System.Drawing.Size(354, 4);
             _progressTrack.TabIndex = 2;
-            _progressTrack.Appearance.BackColor = System.Drawing.Color.FromArgb(241, 245, 249);
-            _progressTrack.Appearance.Options.UseBackColor = true;
+            _progressTrack.Appearance.Options.UseBackColor = false;
 
             // 
             // _progressFill
@@ -144,7 +136,6 @@
             // ToastForm
             // 
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            BackColor = System.Drawing.Color.FromArgb(250, 250, 252);
             ClientSize = new System.Drawing.Size(360, 92);
             Controls.Add(_progressFill);
             Controls.Add(_progressTrack);

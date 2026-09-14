@@ -1,21 +1,17 @@
-using Cost.Accounting.Automation.Domain.ChartOfAccounts;
-using Cost.Accounting.Automation.Domain.Companies;
+using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Customers;
-using Cost.Accounting.Automation.Domain.LoginTokens;
-using Cost.Accounting.Automation.Domain.Photos;
-using Cost.Accounting.Automation.Domain.Roles;
+using Cost.Accounting.Automation.Domain.Invoices;
+using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Suppliers;
-using Cost.Accounting.Automation.Domain.Users;
 using Cost.Accounting.Automation.Infrastructure.Context;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-using DevExpress.LookAndFeel;
 using DevExpress.Utils;
-using DevExpress.Utils.Colors;
 using DevExpress.XtraCharts;
-using DevExpress.XtraEditors;
-using DevExpress.XtraEditors.Controls;
+using DevExpress.XtraGrid;
+using DevExpress.XtraGrid.Columns;
+using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Drawing;
@@ -28,6 +24,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
     {
         private sealed record ChartPoint(string Label, int Count);
 
+        private sealed record BalanceRow(string AccountTypeName, string AccountName, decimal TotalDebit, decimal TotalCredit, decimal Balance);
+
+        private sealed record CriticalStockRow(string ProductCode, string ProductName, string CategoryName, decimal Stock, decimal? MinimumLevel);
+
+        private sealed record BalancePoint(string Label, decimal Amount);
+
+        private sealed record StockPoint(string Label, decimal Input, decimal Output);
+
         private const int DashboardAutoRefreshIntervalMs = 30_000;
 
         private readonly SessionClaimContext _session;
@@ -35,48 +39,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private readonly System.Windows.Forms.Timer _refreshTimer;
         private bool _refreshing;
         private bool _hasLoadedOnce;
-
-        private Color SkinPrimaryColor =>
-            DXSkinColorHelper.GetDXSkinColor(
-                DXSkinColors.FillColors.Primary,
-                LookAndFeel.ActiveSkinName,
-                LookAndFeel.ActiveSvgPaletteName);
-
-        private Color SkinSuccessColor =>
-            DXSkinColorHelper.GetDXSkinColor(
-                DXSkinColors.FillColors.Success,
-                LookAndFeel.ActiveSkinName,
-                LookAndFeel.ActiveSvgPaletteName);
-
-        private Color SkinWarningColor =>
-            DXSkinColorHelper.GetDXSkinColor(
-                DXSkinColors.FillColors.Warning,
-                LookAndFeel.ActiveSkinName,
-                LookAndFeel.ActiveSvgPaletteName);
-
-        private Color SkinDangerColor =>
-            DXSkinColorHelper.GetDXSkinColor(
-                DXSkinColors.FillColors.Danger,
-                LookAndFeel.ActiveSkinName,
-                LookAndFeel.ActiveSvgPaletteName);
-
-        private Color SkinQuestionColor =>
-            DXSkinColorHelper.GetDXSkinColor(
-                DXSkinColors.FillColors.Question,
-                LookAndFeel.ActiveSkinName,
-                LookAndFeel.ActiveSvgPaletteName);
-
-        private Color SkinTextColor =>
-            DXSkinColorHelper.GetDXSkinColor(
-                DXSkinColors.ForeColors.WindowText,
-                LookAndFeel.ActiveSkinName,
-                LookAndFeel.ActiveSvgPaletteName);
-
-        private Color SkinSecondaryTextColor =>
-            DXSkinColorHelper.GetDXSkinColor(
-                DXSkinColors.ForeColors.DisabledText,
-                LookAndFeel.ActiveSkinName,
-                LookAndFeel.ActiveSvgPaletteName);
+        private bool _tableColumnsConfigured;
 
         public DashboardMdiForm() : base("Dashboard")
         {
@@ -104,8 +67,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _kpiValues[7] = lblKpi7Value;
             _kpiValues[8] = lblKpi8Value;
 
-            LookAndFeel.StyleChanged += LookAndFeel_StyleChanged;
-
             _refreshTimer =
                 new System.Windows.Forms.Timer
                 {
@@ -114,15 +75,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             _refreshTimer.Tick +=
                 RefreshDashboardTimer_Tick;
-
-            BuildDashboardAppearance();
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-
-            BuildDashboardAppearance();
 
             LoadSessionInfo();
 
@@ -136,8 +93,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _refreshTimer.Stop();
             _refreshTimer.Tick -= RefreshDashboardTimer_Tick;
             _refreshTimer.Dispose();
-
-            LookAndFeel.StyleChanged -= LookAndFeel_StyleChanged;
 
             base.OnFormClosed(e);
         }
@@ -158,226 +113,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 _refreshing = false;
             }
-        }
-
-        private void LookAndFeel_StyleChanged(object? sender, EventArgs e)
-        {
-            if (IsDisposed || Disposing)
-                return;
-
-            if (!IsHandleCreated)
-                return;
-
-            BeginInvoke(new Action(() =>
-            {
-                if (IsDisposed || Disposing)
-                    return;
-
-                BuildDashboardAppearance();
-            }));
-        }
-
-        private void BuildDashboardAppearance()
-        {
-            Color primary =
-                SkinPrimaryColor;
-
-            Color success =
-                SkinSuccessColor;
-
-            Color warning =
-                SkinWarningColor;
-
-            Color danger =
-                SkinDangerColor;
-
-            Color question =
-                SkinQuestionColor;
-
-            Color textColor =
-                SkinTextColor;
-
-            Color secondaryTextColor =
-                SkinSecondaryTextColor;
-
-            pnlHeader.BackColor =
-                primary;
-
-            pnlBody.BackColor =
-                Color.Transparent;
-
-            lblWelcome.ForeColor =
-                Color.White;
-
-            lblSub.ForeColor =
-                Color.White;
-
-            lblDate.ForeColor =
-                Color.White;
-
-            Color[] accents =
-            {
-                primary,
-                success,
-                warning,
-                primary,
-                question,
-                danger,
-                success,
-                warning
-            };
-
-            PanelControl[] cards =
-            {
-                kpi1,
-                kpi2,
-                kpi3,
-                kpi4,
-                kpi5,
-                kpi6,
-                kpi7,
-                kpi8
-            };
-
-            Panel[] accentPanels =
-            {
-                acc1,
-                acc2,
-                acc3,
-                acc4,
-                acc5,
-                acc6,
-                acc7,
-                acc8
-            };
-
-            Panel[] iconBadges =
-            {
-                pnlKpi1IconBadge,
-                pnlKpi2IconBadge,
-                pnlKpi3IconBadge,
-                pnlKpi4IconBadge,
-                pnlKpi5IconBadge,
-                pnlKpi6IconBadge,
-                pnlKpi7IconBadge,
-                pnlKpi8IconBadge
-            };
-
-            Label[] valueLabels =
-            {
-                lblKpi1Value,
-                lblKpi2Value,
-                lblKpi3Value,
-                lblKpi4Value,
-                lblKpi5Value,
-                lblKpi6Value,
-                lblKpi7Value,
-                lblKpi8Value
-            };
-
-            Label[] titleLabels =
-            {
-                lblKpi1Title,
-                lblKpi2Title,
-                lblKpi3Title,
-                lblKpi4Title,
-                lblKpi5Title,
-                lblKpi6Title,
-                lblKpi7Title,
-                lblKpi8Title
-            };
-
-            for (int i = 0; i < cards.Length; i++)
-            {
-                Color accent =
-                    accents[i];
-
-                // Kartları belirgin kılmak için Simple border ve aralarında boşluk için Margin
-                cards[i].BorderStyle =
-                    DevExpress.XtraEditors.Controls.BorderStyles.Simple;
-
-                cards[i].Margin =
-                    new Padding(8);
-
-                cards[i].Appearance.Options.UseBackColor =
-                    false;
-
-                cards[i].Appearance.Options.UseForeColor =
-                    false;
-
-                accentPanels[i].BackColor =
-                    accent;
-
-                iconBadges[i].BackColor =
-                    CreateTransparentColor(
-                        accent,
-                        32);
-
-                valueLabels[i].ForeColor =
-                    textColor;
-
-                titleLabels[i].ForeColor =
-                    secondaryTextColor;
-            }
-
-            ConfigureChartAppearance(
-                pnlChartRoles,
-                lblChartRolesTitle,
-                chartRoles,
-                "Rol Dağılımı");
-
-            ConfigureChartAppearance(
-                pnlChartCompanies,
-                lblChartCompaniesTitle,
-                chartCompanies,
-                "Şirket Bazlı Kullanıcılar");
-
-            ConfigureChartAppearance(
-                pnlChartAccounts,
-                lblChartAccountsTitle,
-                chartAccounts,
-                "Hesap Planı Türleri");
-
-            Refresh();
-        }
-
-        private static Color CreateTransparentColor(
-            Color color,
-            int alpha)
-        {
-            return Color.FromArgb(
-                alpha,
-                color.R,
-                color.G,
-                color.B);
-        }
-
-        private void ConfigureChartAppearance(
-            PanelControl panel,
-            Label title,
-            ChartControl chart,
-            string caption)
-        {
-            var textColor =
-                DXSkinColorHelper.GetDXSkinColor(
-                    DXSkinColors.ForeColors.WindowText,
-                    this.LookAndFeel.ActiveSkinName,
-                    this.LookAndFeel.ActiveSvgPaletteName);
-
-            // Grafik panellerini de belirgin kartlar haline getirip aralarına boşluk ekledik
-            panel.BorderStyle = BorderStyles.Simple;
-            panel.Margin = new Padding(8);
-            panel.Appearance.Options.UseBackColor = false;
-            panel.Appearance.Options.UseForeColor = false;
-
-            title.Text = caption;
-            title.ForeColor = textColor;
-            title.BackColor = Color.Transparent;
-            title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-
-            chart.BackColor = Color.Transparent;
-            chart.BorderOptions.Visibility = DefaultBoolean.False;
-            chart.Legend.EnableAntialiasing = DefaultBoolean.True;
         }
 
         private void LoadSessionInfo()
@@ -443,23 +178,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     scope.ServiceProvider
                         .GetRequiredService<ApplicationDbContext>();
 
-                int companyCount =
-                    await db.Set<Company>()
-                        .CountAsync();
-
-                int userCount =
-                    await db.Set<User>()
-                        .CountAsync();
-
-                int roleCount =
-                    await db.Set<Role>()
-                        .CountAsync();
-
-                int activeSessionCount =
-                    await db.Set<LoginToken>()
-                        .CountAsync(
-                            t => t.IsActive.Value);
-
                 int customerCount =
                     await db.Set<Customer>()
                         .CountAsync();
@@ -468,42 +186,101 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     await db.Set<Supplier>()
                         .CountAsync();
 
-                int accountCount =
-                    await db.Set<ChartOfAccount>()
-                        .CountAsync();
+                int approvedInvoiceCount =
+                    await db.Set<Invoice>()
+                        .CountAsync(
+                            i => i.Status == InvoiceStatus.Approved);
 
-                int photoCount =
-                    await db.Set<Photo>()
-                        .CountAsync();
+                int draftInvoiceCount =
+                    await db.Set<Invoice>()
+                        .CountAsync(
+                            i => i.Status == InvoiceStatus.Draft);
 
-                SetKpi(1, companyCount);
-                SetKpi(2, userCount);
-                SetKpi(3, roleCount);
-                SetKpi(4, activeSessionCount);
-                SetKpi(5, customerCount);
-                SetKpi(6, supplierCount);
-                SetKpi(7, accountCount);
-                SetKpi(8, photoCount);
+                (List<BalanceRow> receivables, List<BalanceRow> payables) =
+                    await LoadBalanceRowsAsync(db);
+
+                decimal totalReceivables =
+                    receivables.Sum(r => r.Balance);
+
+                decimal totalPayables =
+                    payables.Sum(r => -r.Balance);
+
+                List<CriticalStockRow> criticalStock =
+                    await LoadCriticalStockRowsAsync(db);
+
+                int inStockCount =
+                    await db.Set<Product>()
+                        .Select(
+                            p => p.Movements.Sum(
+                                m => m.MovementType == ProductMovementType.Input
+                                    ? m.Quantity
+                                    : -m.Quantity))
+                        .CountAsync(q => q > 0);
+
+                List<ChartPoint> invoiceStatus =
+                    BuildInvoiceStatus(
+                        approvedInvoiceCount,
+                        draftInvoiceCount);
+
+                List<BalancePoint> invoiceTrend =
+                    await LoadInvoiceTrendAsync(db);
+
+                List<StockPoint> stockMovements =
+                    await LoadStockMovementsAsync(db);
+
+                SetKpi(1, customerCount.ToString("N0"));
+                SetKpi(2, supplierCount.ToString("N0"));
+                SetKpi(3, totalReceivables.ToString("N2"));
+                SetKpi(4, totalPayables.ToString("N2"));
+                SetKpi(5, criticalStock.Count.ToString("N0"));
+                SetKpi(6, inStockCount.ToString("N0"));
+                SetKpi(7, approvedInvoiceCount.ToString("N0"));
+                SetKpi(8, draftInvoiceCount.ToString("N0"));
+
+                ConfigureTableColumns();
+
+                gridReceivables.DataSource = receivables;
+                gridPayables.DataSource = payables;
+                gridCriticalStock.DataSource = criticalStock;
+
+                LoadMoneyBar(
+                    chartReceivables,
+                    receivables
+                        .Take(10)
+                        .Select(r => new BalancePoint(r.AccountName, r.Balance))
+                        .ToList());
+
+                LoadMoneyBar(
+                    chartPayables,
+                    payables
+                        .Take(10)
+                        .Select(r => new BalancePoint(r.AccountName, -r.Balance))
+                        .ToList());
+
+                LoadDoughnut(
+                    chartCriticalStock,
+                    criticalStock
+                        .GroupBy(c => c.CategoryName)
+                        .Select(g => new ChartPoint(g.Key, g.Count()))
+                        .OrderByDescending(p => p.Count)
+                        .ToList());
+
+                LoadDoughnut(
+                    chartInvoiceStatus,
+                    invoiceStatus);
+
+                LoadTrend(
+                    chartInvoiceTrend,
+                    invoiceTrend);
+
+                LoadStockBar(
+                    chartStockMovements,
+                    stockMovements);
 
                 _hasLoadedOnce =
                     true;
 
                 UpdateLastUpdatedStamp();
-
-                List<ChartPoint> roleData =
-                    await LoadRoleDistributionAsync(db);
-
-                List<ChartPoint> companyData =
-                    await LoadCompanyDistributionAsync(db);
-
-                List<ChartPoint> accountData =
-                    await LoadAccountTypeDistributionAsync(db);
-
-                LoadDoughnut(chartRoles, roleData);
-                LoadBar(chartCompanies, companyData);
-                LoadDoughnut(chartAccounts, accountData);
-
-                BuildDashboardAppearance();
             }
             catch
             {
@@ -527,121 +304,367 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private void SetKpi(
             int index,
-            int? value)
+            string? value)
         {
             if (_kpiValues.TryGetValue(
                     index,
                     out Label? label))
             {
                 label.Text =
-                    value?.ToString("N0")
+                    value
                     ?? "-";
             }
         }
 
-        private static async Task<List<ChartPoint>>
-            LoadRoleDistributionAsync(
-                ApplicationDbContext db)
+        private void ConfigureTableColumns()
         {
-            var rows =
-                await
-                (
-                    from u in db.Set<User>()
-                    join r in db.Set<Role>()
-                        on u.RoleId equals r.Id
-                    group u by r.Name.Value
-                    into g
-                    select new
-                    {
-                        Label = g.Key,
-                        Count = g.Count()
-                    }
-                ).ToListAsync();
-
-            return rows
-                .Select(
-                    x =>
-                        new ChartPoint(
-                            x.Label,
-                            x.Count))
-                .ToList();
-        }
-
-        private static async Task<List<ChartPoint>>
-            LoadCompanyDistributionAsync(
-                ApplicationDbContext db)
-        {
-            var rows =
-                await
-                (
-                    from u in db.Set<User>()
-                    join c in db.Set<Company>()
-                        on u.CompanyId equals c.Id
-                    group u by c.Name.Value
-                    into g
-                    orderby g.Count() descending
-                    select new
-                    {
-                        Label = g.Key,
-                        Count = g.Count()
-                    }
-                ).ToListAsync();
-
-            return rows
-                .Select(
-                    x =>
-                        new ChartPoint(
-                            x.Label,
-                            x.Count))
-                .ToList();
-        }
-
-        private static async Task<List<ChartPoint>>
-            LoadAccountTypeDistributionAsync(
-                ApplicationDbContext db)
-        {
-            var rows =
-                await
-                (
-                    from a in db.Set<ChartOfAccount>()
-                    group a by a.Type
-                    into g
-                    select new
-                    {
-                        Type = g.Key,
-                        Count = g.Count()
-                    }
-                ).ToListAsync();
-
-            return rows
-                .Select(
-                    x =>
-                        new ChartPoint(
-                            AccountTypeText(x.Type),
-                            x.Count))
-                .ToList();
-        }
-
-        private static string AccountTypeText(
-            ChartOfAccountType type)
-        {
-            return type switch
+            if (_tableColumnsConfigured)
             {
-                ChartOfAccountType.MainGroup =>
-                    "Ana Grup",
+                return;
+            }
 
-                ChartOfAccountType.Warehouse =>
-                    "Depo",
+            _tableColumnsConfigured =
+                true;
 
-                ChartOfAccountType.Category =>
-                    "Kategori",
+            AddColumn(viewReceivables, "Müşteri", nameof(BalanceRow.AccountName), 120);
+            AddColumn(viewReceivables, "Toplam Borç", nameof(BalanceRow.TotalDebit), 70, "n2");
+            AddColumn(viewReceivables, "Toplam Alacak", nameof(BalanceRow.TotalCredit), 70, "n2");
+            AddColumn(viewReceivables, "Alacak Bakiyesi", nameof(BalanceRow.Balance), 85, "n2");
 
-                ChartOfAccountType.Workshop =>
-                    "Atölye",
+            AddColumn(viewPayables, "Tedarikçi", nameof(BalanceRow.AccountName), 120);
+            AddColumn(viewPayables, "Toplam Borç", nameof(BalanceRow.TotalDebit), 70, "n2");
+            AddColumn(viewPayables, "Toplam Alacak", nameof(BalanceRow.TotalCredit), 70, "n2");
+            AddColumn(viewPayables, "Borç Bakiyesi", nameof(BalanceRow.Balance), 85, "n2");
 
-                _ =>
-                    type.ToString()
-            };
+            AddColumn(viewCriticalStock, "Ürün Kodu", nameof(CriticalStockRow.ProductCode), 75);
+            AddColumn(viewCriticalStock, "Ürün Adı", nameof(CriticalStockRow.ProductName), 105);
+            AddColumn(viewCriticalStock, "Kategori", nameof(CriticalStockRow.CategoryName), 60);
+            AddColumn(viewCriticalStock, "Stok", nameof(CriticalStockRow.Stock), 50, "n0");
+            AddColumn(viewCriticalStock, "Min. Seviye", nameof(CriticalStockRow.MinimumLevel), 60, "n0");
+        }
+
+        private static void AddColumn(
+            GridView view,
+            string caption,
+            string fieldName,
+            int width,
+            string? format = null)
+        {
+            GridColumn column =
+                new()
+                {
+                    Caption = caption,
+                    FieldName = fieldName,
+                    Visible = true,
+                    Width = width
+                };
+
+            if (format != null)
+            {
+                column.DisplayFormat.FormatType =
+                    FormatType.Numeric;
+
+                column.DisplayFormat.FormatString =
+                    format;
+            }
+
+            view.Columns.Add(column);
+        }
+
+        private static async Task<(List<BalanceRow> Receivables, List<BalanceRow> Payables)>
+            LoadBalanceRowsAsync(
+                ApplicationDbContext db)
+        {
+            List<CurrentAccountMovement> movements =
+                await db.Set<CurrentAccountMovement>()
+                    .Where(
+                        m => m.CustomerId != null
+                            || m.SupplierId != null)
+                    .ToListAsync();
+
+            Dictionary<Guid, string> customerNames =
+                await db.Set<Customer>()
+                    .ToDictionaryAsync(
+                        c => c.Id.Value,
+                        c => c.Name.Value);
+
+            Dictionary<Guid, string> supplierNames =
+                await db.Set<Supplier>()
+                    .ToDictionaryAsync(
+                        s => s.Id.Value,
+                        s => s.Name.Value);
+
+            List<BalanceRow> receivables =
+                movements
+                    .Where(
+                        m => m.CurrentAccountType == CurrentAccountType.Customer
+                            && m.CustomerId != null)
+                    .GroupBy(m => m.CustomerId!.Value)
+                    .Select(g =>
+                    {
+                        decimal debit = g.Sum(m => m.Debit);
+                        decimal credit = g.Sum(m => m.Credit);
+
+                        return new BalanceRow(
+                            "Müşteri",
+                            customerNames.TryGetValue(g.Key, out string? name)
+                                ? name
+                                : "-",
+                            debit,
+                            credit,
+                            debit - credit);
+                    })
+                    .Where(r => r.Balance > 0)
+                    .OrderByDescending(r => r.Balance)
+                    .ToList();
+
+            List<BalanceRow> payables =
+                movements
+                    .Where(
+                        m => m.CurrentAccountType == CurrentAccountType.Supplier
+                            && m.SupplierId != null)
+                    .GroupBy(m => m.SupplierId!.Value)
+                    .Select(g =>
+                    {
+                        decimal debit = g.Sum(m => m.Debit);
+                        decimal credit = g.Sum(m => m.Credit);
+
+                        return new BalanceRow(
+                            "Tedarikçi",
+                            supplierNames.TryGetValue(g.Key, out string? name)
+                                ? name
+                                : "-",
+                            debit,
+                            credit,
+                            debit - credit);
+                    })
+                    .Where(r => r.Balance < 0)
+                    .OrderBy(r => r.Balance)
+                    .ToList();
+
+            return (receivables, payables);
+        }
+
+        private static async Task<List<CriticalStockRow>>
+            LoadCriticalStockRowsAsync(
+                ApplicationDbContext db)
+        {
+            var rows =
+                await db.Set<Product>()
+                    .Select(
+                        p => new
+                        {
+                            ProductCode = p.ProductCode.Value,
+                            ProductName = p.Name.Value,
+                            CategoryName = p.Category!.Name.Value,
+                            MinimumLevel = p.MinimumProductLevel,
+                            Stock = p.Movements.Sum(
+                                m => m.MovementType == ProductMovementType.Input
+                                    ? m.Quantity
+                                    : -m.Quantity)
+                        })
+                    .ToListAsync();
+
+            return rows
+                .Where(
+                    r => r.Stock <= 0
+                        || (r.MinimumLevel != null && r.Stock <= r.MinimumLevel))
+                .OrderBy(r => r.Stock)
+                .Take(50)
+                .Select(
+                    r => new CriticalStockRow(
+                        r.ProductCode,
+                        r.ProductName,
+                        r.CategoryName,
+                        r.Stock,
+                        r.MinimumLevel))
+                .ToList();
+        }
+
+        private static List<ChartPoint> BuildInvoiceStatus(
+            int approvedCount,
+            int draftCount)
+        {
+            List<ChartPoint> points = new();
+
+            if (draftCount > 0)
+            {
+                points.Add(new ChartPoint("Taslak", draftCount));
+            }
+
+            if (approvedCount > 0)
+            {
+                points.Add(new ChartPoint("Onaylı", approvedCount));
+            }
+
+            return points;
+        }
+
+        private static async Task<List<BalancePoint>> LoadInvoiceTrendAsync(
+            ApplicationDbContext db)
+        {
+            var raw =
+                await db.Set<Invoice>()
+                    .Where(i => i.Status == InvoiceStatus.Approved)
+                    .Select(i => new { i.Date, i.GrandTotal })
+                    .ToListAsync();
+
+            DateOnly firstMonth =
+                new DateOnly(
+                    DateTime.Today.Year,
+                    DateTime.Today.Month,
+                    1).AddMonths(-5);
+
+            var grouped =
+                raw
+                    .Where(x => x.Date >= firstMonth)
+                    .GroupBy(x => new { x.Date.Year, x.Date.Month })
+                    .Select(
+                        g => new
+                        {
+                            g.Key.Year,
+                            g.Key.Month,
+                            Total = g.Sum(x => x.GrandTotal)
+                        })
+                    .ToList();
+
+            CultureInfo culture =
+                CultureInfo.GetCultureInfo("tr-TR");
+
+            List<BalancePoint> result = new();
+
+            for (int i = 0; i < 6; i++)
+            {
+                DateOnly month =
+                    firstMonth.AddMonths(i);
+
+                var point =
+                    grouped.FirstOrDefault(
+                        g => g.Year == month.Year
+                            && g.Month == month.Month);
+
+                result.Add(
+                    new BalancePoint(
+                        month.ToString("MMMM", culture),
+                        point?.Total ?? 0));
+            }
+
+            return result;
+        }
+
+        private static async Task<List<StockPoint>> LoadStockMovementsAsync(
+            ApplicationDbContext db)
+        {
+            var raw =
+                await db.Set<ProductMovement>()
+                    .Select(
+                        m => new
+                        {
+                            m.Date,
+                            m.MovementType,
+                            m.Quantity
+                        })
+                    .ToListAsync();
+
+            DateOnly firstMonth =
+                new DateOnly(
+                    DateTime.Today.Year,
+                    DateTime.Today.Month,
+                    1).AddMonths(-5);
+
+            CultureInfo culture =
+                CultureInfo.GetCultureInfo("tr-TR");
+
+            List<StockPoint> result = new();
+
+            for (int i = 0; i < 6; i++)
+            {
+                DateOnly month =
+                    firstMonth.AddMonths(i);
+
+                decimal input =
+                    raw
+                        .Where(
+                            m => m.Date.Year == month.Year
+                                && m.Date.Month == month.Month
+                                && m.MovementType == ProductMovementType.Input)
+                        .Sum(m => m.Quantity);
+
+                decimal output =
+                    raw
+                        .Where(
+                            m => m.Date.Year == month.Year
+                                && m.Date.Month == month.Month
+                                && m.MovementType == ProductMovementType.Output)
+                        .Sum(m => m.Quantity);
+
+                result.Add(
+                    new StockPoint(
+                        month.ToString("MMMM", culture),
+                        input,
+                        output));
+            }
+
+            return result;
+        }
+
+        private static void LoadMoneyBar(
+            ChartControl chart,
+            List<BalancePoint> data)
+        {
+            chart.Series.Clear();
+
+            if (data.Count == 0)
+            {
+                chart.Legend.Visibility =
+                    DefaultBoolean.False;
+
+                return;
+            }
+
+            Series series =
+                new Series(
+                    "Tutar",
+                    ViewType.Bar)
+                {
+                    DataSource = data,
+                    ArgumentDataMember =
+                        nameof(BalancePoint.Label)
+                };
+
+            series.ValueDataMembers.AddRange(
+                nameof(BalancePoint.Amount));
+
+            if (series.View is BarSeriesView barView)
+            {
+                barView.Border.Visibility = DefaultBoolean.False;
+            }
+
+            chart.Series.Add(series);
+
+            chart.Legend.Visibility =
+                DefaultBoolean.False;
+
+            if (chart.Diagram is XYDiagram diagram)
+            {
+                diagram.Rotated =
+                    true;
+
+                diagram.AxisX.Title.Visibility =
+                    DefaultBoolean.False;
+
+                diagram.AxisY.Title.Visibility =
+                    DefaultBoolean.False;
+
+                diagram.AxisX.Label.TextPattern =
+                    "{A}";
+
+                diagram.AxisY.Label.TextPattern =
+                    "{V:N0}";
+
+                diagram.AxisY.WholeRange.Auto =
+                    true;
+            }
         }
 
         private static void LoadDoughnut(
@@ -697,9 +720,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
         }
 
-        private static void LoadBar(
+        private static void LoadTrend(
             ChartControl chart,
-            List<ChartPoint> data)
+            List<BalancePoint> data)
         {
             chart.Series.Clear();
 
@@ -713,16 +736,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             Series series =
                 new Series(
-                    "Kullanıcı",
-                    ViewType.Bar)
+                    "Aylık Tutar",
+                    ViewType.Area)
                 {
                     DataSource = data,
                     ArgumentDataMember =
-                        nameof(ChartPoint.Label)
+                        nameof(BalancePoint.Label)
                 };
 
             series.ValueDataMembers.AddRange(
-                nameof(ChartPoint.Count));
+                nameof(BalancePoint.Amount));
+
+            series.LabelsVisibility =
+                DefaultBoolean.False;
+
+            if (series.View is AreaSeriesView areaView)
+            {
+                areaView.MarkerVisibility = DefaultBoolean.False;
+                areaView.Border.Visibility = DefaultBoolean.False;
+            }
 
             chart.Series.Add(series);
 
@@ -731,9 +763,96 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             if (chart.Diagram is XYDiagram diagram)
             {
-                diagram.Rotated =
-                    false;
+                diagram.AxisX.Title.Visibility =
+                    DefaultBoolean.False;
 
+                diagram.AxisY.Title.Visibility =
+                    DefaultBoolean.False;
+
+                diagram.AxisX.Label.TextPattern =
+                    "{A}";
+
+                diagram.AxisY.Label.TextPattern =
+                    "{V:N0}";
+
+                diagram.AxisY.WholeRange.Auto =
+                    true;
+            }
+        }
+
+        private static void LoadStockBar(
+            ChartControl chart,
+            List<StockPoint> data)
+        {
+            chart.Series.Clear();
+
+            if (data.Count == 0)
+            {
+                chart.Legend.Visibility =
+                    DefaultBoolean.False;
+
+                return;
+            }
+
+            Series inputSeries =
+                new Series(
+                    "Giriş",
+                    ViewType.Bar)
+                {
+                    DataSource = data,
+                    ArgumentDataMember =
+                        nameof(StockPoint.Label)
+                };
+
+            inputSeries.ValueDataMembers.AddRange(
+                nameof(StockPoint.Input));
+
+            inputSeries.LabelsVisibility =
+                DefaultBoolean.False;
+
+            Series outputSeries =
+                new Series(
+                    "Çıkış",
+                    ViewType.Bar)
+                {
+                    DataSource = data,
+                    ArgumentDataMember =
+                        nameof(StockPoint.Label)
+                };
+
+            outputSeries.ValueDataMembers.AddRange(
+                nameof(StockPoint.Output));
+
+            outputSeries.LabelsVisibility =
+                DefaultBoolean.False;
+
+            if (inputSeries.View is BarSeriesView inView)
+            {
+                inView.Border.Visibility = DefaultBoolean.False;
+            }
+
+            if (outputSeries.View is BarSeriesView outView)
+            {
+                outView.Border.Visibility = DefaultBoolean.False;
+            }
+
+            chart.Series.Add(inputSeries);
+            chart.Series.Add(outputSeries);
+
+            chart.Legend.Visibility =
+                DefaultBoolean.True;
+
+            chart.Legend.AlignmentHorizontal =
+                LegendAlignmentHorizontal.Center;
+
+            chart.Legend.AlignmentVertical =
+                LegendAlignmentVertical.Bottom;
+
+            chart.Legend.EnableAntialiasing =
+                DefaultBoolean.True;
+
+            if (chart.Diagram is XYDiagram diagram)
+            {
                 diagram.AxisX.Title.Visibility =
                     DefaultBoolean.False;
 

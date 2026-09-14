@@ -11,6 +11,7 @@ using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -29,12 +30,13 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
-    public partial class ProductEditForm : XtraForm
+    public partial class ProductEditForm : SkinSensitiveForm
     {
         private readonly ProductDto? _editing;
-        private readonly BindingList<PriceRowVm> _prices = [];
-        private readonly BindingList<ImageRowVm> _images = [];
+        private readonly BindingList<ProductPriceDto> _prices = [];
+        private readonly BindingList<ProductImageDto> _images = [];
         private readonly List<ProductMovementDto> _movements = [];
+        private readonly Dictionary<string, Image?> _imageCache = [];
         private List<ProductUnitTypeDto> _unitTypes = [];
         private List<TaxRateDto> _taxRates = [];
         private List<ChartOfAccountLookUpDto> _accounts = [];
@@ -56,16 +58,42 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             lblTitle.Text = Text;
             lblSubtitle.Text = _editing is null ? "Yeni ürün kartı oluşturmak için bilgileri doldurun" : "Ürün bilgilerini güncelleyin";
 
+            ConfigurePriceGrid();
+            ConfigureMovementGrid();
+            ConfigureImageColumns();
             gridPrices.DataSource = _prices;
             gridImages.DataSource = _images;
-            ConfigureImageColumns();
 
             WireEvents();
+        }
+
+        private void ConfigurePriceGrid()
+        {
+            GridColumnFactory.ConfigureFromAttributes(gridPriceView, typeof(ProductPriceDto));
+
+            foreach (GridColumn column in gridPriceView.Columns)
+            {
+                column.ColumnEdit = column.FieldName switch
+                {
+                    nameof(ProductPriceDto.PriceTypeName) => riCombo,
+                    nameof(ProductPriceDto.UnitPrice) => riSpin,
+                    nameof(ProductPriceDto.StartDate) => riDate,
+                    nameof(ProductPriceDto.EndDate) => riDateNull,
+                    _ => column.ColumnEdit
+                };
+            }
+        }
+
+        private void ConfigureMovementGrid()
+        {
+            GridColumnFactory.ConfigureFromAttributes(gridMovementView, typeof(ProductMovementDto));
+            gridMovementView.OptionsBehavior.ReadOnly = true;
         }
 
         private void ConfigureImageColumns()
         {
             gridImageView.Columns.Clear();
+            gridImageView.CustomUnboundColumnData += GridImageView_CustomUnboundColumnData;
 
             RepositoryItemPictureEdit riPicture = new()
             {
@@ -77,7 +105,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             GridColumn colImage = new()
             {
                 Caption = "Resim",
-                FieldName = nameof(ImageRowVm.Image),
+                FieldName = "ImageUnbound",
+                UnboundDataType = typeof(Image),
                 Visible = true,
                 Width = 80,
                 ColumnEdit = riPicture
@@ -87,7 +116,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             GridColumn colPath = new()
             {
                 Caption = "Resim Yolu",
-                FieldName = nameof(ImageRowVm.Path),
+                FieldName = nameof(ProductImageDto.Path),
                 Visible = true,
                 Width = 280
             };
@@ -95,7 +124,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             GridColumn colIsPrimary = new()
             {
                 Caption = "Ana Resim",
-                FieldName = nameof(ImageRowVm.IsPrimary),
+                FieldName = nameof(ProductImageDto.IsPrimary),
                 Visible = true,
                 Width = 90,
                 ColumnEdit = riCheck
@@ -103,6 +132,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
             gridImageView.Columns.AddRange([colImage, colPath, colIsPrimary]);
             gridImageView.RowHeight = 65;
+        }
+
+        private void GridImageView_CustomUnboundColumnData(object? sender, CustomColumnDataEventArgs e)
+        {
+            if (e.IsGetData && e.Column.FieldName == "ImageUnbound" && e.Row is ProductImageDto img)
+            {
+                e.Value = GetOrLoadImage(img.Path);
+            }
         }
 
         private void WireEvents()
@@ -316,22 +353,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
             foreach (ProductPriceDto p in full.Prices)
             {
-                _prices.Add(new PriceRowVm
+                _prices.Add(new ProductPriceDto
                 {
-                    PriceTypeName = p.PriceType == ProductPriceType.Sale ? "Satış" : "Alış",
+                    Id = p.Id,
+                    PriceType = p.PriceType,
                     UnitPrice = p.UnitPrice,
-                    StartDate = p.StartDate.ToDateTime(TimeOnly.MinValue),
-                    EndDate = p.EndDate?.ToDateTime(TimeOnly.MinValue)
+                    StartDate = p.StartDate,
+                    EndDate = p.EndDate
                 });
             }
 
             foreach (ProductImageDto img in full.Images)
             {
-                _images.Add(new ImageRowVm
+                _images.Add(new ProductImageDto
                 {
                     Path = img.Path,
-                    IsPrimary = img.IsPrimary,
-                    Image = LoadImageSafe(img.Path)
+                    IsPrimary = img.IsPrimary
                 });
             }
 
@@ -339,8 +376,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             gridPriceView.BestFitColumns();
         }
 
-        private static Image? LoadImageSafe(string relativePath)
+        private Image? GetOrLoadImage(string relativePath)
         {
+            if (_imageCache.TryGetValue(relativePath, out Image? cached))
+            {
+                return cached;
+            }
+
+            Image? img = null;
             try
             {
                 string fullPath = StorageRoot.Resolve(relativePath);
@@ -349,11 +392,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                     using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
                     using var ms = new MemoryStream();
                     fs.CopyTo(ms);
-                    return SafeBitmap(ms);
+                    img = SafeBitmap(ms);
                 }
             }
             catch { }
-            return null;
+
+            _imageCache[relativePath] = img;
+            return img;
         }
 
         private static Image? SafeBitmap(MemoryStream ms)
@@ -458,8 +503,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                     ClearBarcodePreview();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                CrashLog.WriteException("ProductEditForm.BarcodePreview", ex);
                 ClearBarcodePreview();
             }
         }
@@ -526,11 +572,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         private void BtnAddPrice_Click(object? sender, EventArgs e)
         {
-            _prices.Add(new PriceRowVm
+            _prices.Add(new ProductPriceDto
             {
-                PriceTypeName = "Satış",
+                PriceType = ProductPriceType.Sale,
                 UnitPrice = 0,
-                StartDate = DateTime.Today,
+                StartDate = DateOnly.FromDateTime(DateTime.Today),
                 EndDate = null
             });
 
@@ -562,11 +608,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                     Path.GetFileName(file),
                     "ProductImages");
 
-                _images.Add(new ImageRowVm
+                _images.Add(new ProductImageDto
                 {
                     Path = relativePath,
-                    IsPrimary = false,
-                    Image = LoadImageSafe(relativePath)
+                    IsPrimary = false
                 });
             }
 
@@ -594,7 +639,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         private void GridImageView_CellValueChanging(object? sender, CellValueChangedEventArgs e)
         {
-            if (e.Column.FieldName == nameof(ImageRowVm.IsPrimary))
+            if (e.Column.FieldName == nameof(ProductImageDto.IsPrimary))
             {
                 gridImageView.CloseEditor();
                 bool newValue = Convert.ToBoolean(e.Value);
@@ -659,6 +704,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             }
             catch (Exception ex)
             {
+                CrashLog.WriteException("ProductEditForm.Save", ex);
                 ToastHelper.Show("Kaydetme sırasında bir hata oluştu: " + ex.Message, ToastType.Error, 5000);
             }
         }
@@ -675,11 +721,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             bool isActive = chkActive.Checked;
 
             List<ProductPriceRow> priceRows = _prices.Select(p => new ProductPriceRow(
-                null,
-                p.PriceTypeName == "Satış" ? ProductPriceType.Sale : ProductPriceType.Purchase,
+                p.Id == Guid.Empty ? null : p.Id,
+                p.PriceType,
                 p.UnitPrice,
-                DateOnly.FromDateTime(p.StartDate),
-                p.EndDate is { } end ? DateOnly.FromDateTime(end) : null)).ToList();
+                p.StartDate,
+                p.EndDate)).ToList();
 
             List<ProductImageRow> imageRows = _images.Select(i => new ProductImageRow(null, i.Path, i.IsPrimary)).ToList();
 
@@ -749,21 +795,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             cmbWarehouse.ErrorText = string.Empty;
             cmbCategory.ErrorText = string.Empty;
             cmbUnitType.ErrorText = string.Empty;
-        }
-
-        private sealed class PriceRowVm
-        {
-            public string PriceTypeName { get; set; } = "Satış";
-            public decimal UnitPrice { get; set; }
-            public DateTime StartDate { get; set; } = DateTime.Today;
-            public DateTime? EndDate { get; set; }
-        }
-
-        private sealed class ImageRowVm
-        {
-            public string Path { get; set; } = default!;
-            public bool IsPrimary { get; set; }
-            public Image? Image { get; set; }
         }
     }
 }

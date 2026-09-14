@@ -10,9 +10,10 @@ public sealed record CurrentAccountMovementGetAllQuery(
     CurrentAccountType? AccountType = null,
     Guid? CustomerId = null,
     Guid? SupplierId = null,
-    bool OnlyDeleted = false) : IRequest<IQueryable<CurrentAccountMovementDto>>
+    bool OnlyDeleted = false,
+    CurrentAccountMovementType[]? MovementTypes = null) : IRequest<IQueryable<CurrentAccountMovementDto>>
 {
-    public CurrentAccountMovementGetAllQuery() : this(null, null, null, false) { }
+    public CurrentAccountMovementGetAllQuery() : this(null, null, null, false, null) { }
 }
 
 internal sealed class CurrentAccountMovementGetAllQueryHandler(
@@ -27,6 +28,11 @@ internal sealed class CurrentAccountMovementGetAllQueryHandler(
         if (request.AccountType.HasValue)
         {
             source = source.Where(i => i.Entity.CurrentAccountType == request.AccountType.Value);
+        }
+
+        if (request.MovementTypes is { Length: > 0 })
+        {
+            source = source.Where(i => request.MovementTypes!.Contains(i.Entity.MovementType));
         }
 
         if (request.CustomerId.HasValue)

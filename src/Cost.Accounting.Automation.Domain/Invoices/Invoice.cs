@@ -43,7 +43,10 @@ public sealed class Invoice : Entity, IHardDeletable
 
     public Description Description { get; private set; } = default!;
 
+    public InvoiceStatus Status { get; private set; } = InvoiceStatus.Draft;
+
     public decimal SubTotal { get; private set; }
+    public decimal DiscountTotal { get; private set; }
     public decimal TaxTotal { get; private set; }
     public decimal GrandTotal { get; private set; }
 
@@ -54,6 +57,14 @@ public sealed class Invoice : Entity, IHardDeletable
     public void SetCustomer(IdentityId? customerId) => CustomerId = customerId;
     public void SetSupplier(IdentityId? supplierId) => SupplierId = supplierId;
     public void SetDescription(Description description) => Description = description;
+
+    public void Approve()
+    {
+        if (Status == InvoiceStatus.Draft)
+        {
+            Status = InvoiceStatus.Approved;
+        }
+    }
 
     public void AddLine(InvoiceLine line)
     {
@@ -76,6 +87,7 @@ public sealed class Invoice : Entity, IHardDeletable
     public void CalculateTotals()
     {
         SubTotal = _lines.Sum(l => l.Quantity * l.UnitPrice);
+        DiscountTotal = _lines.Sum(l => l.Quantity * l.UnitPrice * l.DiscountRate / 100m);
         TaxTotal = _lines.Sum(l => l.TaxAmount);
         GrandTotal = _lines.Sum(l => l.TotalAmount);
     }

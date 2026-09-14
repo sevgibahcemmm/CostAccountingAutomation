@@ -14,6 +14,7 @@ public sealed class InvoiceLine : Entity, IHardDeletable
         IdentityId productId,
         decimal quantity,
         decimal unitPrice,
+        decimal discountRate,
         decimal taxRateRate,
         decimal taxAmount,
         decimal totalAmount,
@@ -22,6 +23,7 @@ public sealed class InvoiceLine : Entity, IHardDeletable
         ProductId = productId;
         Quantity = quantity;
         UnitPrice = unitPrice;
+        DiscountRate = discountRate;
         TaxRateRate = taxRateRate;
         TaxAmount = taxAmount;
         TotalAmount = totalAmount;
@@ -34,6 +36,7 @@ public sealed class InvoiceLine : Entity, IHardDeletable
 
     public decimal Quantity { get; private set; }
     public decimal UnitPrice { get; private set; }
+    public decimal DiscountRate { get; private set; }
     public decimal TaxRateRate { get; private set; }
     public decimal TaxAmount { get; private set; }
     public decimal TotalAmount { get; private set; }
@@ -45,6 +48,7 @@ public sealed class InvoiceLine : Entity, IHardDeletable
         IdentityId productId,
         decimal quantity,
         decimal unitPrice,
+        decimal discountRate,
         decimal taxRateRate,
         decimal taxAmount,
         decimal totalAmount,
@@ -53,6 +57,7 @@ public sealed class InvoiceLine : Entity, IHardDeletable
         ProductId = productId;
         Quantity = quantity;
         UnitPrice = unitPrice;
+        DiscountRate = discountRate;
         TaxRateRate = taxRateRate;
         TaxAmount = taxAmount;
         TotalAmount = totalAmount;

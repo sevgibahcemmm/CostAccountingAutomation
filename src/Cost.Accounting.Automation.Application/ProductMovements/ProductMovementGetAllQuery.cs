@@ -9,9 +9,10 @@ namespace Cost.Accounting.Automation.Application.ProductMovements;
 public sealed record ProductMovementGetAllQuery(
     Guid? ProductId = null,
     ProductMovementType? MovementType = null,
+    Guid? WarehouseId = null,
     bool OnlyDeleted = false) : IRequest<IQueryable<ProductMovementListDto>>
 {
-    public ProductMovementGetAllQuery() : this(null, null, false) { }
+    public ProductMovementGetAllQuery() : this(null, null, null, false) { }
 }
 
 internal sealed class ProductMovementGetAllQueryHandler(
@@ -32,6 +33,12 @@ internal sealed class ProductMovementGetAllQueryHandler(
         if (request.MovementType.HasValue)
         {
             source = source.Where(i => i.Entity.MovementType == request.MovementType.Value);
+        }
+
+        if (request.WarehouseId.HasValue)
+        {
+            IdentityId warehouseId = new(request.WarehouseId.Value);
+            source = source.Where(i => i.Entity.Product != null && i.Entity.Product.WarehouseId == warehouseId);
         }
 
         return Task.FromResult(source.MapTo().AsQueryable());

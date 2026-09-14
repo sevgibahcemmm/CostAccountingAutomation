@@ -23,7 +23,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 IconOptions.SvgImage = icon;
             }
 
-            pnlHeader.Paint += PnlHeader_Paint;
             pnlBody.Resize += (s, e) => CenterContent();
             btnClosePage.Click += (_, _) => Close();
             CenterContent();

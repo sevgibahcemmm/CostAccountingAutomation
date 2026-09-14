@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Permissions;
 using Cost.Accounting.Automation.Application.Roles;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -16,7 +17,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 {
-    public partial class RoleEditForm : XtraForm
+    public partial class RoleEditForm : SkinSensitiveForm
     {
         private static readonly Font FontBold = new("Segoe UI", 9F, FontStyle.Bold);
         private static readonly Font FontStrikeout = new("Segoe UI", 9F, FontStyle.Strikeout);
@@ -233,7 +234,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 
             if (e.Node.HasChildren)
             {
-                if (e.Node.CheckState == CheckState.Checked)
+                if (e.Node.CheckState == CheckState.Checked && !SkinTheme.IsDarkSkin)
                 {
                     e.Appearance.BackColor = CheckedBack;
                 }
@@ -252,15 +253,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 
             if (isChecked)
             {
-                e.Appearance.BackColor = wasSet ? CheckedBack : AddedBack;
-                e.Appearance.ForeColor = wasSet ? SystemColors.ControlText : Color.FromArgb(35, 90, 160);
-                e.Appearance.Font = wasSet ? FontBold : FontBold;
+                if (!SkinTheme.IsDarkSkin)
+                {
+                    e.Appearance.BackColor = wasSet ? CheckedBack : AddedBack;
+                    e.Appearance.ForeColor = wasSet ? SystemColors.ControlText : SkinTheme.Primary;
+                }
+
+                e.Appearance.Font = FontBold;
             }
             else if (wasSet)
             {
-                e.Appearance.ForeColor = RemovedFore;
+                e.Appearance.ForeColor = SkinTheme.IsDarkSkin ? SkinTheme.Warning : RemovedFore;
                 e.Appearance.Font = FontStrikeout;
-                e.Appearance.BackColor = Color.FromArgb(255, 242, 238);
+
+                if (!SkinTheme.IsDarkSkin)
+                {
+                    e.Appearance.BackColor = Color.FromArgb(255, 242, 238);
+                }
             }
         }
 

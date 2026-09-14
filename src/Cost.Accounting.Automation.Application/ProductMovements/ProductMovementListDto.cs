@@ -5,21 +5,49 @@ namespace Cost.Accounting.Automation.Application.ProductMovements;
 
 public sealed class ProductMovementListDto : EntityDto
 {
+    [Column("Ürün Id", IsVisible = false)]
     public Guid ProductId { get; set; }
+
+    [Column("Ürün Adı", Order = 30, Width = 200)]
     public string ProductName { get; set; } = default!;
+
+    [Column("Ürün Kodu", Order = 20, Width = 100, Alignment = "Right")]
     public string ProductCode { get; set; } = default!;
+
+    [Column("Barkod", Order = 100, IsVisible = false)]
     public string? Barcode { get; set; }
+
+    [Column("Depo", Order = 40, Width = 120)]
     public string WarehouseName { get; set; } = default!;
+
+    [Column("Birim", Order = 55, Width = 70, Alignment = "Center")]
     public string UnitTypeName { get; set; } = default!;
 
+    [Column("Hareket Türü", IsVisible = false)]
     public ProductMovementType MovementType { get; set; }
+
+    [Column("Hareket Türü", Order = 15, Width = 80, Alignment = "Center")]
     public string MovementTypeName => MovementType == ProductMovementType.Input ? "Giriş" : "Çıkış";
+
+    [Column("Miktar", Order = 50, Width = 90, Format = "n2", Alignment = "Right")]
     public decimal Quantity { get; set; }
+
+    [Column("Birim Fiyat", Order = 60, Width = 100, Format = "n2", Alignment = "Right")]
     public decimal? UnitPrice { get; set; }
+
+    [Column("Toplam Tutar", Order = 70, Width = 110, Format = "n2", Alignment = "Right")]
     public decimal? TotalPrice => UnitPrice.HasValue ? Quantity * UnitPrice.Value : null;
+
+    [Column("Tarih", Order = 10, Width = 90, Format = "dd.MM.yyyy", Alignment = "Center")]
     public DateOnly Date { get; set; }
+
+    [Column("Belge / Ref No", Order = 80, Width = 110)]
     public string? ReferenceNo { get; set; }
+
+    [Column("Açıklama", Order = 90, Width = 180)]
     public string Description { get; set; } = default!;
+
+    [Column("Fatura Id", IsVisible = false)]
     public Guid? InvoiceId { get; set; }
 }
 

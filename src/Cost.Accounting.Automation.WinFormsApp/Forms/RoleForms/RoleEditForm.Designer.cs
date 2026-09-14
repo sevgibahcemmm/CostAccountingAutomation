@@ -285,12 +285,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             // btnSave
             // 
             btnSave.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnSave.Appearance.BackColor = DevExpress.LookAndFeel.DXSkinColors.FillColors.Primary;
             btnSave.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            btnSave.Appearance.ForeColor = Color.White;
-            btnSave.Appearance.Options.UseBackColor = true;
             btnSave.Appearance.Options.UseFont = true;
-            btnSave.Appearance.Options.UseForeColor = true;
             btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
             btnSave.ImageOptions.SvgImageSize = new Size(20, 20);

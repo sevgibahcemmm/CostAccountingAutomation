@@ -2,7 +2,6 @@ using Cost.Accounting.Automation.Application.Customers;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
-using DevExpress.XtraGrid.Columns;
 using TS.MediatR;
 using TS.Result;
 
@@ -29,20 +28,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
 
         protected override void ConfigureColumns()
         {
-            View.Columns.Clear();
-
-            GridColumn[] columns =
-            [
-                new() { Caption = "Firma / Kişi Adı", FieldName = nameof(CustomerDto.Name), Visible = true, Width = 220 },
-                new() { Caption = "Vergi Dairesi", FieldName = nameof(CustomerDto.TaxOffice), Visible = true, Width = 130 },
-                new() { Caption = "Vergi No", FieldName = nameof(CustomerDto.TaxNumber), Visible = true, Width = 115 },
-                new() { Caption = "Şehir", FieldName = nameof(CustomerDto.City), Visible = true, Width = 95 },
-                new() { Caption = "İlçe", FieldName = nameof(CustomerDto.District), Visible = true, Width = 95 },
-                new() { Caption = "Telefon 1", FieldName = nameof(CustomerDto.PhoneNumber1), Visible = true, Width = 125 },
-                new() { Caption = "E-Posta", FieldName = nameof(CustomerDto.Email), Visible = true, Width = 170 }
-            ];
-
-            View.Columns.AddRange(columns);
             AddColumnsFromAttributes();
         }
 

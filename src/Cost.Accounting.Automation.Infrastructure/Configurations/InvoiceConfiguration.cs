@@ -25,11 +25,17 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(x => x.SubTotal)
             .HasColumnType("money");
 
+        builder.Property(x => x.DiscountTotal)
+            .HasColumnType("money");
+
         builder.Property(x => x.TaxTotal)
             .HasColumnType("money");
 
         builder.Property(x => x.GrandTotal)
             .HasColumnType("money");
+
+        builder.Property(x => x.Status)
+            .IsRequired();
 
         builder.HasIndex(x => x.InvoiceNumber);
         builder.HasIndex(x => x.InvoiceType);

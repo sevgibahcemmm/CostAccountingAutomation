@@ -4,9 +4,16 @@ using Cost.Accounting.Automation.Domain.Roles;
 namespace Cost.Accounting.Automation.Application.Roles;
 public sealed class RoleDto : EntityDto
 {
+    [Column("Rol Adı", Order = 10, Width = 220)]
     public string Name { get; set; } = default!;
+
+    [Column("Yetki Sayısı", Order = 20, Width = 90, Alignment = "Center")]
     public int PermissionCount { get; set; }
+
+    [Column("Yetkiler", IsVisible = false)]
     public List<string> Permissions { get; set; } = new();
+
+    [Column("Yetki Detayları", IsVisible = false)]
     public List<RolePermissionDto> PermissionDetails { get; set; } = new();
 }
 

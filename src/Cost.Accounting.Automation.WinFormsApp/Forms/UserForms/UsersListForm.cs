@@ -178,11 +178,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                using var brush = new SolidBrush(Color.FromArgb(90, 110, 160));
+                using var brush = new SolidBrush(SkinTheme.Primary);
                 g.FillEllipse(brush, 0, 0, 60, 60);
+                using var textBrush = new SolidBrush(SkinTheme.GetContrastText(SkinTheme.Primary));
                 using var font = new Font("Segoe UI", 20, FontStyle.Bold);
                 SizeF size = g.MeasureString(initials, font);
-                g.DrawString(initials, font, Brushes.White, (60 - size.Width) / 2, (60 - size.Height) / 2);
+                g.DrawString(initials, font, textBrush, (60 - size.Width) / 2, (60 - size.Height) / 2);
             }
 
             return bmp;

@@ -7,9 +7,10 @@ namespace Cost.Accounting.Automation.Application.Products;
 
 [Permission("product:view")]
 public sealed record ProductGetAllQuery(
+    Guid? WarehouseId = null,
     bool OnlyDeleted = false) : IRequest<IQueryable<ProductDto>>
 {
-    public ProductGetAllQuery() : this(false) { }
+    public ProductGetAllQuery() : this(null, false) { }
 }
 
 internal sealed class ProductGetAllQueryHandler(
@@ -20,6 +21,12 @@ internal sealed class ProductGetAllQueryHandler(
         IQueryable<EntityWithAuditDto<Product>> source = request.OnlyDeleted
             ? productRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
             : productRepository.GetAllWithAudit();
+
+        if (request.WarehouseId.HasValue)
+        {
+            IdentityId warehouseId = new(request.WarehouseId.Value);
+            source = source.Where(i => i.Entity.WarehouseId == warehouseId);
+        }
 
         return Task.FromResult(source.MapTo().AsQueryable());
     }

@@ -1,6 +1,9 @@
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
@@ -31,24 +34,30 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         public ProductsListForm() : base("Ürünler")
         {
-            Load += ProductsListForm_Load;
         }
 
-        private void ProductsListForm_Load(object? sender, EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
-            foreach (Control ctrl in Controls)
+            base.OnLoad(e);
+            _ = LoadWarehouseFilterAsync();
+        }
+
+        private async Task LoadWarehouseFilterAsync()
+        {
+            try
             {
-                if (ctrl.Height < 100 && (ctrl.BackColor == Color.Black || ctrl.Controls.Cast<Control>().Any(c => c.Text.Contains("listeleniyor") || c.Text.Contains("Ürünler"))))
-                {
-                    ctrl.Height = Math.Max(ctrl.Height, 82);
-                    foreach (Control subCtrl in ctrl.Controls)
-                    {
-                        if (subCtrl is LabelControl lbl && lbl.Text.Contains("listeleniyor"))
-                        {
-                            lbl.Top = ctrl.Height - lbl.Height - 8;
-                        }
-                    }
-                }
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                List<ChartOfAccountLookUpDto> warehouses = ((await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [])
+                    .Where(w => w.Type == ChartOfAccountType.Warehouse)
+                    .ToList();
+
+                ConfigureFilter(warehouses, nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Depo");
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Depo filtresi yüklenemedi: " + ex.Message, ToastType.Warning);
             }
         }
 
@@ -68,7 +77,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         protected override void ConfigureColumns()
         {
-            View.Columns.Clear();
+            AddColumnsFromAttributes();
+
+            View.Columns[nameof(ProductDto.MinimumProductLevel)]!.Visible = false;
 
             RepositoryItemPictureEdit riPicture = new()
             {
@@ -99,7 +110,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 Caption = "Resim",
                 FieldName = "PrimaryImageUnbound",
                 UnboundDataType = typeof(Image),
-                Visible = true,
+                VisibleIndex = 0,
                 Width = 45,
                 ColumnEdit = riPicture
             };
@@ -110,7 +121,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 Caption = "Barkod",
                 FieldName = "BarcodeImageUnbound",
                 UnboundDataType = typeof(Image),
-                Visible = true,
+                VisibleIndex = 2,
                 Width = 90,
                 ColumnEdit = riBarcodePicture
             };
@@ -121,38 +132,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 Caption = "Karekod",
                 FieldName = "QrImageUnbound",
                 UnboundDataType = typeof(Image),
-                Visible = true,
+                VisibleIndex = 3,
                 Width = 70,
                 ColumnEdit = riQrPicture
             };
             colQrImage.OptionsColumn.FixedWidth = true;
 
-            GridColumn[] columns =
-            [
-                colImage,
-                new() { Caption = "Ürün Adı", FieldName = nameof(ProductDto.Name), Visible = true, Width = 240 },
-                colBarcodeImage,
-                colQrImage,
-                new() { Caption = "Kategori", FieldName = nameof(ProductDto.CategoryName), Visible = true, Width = 150 },
-                new() { Caption = "Depo", FieldName = nameof(ProductDto.WarehouseName), Visible = true, Width = 130 },
-                new() { Caption = "Birim", FieldName = nameof(ProductDto.ProductUnitTypeName), Visible = true, Width = 70 },
-                new() { Caption = "KDV", FieldName = nameof(ProductDto.TaxRateRate), Visible = true, Width = 70, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "p0" } },
-                new() { Caption = "Stok", FieldName = nameof(ProductDto.StockQuantity), Visible = true, Width = 90, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "n2" } },
-                new() { Caption = "Hesap Planı No", FieldName = nameof(ProductDto.ChartOfAccountCode), Visible = true, Width = 170 }
-            ];
-
-            View.Columns.AddRange(columns);
-
-            GridColumn codeColumn = new()
-            {
-                Caption = "Ürün Kodu",
-                FieldName = nameof(ProductDto.ProductCode),
-                Visible = true,
-                Width = 170
-            };
-            codeColumn.AppearanceCell.TextOptions.HAlignment = HorzAlignment.Far;
-            codeColumn.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Far;
-            View.Columns.Add(codeColumn);
+            View.Columns.AddRange([colImage, colBarcodeImage, colQrImage]);
 
             View.RowHeight = 55;
             View.CustomUnboundColumnData += View_CustomUnboundColumnData;
@@ -163,8 +149,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             View.GridControl.ToolTipController = toolTipController;
 
             ConfigureImagesDetailView();
-
-            AddColumnsFromAttributes();
         }
 
         private void View_MasterRowEmpty(object? sender, MasterRowEmptyEventArgs e)
@@ -457,7 +441,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         protected override bool SupportsRestore => true;
 
         protected override ProductGetAllQuery BuildListQuery()
-            => new(OnlyDeleted: ShowDeleted);
+            => new(WarehouseId: SelectedFilterGuid, OnlyDeleted: ShowDeleted);
 
         protected override IRequest<Result<string>> BuildRestoreCommand(ProductDto item)
             => new ProductRestoreCommand(item.Id);

@@ -271,12 +271,8 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             // 
             // btnSave
             // 
-            btnSave.Appearance.BackColor = DevExpress.LookAndFeel.DXSkinColors.FillColors.Primary;
             btnSave.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            btnSave.Appearance.ForeColor = Color.White;
-            btnSave.Appearance.Options.UseBackColor = true;
             btnSave.Appearance.Options.UseFont = true;
-            btnSave.Appearance.Options.UseForeColor = true;
             btnSave.Location = new Point(611, 18);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(110, 34);

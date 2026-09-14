@@ -131,24 +131,12 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
 
     private void Tree_CustomDrawNodeCell(object? sender, DevExpress.XtraTreeList.CustomDrawNodeCellEventArgs e)
     {
-        if (e.Node is null || e.Node.Selected)
+        if (e.Node is null)
         {
             return;
         }
 
-        // Ağaç satır renkleri sabit RGB yerine aktif DevExpress skin'inin
-        // birincil rengi üzerinden türetiliyor: skin değişse bile uyumlu kalır.
-        Color primary = DevExpress.LookAndFeel.DXSkinColors.FillColors.Primary;
-        int level = e.Node.Level;
-        e.Appearance.BackColor = level switch
-        {
-            0 => Tint(primary, 0.78f),
-            1 => Tint(primary, 0.87f),
-            2 => Tint(primary, 0.94f),
-            _ => Color.White
-        };
-
-        if (level == 0)
+        if (e.Node.Level == 0)
         {
             e.Appearance.Font = Level0Font;
         }
@@ -259,27 +247,4 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
             _btnImport.Enabled = true;
         }
     }
-
-    /// <summary>
-    /// Bir rengi verilen oranda beyaza (amount > 0) ya da siyaha (amount &lt; 0) yaklaştırır.
-    /// Skin'in birincil renginden açık/koyu tonlar türetmek için kullanılır.
-    /// </summary>
-    private static Color Tint(Color color, float amount)
-    {
-        if (amount >= 0)
-        {
-            int r = color.R + (int)((255 - color.R) * amount);
-            int g = color.G + (int)((255 - color.G) * amount);
-            int b = color.B + (int)((255 - color.B) * amount);
-            return Color.FromArgb(Clamp(r), Clamp(g), Clamp(b));
-        }
-
-        float factor = 1 + amount;
-        return Color.FromArgb(
-            Clamp((int)(color.R * factor)),
-            Clamp((int)(color.G * factor)),
-            Clamp((int)(color.B * factor)));
-    }
-
-    private static int Clamp(int value) => Math.Max(0, Math.Min(255, value));
 }

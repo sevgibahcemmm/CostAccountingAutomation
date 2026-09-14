@@ -5,6 +5,7 @@ namespace Cost.Accounting.Automation.Application.Products;
 
 public sealed class ProductUnitTypeDto : EntityDto
 {
+    [Column("Birim Cinsi", Order = 10, Width = 250)]
     public string Name { get; set; } = default!;
 }
 

@@ -69,19 +69,46 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private System.Windows.Forms.Panel pnlKpi8IconBadge;
         private System.Windows.Forms.Label lblKpi8Icon;
 
-        private System.Windows.Forms.TableLayoutPanel tblCharts;
+        private System.Windows.Forms.TableLayoutPanel tblBottom;
 
-        private DevExpress.XtraEditors.PanelControl pnlChartRoles;
-        private System.Windows.Forms.Label lblChartRolesTitle;
-        private DevExpress.XtraCharts.ChartControl chartRoles;
+        private DevExpress.XtraEditors.PanelControl pnlTableReceivables;
+        private System.Windows.Forms.Label lblTableReceivablesTitle;
+        private DevExpress.XtraGrid.GridControl gridReceivables;
+        private DevExpress.XtraGrid.Views.Grid.GridView viewReceivables;
 
-        private DevExpress.XtraEditors.PanelControl pnlChartCompanies;
-        private System.Windows.Forms.Label lblChartCompaniesTitle;
-        private DevExpress.XtraCharts.ChartControl chartCompanies;
+        private DevExpress.XtraEditors.PanelControl pnlTablePayables;
+        private System.Windows.Forms.Label lblTablePayablesTitle;
+        private DevExpress.XtraGrid.GridControl gridPayables;
+        private DevExpress.XtraGrid.Views.Grid.GridView viewPayables;
 
-        private DevExpress.XtraEditors.PanelControl pnlChartAccounts;
-        private System.Windows.Forms.Label lblChartAccountsTitle;
-        private DevExpress.XtraCharts.ChartControl chartAccounts;
+        private DevExpress.XtraEditors.PanelControl pnlTableCriticalStock;
+        private System.Windows.Forms.Label lblTableCriticalStockTitle;
+        private DevExpress.XtraGrid.GridControl gridCriticalStock;
+        private DevExpress.XtraGrid.Views.Grid.GridView viewCriticalStock;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartReceivables;
+        private System.Windows.Forms.Label lblChartReceivablesTitle;
+        private DevExpress.XtraCharts.ChartControl chartReceivables;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartPayables;
+        private System.Windows.Forms.Label lblChartPayablesTitle;
+        private DevExpress.XtraCharts.ChartControl chartPayables;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartCriticalStock;
+        private System.Windows.Forms.Label lblChartCriticalStockTitle;
+        private DevExpress.XtraCharts.ChartControl chartCriticalStock;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartInvoiceStatus;
+        private System.Windows.Forms.Label lblChartInvoiceStatusTitle;
+        private DevExpress.XtraCharts.ChartControl chartInvoiceStatus;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartInvoiceTrend;
+        private System.Windows.Forms.Label lblChartInvoiceTrendTitle;
+        private DevExpress.XtraCharts.ChartControl chartInvoiceTrend;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartStockMovements;
+        private System.Windows.Forms.Label lblChartStockMovementsTitle;
+        private DevExpress.XtraCharts.ChartControl chartStockMovements;
 
         protected override void Dispose(bool disposing)
         {
@@ -263,34 +290,97 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblKpi8Icon =
                 new System.Windows.Forms.Label();
 
-            tblCharts =
+            tblBottom =
                 new System.Windows.Forms.TableLayoutPanel();
 
-            pnlChartRoles =
+            pnlTableReceivables =
                 new DevExpress.XtraEditors.PanelControl();
 
-            lblChartRolesTitle =
+            lblTableReceivablesTitle =
                 new System.Windows.Forms.Label();
 
-            chartRoles =
+            gridReceivables =
+                new DevExpress.XtraGrid.GridControl();
+
+            viewReceivables =
+                new DevExpress.XtraGrid.Views.Grid.GridView();
+
+            pnlTablePayables =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblTablePayablesTitle =
+                new System.Windows.Forms.Label();
+
+            gridPayables =
+                new DevExpress.XtraGrid.GridControl();
+
+            viewPayables =
+                new DevExpress.XtraGrid.Views.Grid.GridView();
+
+            pnlTableCriticalStock =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblTableCriticalStockTitle =
+                new System.Windows.Forms.Label();
+
+            gridCriticalStock =
+                new DevExpress.XtraGrid.GridControl();
+
+            viewCriticalStock =
+                new DevExpress.XtraGrid.Views.Grid.GridView();
+
+            pnlChartReceivables =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartReceivablesTitle =
+                new System.Windows.Forms.Label();
+
+            chartReceivables =
                 new DevExpress.XtraCharts.ChartControl();
 
-            pnlChartCompanies =
+            pnlChartPayables =
                 new DevExpress.XtraEditors.PanelControl();
 
-            lblChartCompaniesTitle =
+            lblChartPayablesTitle =
                 new System.Windows.Forms.Label();
 
-            chartCompanies =
+            chartPayables =
                 new DevExpress.XtraCharts.ChartControl();
 
-            pnlChartAccounts =
+            pnlChartCriticalStock =
                 new DevExpress.XtraEditors.PanelControl();
 
-            lblChartAccountsTitle =
+            lblChartCriticalStockTitle =
                 new System.Windows.Forms.Label();
 
-            chartAccounts =
+            chartCriticalStock =
+                new DevExpress.XtraCharts.ChartControl();
+
+            pnlChartInvoiceStatus =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartInvoiceStatusTitle =
+                new System.Windows.Forms.Label();
+
+            chartInvoiceStatus =
+                new DevExpress.XtraCharts.ChartControl();
+
+            pnlChartInvoiceTrend =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartInvoiceTrendTitle =
+                new System.Windows.Forms.Label();
+
+            chartInvoiceTrend =
+                new DevExpress.XtraCharts.ChartControl();
+
+            pnlChartStockMovements =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartStockMovementsTitle =
+                new System.Windows.Forms.Label();
+
+            chartStockMovements =
                 new DevExpress.XtraCharts.ChartControl();
 
             pnlHeader.SuspendLayout();
@@ -330,22 +420,55 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             kpi8.SuspendLayout();
             pnlKpi8IconBadge.SuspendLayout();
 
-            tblCharts.SuspendLayout();
+            tblBottom.SuspendLayout();
 
-            ((System.ComponentModel.ISupportInitialize)pnlChartRoles).BeginInit();
-            pnlChartRoles.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlTableReceivables).BeginInit();
+            pnlTableReceivables.SuspendLayout();
 
-            ((System.ComponentModel.ISupportInitialize)chartRoles).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridReceivables).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)viewReceivables).BeginInit();
 
-            ((System.ComponentModel.ISupportInitialize)pnlChartCompanies).BeginInit();
-            pnlChartCompanies.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlTablePayables).BeginInit();
+            pnlTablePayables.SuspendLayout();
 
-            ((System.ComponentModel.ISupportInitialize)chartCompanies).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridPayables).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)viewPayables).BeginInit();
 
-            ((System.ComponentModel.ISupportInitialize)pnlChartAccounts).BeginInit();
-            pnlChartAccounts.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlTableCriticalStock).BeginInit();
+            pnlTableCriticalStock.SuspendLayout();
 
-            ((System.ComponentModel.ISupportInitialize)chartAccounts).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridCriticalStock).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)viewCriticalStock).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartReceivables).BeginInit();
+            pnlChartReceivables.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartReceivables).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartPayables).BeginInit();
+            pnlChartPayables.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartPayables).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartCriticalStock).BeginInit();
+            pnlChartCriticalStock.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartCriticalStock).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartInvoiceStatus).BeginInit();
+            pnlChartInvoiceStatus.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartInvoiceStatus).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartInvoiceTrend).BeginInit();
+            pnlChartInvoiceTrend.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartInvoiceTrend).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartStockMovements).BeginInit();
+            pnlChartStockMovements.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartStockMovements).BeginInit();
 
             SuspendLayout();
 
@@ -478,7 +601,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 0);
 
             tblLayout.Controls.Add(
-                tblCharts,
+                tblBottom,
                 0,
                 1);
 
@@ -583,8 +706,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi1Title,
                 pnlKpi1IconBadge,
                 lblKpi1Icon,
-                "ŞİRKET",
-                "🏢");
+                "MÜŞTERİ",
+                "🤝");
 
             ConfigureKpiCard(
                 kpi2,
@@ -593,8 +716,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi2Title,
                 pnlKpi2IconBadge,
                 lblKpi2Icon,
-                "KULLANICI",
-                "👤");
+                "TEDARİKÇİ",
+                "🚚");
 
             ConfigureKpiCard(
                 kpi3,
@@ -603,8 +726,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi3Title,
                 pnlKpi3IconBadge,
                 lblKpi3Icon,
-                "ROL",
-                "🔑");
+                "TOPLAM ALACAK",
+                "💰");
 
             ConfigureKpiCard(
                 kpi4,
@@ -613,8 +736,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi4Title,
                 pnlKpi4IconBadge,
                 lblKpi4Icon,
-                "AKTİF OTURUM",
-                "🕐");
+                "TOPLAM BORÇ",
+                "🏦");
 
             ConfigureKpiCard(
                 kpi5,
@@ -623,8 +746,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi5Title,
                 pnlKpi5IconBadge,
                 lblKpi5Icon,
-                "MÜŞTERİ",
-                "🤝");
+                "KRİTİK STOK",
+                "⚠️");
 
             ConfigureKpiCard(
                 kpi6,
@@ -633,8 +756,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi6Title,
                 pnlKpi6IconBadge,
                 lblKpi6Icon,
-                "TEDARİKÇİ",
-                "🚚");
+                "STOKTAKİ ÜRÜN",
+                "📦");
 
             ConfigureKpiCard(
                 kpi7,
@@ -643,8 +766,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi7Title,
                 pnlKpi7IconBadge,
                 lblKpi7Icon,
-                "HESAP PLANI",
-                "📒");
+                "ONAYLI FATURA",
+                "✅");
 
             ConfigureKpiCard(
                 kpi8,
@@ -653,89 +776,168 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi8Title,
                 pnlKpi8IconBadge,
                 lblKpi8Icon,
-                "FOTOĞRAF",
-                "📷");
+                "TASLAK FATURA",
+                "📝");
 
-            tblCharts.ColumnCount =
+            tblBottom.ColumnCount =
                 3;
 
-            tblCharts.ColumnStyles.Add(
+            tblBottom.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
                     33.3333F));
 
-            tblCharts.ColumnStyles.Add(
+            tblBottom.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
                     33.3333F));
 
-            tblCharts.ColumnStyles.Add(
+            tblBottom.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
                     33.3334F));
 
-            tblCharts.Controls.Add(
-                pnlChartRoles,
+            tblBottom.Controls.Add(
+                pnlChartReceivables,
                 0,
                 0);
 
-            tblCharts.Controls.Add(
-                pnlChartCompanies,
+            tblBottom.Controls.Add(
+                pnlChartPayables,
                 1,
                 0);
 
-            tblCharts.Controls.Add(
-                pnlChartAccounts,
+            tblBottom.Controls.Add(
+                pnlChartCriticalStock,
                 2,
                 0);
 
-            tblCharts.Dock =
+            tblBottom.Controls.Add(
+                pnlChartInvoiceStatus,
+                0,
+                1);
+
+            tblBottom.Controls.Add(
+                pnlChartInvoiceTrend,
+                1,
+                1);
+
+            tblBottom.Controls.Add(
+                pnlChartStockMovements,
+                2,
+                1);
+
+            tblBottom.Controls.Add(
+                pnlTableReceivables,
+                0,
+                2);
+
+            tblBottom.Controls.Add(
+                pnlTablePayables,
+                1,
+                2);
+
+            tblBottom.Controls.Add(
+                pnlTableCriticalStock,
+                2,
+                2);
+
+            tblBottom.Dock =
                 System.Windows.Forms.DockStyle.Fill;
 
-            tblCharts.Location =
+            tblBottom.Location =
                 new System.Drawing.Point(0, 187);
 
-            tblCharts.Margin =
+            tblBottom.Margin =
                 new System.Windows.Forms.Padding(
                     0,
                     4,
                     0,
                     0);
 
-            tblCharts.Name =
-                "tblCharts";
+            tblBottom.Name =
+                "tblBottom";
 
-            tblCharts.RowCount =
-                1;
+            tblBottom.RowCount =
+                3;
 
-            tblCharts.RowStyles.Add(
+            tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    100F));
+                    36F));
 
-            tblCharts.Size =
+            tblBottom.RowStyles.Add(
+                new System.Windows.Forms.RowStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    32F));
+
+            tblBottom.RowStyles.Add(
+                new System.Windows.Forms.RowStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    32F));
+
+            tblBottom.Size =
                 new System.Drawing.Size(1248, 405);
 
-            tblCharts.TabIndex =
+            tblBottom.TabIndex =
                 1;
 
-            ConfigureChartPanel(
-                pnlChartRoles,
-                lblChartRolesTitle,
-                chartRoles,
-                "Rol Dağılımı");
+            ConfigureTablePanel(
+                pnlTableReceivables,
+                lblTableReceivablesTitle,
+                gridReceivables,
+                viewReceivables,
+                "Alacak Durumu");
+
+            ConfigureTablePanel(
+                pnlTablePayables,
+                lblTablePayablesTitle,
+                gridPayables,
+                viewPayables,
+                "Borç Durumu");
+
+            ConfigureTablePanel(
+                pnlTableCriticalStock,
+                lblTableCriticalStockTitle,
+                gridCriticalStock,
+                viewCriticalStock,
+                "Kritik Stok");
 
             ConfigureChartPanel(
-                pnlChartCompanies,
-                lblChartCompaniesTitle,
-                chartCompanies,
-                "Şirket Bazlı Kullanıcılar");
+                pnlChartReceivables,
+                lblChartReceivablesTitle,
+                chartReceivables,
+                "En Yüksek Alacaklar");
 
             ConfigureChartPanel(
-                pnlChartAccounts,
-                lblChartAccountsTitle,
-                chartAccounts,
-                "Hesap Planı Türleri");
+                pnlChartPayables,
+                lblChartPayablesTitle,
+                chartPayables,
+                "En Yüksek Borçlar");
+
+            ConfigureChartPanel(
+                pnlChartCriticalStock,
+                lblChartCriticalStockTitle,
+                chartCriticalStock,
+                "Kritik Stok Kategorileri");
+
+            ConfigureChartPanel(
+                pnlChartInvoiceStatus,
+                lblChartInvoiceStatusTitle,
+                chartInvoiceStatus,
+                "Fatura Durumu");
+
+            ConfigureChartPanel(
+                pnlChartInvoiceTrend,
+                lblChartInvoiceTrendTitle,
+                chartInvoiceTrend,
+                "Aylık Fatura Trendi");
+
+            ConfigureChartPanel(
+                pnlChartStockMovements,
+                lblChartStockMovementsTitle,
+                chartStockMovements,
+                "Stok Giriş / Çıkış");
 
             ClientSize =
                 new System.Drawing.Size(1280, 720);
@@ -784,16 +986,37 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             kpi8.ResumeLayout(false);
             pnlKpi8IconBadge.ResumeLayout(false);
 
-            tblCharts.ResumeLayout(false);
+            tblBottom.ResumeLayout(false);
 
-            pnlChartRoles.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)chartRoles).EndInit();
+            pnlTableReceivables.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)viewReceivables).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridReceivables).EndInit();
 
-            pnlChartCompanies.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)chartCompanies).EndInit();
+            pnlTablePayables.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)viewPayables).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridPayables).EndInit();
 
-            pnlChartAccounts.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)chartAccounts).EndInit();
+            pnlTableCriticalStock.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)viewCriticalStock).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridCriticalStock).EndInit();
+
+            pnlChartReceivables.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartReceivables).EndInit();
+
+            pnlChartPayables.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartPayables).EndInit();
+
+            pnlChartCriticalStock.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartCriticalStock).EndInit();
+
+            pnlChartInvoiceStatus.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartInvoiceStatus).EndInit();
+
+            pnlChartInvoiceTrend.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartInvoiceTrend).EndInit();
+
+            pnlChartStockMovements.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartStockMovements).EndInit();
 
             ResumeLayout(false);
         }
@@ -913,6 +1136,78 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                         14,
                         12);
             };
+        }
+
+        private static void ConfigureTablePanel(
+            DevExpress.XtraEditors.PanelControl panel,
+            System.Windows.Forms.Label title,
+            DevExpress.XtraGrid.GridControl grid,
+            DevExpress.XtraGrid.Views.Grid.GridView view,
+            string caption)
+        {
+            panel.BorderStyle =
+                DevExpress.XtraEditors.Controls.BorderStyles.Simple;
+
+            panel.Dock =
+                System.Windows.Forms.DockStyle.Fill;
+
+            panel.Margin =
+                new System.Windows.Forms.Padding(8);
+
+            panel.Padding =
+                new System.Windows.Forms.Padding(
+                    12,
+                    40,
+                    12,
+                    6);
+
+            panel.Controls.Add(grid);
+            panel.Controls.Add(title);
+
+            title.AutoSize =
+                false;
+
+            title.Location =
+                new System.Drawing.Point(14, 10);
+
+            title.Size =
+                new System.Drawing.Size(350, 24);
+
+            title.Text =
+                caption;
+
+            title.Font =
+                new System.Drawing.Font(
+                    "Segoe UI",
+                    10F,
+                    System.Drawing.FontStyle.Bold);
+
+            view.GridControl =
+                grid;
+
+            grid.MainView =
+                view;
+
+            grid.Dock =
+                System.Windows.Forms.DockStyle.Fill;
+
+            view.OptionsBehavior.Editable =
+                false;
+
+            view.OptionsView.ShowGroupPanel =
+                false;
+
+            view.OptionsView.ShowAutoFilterRow =
+                false;
+
+            view.OptionsView.ShowIndicator =
+                false;
+
+            view.OptionsView.EnableAppearanceEvenRow =
+                true;
+
+            view.OptionsView.EnableAppearanceOddRow =
+                true;
         }
 
         private static void ConfigureChartPanel(

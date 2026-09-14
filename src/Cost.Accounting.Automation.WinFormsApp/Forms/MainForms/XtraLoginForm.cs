@@ -3,6 +3,8 @@ using Cost.Accounting.Automation.Infrastructure;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+using DevExpress.XtraEditors.Controls;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Drawing.Drawing2D;
@@ -14,7 +16,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
     public partial class XtraLoginForm : DevExpress.XtraEditors.XtraForm
     {
-        private static readonly Color LeftPanelColor = Color.FromArgb(15, 23, 42);
+        private static readonly Color[] LeftPanelGradient = new[]
+        {
+            Color.FromArgb(15, 23, 42),
+            Color.FromArgb(30, 27, 75),
+            Color.FromArgb(30, 58, 138)
+        };
 
         private bool _passwordVisible;
         private Guid _captchaChallengeId;
@@ -22,6 +29,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         public XtraLoginForm()
         {
             InitializeComponent();
+            ConfigureIcons();
+
+            btnLogin.Appearance.Options.UseBackColor = false;
+            btnLogin.Appearance.BackColor = Color.Transparent;
+
             lnkForgot.Click += LnkForgot_Click;
             pnlUserNameBox.Paint += AuthFormStyles.RoundedField_Paint;
             txtUserName.Enter += AuthFormStyles.Field_Enter;
@@ -32,7 +44,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCaptchaResult.Paint += AuthFormStyles.RoundedField_Paint;
             txtCaptchaResult.Enter += AuthFormStyles.Field_Enter;
             txtCaptchaResult.Leave += AuthFormStyles.Field_Leave;
-            btnLogin.Paint += AuthFormStyles.Button_Paint;
             Load += async (s, e) => await InitAsync();
             FormClosed += XtraLoginForm_FormClosed;
         }
@@ -59,6 +70,33 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 btnLogin.Enabled = true;
             }
+        }
+
+        private void ConfigureIcons()
+        {
+            pnlLeftLockGlyph.Text = string.Empty;
+            pnlLeftLockGlyph.ImageOptions.SvgImage = SvgIcons.LockWhiteIcon;
+            pnlLeftLockGlyph.ImageOptions.SvgImageSize = new Size(48, 48);
+
+            _lblLogoIcon.Text = string.Empty;
+            _lblLogoIcon.ImageOptions.SvgImage = SvgIcons.ShieldIcon;
+            _lblLogoIcon.ImageOptions.SvgImageSize = new Size(54, 54);
+
+            lblUserIcon.Text = string.Empty;
+            lblUserIcon.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            lblUserIcon.ImageOptions.SvgImageSize = new Size(22, 22);
+
+            lblPassIcon.Text = string.Empty;
+            lblPassIcon.ImageOptions.SvgImage = SvgIcons.KeyIcon;
+            lblPassIcon.ImageOptions.SvgImageSize = new Size(22, 22);
+
+            lblTogglePassword.Text = string.Empty;
+            lblTogglePassword.ImageOptions.SvgImage = SvgIcons.EyeIcon;
+            lblTogglePassword.ImageOptions.SvgImageSize = new Size(22, 22);
+
+            btnLogin.ImageOptions.SvgImage = SvgIcons.NextIcon;
+            btnLogin.ImageOptions.SvgImageSize = new Size(22, 22);
+            btnLogin.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
         }
 
         private async Task RecreateCaptchaAsync()
@@ -216,9 +254,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void lblTogglePassword_Click(object? sender, EventArgs e)
         {
             _passwordVisible = !_passwordVisible;
-            txtPassword.Properties.PasswordChar = _passwordVisible ? '\0' : '\u2022';
+            txtPassword.Properties.PasswordChar = _passwordVisible ? '\0' : '•';
             txtPassword.Properties.UseSystemPasswordChar = false;
-            lblTogglePassword.Text = _passwordVisible ? "🙈" : "👁";
+            lblTogglePassword.ImageOptions.SvgImage = _passwordVisible ? SvgIcons.EyeOffIcon : SvgIcons.EyeIcon;
             txtPassword.Refresh();
         }
 
@@ -230,56 +268,81 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.CompositingQuality = CompositingQuality.HighQuality;
 
             var rect = ((Control)sender).ClientRectangle;
 
             using var brush = new LinearGradientBrush(
                 rect,
-                LeftPanelColor,
-                Color.FromArgb(30, 58, 108),
-                LinearGradientMode.Vertical);
+                LeftPanelGradient[0],
+                LeftPanelGradient[2],
+                35f);
+            var blend = new ColorBlend { Positions = new[] { 0f, 0.55f, 1f } };
+            blend.Colors = LeftPanelGradient;
+            brush.InterpolationColors = blend;
             g.FillRectangle(brush, rect);
 
-            using var circle1 = new SolidBrush(Color.FromArgb(22, 96, 165, 250));
-            g.FillEllipse(circle1, rect.Width - 150, -70, 220, 220);
+            DrawGlowCircle(g, rect.Width - 40, -90, 300, 96, 165, 250);
+            DrawGlowCircle(g, -120, rect.Height - 200, 260, 139, 92, 246);
+            DrawGlowCircle(g, rect.Width - 200, rect.Height - 140, 180, 56, 189, 248);
 
-            using var circle2 = new SolidBrush(Color.FromArgb(14, 96, 165, 250));
-            g.FillEllipse(circle2, -60, rect.Height - 150, 200, 200);
-
-            using var dotBrush = new SolidBrush(Color.FromArgb(10, 255, 255, 255));
-            int spacing = 38;
-            for (int x = 18; x < rect.Width; x += spacing)
+            using var dotBrush = new SolidBrush(Color.FromArgb(14, 255, 255, 255));
+            int spacing = 40;
+            for (int x = 16; x < rect.Width; x += spacing)
             {
-                for (int y = 18; y < rect.Height; y += spacing)
+                for (int y = 16; y < rect.Height; y += spacing)
                 {
                     g.FillEllipse(dotBrush, x, y, 2, 2);
                 }
             }
 
-            using var linePen = new Pen(Color.FromArgb(60, 96, 165, 250), 2f);
-            linePen.StartCap = LineCap.Round;
-            linePen.EndCap = LineCap.Round;
-            g.DrawLine(linePen, rect.Width / 2 - 40, 272, rect.Width / 2, 272);
+            using var thinGlowPen = new Pen(Color.FromArgb(70, Color.FromArgb(129, 140, 248)), 1.4f);
+            thinGlowPen.StartCap = LineCap.Round;
+            thinGlowPen.EndCap = LineCap.Round;
+            g.DrawArc(thinGlowPen, rect.Width - 240, -20, 300, 240, 200, 140);
+            g.DrawArc(thinGlowPen, -150, rect.Height - 200, 300, 240, 20, 130);
+
+            using var accentLinePen = new Pen(Color.FromArgb(90, Color.FromArgb(167, 139, 250)), 2.2f);
+            accentLinePen.StartCap = LineCap.Round;
+            accentLinePen.EndCap = LineCap.Round;
+            g.DrawLine(accentLinePen, rect.Width / 2 - 42, 302, rect.Width / 2 + 42, 302);
         }
 
         private void pnlLeftBadge_Paint(object sender, PaintEventArgs e)
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.CompositingQuality = CompositingQuality.HighQuality;
             var control = (Control)sender;
             int size = Math.Min(control.Width, control.Height);
 
+            for (int i = 3; i >= 1; i--)
+            {
+                int ring = size - i * 7;
+                if (ring <= 0) continue;
+                using var ringPen = new Pen(Color.FromArgb(22, Color.FromArgb(129, 140, 248)), 2.5f);
+                g.DrawEllipse(ringPen, (size - ring) / 2f, (size - ring) / 2f, ring, ring);
+            }
+
             using var circlePath = new GraphicsPath();
-            circlePath.AddEllipse(0, 0, size - 1, size - 1);
+            circlePath.AddEllipse(1, 1, size - 2, size - 2);
+
+            using var haloBrush = new SolidBrush(Color.FromArgb(45, 139, 92, 246));
+            g.FillEllipse(haloBrush, -4, -4, size + 8, size + 8);
 
             using var bgBrush = new LinearGradientBrush(
                 new Rectangle(0, 0, size, size),
-                Color.FromArgb(37, 99, 235),
-                Color.FromArgb(59, 130, 246),
+                Color.FromArgb(99, 102, 241),
+                Color.FromArgb(168, 85, 247),
                 LinearGradientMode.ForwardDiagonal);
             g.FillPath(bgBrush, circlePath);
 
-            using var borderPen = new Pen(Color.FromArgb(40, 96, 165, 250), 2f);
+            using var innerGlow = new GraphicsPath();
+            innerGlow.AddEllipse(10, 10, size - 20, size - 20);
+            using var innerBrush = new SolidBrush(Color.FromArgb(35, 255, 255, 255));
+            g.FillPath(innerBrush, innerGlow);
+
+            using var borderPen = new Pen(Color.FromArgb(70, 255, 255, 255), 1.6f);
             g.DrawPath(borderPen, circlePath);
         }
 
@@ -287,21 +350,34 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.CompositingQuality = CompositingQuality.HighQuality;
             var control = (Control)sender;
             int size = Math.Min(control.Width, control.Height);
 
+            using var haloBrush = new SolidBrush(Color.FromArgb(40, 99, 102, 241));
+            g.FillEllipse(haloBrush, -5, -5, size + 10, size + 10);
+
             using var bgBrush = new LinearGradientBrush(
                 new Rectangle(0, 0, size, size),
-                Color.FromArgb(239, 246, 255),
-                Color.FromArgb(219, 234, 254),
+                Color.FromArgb(238, 242, 255),
+                Color.FromArgb(224, 231, 255),
                 LinearGradientMode.ForwardDiagonal);
 
             using var ellipsePath = new GraphicsPath();
             ellipsePath.AddEllipse(1, 1, size - 2, size - 2);
             g.FillPath(bgBrush, ellipsePath);
 
-            using var borderPen = new Pen(Color.FromArgb(191, 219, 254), 2f);
+            using var borderPen = new Pen(Color.FromArgb(199, 210, 254), 2f);
             g.DrawPath(borderPen, ellipsePath);
+        }
+
+        private static void DrawGlowCircle(Graphics g, float x, float y, float diameter, int r, int gr, int b)
+        {
+            using var brush = new SolidBrush(Color.FromArgb(24, r, gr, b));
+            g.FillEllipse(brush, x, y, diameter, diameter);
+
+            using var innerBrush = new SolidBrush(Color.FromArgb(16, r, gr, b));
+            g.FillEllipse(innerBrush, x + diameter * 0.15f, y + diameter * 0.15f, diameter * 0.7f, diameter * 0.7f);
         }
     }
 }

@@ -15,6 +15,12 @@ public enum ProductMovementType
     Output = 2
 }
 
+public enum StockCostingMethod
+{
+    Fifo = 1,
+    Lifo = 2
+}
+
 public sealed class ProductUnitType : Entity
 {
     private ProductUnitType()

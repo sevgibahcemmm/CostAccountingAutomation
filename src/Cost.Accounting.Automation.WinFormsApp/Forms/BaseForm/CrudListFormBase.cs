@@ -1,17 +1,13 @@
-using System.Reflection;
-using System.Text;
 using System.Drawing;
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
 using DomainEntityDto = Cost.Accounting.Automation.Domain.Abstractions.EntityDto;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
-using DevExpress.XtraEditors.Repository;
+using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraGrid.Columns;
-using DevExpress.XtraGrid.Views.Base;
 using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
@@ -24,20 +20,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         where TDto : DomainEntityDto
         where TEditForm : XtraForm
     {
-        private readonly RepositoryItemCheckEdit _riActive = new();
-        private readonly RepositoryItemTextEdit _riBoolText = new();
-        private readonly Dictionary<string, ColumnAttribute> _boolTextColumns = new();
-        private readonly Dictionary<string, string> _stringFormatColumns = new();
-
         protected List<TDto> _allItems = [];
 
         private bool _showDeleted;
+        private bool _isFilterSetting;
 
         protected CrudListFormBase(string formTitle) : base(formTitle)
         {
             InitializeComponent();
             lblTitle.Text = formTitle;
-            pnlHeader.Paint += PnlHeader_Paint;
             IconOptions.SvgImage = ModuleIcon;
             WireEvents();
             SetupGrid();
@@ -49,7 +40,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
         protected DevExpress.XtraGrid.GridControl BaseGrid => gridControl;
 
-        protected System.Windows.Forms.Panel HeaderPanel => pnlHeader;
+        protected DevExpress.XtraEditors.PanelControl HeaderPanel => pnlHeader;
 
         protected DevExpress.XtraEditors.PanelControl ToolbarPanel => pnlToolbar;
 
@@ -57,9 +48,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
         protected virtual bool AllowDelete => true;
 
+        protected virtual bool AllowsEdit(TDto item) => true;
+
+        protected virtual bool AllowsDelete(TDto item) => true;
+
         protected bool ShowDeleted => _showDeleted;
 
         protected virtual bool SupportsRestore => false;
+
+        protected virtual bool SupportsApprove => false;
+
+        protected virtual IRequest<Result<string>>? BuildApproveCommand(TDto item) => null;
 
         protected virtual TListQuery BuildListQuery() => new();
 
@@ -85,6 +84,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             {
                 btnDelete.Visible = false;
             }
+            btnApprove.Visible = SupportsApprove;
             ConfigureColumns();
             _ = ReloadAsync();
         }
@@ -98,31 +98,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
                 int[] rows = gridView.GetSelectedRows();
                 if (rows.Length == 1 && gridView.GetRow(rows[0]) is TDto dto)
                 {
+                    if (!AllowsEdit(dto))
+                    {
+                        ToastHelper.Show("Bu kayıt düzenlenemez.", ToastType.Warning);
+                        return;
+                    }
+
                     await RunEditorAsync(dto);
                 }
             };
             btnDelete.Click += BtnDelete_Click;
             btnRefresh.Click += async (_, _) => await ReloadAsync();
+            btnApprove.Click += BtnApprove_Click;
             btnDeleted.CheckedChanged += BtnDeleted_CheckedChanged;
             btnRestore.Click += BtnRestore_Click;
             txtSearch.EditValueChanged += TxtSearch_EditValueChanged;
+            cmbFilter.EditValueChanged += CmbFilter_EditValueChanged;
             gridView.DoubleClick += GridView_DoubleClick;
             gridView.SelectionChanged += GridView_SelectionChanged;
         }
 
         private void SetupGrid()
         {
+            gridView.OptionsBehavior.AutoPopulateColumns = false;
             gridView.OptionsView.ShowGroupPanel = false;
             gridView.OptionsSelection.MultiSelect = true;
             gridView.OptionsSelection.MultiSelectMode = GridMultiSelectMode.CheckBoxRowSelect;
             gridView.OptionsBehavior.Editable = false;
-            gridView.OptionsView.EnableAppearanceEvenRow = false;
-            gridView.OptionsView.EnableAppearanceOddRow = false;
-            _riActive.ReadOnly = true;
-            _riBoolText.ReadOnly = true;
-            gridControl.RepositoryItems.Add(_riActive);
-            gridControl.RepositoryItems.Add(_riBoolText);
-            gridView.CustomColumnDisplayText += GridView_CustomColumnDisplayText;
+            gridView.OptionsView.EnableAppearanceEvenRow = true;
+            gridView.OptionsView.EnableAppearanceOddRow = true;
         }
 
         private void SetupButtonIcons()
@@ -133,6 +137,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             SetButtonIcon(btnRefresh, SvgIcons.RefreshIcon, 18);
             SetButtonIcon(btnDeleted, SvgIcons.TrashIcon, 18);
             SetButtonIcon(btnRestore, SvgIcons.RestoreIcon, 18);
+            SetButtonIcon(btnApprove, SvgIcons.CheckIcon, 18);
             SetButtonIcon(btnClosePage, SvgIcons.CloseIcon, 16);
         }
 
@@ -142,6 +147,48 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             button.ImageOptions.SvgImageSize = new Size(size, size);
             button.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
         }
+
+        /// <summary>
+        /// Sağ üst arama çubuğunun soluna depo/cari gibi filtre amaçlı bir lookup ekler.
+        /// </summary>
+        protected void ConfigureFilter(object? dataSource, string valueMember, string displayMember, string caption)
+        {
+            bool hasItems = dataSource is System.Collections.IEnumerable { } items && items.Cast<object?>().Any();
+
+            if (!hasItems)
+            {
+                lblFilter.Visible = false;
+                cmbFilter.Visible = false;
+                return;
+            }
+
+            _isFilterSetting = true;
+            try
+            {
+                cmbFilter.Properties.DataSource = dataSource;
+                cmbFilter.Properties.ValueMember = valueMember;
+                cmbFilter.Properties.DisplayMember = displayMember;
+                cmbFilter.Properties.PopupFilterMode = PopupFilterMode.Contains;
+                cmbFilter.Properties.BestFitMode = BestFitMode.BestFit;
+
+                cmbFilterView.Columns.Clear();
+                GridColumn column = cmbFilterView.Columns.AddField(displayMember);
+                column.Caption = caption;
+                column.VisibleIndex = 0;
+                column.Width = 160;
+                cmbFilterView.BestFitColumns();
+
+                lblFilter.Text = caption + ":";
+                lblFilter.Visible = true;
+                cmbFilter.Visible = true;
+            }
+            finally
+            {
+                _isFilterSetting = false;
+            }
+        }
+
+        protected Guid? SelectedFilterGuid => cmbFilter.EditValue is Guid filterId ? filterId : null;
 
         private static void SetButtonIcon(CheckButton button, SvgImage icon, int size)
         {
@@ -154,18 +201,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         {
             PictureEdit pic = new()
             {
-                Location = new Point(28, 24),
+                Location = new Point(28, 31),
                 Size = new Size(42, 42),
                 BackColor = Color.Transparent
             };
             pic.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
-            pic.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.None;
+            pic.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.Default;
             pic.SvgImage = ModuleIcon;
             pic.Properties.Appearance.BackColor = Color.Transparent;
             pic.Properties.Appearance.Options.UseBackColor = true;
             pnlHeader.Controls.Add(pic);
-            lblTitle.Location = new Point(82, 20);
-            lblSub.Location = new Point(84, 62);
+            lblTitle.Location = new Point(82, 16);
+            lblSub.Location = new Point(84, 66);
         }
 
         protected GridColumn CreateBooleanColumn(string caption, string fieldName)
@@ -173,127 +220,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             {
                 Caption = caption,
                 FieldName = fieldName,
-                Visible = true,
-                ColumnEdit = _riActive
+                Visible = true
             };
 
         protected void AddColumnsFromAttributes()
-        {
-            PropertyInfo[] properties = typeof(TDto).GetProperties();
-            List<(GridColumn Column, int Order)> columns = new();
-
-            foreach (PropertyInfo property in properties)
-            {
-                ColumnAttribute? attr = property.GetCustomAttribute<ColumnAttribute>();
-                if (attr is null || !attr.IsVisible)
-                {
-                    continue;
-                }
-
-                GridColumn column = new()
-                {
-                    Caption = attr.Title,
-                    FieldName = property.Name,
-                    Visible = true,
-                    Width = attr.Width
-                };
-
-                ApplyColumnFormat(column, property, attr);
-                columns.Add((column, attr.Order));
-            }
-
-            foreach ((GridColumn column, int order) in columns.OrderBy(c => c.Order))
-            {
-                View.Columns.Add(column);
-            }
-        }
-
-        private void ApplyColumnFormat(GridColumn column, PropertyInfo property, ColumnAttribute attr)
-        {
-            switch (attr.Alignment?.ToLowerInvariant())
-            {
-                case "center":
-                    column.AppearanceCell.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
-                    column.AppearanceHeader.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
-                    break;
-                case "right":
-                    column.AppearanceCell.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
-                    column.AppearanceHeader.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
-                    break;
-            }
-
-            if (property.PropertyType == typeof(bool))
-            {
-                if (attr.TrueText is null && attr.FalseText is null)
-                {
-                    column.ColumnEdit = _riActive;
-                }
-                else
-                {
-                    column.ColumnEdit = _riBoolText;
-                    _boolTextColumns[property.Name] = attr;
-                }
-                return;
-            }
-
-            if (property.PropertyType == typeof(string))
-            {
-                if (!string.IsNullOrWhiteSpace(attr.Format) && attr.Format != "G")
-                {
-                    _stringFormatColumns[property.Name] = attr.Format;
-                }
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(attr.Format) && attr.Format != "G")
-            {
-                column.DisplayFormat.FormatType = DevExpress.Utils.FormatType.Custom;
-                column.DisplayFormat.FormatString = attr.Format;
-            }
-        }
-
-        private void GridView_CustomColumnDisplayText(object? sender, CustomColumnDisplayTextEventArgs e)
-        {
-            if (e.Column is null)
-            {
-                return;
-            }
-
-            if (_boolTextColumns.TryGetValue(e.Column.FieldName, out ColumnAttribute? attr))
-            {
-                e.DisplayText = e.Value is bool b && b ? attr.TrueText : attr.FalseText;
-                return;
-            }
-
-            if (_stringFormatColumns.TryGetValue(e.Column.FieldName, out string? format)
-                && e.Value is string raw)
-            {
-                e.DisplayText = ApplyStringFormat(raw, format);
-            }
-        }
-
-        private static string ApplyStringFormat(string value, string format)
-        {
-            StringBuilder sb = new(value.Length + 4);
-            int valueIndex = 0;
-
-            foreach (char c in format)
-            {
-                if (c == '#')
-                {
-                    if (valueIndex < value.Length)
-                    {
-                        sb.Append(value[valueIndex++]);
-                    }
-                }
-                else
-                {
-                    sb.Append(c);
-                }
-            }
-
-            return sb.ToString();
-        }
+            => GridColumnFactory.ConfigureFromAttributes(View, typeof(TDto));
 
         private void GridView_SelectionChanged(object? sender, EventArgs e)
         {
@@ -304,11 +235,33 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         {
             int selected = gridView.GetSelectedRows().Length;
             bool showDeleted = _showDeleted;
+            bool allEditable = true;
+            bool allDeletable = true;
+
+            foreach (int row in gridView.GetSelectedRows())
+            {
+                if (gridView.GetRow(row) is not TDto dto)
+                {
+                    continue;
+                }
+
+                if (!AllowsEdit(dto))
+                {
+                    allEditable = false;
+                }
+
+                if (!AllowsDelete(dto))
+                {
+                    allDeletable = false;
+                }
+            }
 
             btnNew.Enabled = !showDeleted;
-            btnEdit.Enabled = !showDeleted && selected == 1;
-            btnDelete.Enabled = !showDeleted && selected >= 1;
+            btnEdit.Enabled = !showDeleted && selected == 1 && allEditable;
+            btnDelete.Enabled = !showDeleted && selected >= 1 && allDeletable;
             btnDelete.Visible = AllowDelete && !showDeleted;
+            btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1;
+            btnApprove.Visible = SupportsApprove && !showDeleted;
             btnRestore.Enabled = showDeleted && selected >= 1;
             btnRestore.Visible = showDeleted && SupportsRestore;
             btnDeleted.Checked = showDeleted;
@@ -322,8 +275,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
                 using var scope = Program.Services.CreateScope();
                 ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
                 TListQuery query = BuildListQuery();
+                CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
                 gridControl.DataSource = null;
                 List<TDto> items = (await mediator.Send(query, CancellationToken.None)).ToList();
+                CrashLog.Write("Reload", $"{typeof(TListQuery).Name} returned {items.Count} items");
                 _allItems = items;
                 gridControl.DataSource = items;
                 gridView.BestFitColumns();
@@ -331,11 +286,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             }
             catch (AuthorizationException ex)
             {
+                CrashLog.WriteException("Reload.Auth", ex);
                 ToastHelper.Show(ex.Message, ToastType.Warning, 4000);
                 lblSub.Text = "Yetkiniz yok";
             }
             catch (Exception ex)
             {
+                CrashLog.WriteException("Reload", ex);
                 ToastHelper.Show("Liste yüklenemedi: " + ex.Message, ToastType.Error, 4000);
                 lblSub.Text = "Yükleme hatası";
             }
@@ -405,6 +362,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
             if (gridView.GetFocusedRow() is TDto dto)
             {
+                if (!AllowsEdit(dto))
+                {
+                    ToastHelper.Show("Bu kayıt düzenlenemez.", ToastType.Warning);
+                    return;
+                }
+
                 await RunEditorAsync(dto);
             }
         }
@@ -425,6 +388,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             if (selected.Count == 0)
             {
                 ToastHelper.Show("Silinecek kayıtları işaretleyin", ToastType.Warning);
+                return;
+            }
+
+            if (selected.Any(item => !AllowsDelete(item)))
+            {
+                ToastHelper.Show("Silinemeyen kayıt(lar) seçildi. İşlem iptal edildi.", ToastType.Warning);
                 return;
             }
 
@@ -452,6 +421,60 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             finally
             {
                 btnDelete.Enabled = true;
+            }
+        }
+
+        private async void CmbFilter_EditValueChanged(object? sender, EventArgs e)
+        {
+            if (_isFilterSetting)
+            {
+                return;
+            }
+
+            await ReloadAsync();
+        }
+
+        private async void BtnApprove_Click(object? sender, EventArgs e)
+        {
+            if (!SupportsApprove)
+            {
+                return;
+            }
+
+            List<TDto> selected = gridView.GetSelectedRows()
+                .Select(i => gridView.GetRow(i) as TDto)
+                .Where(x => x is not null)
+                .Cast<TDto>()
+                .ToList();
+
+            if (selected.Count == 0)
+            {
+                ToastHelper.Show("Onaylanacak kayıtları işaretleyin", ToastType.Warning);
+                return;
+            }
+
+            btnApprove.Enabled = false;
+            try
+            {
+                foreach (TDto item in selected)
+                {
+                    IRequest<Result<string>>? command = BuildApproveCommand(item);
+                    if (command is null)
+                    {
+                        ToastHelper.Show($"'{GetDeleteSummary(item)}' zaten onaylanmış durumda.", ToastType.Warning);
+                        continue;
+                    }
+
+                    if (!await CrudExecutor.ExecuteAsync(command))
+                    {
+                        break;
+                    }
+                }
+                await ReloadAsync();
+            }
+            finally
+            {
+                btnApprove.Enabled = true;
             }
         }
 

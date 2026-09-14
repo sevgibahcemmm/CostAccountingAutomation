@@ -47,7 +47,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
             _SvgUserWhite,      // 20 Kullanıcılar
             _SvgKeyWhite,       // 21 Roller
             _SvgBuildingWhite,  // 22 Şirket Ayarları
-            _SvgBag             // 23 Satış Siparişleri
+            _SvgBag,            // 23 Satış Siparişleri
+            _SvgSwap            // 24 Hareketler / Cari Hareketler
         };
 
         public static SvgImage[] MenuIcons { get; } = CreateModulesFrom(_MenuSvg);
@@ -83,6 +84,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage UncheckIcon { get; } = Svg(_SvgUncheck);
 
         public static SvgImage BarcodeIcon { get; } = Svg(_SvgBarcode);
+
+        public static SvgImage LockWhiteIcon { get; } = Svg(_SvgLockWhite);
+
+        public static SvgImage EyeIcon { get; } = Svg(_SvgEye);
+
+        public static SvgImage EyeOffIcon { get; } = Svg(_SvgEyeOff);
         public static SvgImage QRIcon { get; } = Svg(_SvgQr);
         public static SvgImage TagIcon { get; } = Svg(_SvgTag);
         public static SvgImage TrendBlueIcon { get; } = Svg(_SvgTrendBlue);
@@ -194,6 +201,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
 
         private const string _SvgBag = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M6 8h12l1.5 12h-15z' fill='none' stroke='white' stroke-width='1.6' stroke-linejoin='round'/><path d='M9 8a3 3 0 0 1 6 0' fill='none' stroke='white' stroke-width='1.6' stroke-linejoin='round'/></svg>";
 
+        private const string _SvgSwap = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 8h13M13 4l4 4-4 4' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/><path d='M20 16H7M11 12l-4 4 4 4' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+
         private const string _SvgEdit = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 20l.8-4L16.5 4.3 19.7 7.5 8 19.2z' fill='none' stroke='#2563eb' stroke-width='1.7' stroke-linejoin='round'/><line x1='14' y1='6' x2='18' y2='10' stroke='#2563eb' stroke-width='1.7'/></svg>";
 
         private const string _SvgRefresh = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M23 4v6h-6' fill='none' stroke='#2563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/><path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10' fill='none' stroke='#2563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>";
@@ -227,5 +236,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         private const string _SvgPin = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 22s7-6.6 7-12a7 7 0 1 0-14 0c0 5.4 7 12 7 12z' fill='none' stroke='#64748b' stroke-width='1.6' stroke-linejoin='round'/><circle cx='12' cy='10' r='2.4' fill='none' stroke='#64748b' stroke-width='1.6'/></svg>";
 
         private const string _SvgReceiptGray = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M6 2h12v20l-3-2-3 2-3-2-3 2V2z' fill='none' stroke='#64748b' stroke-width='1.6' stroke-linejoin='round'/><line x1='9' y1='7' x2='15' y2='7' stroke='#64748b' stroke-width='1.6'/><line x1='9' y1='11' x2='15' y2='11' stroke='#64748b' stroke-width='1.6'/><line x1='9' y1='15' x2='13' y2='15' stroke='#64748b' stroke-width='1.6'/></svg>";
+
+        private const string _SvgLockWhite = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='4' y='10' width='16' height='11' rx='2' fill='none' stroke='white' stroke-width='1.7'/><path d='M8 10V7a4 4 0 0 1 8 0v3' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round'/><circle cx='12' cy='15.5' r='1.4' fill='white'/></svg>";
+
+        private const string _SvgEye = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12 17.9 18.5 12 18.5 2.5 12 2.5 12z' fill='none' stroke='#64748b' stroke-width='1.7' stroke-linejoin='round'/><circle cx='12' cy='12' r='2.8' fill='none' stroke='#64748b' stroke-width='1.7'/></svg>";
+
+        private const string _SvgEyeOff = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12 17.9 18.5 12 18.5 2.5 12 2.5 12z' fill='none' stroke='#64748b' stroke-width='1.7' stroke-linejoin='round'/><path d='M4.5 4.5l15 15' stroke='#64748b' stroke-width='1.7' stroke-linecap='round'/></svg>";
     }
 }
