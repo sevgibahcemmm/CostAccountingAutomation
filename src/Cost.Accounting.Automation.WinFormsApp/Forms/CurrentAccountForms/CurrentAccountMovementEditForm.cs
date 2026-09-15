@@ -6,13 +6,14 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
+using DevExpress.XtraEditors;
 using DevExpress.XtraGrid.Columns;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 {
-    public partial class CurrentAccountMovementEditForm : SkinSensitiveForm
+    public partial class CurrentAccountMovementEditForm : XtraForm
     {
         private readonly CurrentAccountMovementDto? _editing;
         private readonly CurrentAccountType? _preselectedType;

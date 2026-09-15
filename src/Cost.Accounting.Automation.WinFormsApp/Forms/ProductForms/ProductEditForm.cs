@@ -30,7 +30,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
-    public partial class ProductEditForm : SkinSensitiveForm
+    public partial class ProductEditForm : XtraForm
     {
         private readonly ProductDto? _editing;
         private readonly BindingList<ProductPriceDto> _prices = [];

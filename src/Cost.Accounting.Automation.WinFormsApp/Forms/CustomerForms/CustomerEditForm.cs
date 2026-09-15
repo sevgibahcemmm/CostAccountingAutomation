@@ -12,7 +12,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
 {
-    public partial class CustomerEditForm : SkinSensitiveForm
+    public partial class CustomerEditForm : XtraForm
     {
         private readonly CustomerDto? _editing;
 

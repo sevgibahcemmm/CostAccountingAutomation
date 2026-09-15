@@ -53,7 +53,9 @@ public sealed partial class ChartOfAccountsListForm
         // _pnlHeader
         //
         _pnlHeader.Dock = DockStyle.Top;
+        _pnlHeader.Width = 1280;
         _pnlHeader.Height = 110;
+        _pnlHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
 
         //
         // _lblTitle
@@ -62,7 +64,7 @@ public sealed partial class ChartOfAccountsListForm
         _lblTitle.Location = new Point(82, 16);
         _lblTitle.Size = new Size(900, 26);
         _lblTitle.Text = "Hesap Planı";
-        _lblTitle.Appearance.Font = new Font("Segoe UI", 15F, FontStyle.Bold);
+        _lblTitle.Appearance.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
         _lblTitle.Appearance.Options.UseFont = true;
 
         //
@@ -72,7 +74,7 @@ public sealed partial class ChartOfAccountsListForm
         _lblSub.Location = new Point(84, 66);
         _lblSub.Size = new Size(900, 18);
         _lblSub.Text = "Yükleniyor...";
-        _lblSub.Appearance.Font = new Font("Segoe UI", 9F);
+        _lblSub.Appearance.Font = new Font("Segoe UI", 10F);
         _lblSub.Appearance.ForeColor = SkinTheme.SecondaryText;
         _lblSub.Appearance.Options.UseFont = true;
         _lblSub.Appearance.Options.UseForeColor = true;
@@ -120,7 +122,7 @@ public sealed partial class ChartOfAccountsListForm
         _btnImport.Text = "Hesap Planı İçe Aktar";
         _btnImport.Size = new Size(190, 36);
         _btnImport.Location = new Point(16, 10);
-        _btnImport.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        _btnImport.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         _btnImport.Appearance.Options.UseFont = true;
         _btnImport.Click += BtnImport_Click;
 
@@ -154,7 +156,7 @@ public sealed partial class ChartOfAccountsListForm
         _btnDelete.Text = "Seçileni Sil";
         _btnDelete.Size = new Size(96, 36);
         _btnDelete.Location = new Point(574, 10);
-        _btnDelete.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        _btnDelete.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         _btnDelete.Appearance.Options.UseFont = true;
         _btnDelete.Click += BtnDelete_Click;
 
@@ -203,8 +205,9 @@ public sealed partial class ChartOfAccountsListForm
         Controls.Add(_pnlHeader);
 
         IconOptions.SvgImage = SvgIcons.Modules[6];
-        Size = new Size(1280, 740);
-        MinimumSize = new Size(860, 520);
+        AutoScaleDimensions = new SizeF(7F, 16F);
+        AutoScaleMode = AutoScaleMode.Font;
+        ClientSize = new Size(1280, 680);
 
         ((System.ComponentModel.ISupportInitialize)_picHeaderIcon.Properties).EndInit();
         ((System.ComponentModel.ISupportInitialize)_tree).EndInit();

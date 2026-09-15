@@ -117,7 +117,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     element.ImageOptions.SvgImageSize = new Size(26, 26);
                 }
 
-                element.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.True;
+                element.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.False;
 
                 WireElementClick(element);
 
@@ -127,7 +127,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     {
                         child.ImageOptions.SvgImage = SvgIcons.MenuIcons[Math.Min(iconIndex, SvgIcons.MenuIcons.Length - 1)];
                         child.ImageOptions.SvgImageSize = new Size(22, 22);
-                        child.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.True;
+                        child.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.False;
                     }
 
                     WireElementClick(child);

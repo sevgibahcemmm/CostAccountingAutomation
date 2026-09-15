@@ -12,7 +12,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
 {
-    public partial class SupplierEditForm : SkinSensitiveForm
+    public partial class SupplierEditForm : XtraForm
     {
         private readonly SupplierDto? _editing;
 

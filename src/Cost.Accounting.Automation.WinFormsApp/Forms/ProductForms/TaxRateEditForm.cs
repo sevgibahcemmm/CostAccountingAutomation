@@ -10,7 +10,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
-    public partial class TaxRateEditForm : SkinSensitiveForm
+    public partial class TaxRateEditForm : XtraForm
     {
         private readonly TaxRateDto? _editing;
 

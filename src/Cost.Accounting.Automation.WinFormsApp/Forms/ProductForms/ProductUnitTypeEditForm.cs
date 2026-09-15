@@ -10,7 +10,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
-    public partial class ProductUnitTypeEditForm : SkinSensitiveForm
+    public partial class ProductUnitTypeEditForm : XtraForm
     {
         private readonly ProductUnitTypeDto? _editing;
 

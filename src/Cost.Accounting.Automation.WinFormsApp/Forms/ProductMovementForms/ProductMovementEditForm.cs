@@ -12,7 +12,7 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
 {
-    public partial class ProductMovementEditForm : SkinSensitiveForm
+    public partial class ProductMovementEditForm : XtraForm
     {
         private readonly ProductMovementListDto? _editing;
         private readonly ProductMovementType? _preselectedType;

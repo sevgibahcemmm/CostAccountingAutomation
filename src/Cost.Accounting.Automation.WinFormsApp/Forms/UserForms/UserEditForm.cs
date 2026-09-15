@@ -19,7 +19,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 {
-    public partial class UserEditForm : SkinSensitiveForm
+    public partial class UserEditForm : XtraForm
     {
         private readonly UserDto? _editing;
         private List<RoleDto> _roles = [];

@@ -17,7 +17,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 {
-    public partial class RoleEditForm : SkinSensitiveForm
+    public partial class RoleEditForm : XtraForm
     {
         private static readonly Font FontBold = new("Segoe UI", 9F, FontStyle.Bold);
         private static readonly Font FontStrikeout = new("Segoe UI", 9F, FontStyle.Strikeout);

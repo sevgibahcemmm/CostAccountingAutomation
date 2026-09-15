@@ -60,6 +60,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             var pnlHeader = new PanelControl
             {
                 Dock = DockStyle.Top,
+                Width = 1280,
                 Height = 110
             };
             pnlHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;

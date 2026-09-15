@@ -97,12 +97,55 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage PinIcon { get; } = Svg(_SvgPin);
         public static SvgImage ReceiptGrayIcon { get; } = Svg(_SvgReceiptGray);
 
+        private static readonly string[] _ModuleColors =
+        {
+            "#2dd4bf", // 0 Ana Sayfa – teal
+            "#a78bfa", // 1 Maliyet – violet
+            "#60a5fa", // 2 Stok – blue
+            "#34d399", // 3 Satın Alma – emerald
+            "#fb923c", // 4 Satış – orange
+            "#f472b6", // 5 Cari – pink
+            "#fbbf24", // 6 Muhasebe – amber
+            "#38bdf8", // 7 Finans – sky
+            "#a5b4fc", // 8 Sistem – indigo
+            "#f87171"  // 9 Çıkış – red
+        };
+
+        private static readonly string[] _MenuColors =
+        {
+            "#2dd4bf", // 0  Ana Sayfa – dashboard (teal)
+            "#a78bfa", // 1  Maliyet – calculator (violet)
+            "#60a5fa", // 2  Stok – box (blue)
+            "#34d399", // 3  Satın Alma – cart (emerald)
+            "#fb923c", // 4  Satış – receipt (orange)
+            "#f472b6", // 5  Cari – people (pink)
+            "#fbbf24", // 6  Muhasebe – chart (amber)
+            "#38bdf8", // 7  Finans – wallet (sky)
+            "#a5b4fc", // 8  Sistem – gear (indigo)
+            "#f87171", // 9  Çıkış – logout (red)
+            "#a78bfa", // 10 Maliyet Merkezleri (violet)
+            "#60a5fa", // 11 Stok Girişi (blue)
+            "#60a5fa", // 12 Stok Çıkışı (blue)
+            "#fbbf24", // 13 Hesap Planı (amber)
+            "#34d399", // 14 Tedarikçiler (emerald)
+            "#fbbf24", // 15 Mizan (amber)
+            "#38bdf8", // 16 Banka İşlemleri (sky)
+            "#38bdf8", // 17 Ödeme/Tahsilat (sky)
+            "#38bdf8", // 18 Kasa (sky)
+            "#38bdf8", // 19 Gelir/Gider (sky)
+            "#a5b4fc", // 20 Kullanıcılar (indigo)
+            "#a5b4fc", // 21 Roller (indigo)
+            "#a5b4fc", // 22 Şirket Ayarları (indigo)
+            "#fb923c", // 23 Satış Siparişleri (orange)
+            "#f472b6"  // 24 Cari Hareketler (pink)
+        };
+
         private static SvgImage[] CreateModules()
         {
             var images = new SvgImage[_ModuleSvg.Length];
             for (int i = 0; i < _ModuleSvg.Length; i++)
             {
-                images[i] = Svg(_ModuleSvg[i]);
+                images[i] = Svg(_ModuleSvg[i], _ModuleColors[Math.Min(i, _ModuleColors.Length - 1)]);
             }
             return images;
         }
@@ -112,14 +155,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
             var images = new SvgImage[contents.Length];
             for (int i = 0; i < contents.Length; i++)
             {
-                images[i] = Svg(contents[i]);
+                images[i] = Svg(contents[i], _MenuColors[Math.Min(i, _MenuColors.Length - 1)]);
             }
             return images;
         }
 
-        private static SvgImage Svg(string content)
+        private static SvgImage Svg(string content) => Svg(content, "#ffffff");
+
+        private static SvgImage Svg(string content, string color)
         {
-            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
+            // Koyu zemin üzerinde görünen beyaz çizimli ikonları ilgili modülün canlı pastel rengiyle boya.
+            string colored = content
+                .Replace("stroke='white'", "stroke='" + color + "'")
+                .Replace("fill='white'", "fill='" + color + "'");
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(colored));
             return SvgImage.FromStream(stream);
         }
 
