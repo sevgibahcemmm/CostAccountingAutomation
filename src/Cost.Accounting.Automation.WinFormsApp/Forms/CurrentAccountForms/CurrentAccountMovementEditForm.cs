@@ -34,8 +34,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             _editing = existing;
             _preselectedType = accountType ?? existing?.CurrentAccountType;
 
-            IconOptions.SvgImage = SvgIcons.Modules[5];
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.Modules[5];
+            IconOptions.SvgImage = DxIcon.CurrentAccounts;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.CurrentAccounts;
 
             Text = _editing is null ? "Yeni Cari Hareket" : "Cari Hareket İncele";
             lblTitle.Text = Text;

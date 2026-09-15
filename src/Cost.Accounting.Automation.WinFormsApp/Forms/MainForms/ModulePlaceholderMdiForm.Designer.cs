@@ -1,5 +1,5 @@
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -90,7 +90,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             this.btnClosePage.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnClosePage.Appearance.Options.UseFont = true;
             this.btnClosePage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            this.btnClosePage.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            this.btnClosePage.ImageOptions.SvgImage = DxIcon.Close;
             this.btnClosePage.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             this.btnClosePage.Location = new System.Drawing.Point(916, 37);
             this.btnClosePage.Name = "btnClosePage";

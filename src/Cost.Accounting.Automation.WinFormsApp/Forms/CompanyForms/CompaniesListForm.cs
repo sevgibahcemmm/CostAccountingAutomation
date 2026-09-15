@@ -1,19 +1,19 @@
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
 using TS.MediatR;
 using TS.Result;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
 {
     public sealed partial class CompaniesListForm : CrudListFormBase<CompanyGetAllQuery, CompanyDto, CompanyEditForm>
     {
-        public CompaniesListForm() : base("Şirketler")
+        public CompaniesListForm() : base("Åirketler")
         {
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.BuildingWhiteIcon;
+        protected override SvgImage ModuleIcon => DxIcon.Company;
 
         protected override string[] SearchFieldNames =>
         [

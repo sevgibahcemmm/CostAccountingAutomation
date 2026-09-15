@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
 {
     partial class CompanyEditForm
@@ -216,7 +215,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(32, 32);
             lblHeaderIcon.TabIndex = 2;
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.BuildingIcon;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Company;
             lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             //
             // lblTitle
@@ -228,7 +227,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblTitle.Name = "lblTitle";
             lblTitle.Size = new Size(122, 21);
             lblTitle.TabIndex = 0;
-            lblTitle.Text = "Şirket Bilgileri";
+            lblTitle.Text = "�?irket Bilgileri";
             //
             // lblSubtitle
             //
@@ -241,7 +240,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblSubtitle.Name = "lblSubtitle";
             lblSubtitle.Size = new Size(220, 14);
             lblSubtitle.TabIndex = 3;
-            lblSubtitle.Text = "Şirket bilgilerini eksiksiz doldurun";
+            lblSubtitle.Text = "�?irket bilgilerini eksiksiz doldurun";
             //
             // pnlHeaderLine
             //
@@ -281,7 +280,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             tabBasic.Controls.Add(lblTaxOffice);
             tabBasic.Controls.Add(txtName);
             tabBasic.Controls.Add(lblName);
-            tabBasic.ImageOptions.SvgImage = SvgIcons.BuildingIcon;
+            tabBasic.ImageOptions.SvgImage = DxIcon.Company;
             tabBasic.ImageOptions.SvgImageSize = new Size(16, 16);
             tabBasic.Name = "tabBasic";
             tabBasic.Size = new Size(474, 297);
@@ -298,7 +297,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblName.Name = "lblName";
             lblName.Size = new Size(50, 14);
             lblName.TabIndex = 0;
-            lblName.Text = "Şirket Adı";
+            lblName.Text = "�?irket Adı";
             //
             // txtName
             //
@@ -308,7 +307,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             txtName.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtName.Properties.Appearance.Options.UseFont = true;
             txtName.Properties.MaxLength = 200;
-            txtName.Properties.NullText = "Örn. Delta İnşaat A.Ş.";
+            txtName.Properties.NullText = "Örn. Delta İnşaat A.�?.";
             txtName.Properties.Padding = new Padding(26, 2, 2, 2);
             txtName.Size = new Size(434, 26);
             txtName.TabIndex = 1;
@@ -375,7 +374,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblPrefix.Name = "lblPrefix";
             lblPrefix.Size = new Size(60, 14);
             lblPrefix.TabIndex = 6;
-            lblPrefix.Text = "Şirket Ön Eki";
+            lblPrefix.Text = "�?irket Ön Eki";
             //
             // txtPrefix
             //
@@ -397,7 +396,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             chkActive.Name = "chkActive";
             chkActive.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             chkActive.Properties.Appearance.Options.UseFont = true;
-            chkActive.Properties.Caption = "Aktif Şirket";
+            chkActive.Properties.Caption = "Aktif �?irket";
             chkActive.Size = new Size(160, 21);
             chkActive.TabIndex = 8;
             //
@@ -431,7 +430,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             tabInvoice.Controls.Add(lblLetterhead);
             tabInvoice.Controls.Add(memoInvoice);
             tabInvoice.Controls.Add(lblInvoice);
-            tabInvoice.ImageOptions.SvgImage = SvgIcons.ReceiptGrayIcon;
+            tabInvoice.ImageOptions.SvgImage = DxIcon.Receipt;
             tabInvoice.ImageOptions.SvgImageSize = new Size(16, 16);
             tabInvoice.Name = "tabInvoice";
             tabInvoice.Size = new Size(474, 297);
@@ -503,7 +502,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             tabAddress.Controls.Add(lblDistrict);
             tabAddress.Controls.Add(txtCity);
             tabAddress.Controls.Add(lblCity);
-            tabAddress.ImageOptions.SvgImage = SvgIcons.PinIcon;
+            tabAddress.ImageOptions.SvgImage = DxIcon.Pin;
             tabAddress.ImageOptions.SvgImageSize = new Size(16, 16);
             tabAddress.Name = "tabAddress";
             tabAddress.Size = new Size(474, 297);
@@ -520,7 +519,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblCity.Name = "lblCity";
             lblCity.Size = new Size(28, 14);
             lblCity.TabIndex = 0;
-            lblCity.Text = "Şehir";
+            lblCity.Text = "�?ehir";
             //
             // txtCity
             //
@@ -671,7 +670,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             tabUnits.Controls.Add(lblExpCode);
             tabUnits.Controls.Add(txtExpName);
             tabUnits.Controls.Add(lblExpName);
-            tabUnits.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            tabUnits.ImageOptions.SvgImage = DxIcon.Tag;
             tabUnits.ImageOptions.SvgImageSize = new Size(16, 16);
             tabUnits.Name = "tabUnits";
             tabUnits.Size = new Size(474, 297);
@@ -783,7 +782,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconName.Location = new Point(24, 44);
             lblIconName.Name = "lblIconName";
             lblIconName.Size = new Size(18, 18);
-            lblIconName.ImageOptions.SvgImage = SvgIcons.BuildingIcon;
+            lblIconName.ImageOptions.SvgImage = DxIcon.Company;
             lblIconName.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconName.Tag = txtName;
             lblIconName.MouseDown += FieldIcon_MouseDown;
@@ -794,7 +793,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconTaxOffice.Location = new Point(24, 102);
             lblIconTaxOffice.Name = "lblIconTaxOffice";
             lblIconTaxOffice.Size = new Size(18, 18);
-            lblIconTaxOffice.ImageOptions.SvgImage = SvgIcons.IdCardIcon;
+            lblIconTaxOffice.ImageOptions.SvgImage = DxIcon.IdCard;
             lblIconTaxOffice.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconTaxOffice.Tag = txtTaxOffice;
             lblIconTaxOffice.MouseDown += FieldIcon_MouseDown;
@@ -805,7 +804,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconTaxNumber.Location = new Point(251, 102);
             lblIconTaxNumber.Name = "lblIconTaxNumber";
             lblIconTaxNumber.Size = new Size(18, 18);
-            lblIconTaxNumber.ImageOptions.SvgImage = SvgIcons.BarcodeIcon;
+            lblIconTaxNumber.ImageOptions.SvgImage = DxIcon.Barcode;
             lblIconTaxNumber.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconTaxNumber.Tag = txtTaxNumber;
             lblIconTaxNumber.MouseDown += FieldIcon_MouseDown;
@@ -816,7 +815,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconPrefix.Location = new Point(24, 160);
             lblIconPrefix.Name = "lblIconPrefix";
             lblIconPrefix.Size = new Size(18, 18);
-            lblIconPrefix.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            lblIconPrefix.ImageOptions.SvgImage = DxIcon.Tag;
             lblIconPrefix.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconPrefix.Tag = txtPrefix;
             lblIconPrefix.MouseDown += FieldIcon_MouseDown;
@@ -827,7 +826,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconCity.Location = new Point(24, 44);
             lblIconCity.Name = "lblIconCity";
             lblIconCity.Size = new Size(18, 18);
-            lblIconCity.ImageOptions.SvgImage = SvgIcons.PinIcon;
+            lblIconCity.ImageOptions.SvgImage = DxIcon.Pin;
             lblIconCity.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconCity.Tag = txtCity;
             lblIconCity.MouseDown += FieldIcon_MouseDown;
@@ -838,7 +837,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconPhone1.Location = new Point(24, 102);
             lblIconPhone1.Name = "lblIconPhone1";
             lblIconPhone1.Size = new Size(18, 18);
-            lblIconPhone1.ImageOptions.SvgImage = SvgIcons.PhoneIcon;
+            lblIconPhone1.ImageOptions.SvgImage = DxIcon.Phone;
             lblIconPhone1.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconPhone1.Tag = txtPhone1;
             lblIconPhone1.MouseDown += FieldIcon_MouseDown;
@@ -849,7 +848,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconPhone2.Location = new Point(251, 102);
             lblIconPhone2.Name = "lblIconPhone2";
             lblIconPhone2.Size = new Size(18, 18);
-            lblIconPhone2.ImageOptions.SvgImage = SvgIcons.PhoneIcon;
+            lblIconPhone2.ImageOptions.SvgImage = DxIcon.Phone;
             lblIconPhone2.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconPhone2.Tag = txtPhone2;
             lblIconPhone2.MouseDown += FieldIcon_MouseDown;
@@ -860,7 +859,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconEmail.Location = new Point(24, 160);
             lblIconEmail.Name = "lblIconEmail";
             lblIconEmail.Size = new Size(18, 18);
-            lblIconEmail.ImageOptions.SvgImage = SvgIcons.AtIcon;
+            lblIconEmail.ImageOptions.SvgImage = DxIcon.At;
             lblIconEmail.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconEmail.Tag = txtEmail;
             lblIconEmail.MouseDown += FieldIcon_MouseDown;
@@ -871,7 +870,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconExpName.Location = new Point(24, 44);
             lblIconExpName.Name = "lblIconExpName";
             lblIconExpName.Size = new Size(18, 18);
-            lblIconExpName.ImageOptions.SvgImage = SvgIcons.BuildingIcon;
+            lblIconExpName.ImageOptions.SvgImage = DxIcon.Company;
             lblIconExpName.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconExpName.Tag = txtExpName;
             lblIconExpName.MouseDown += FieldIcon_MouseDown;
@@ -882,7 +881,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconExpCode.Location = new Point(251, 44);
             lblIconExpCode.Name = "lblIconExpCode";
             lblIconExpCode.Size = new Size(18, 18);
-            lblIconExpCode.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            lblIconExpCode.ImageOptions.SvgImage = DxIcon.Tag;
             lblIconExpCode.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconExpCode.Tag = txtExpCode;
             lblIconExpCode.MouseDown += FieldIcon_MouseDown;
@@ -893,7 +892,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconAccName.Location = new Point(24, 102);
             lblIconAccName.Name = "lblIconAccName";
             lblIconAccName.Size = new Size(18, 18);
-            lblIconAccName.ImageOptions.SvgImage = SvgIcons.BuildingIcon;
+            lblIconAccName.ImageOptions.SvgImage = DxIcon.Company;
             lblIconAccName.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconAccName.Tag = txtAccName;
             lblIconAccName.MouseDown += FieldIcon_MouseDown;
@@ -904,7 +903,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblIconAccCode.Location = new Point(251, 102);
             lblIconAccCode.Name = "lblIconAccCode";
             lblIconAccCode.Size = new Size(18, 18);
-            lblIconAccCode.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            lblIconAccCode.ImageOptions.SvgImage = DxIcon.Tag;
             lblIconAccCode.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconAccCode.Tag = txtAccCode;
             lblIconAccCode.MouseDown += FieldIcon_MouseDown;
@@ -944,7 +943,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             btnCancel.Size = new Size(104, 32);
             btnCancel.TabIndex = 1;
             btnCancel.Text = "İptal";
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
             btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
@@ -959,7 +958,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             btnSave.Size = new Size(148, 32);
             btnSave.TabIndex = 2;
             btnSave.Text = "Kaydet";
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImage = DxIcon.Check;
             btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
             btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
@@ -977,8 +976,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             MinimizeBox = false;
             Name = "CompanyEditForm";
             StartPosition = FormStartPosition.CenterParent;
-            IconOptions.SvgImage = SvgIcons.BuildingIcon;
-            Text = "Şirket";
+            IconOptions.SvgImage = DxIcon.Company;
+            Text = "�?irket";
             ((System.ComponentModel.ISupportInitialize)pnlHeader).EndInit();
             pnlHeader.ResumeLayout(false);
             pnlHeader.PerformLayout();

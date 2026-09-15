@@ -61,9 +61,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
 
         protected override SvgImage ModuleIcon => _targetType switch
         {
-            ProductMovementType.Input => SvgIcons.MenuIcons[11],
-            ProductMovementType.Output => SvgIcons.MenuIcons[12],
-            _ => SvgIcons.Modules[2]
+            ProductMovementType.Input => DxIcon.StockInput,
+            ProductMovementType.Output => DxIcon.StockOutput,
+            _ => DxIcon.StockMovements
         };
 
         protected override string[] SearchFieldNames =>

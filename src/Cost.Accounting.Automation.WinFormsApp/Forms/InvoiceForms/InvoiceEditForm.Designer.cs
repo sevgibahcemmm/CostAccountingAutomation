@@ -548,9 +548,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             // 
             this.lblGrandTotalTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.lblGrandTotalTitle.Appearance.ForeColor = System.Drawing.Color.FromArgb(30, 64, 175);
+            this.lblGrandTotalTitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             this.lblGrandTotalTitle.Location = new System.Drawing.Point(15, 76);
             this.lblGrandTotalTitle.Name = "lblGrandTotalTitle";
-            this.lblGrandTotalTitle.Size = new System.Drawing.Size(82, 17);
+            this.lblGrandTotalTitle.Size = new System.Drawing.Size(100, 17);
             this.lblGrandTotalTitle.Text = "Genel Toplam:";
 
             // 
@@ -560,9 +561,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.lblGrandTotalValue.Appearance.ForeColor = System.Drawing.Color.FromArgb(30, 64, 175);
             this.lblGrandTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
             this.lblGrandTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            this.lblGrandTotalValue.Location = new System.Drawing.Point(60, 96);
+            this.lblGrandTotalValue.Location = new System.Drawing.Point(115, 76);
             this.lblGrandTotalValue.Name = "lblGrandTotalValue";
-            this.lblGrandTotalValue.Size = new System.Drawing.Size(175, 20);
+            this.lblGrandTotalValue.Size = new System.Drawing.Size(120, 20);
             this.lblGrandTotalValue.Text = "0,00 ₺";
 
             // 

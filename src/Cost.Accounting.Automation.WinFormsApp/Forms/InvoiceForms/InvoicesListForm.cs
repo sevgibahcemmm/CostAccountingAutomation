@@ -33,7 +33,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             InitializeLinesDetailView();
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.Modules[4];
+        protected override SvgImage ModuleIcon => DxIcon.Invoices;
 
         protected override string[] SearchFieldNames =>
         [

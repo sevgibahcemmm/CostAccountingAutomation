@@ -1,9 +1,9 @@
-﻿using Cost.Accounting.Automation.Application.ChartOfAccounts;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
 using DevExpress.XtraTreeList;
 using DevExpress.XtraTreeList.Columns;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms;
 
@@ -88,7 +88,7 @@ public sealed partial class ChartOfAccountsListForm
         _picHeaderIcon.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
         _picHeaderIcon.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.Default;
         _picHeaderIcon.Properties.ShowMenu = false;
-        _picHeaderIcon.SvgImage = SvgIcons.Modules[6];
+        _picHeaderIcon.SvgImage = DxIcon.ChartAccounts;
 
         //
         // _btnClosePage
@@ -99,7 +99,7 @@ public sealed partial class ChartOfAccountsListForm
         _btnClosePage.Location = new Point(1170, 37);
         _btnClosePage.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         _btnClosePage.Appearance.Options.UseFont = true;
-        _btnClosePage.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+        _btnClosePage.ImageOptions.SvgImage = DxIcon.Close;
         _btnClosePage.ImageOptions.SvgImageSize = new Size(16, 16);
         _btnClosePage.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
         _btnClosePage.Click += BtnClosePage_Click;
@@ -176,13 +176,13 @@ public sealed partial class ChartOfAccountsListForm
         _btnClearSelection.Location = new Point(794, 10);
         _btnClearSelection.Click += BtnClearSelection_Click;
 
-        SetIcon(_btnImport, SvgIcons.ImportIcon, 18);
-        SetIcon(_btnRefresh, SvgIcons.RefreshIcon, 18);
-        SetIcon(_btnExpandAll, SvgIcons.ExpandAllIcon, 18);
-        SetIcon(_btnCollapseAll, SvgIcons.CollapseAllIcon, 18);
-        SetIcon(_btnDelete, SvgIcons.TrashIcon, 18);
-        SetIcon(_btnSelectAll, SvgIcons.CheckAllIcon, 18);
-        SetIcon(_btnClearSelection, SvgIcons.UncheckIcon, 18);
+        SetIcon(_btnImport, DxIcon.Import, 18);
+        SetIcon(_btnRefresh, DxIcon.Refresh, 18);
+        SetIcon(_btnExpandAll, DxIcon.ExpandAll, 18);
+        SetIcon(_btnCollapseAll, DxIcon.CollapseAll, 18);
+        SetIcon(_btnDelete, DxIcon.Delete, 18);
+        SetIcon(_btnSelectAll, DxIcon.CheckAll, 18);
+        SetIcon(_btnClearSelection, DxIcon.Uncheck, 18);
 
         _pnlToolbar.Controls.Add(_btnImport);
         _pnlToolbar.Controls.Add(_btnRefresh);
@@ -204,7 +204,7 @@ public sealed partial class ChartOfAccountsListForm
         Controls.Add(_pnlToolbar);
         Controls.Add(_pnlHeader);
 
-        IconOptions.SvgImage = SvgIcons.Modules[6];
+        IconOptions.SvgImage = DxIcon.ChartAccounts;
         AutoScaleDimensions = new SizeF(7F, 16F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(1280, 680);

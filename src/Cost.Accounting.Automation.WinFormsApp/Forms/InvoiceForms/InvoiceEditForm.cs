@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Customers;
 using Cost.Accounting.Automation.Application.Invoices;
 using Cost.Accounting.Automation.Application.Products;
@@ -31,6 +31,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private List<ProductDto> _products = [];
         private List<ChartOfAccountLookUpDto> _warehouses = [];
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
+        private string? _lastAutoDescription;
 
         public InvoiceEditForm() : this(null)
         {
@@ -41,26 +42,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             InitializeComponent();
             _editing = existing;
 
-            IconOptions.SvgImage = SvgIcons.Modules[4];
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.Modules[4];
+            IconOptions.SvgImage = DxIcon.Invoices;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Invoices;
 
-            Text = _editing is null ? "Yeni Fatura" : "Fatura Ä°ncele";
+            Text = _editing is null ? "Yeni Fatura" : "Fatura İncele";
             lblTitle.Text = Text;
             lblSubtitle.Text = _editing is null
-                ? "Soldan Ã¼rÃ¼n seÃ§in, sadece fiyat ve miktarÄ± girin"
+                ? "Soldan ürün seçin, sadece fiyat ve miktarı girin"
                 : _editing.Status == InvoiceStatus.Draft
-                    ? "TaslaÄŸÄ± dÃ¼zenleyip kaydedebilir veya onaylayabilirsiniz"
-                    : "Fatura ve kalem detaylarÄ±";
+                    ? "Taslağı düzenleyip kaydedebilir veya onaylayabilirsiniz"
+                    : "Fatura ve kalem detayları";
 
             InitControls();
             WireEvents();
+            UpdateAutoDescription();
         }
 
         private void InitControls()
         {
             cmbInvoiceType.Properties.Items.Clear();
-            cmbInvoiceType.Properties.Items.Add("SatÄ±ÅŸ FaturasÄ±");
-            cmbInvoiceType.Properties.Items.Add("SatÄ±n Alma FaturasÄ±");
+            cmbInvoiceType.Properties.Items.Add("Satış Faturası");
+            cmbInvoiceType.Properties.Items.Add("Satın Alma Faturası");
             cmbInvoiceType.SelectedIndex = 1;
 
             dtDate.DateTime = DateTime.Today;
@@ -106,11 +108,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 ValueMember = nameof(ProductDto.Id),
                 DisplayMember = nameof(ProductDto.Name),
-                NullText = "ÃœrÃ¼n SeÃ§iniz...",
+                NullText = "Ürün Seçiniz...",
                 PopupFilterMode = PopupFilterMode.Contains
             };
-            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.ProductCode)).Caption = "ÃœrÃ¼n Kodu";
-            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.Name)).Caption = "ÃœrÃ¼n AdÄ±";
+            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.ProductCode)).Caption = "Ürün Kodu";
+            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.Name)).Caption = "Ürün Adı";
             _riProductLookUp.View.Columns.AddField(nameof(ProductDto.StockQuantity)).Caption = "Stok";
             _riProductLookUp.View.Columns[0].Visible = true;
             _riProductLookUp.View.Columns[1].Visible = true;
@@ -125,6 +127,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             RepositoryItemTextEdit riDesc = new();
 
             gridLines.RepositoryItems.AddRange([_riProductLookUp, riQuantity, riPrice, riDiscountRate, riTaxRate, riReadOnlyMoney, riDesc]);
+
+            // ConfigureFromAttributes DevExpress'in dar varsayılan sütun genişliklerini
+            // kullanır; okunabilirlik için burada gerçekçi genişlikler veriyoruz.
+            Dictionary<string, int> columnWidths = new()
+            {
+                [nameof(InvoiceLineDto.ProductId)] = 260,
+                [nameof(InvoiceLineDto.Quantity)] = 90,
+                [nameof(InvoiceLineDto.UnitPrice)] = 110,
+                [nameof(InvoiceLineDto.DiscountRate)] = 90,
+                [nameof(InvoiceLineDto.DiscountAmount)] = 110,
+                [nameof(InvoiceLineDto.TaxRateRate)] = 80,
+                [nameof(InvoiceLineDto.TaxAmount)] = 110,
+                [nameof(InvoiceLineDto.TotalAmount)] = 130,
+            };
 
             foreach (GridColumn column in gridLinesView.Columns)
             {
@@ -141,28 +157,68 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                     nameof(InvoiceLineDto.Description) => riDesc,
                     _ => column.ColumnEdit
                 };
+
+                if (columnWidths.TryGetValue(column.FieldName, out int width))
+                {
+                    column.Width = width;
+                    column.OptionsColumn.FixedWidth = true;
+                }
+                else if (column.FieldName == nameof(InvoiceLineDto.Description))
+                {
+                    // Açıklama sütunu kalan tüm boşluğu doldursun.
+                    column.MinWidth = 220;
+                    column.OptionsColumn.FixedWidth = false;
+                }
+
+                bool isMoneyColumn = column.FieldName is nameof(InvoiceLineDto.UnitPrice)
+                    or nameof(InvoiceLineDto.DiscountAmount)
+                    or nameof(InvoiceLineDto.TaxAmount)
+                    or nameof(InvoiceLineDto.TotalAmount);
+                bool isNumericColumn = isMoneyColumn || column.FieldName is nameof(InvoiceLineDto.Quantity)
+                    or nameof(InvoiceLineDto.DiscountRate)
+                    or nameof(InvoiceLineDto.TaxRateRate);
+
+                if (isNumericColumn)
+                {
+                    column.AppearanceCell.TextOptions.HAlignment = HorzAlignment.Far;
+                }
+                column.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Center;
             }
+
+            // Sütunlar arttıkça grid'in tamamı kullanılsın, Açıklama sütunu esnesin.
+            gridLinesView.OptionsView.ColumnAutoWidth = true;
+            gridLinesView.OptionsCustomization.AllowColumnResizing = true;
         }
 
         private void ConfigureCatalogGrid()
         {
             gridCatalogView.Columns.Clear();
             gridCatalogView.OptionsBehavior.AutoPopulateColumns = false;
+            // ProductDto içindeki liste tipi alanlar (ör. Prices) DevExpress tarafından
+            // otomatik master-detail olarak algılanıp satırlara "+" ekleyebiliyor; kapatıyoruz.
+            gridCatalogView.OptionsDetail.EnableMasterViewMode = false;
 
             GridColumn[] columns =
             [
-                new() { Caption = "ÃœrÃ¼n AdÄ±", FieldName = nameof(ProductDto.Name), Visible = true, Width = 160 },
-                new() { Caption = "ÃœrÃ¼n Kodu", FieldName = nameof(ProductDto.ProductCode), Visible = true, Width = 90 },
-                new() { Caption = "Depo", FieldName = nameof(ProductDto.WarehouseName), Visible = true, Width = 90 },
-                new() { Caption = "Birim", FieldName = nameof(ProductDto.ProductUnitTypeName), Visible = true, Width = 55 },
-                new() { Caption = "KDV %", FieldName = nameof(ProductDto.TaxRateRate), Visible = true, Width = 60, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "p0" } },
-                new() { Caption = "Stok", FieldName = nameof(ProductDto.StockQuantity), Visible = true, Width = 70, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "n2" } },
-                new() { Caption = "AlÄ±ÅŸ FiyatÄ±", FieldName = "PurchasePriceUnbound", UnboundDataType = typeof(decimal), Visible = true, Width = 85, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
-                new() { Caption = "SatÄ±ÅŸ FiyatÄ±", FieldName = "SalePriceUnbound", UnboundDataType = typeof(decimal), Visible = true, Width = 85, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } }
+                new() { Caption = "Ürün Adı", FieldName = nameof(ProductDto.Name), Visible = true, Width = 220 },
+                new() { Caption = "Ürün Kodu", FieldName = nameof(ProductDto.ProductCode), Visible = true, Width = 110 },
+                new() { Caption = "Depo", FieldName = nameof(ProductDto.WarehouseName), Visible = true, Width = 110 },
+                new() { FieldName = nameof(ProductDto.WarehouseId), Visible = false }, // filtre panelinde depo adını göstermek için gizli kolon
+                new() { Caption = "Birim", FieldName = nameof(ProductDto.ProductUnitTypeName), Visible = true, Width = 75 },
+                new() { Caption = "KDV %", FieldName = nameof(ProductDto.TaxRateRate), Visible = true, Width = 75, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "p0" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
+                new() { Caption = "Stok", FieldName = nameof(ProductDto.StockQuantity), Visible = true, Width = 90, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "n2" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
+                new() { Caption = "Alış Fiyatı", FieldName = "PurchasePriceUnbound", UnboundDataType = typeof(decimal), Visible = true, Width = 110, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
+                new() { Caption = "Satış Fiyatı", FieldName = "SalePriceUnbound", UnboundDataType = typeof(decimal), Visible = true, Width = 110, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } }
             ];
+
+            foreach (GridColumn column in columns)
+            {
+                column.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Center;
+            }
 
             gridCatalogView.Columns.AddRange(columns);
             gridCatalogView.CustomUnboundColumnData += GridCatalogView_CustomUnboundColumnData;
+            gridCatalogView.OptionsView.ColumnAutoWidth = false;
         }
 
         private void GridCatalogView_CustomUnboundColumnData(object? sender, CustomColumnDataEventArgs e)
@@ -202,6 +258,97 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             gridLinesView.ValidatingEditor += GridLinesView_ValidatingEditor;
             gridCatalogView.DoubleClick += GridCatalogView_DoubleClick;
             cmbCatalogWarehouse.EditValueChanged += CmbCatalogWarehouse_EditValueChanged;
+
+            // Açıklama alanını otomatik oluşturmak için ilgili alanlardaki değişiklikleri izle.
+            cmbInvoiceType.SelectedIndexChanged += (_, _) => UpdateAutoDescription();
+            dtDate.EditValueChanged += (_, _) => UpdateAutoDescription();
+            txtInvoiceNumber.EditValueChanged += (_, _) => UpdateAutoDescription();
+            lookUpAccount.EditValueChanged += (_, _) => UpdateAutoDescription();
+            _lines.ListChanged += (_, _) => UpdateAutoDescription();
+        }
+
+        /// <summary>
+        /// Fatura tarihi, cari, fatura numarası ve kalemlerdeki ürünlere göre
+        /// "... tarihinde ... firmasından/firmasına ... fatura numarası ile ... alınmıştır/satılmıştır."
+        /// biçiminde bir açıklama metni üretip Açıklama alanına yazar.
+        /// Kullanıcı açıklamayı elle değiştirmişse üzerine yazmaz.
+        /// </summary>
+        private void UpdateAutoDescription()
+        {
+            // Onaylanmış faturalarda veya salt-okunur durumda otomatik açıklama üretilmez.
+            if (_editing is not null && _editing.Status != InvoiceStatus.Draft)
+            {
+                return;
+            }
+
+            // Kullanıcı, otomatik üretilenden farklı bir metin yazdıysa dokunma.
+            if (!string.IsNullOrEmpty(txtDescription.Text) && txtDescription.Text != _lastAutoDescription)
+            {
+                return;
+            }
+
+            bool isSales = cmbInvoiceType.SelectedIndex == 0;
+            string accountName = GetSelectedAccountName();
+            string invoiceNumber = txtInvoiceNumber.Text.Trim();
+            string dateText = dtDate.DateTime == DateTime.MinValue
+                ? DateTime.Today.ToString("dd.MM.yyyy")
+                : dtDate.DateTime.ToString("dd.MM.yyyy");
+            string materialText = GetLineMaterialsText();
+
+            if (string.IsNullOrEmpty(accountName) && string.IsNullOrEmpty(invoiceNumber) && string.IsNullOrEmpty(materialText))
+            {
+                return;
+            }
+
+            string accountPart = string.IsNullOrEmpty(accountName)
+                ? (isSales ? "müşteri" : "tedarikçi")
+                : accountName;
+            string numberPart = string.IsNullOrEmpty(invoiceNumber) ? "..." : invoiceNumber;
+            string materialPart = string.IsNullOrEmpty(materialText) ? "malzeme" : materialText;
+
+            string description = isSales
+                ? $"{dateText} tarihinde {accountPart} firmasına {numberPart} fatura numarası ile {materialPart} satılmıştır."
+                : $"{dateText} tarihinde {accountPart} firmasından {numberPart} fatura numarası ile {materialPart} alınmıştır.";
+
+            txtDescription.Text = description;
+            _lastAutoDescription = description;
+        }
+
+        private string GetSelectedAccountName()
+        {
+            if (lookUpAccount.EditValue is not Guid accountId || accountId == Guid.Empty)
+            {
+                return string.Empty;
+            }
+
+            bool isSales = cmbInvoiceType.SelectedIndex == 0;
+            return isSales
+                ? _customers.FirstOrDefault(c => c.Id == accountId)?.Name ?? string.Empty
+                : _suppliers.FirstOrDefault(s => s.Id == accountId)?.Name ?? string.Empty;
+        }
+
+        private string GetLineMaterialsText()
+        {
+            List<string> names = _lines
+                .Where(l => l.ProductId != Guid.Empty)
+                .Select(l => _products.FirstOrDefault(p => p.Id == l.ProductId)?.Name)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => n!)
+                .Distinct()
+                .ToList();
+
+            const int maxNames = 3;
+            if (names.Count == 0)
+            {
+                return string.Empty;
+            }
+            if (names.Count <= maxNames)
+            {
+                return string.Join(", ", names);
+            }
+
+            int remaining = names.Count - maxNames;
+            return string.Join(", ", names.Take(maxNames)) + $" ve {remaining} kalem daha (vb.)";
         }
 
         private async void InvoiceEditForm_Load(object? sender, EventArgs e)
@@ -211,10 +358,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             if (_editing is not null)
             {
                 PopulateExisting(_editing);
-            }
-            else
-            {
-                AddEmptyLine();
             }
         }
 
@@ -252,7 +395,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             }
             catch (Exception ex)
             {
-                ToastHelper.Show("Veriler yÃ¼klenirken hata oluÅŸtu: " + ex.Message, ToastType.Error);
+                ToastHelper.Show("Veriler yüklenirken hata oluştu: " + ex.Message, ToastType.Error);
             }
         }
 
@@ -264,7 +407,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private void UpdateAccountDataSource()
         {
             bool isSales = cmbInvoiceType.SelectedIndex == 0;
-            lblAccountLabel.Text = isSales ? "MÃ¼ÅŸteri:" : "TedarikÃ§i:";
+            lblAccountLabel.Text = isSales ? "Müşteri:" : "Tedarikçi:";
 
             lookUpAccount.Properties.DataSource = null;
             lookUpAccountView.Columns.Clear();
@@ -276,9 +419,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 lookUpAccount.Properties.ValueMember = nameof(CustomerDto.Id);
                 lookUpAccount.Properties.DisplayMember = nameof(CustomerDto.Name);
 
-                lookUpAccountView.Columns.AddField(nameof(CustomerDto.Name)).Caption = "MÃ¼ÅŸteri AdÄ±";
+                lookUpAccountView.Columns.AddField(nameof(CustomerDto.Name)).Caption = "Müşteri Adı";
                 lookUpAccountView.Columns.AddField(nameof(CustomerDto.TaxNumber)).Caption = "Vergi No";
-                lookUpAccountView.Columns.AddField(nameof(CustomerDto.City)).Caption = "Åehir";
+                lookUpAccountView.Columns.AddField(nameof(CustomerDto.City)).Caption = "Şehir";
             }
             else
             {
@@ -286,9 +429,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 lookUpAccount.Properties.ValueMember = nameof(SupplierDto.Id);
                 lookUpAccount.Properties.DisplayMember = nameof(SupplierDto.Name);
 
-                lookUpAccountView.Columns.AddField(nameof(SupplierDto.Name)).Caption = "TedarikÃ§i AdÄ±";
+                lookUpAccountView.Columns.AddField(nameof(SupplierDto.Name)).Caption = "Tedarikçi Adı";
                 lookUpAccountView.Columns.AddField(nameof(SupplierDto.TaxNumber)).Caption = "Vergi No";
-                lookUpAccountView.Columns.AddField(nameof(SupplierDto.City)).Caption = "Åehir";
+                lookUpAccountView.Columns.AddField(nameof(SupplierDto.City)).Caption = "Şehir";
             }
 
             foreach (GridColumn col in lookUpAccountView.Columns)
@@ -327,6 +470,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             }
 
             RecalculateTotals();
+            UpdateAutoDescription();
         }
 
         private void AddEmptyLine()
@@ -347,6 +491,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 _lines.RemoveAt(rowHandle);
                 RecalculateTotals();
+                UpdateAutoDescription();
             }
         }
 
@@ -357,13 +502,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return;
             }
 
+            GridColumn warehouseIdColumn = gridCatalogView.Columns[nameof(ProductDto.WarehouseId)];
+
             if (cmbCatalogWarehouse.EditValue is Guid warehouseId)
             {
-                gridCatalogView.ActiveFilterString = $"[{nameof(ProductDto.WarehouseId)}] = '{warehouseId}'";
+                // Filtre panelinde ham GUID yerine seçilen deponun adı gösterilsin.
+                string warehouseName = _warehouses.FirstOrDefault(w => w.Id == warehouseId)?.Display ?? string.Empty;
+                warehouseIdColumn.FilterInfo = new ColumnFilterInfo(warehouseIdColumn, warehouseId, $"Depo = {warehouseName}");
             }
             else
             {
-                gridCatalogView.ActiveFilterString = "";
+                warehouseIdColumn.FilterInfo = new ColumnFilterInfo();
             }
         }
 
@@ -376,14 +525,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         {
             if (gridCatalogView.GetFocusedRow() is not ProductDto product)
             {
-                ToastHelper.Show("LÃ¼tfen listeden bir Ã¼rÃ¼n seÃ§in.", ToastType.Warning);
+                ToastHelper.Show("Lütfen listeden bir ürün seçin.", ToastType.Warning);
                 return;
             }
 
             int existingRow = _lines.ToList().FindIndex(l => l.ProductId == product.Id);
             if (existingRow >= 0)
             {
-                ToastHelper.Show($"'{product.Name}' faturaya zaten eklenmiÅŸ.", ToastType.Warning);
+                ToastHelper.Show($"'{product.Name}' faturaya zaten eklenmiş.", ToastType.Warning);
                 gridLinesView.FocusedRowHandle = existingRow;
                 return;
             }
@@ -405,6 +554,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
             gridLinesView.FocusedRowHandle = _lines.Count - 1;
             RecalculateTotals();
+            UpdateAutoDescription();
         }
 
         private void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
@@ -422,7 +572,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                         InvoiceLineDto? duplicate = _lines.FirstOrDefault(l => l != line && l.ProductId == productId);
                         if (duplicate is not null)
                         {
-                            ToastHelper.Show($"'{prod.Name}' faturaya zaten eklenmiÅŸ.", ToastType.Warning);
+                            ToastHelper.Show($"'{prod.Name}' faturaya zaten eklenmiş.", ToastType.Warning);
                             edit.EditValue = line.ProductId == Guid.Empty ? null : line.ProductId;
                             return;
                         }
@@ -440,6 +590,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
                         gridLinesView.RefreshRow(rowHandle);
                         RecalculateTotals();
+                        UpdateAutoDescription();
                     }
                 }
             }
@@ -452,21 +603,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             if (columnName == nameof(InvoiceLineDto.UnitPrice) && e.Value is decimal price && price <= 0)
             {
                 e.Valid = false;
-                e.ErrorText = "Birim fiyat sÄ±fÄ±rdan bÃ¼yÃ¼k olmalÄ±dÄ±r.";
+                e.ErrorText = "Birim fiyat sıfırdan büyük olmalıdır.";
                 return;
             }
 
             if (columnName == nameof(InvoiceLineDto.Quantity) && e.Value is decimal qty && qty <= 0)
             {
                 e.Valid = false;
-                e.ErrorText = "Miktar sÄ±fÄ±rdan bÃ¼yÃ¼k olmalÄ±dÄ±r.";
+                e.ErrorText = "Miktar sıfırdan büyük olmalıdır.";
                 return;
             }
 
             if (columnName == nameof(InvoiceLineDto.DiscountRate) && e.Value is decimal discount && (discount < 0 || discount > 100))
             {
                 e.Valid = false;
-                e.ErrorText = "Ä°skonto oranÄ± %0 ile %100 arasÄ±nda olmalÄ±dÄ±r.";
+                e.ErrorText = "İskonto oranı %0 ile %100 arasında olmalıdır.";
                 return;
             }
 
@@ -489,14 +640,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return;
             }
 
-            ToastHelper.Show($"'{_products.FirstOrDefault(p => p.Id == newProductId)?.Name ?? "ÃœrÃ¼n"}' faturaya zaten eklenmiÅŸ.", ToastType.Warning);
+            ToastHelper.Show($"'{_products.FirstOrDefault(p => p.Id == newProductId)?.Name ?? "Ürün"}' faturaya zaten eklenmiş.", ToastType.Warning);
             e.Valid = false;
-            e.ErrorText = "Bu Ã¼rÃ¼n faturada zaten mevcut.";
+            e.ErrorText = "Bu ürün faturada zaten mevcut.";
         }
 
         private void GridLinesView_CellValueChanged(object? sender, CellValueChangedEventArgs e)
         {
             RecalculateTotals();
+            UpdateAutoDescription();
         }
 
         private void RecalculateTotals()
@@ -531,14 +683,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 byRate[line.TaxRateRate] = acc;
             }
 
-            lblSubTotalValue.Text = subTotal.ToString("n2") + " â‚º";
-            lblDiscountTotalValue.Text = "- " + discountTotal.ToString("n2") + " â‚º";
-            lblTaxTotalValue.Text = taxTotal.ToString("n2") + " â‚º";
-            lblGrandTotalValue.Text = (subTotal - discountTotal + taxTotal).ToString("n2") + " â‚º";
+            lblSubTotalValue.Text = subTotal.ToString("n2") + " ₺";
+            lblDiscountTotalValue.Text = "- " + discountTotal.ToString("n2") + " ₺";
+            lblTaxTotalValue.Text = taxTotal.ToString("n2") + " ₺";
+            lblGrandTotalValue.Text = (subTotal - discountTotal + taxTotal).ToString("n2") + " ₺";
 
             var breakdown = byRate
                 .OrderByDescending(kv => kv.Key)
-                .Select(kv => $"KDV %{kv.Key:n0}  â”‚  Matrah: {kv.Value.Matrah:n2} â‚º  â”‚  KDV: {kv.Value.Kdv:n2} â‚º");
+                .Select(kv => $"KDV %{kv.Key:n0}  │  Matrah: {kv.Value.Matrah:n2} ₺  │  KDV: {kv.Value.Kdv:n2} ₺");
 
             lblTaxBreakdown.Text = breakdown.Any() ? string.Join(Environment.NewLine, breakdown) : "Kalem ekleyin.";
 
@@ -560,14 +712,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             string number = txtInvoiceNumber.Text.Trim();
             if (string.IsNullOrEmpty(number))
             {
-                ToastHelper.Show("Fatura numarasÄ± boÅŸ olamaz.", ToastType.Warning);
+                ToastHelper.Show("Fatura numarası boş olamaz.", ToastType.Warning);
                 txtInvoiceNumber.Focus();
                 return;
             }
 
             if (lookUpAccount.EditValue is not Guid accountId || accountId == Guid.Empty)
             {
-                ToastHelper.Show("LÃ¼tfen bir cari (MÃ¼ÅŸteri/TedarikÃ§i) seÃ§iniz.", ToastType.Warning);
+                ToastHelper.Show("Lütfen bir cari (Müşteri/Tedarikçi) seçiniz.", ToastType.Warning);
                 lookUpAccount.Focus();
                 return;
             }
@@ -577,7 +729,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 .ToList();
             if (validLines.Count == 0 || validLines.Count != _lines.Count(l => l.ProductId != Guid.Empty))
             {
-                ToastHelper.Show("Miktar ve fiyat sÄ±fÄ±rdan bÃ¼yÃ¼k olmalÄ±dÄ±r. Eksik kalemleri tamamlayÄ±n.", ToastType.Warning);
+                ToastHelper.Show("Miktar ve fiyat sıfırdan büyük olmalıdır. Eksik kalemleri tamamlayın.", ToastType.Warning);
                 return;
             }
 
@@ -585,7 +737,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 if (line.DiscountRate < 0 || line.DiscountRate > 100)
                 {
-                    ToastHelper.Show("Ä°skonto oranÄ± %0 ile %100 arasÄ±nda olmalÄ±dÄ±r.", ToastType.Warning);
+                    ToastHelper.Show("İskonto oranı %0 ile %100 arasında olmalıdır.", ToastType.Warning);
                     return;
                 }
             }
@@ -636,9 +788,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 if (ok)
                 {
                     ToastHelper.Show(_editing is { Status: InvoiceStatus.Draft }
-                        ? "Fatura taslaÄŸÄ± gÃ¼ncellendi."
+                        ? "Fatura taslağı güncellendi."
                         : approve
-                            ? "Fatura onaylandÄ±; stok ve cari hareketleri oluÅŸturuldu."
+                            ? "Fatura onaylandı; stok ve cari hareketleri oluşturuldu."
                             : "Fatura taslak olarak kaydedildi.", ToastType.Success);
                     DialogResult = DialogResult.OK;
                     Close();
@@ -664,7 +816,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 bool ok = await CrudExecutor.ExecuteAsync(new InvoiceApproveCommand(_editing.Id));
                 if (ok)
                 {
-                    ToastHelper.Show("Fatura onaylandÄ±; stok ve cari hareketleri oluÅŸturuldu.", ToastType.Success);
+                    ToastHelper.Show("Fatura onaylandı; stok ve cari hareketleri oluşturuldu.", ToastType.Success);
                     DialogResult = DialogResult.OK;
                     Close();
                 }

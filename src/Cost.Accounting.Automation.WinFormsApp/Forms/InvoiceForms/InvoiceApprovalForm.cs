@@ -49,7 +49,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             ToolbarPanel.Controls.Add(_cmbMethod);
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.Modules[4];
+        protected override SvgImage ModuleIcon => DxIcon.Invoices;
 
         protected override bool AllowDelete => false;
 

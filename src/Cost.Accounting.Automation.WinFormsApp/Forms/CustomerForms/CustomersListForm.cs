@@ -13,7 +13,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
         {
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.Modules[5];
+        protected override SvgImage ModuleIcon => DxIcon.Customers;
 
         protected override string[] SearchFieldNames =>
         [

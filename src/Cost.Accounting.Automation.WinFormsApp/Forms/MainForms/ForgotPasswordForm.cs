@@ -1,11 +1,11 @@
 using Cost.Accounting.Automation.Application.Auth;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -20,10 +20,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCodeBox.Paint += AuthFormStyles.RoundedField_Paint;
             btnGenerate.Paint += AuthFormStyles.Button_Paint;
             btnContinue.Paint += AuthFormStyles.Button_Paint;
-            btnGenerate.ImageOptions.SvgImage = SvgIcons.KeyWhiteIcon;
+            btnGenerate.ImageOptions.SvgImage = DxIcon.Key;
             btnGenerate.ImageOptions.SvgImageSize = new Size(18, 18);
             btnGenerate.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnContinue.ImageOptions.SvgImage = SvgIcons.NextIcon;
+            btnContinue.ImageOptions.SvgImage = DxIcon.Next;
             btnContinue.ImageOptions.SvgImageSize = new Size(18, 18);
             btnContinue.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
         }

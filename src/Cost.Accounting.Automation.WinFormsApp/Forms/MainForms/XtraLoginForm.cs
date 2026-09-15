@@ -3,7 +3,6 @@ using Cost.Accounting.Automation.Infrastructure;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors.Controls;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +10,7 @@ using System.Drawing.Drawing2D;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using TS.MediatR;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -75,26 +75,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void ConfigureIcons()
         {
             pnlLeftLockGlyph.Text = string.Empty;
-            pnlLeftLockGlyph.ImageOptions.SvgImage = SvgIcons.LockWhiteIcon;
+            pnlLeftLockGlyph.ImageOptions.SvgImage = DxIcon.Lock;
             pnlLeftLockGlyph.ImageOptions.SvgImageSize = new Size(48, 48);
 
             _lblLogoIcon.Text = string.Empty;
-            _lblLogoIcon.ImageOptions.SvgImage = SvgIcons.ShieldIcon;
+            _lblLogoIcon.ImageOptions.SvgImage = DxIcon.Shield;
             _lblLogoIcon.ImageOptions.SvgImageSize = new Size(54, 54);
 
             lblUserIcon.Text = string.Empty;
-            lblUserIcon.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            lblUserIcon.ImageOptions.SvgImage = DxIcon.User;
             lblUserIcon.ImageOptions.SvgImageSize = new Size(22, 22);
 
             lblPassIcon.Text = string.Empty;
-            lblPassIcon.ImageOptions.SvgImage = SvgIcons.KeyIcon;
+            lblPassIcon.ImageOptions.SvgImage = DxIcon.Key;
             lblPassIcon.ImageOptions.SvgImageSize = new Size(22, 22);
 
             lblTogglePassword.Text = string.Empty;
-            lblTogglePassword.ImageOptions.SvgImage = SvgIcons.EyeIcon;
+            lblTogglePassword.ImageOptions.SvgImage = DxIcon.Eye;
             lblTogglePassword.ImageOptions.SvgImageSize = new Size(22, 22);
 
-            btnLogin.ImageOptions.SvgImage = SvgIcons.NextIcon;
+            btnLogin.ImageOptions.SvgImage = DxIcon.Next;
             btnLogin.ImageOptions.SvgImageSize = new Size(22, 22);
             btnLogin.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
         }
@@ -254,9 +254,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void lblTogglePassword_Click(object? sender, EventArgs e)
         {
             _passwordVisible = !_passwordVisible;
-            txtPassword.Properties.PasswordChar = _passwordVisible ? '\0' : '•';
+            txtPassword.Properties.PasswordChar = _passwordVisible ? '\0' : '\u2022';
             txtPassword.Properties.UseSystemPasswordChar = false;
-            lblTogglePassword.ImageOptions.SvgImage = _passwordVisible ? SvgIcons.EyeOffIcon : SvgIcons.EyeIcon;
+            lblTogglePassword.ImageOptions.SvgImage = _passwordVisible ? DxIcon.EyeOff : DxIcon.Eye;
             txtPassword.Refresh();
         }
 

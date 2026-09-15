@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 {
     partial class RoleEditForm
@@ -109,7 +108,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             // 
             // lblHeaderIcon
             // 
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.ShieldIcon;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Shield;
             lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             lblHeaderIcon.Location = new Point(18, 13);
             lblHeaderIcon.Margin = new Padding(3, 2, 3, 2);
@@ -181,7 +180,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             btnGroupSelectAll.Appearance.Font = new Font("Segoe UI", 9F);
             btnGroupSelectAll.Appearance.Options.UseFont = true;
             btnGroupSelectAll.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnGroupSelectAll.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnGroupSelectAll.ImageOptions.SvgImage = DxIcon.Check;
             btnGroupSelectAll.ImageOptions.SvgImageSize = new Size(16, 16);
             btnGroupSelectAll.Location = new Point(20, 198);
             btnGroupSelectAll.Margin = new Padding(3, 2, 3, 2);
@@ -195,7 +194,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             btnGroupClear.Appearance.Font = new Font("Segoe UI", 9F);
             btnGroupClear.Appearance.Options.UseFont = true;
             btnGroupClear.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnGroupClear.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnGroupClear.ImageOptions.SvgImage = DxIcon.Close;
             btnGroupClear.ImageOptions.SvgImageSize = new Size(14, 14);
             btnGroupClear.Location = new Point(163, 198);
             btnGroupClear.Margin = new Padding(3, 2, 3, 2);
@@ -288,7 +287,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             btnSave.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             btnSave.Appearance.Options.UseFont = true;
             btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImage = DxIcon.Check;
             btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
             btnSave.Location = new Point(307, 13);
             btnSave.Margin = new Padding(3, 2, 3, 2);
@@ -303,7 +302,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             btnCancel.Appearance.Font = new Font("Segoe UI", 9.5F);
             btnCancel.Appearance.Options.UseFont = true;
             btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
             btnCancel.Location = new Point(195, 13);
             btnCancel.Margin = new Padding(3, 2, 3, 2);
@@ -340,7 +339,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             Controls.Add(pnlFooter);
             Controls.Add(pnlHeader);
             FormBorderStyle = FormBorderStyle.FixedDialog;
-            IconOptions.SvgImage = SvgIcons.ShieldIcon;
+            IconOptions.SvgImage = DxIcon.Shield;
             Margin = new Padding(3, 2, 3, 2);
             MaximizeBox = false;
             MinimizeBox = false;

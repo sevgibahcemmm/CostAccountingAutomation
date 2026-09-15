@@ -27,31 +27,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
     {
         private readonly SessionClaimContext _session;
         private readonly Dictionary<int, string> _groupNames = new();
-        private readonly SvgImage[] _moduleIcons = SvgIcons.Modules;
+        private readonly SvgImage[] _moduleIcons;
         private System.Windows.Forms.Timer? _clockTimer;
         private DateTime _tokenExpiry;
 
-        private static readonly Dictionary<string, int> _menuIconIndex = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly Dictionary<string, SvgImage> _menuIcons = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["elmUrunler"] = 2,
-            ["elmBirimCinsleri"] = 12,
-            ["elmKdvOranlari"] = 12,
-            ["elmStokGirisi"] = 11,
-            ["elmStokCikisi"] = 12,
-            ["elmStokHareketleri"] = 24,
-            ["elmFiyatStokListesi"] = 6,
-            ["elmSatinAlmaFaturalari"] = 4,
-            ["elmFaturaOnaylama"] = 1,
-            ["elmSatisFaturalari"] = 4,
-            ["elmMusteriler"] = 5,
-            ["elmTedarikciler"] = 14,
-            ["elmCariHareketler"] = 24,
-            ["elmCariBorcAlacakOzeti"] = 13,
-            ["elmHesapPlani"] = 13,
-            ["elmOdemeTahsilat"] = 17,
-            ["elmSirketAyarlari"] = 22,
-            ["elmKullanicilar"] = 20,
-            ["elmRoller"] = 21
+            ["elmUrunler"] = DxIcon.Products,
+            ["elmBirimCinsleri"] = DxIcon.Tag,
+            ["elmKdvOranlari"] = DxIcon.Percent,
+            ["elmStokGirisi"] = DxIcon.StockInput,
+            ["elmStokCikisi"] = DxIcon.StockOutput,
+            ["elmStokHareketleri"] = DxIcon.StockMovements,
+            ["elmFiyatStokListesi"] = DxIcon.PriceStock,
+            ["elmSatinAlmaFaturalari"] = DxIcon.Invoices,
+            ["elmFaturaOnaylama"] = DxIcon.Check,
+            ["elmSatisFaturalari"] = DxIcon.Sales,
+            ["elmMusteriler"] = DxIcon.Customers,
+            ["elmTedarikciler"] = DxIcon.Suppliers,
+            ["elmCariHareketler"] = DxIcon.CurrentAccounts,
+            ["elmCariBorcAlacakOzeti"] = DxIcon.Balance,
+            ["elmHesapPlani"] = DxIcon.ChartAccounts,
+            ["elmOdemeTahsilat"] = DxIcon.Payments,
+            ["elmSirketAyarlari"] = DxIcon.Company,
+            ["elmKullanicilar"] = DxIcon.Users,
+            ["elmRoller"] = DxIcon.Roles
         };
 
         public RibbonMainForm()
@@ -60,11 +60,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             _session = Program.Services.GetRequiredService<SessionClaimContext>();
             MdiFormManager.Instance.Initialize(xtraTabbedMdiManager);
+            _moduleIcons =
+            [
+                DxIcon.Home,              // 0 Ana Sayfa
+                DxIcon.Module,            // 1 (kullanılmıyor)
+                DxIcon.Products,          // 2 Stok Yönetimi
+                DxIcon.Invoices,          // 3 Fatura Yönetimi
+                DxIcon.Sales,             // 4 Satış Yönetimi
+                DxIcon.CurrentAccounts,   // 5 Cari Yönetimi
+                DxIcon.ChartAccounts,     // 6 Muhasebe Yönetimi
+                DxIcon.AppIcon,           // 7 Sol üst uygulama ikonu
+                DxIcon.Security,          // 8 Sistem Yönetimi
+                DxIcon.Exit               // 9 Çıkış
+            ];
 
             InitializeAccordion();
             IconOptions.SvgImage = _moduleIcons[7];
             accordionControl.OptionsMinimizing.State = AccordionControlState.Minimized;
             accordionControl.OptionsMinimizing.NormalWidth = 260;
+            accordionControl.AnimationType = DevExpress.XtraBars.Navigation.AnimationType.None;
 
             Load += RibbonMainForm_Load;
             FormClosing += RibbonMainForm_FormClosing;
@@ -123,9 +137,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 foreach (AccordionControlElement child in element.Elements)
                 {
-                    if (_menuIconIndex.TryGetValue(child.Name, out int iconIndex))
+                    if (_menuIcons.TryGetValue(child.Name, out SvgImage? icon))
                     {
-                        child.ImageOptions.SvgImage = SvgIcons.MenuIcons[Math.Min(iconIndex, SvgIcons.MenuIcons.Length - 1)];
+                        child.ImageOptions.SvgImage = icon;
                         child.ImageOptions.SvgImageSize = new Size(22, 22);
                         child.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.False;
                     }

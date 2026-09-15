@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 {
     partial class UserEditForm
@@ -164,7 +163,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(32, 32);
             lblHeaderIcon.TabIndex = 2;
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.HeaderUserIcon;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.User;
             lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             //
             // lblTitle
@@ -226,7 +225,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabPersonal.Controls.Add(lblLastName);
             tabPersonal.Controls.Add(txtFirstName);
             tabPersonal.Controls.Add(lblFirstName);
-            tabPersonal.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            tabPersonal.ImageOptions.SvgImage = DxIcon.User;
             tabPersonal.ImageOptions.SvgImageSize = new Size(16, 16);
             tabPersonal.Name = "tabPersonal";
             tabPersonal.Size = new Size(474, 297);
@@ -345,7 +344,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabAccount.Controls.Add(lblCompany);
             tabAccount.Controls.Add(txtTcNo);
             tabAccount.Controls.Add(lblTcNo);
-            tabAccount.ImageOptions.SvgImage = SvgIcons.ShieldIcon;
+            tabAccount.ImageOptions.SvgImage = DxIcon.Shield;
             tabAccount.ImageOptions.SvgImageSize = new Size(16, 16);
             tabAccount.Name = "tabAccount";
             tabAccount.Size = new Size(474, 297);
@@ -390,7 +389,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblCompany.Name = "lblCompany";
             lblCompany.Size = new Size(28, 14);
             lblCompany.TabIndex = 2;
-            lblCompany.Text = "Şirket";
+            lblCompany.Text = "�?irket";
             //
             // cmbCompany
             //
@@ -400,7 +399,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             cmbCompany.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             cmbCompany.Properties.Appearance.Options.UseFont = true;
             cmbCompany.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
-            cmbCompany.Properties.NullText = "Şirket ara / seç (boş = kendi şirketiniz)";
+            cmbCompany.Properties.NullText = "�?irket ara / seç (boş = kendi şirketiniz)";
             cmbCompany.Properties.PopupFilterMode = DevExpress.XtraEditors.PopupFilterMode.Contains;
             cmbCompany.Properties.Padding = new Padding(26, 2, 2, 2);
             cmbCompany.Size = new Size(434, 26);
@@ -463,7 +462,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblIconFirstName.Location = new Point(24, 44);
             lblIconFirstName.Name = "lblIconFirstName";
             lblIconFirstName.Size = new Size(18, 18);
-            lblIconFirstName.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            lblIconFirstName.ImageOptions.SvgImage = DxIcon.User;
             lblIconFirstName.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconFirstName.Tag = txtFirstName;
             lblIconFirstName.MouseDown += FieldIcon_MouseDown;
@@ -474,7 +473,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblIconLastName.Location = new Point(251, 44);
             lblIconLastName.Name = "lblIconLastName";
             lblIconLastName.Size = new Size(18, 18);
-            lblIconLastName.ImageOptions.SvgImage = SvgIcons.UserIcon;
+            lblIconLastName.ImageOptions.SvgImage = DxIcon.User;
             lblIconLastName.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconLastName.Tag = txtLastName;
             lblIconLastName.MouseDown += FieldIcon_MouseDown;
@@ -485,7 +484,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblIconUserName.Location = new Point(24, 102);
             lblIconUserName.Name = "lblIconUserName";
             lblIconUserName.Size = new Size(18, 18);
-            lblIconUserName.ImageOptions.SvgImage = SvgIcons.AtIcon;
+            lblIconUserName.ImageOptions.SvgImage = DxIcon.At;
             lblIconUserName.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconUserName.Tag = txtUserName;
             lblIconUserName.MouseDown += FieldIcon_MouseDown;
@@ -496,7 +495,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblIconEmail.Location = new Point(251, 102);
             lblIconEmail.Name = "lblIconEmail";
             lblIconEmail.Size = new Size(18, 18);
-            lblIconEmail.ImageOptions.SvgImage = SvgIcons.MailIcon;
+            lblIconEmail.ImageOptions.SvgImage = DxIcon.Mail;
             lblIconEmail.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconEmail.Tag = txtEmail;
             lblIconEmail.MouseDown += FieldIcon_MouseDown;
@@ -507,7 +506,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblIconTcNo.Location = new Point(24, 44);
             lblIconTcNo.Name = "lblIconTcNo";
             lblIconTcNo.Size = new Size(18, 18);
-            lblIconTcNo.ImageOptions.SvgImage = SvgIcons.IdCardIcon;
+            lblIconTcNo.ImageOptions.SvgImage = DxIcon.IdCard;
             lblIconTcNo.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconTcNo.Tag = txtTcNo;
             lblIconTcNo.MouseDown += FieldIcon_MouseDown;
@@ -518,7 +517,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblIconCompany.Location = new Point(24, 102);
             lblIconCompany.Name = "lblIconCompany";
             lblIconCompany.Size = new Size(18, 18);
-            lblIconCompany.ImageOptions.SvgImage = SvgIcons.BuildingIcon;
+            lblIconCompany.ImageOptions.SvgImage = DxIcon.Company;
             lblIconCompany.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconCompany.Tag = cmbCompany;
             lblIconCompany.MouseDown += FieldIcon_MouseDown;
@@ -529,7 +528,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblIconRole.Location = new Point(24, 160);
             lblIconRole.Name = "lblIconRole";
             lblIconRole.Size = new Size(18, 18);
-            lblIconRole.ImageOptions.SvgImage = SvgIcons.KeyIcon;
+            lblIconRole.ImageOptions.SvgImage = DxIcon.Key;
             lblIconRole.ImageOptions.SvgImageSize = new Size(18, 18);
             lblIconRole.Tag = cmbRole;
             lblIconRole.MouseDown += FieldIcon_MouseDown;
@@ -541,7 +540,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabPhotos.Controls.Add(btnAddPhoto);
             tabPhotos.Controls.Add(picPhoto);
             tabPhotos.Controls.Add(lstPhotos);
-            tabPhotos.ImageOptions.SvgImage = SvgIcons.PhotoIcon;
+            tabPhotos.ImageOptions.SvgImage = DxIcon.Photo;
             tabPhotos.ImageOptions.SvgImageSize = new Size(16, 16);
             tabPhotos.Name = "tabPhotos";
             tabPhotos.Size = new Size(474, 297);
@@ -578,7 +577,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnAddPhoto.Size = new Size(136, 28);
             btnAddPhoto.TabIndex = 2;
             btnAddPhoto.Text = "Fotoğraf Ekle";
-            btnAddPhoto.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddPhoto.ImageOptions.SvgImage = DxIcon.Add;
             btnAddPhoto.ImageOptions.SvgImageSize = new Size(16, 16);
             btnAddPhoto.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
@@ -592,7 +591,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnSetDefault.Size = new Size(136, 28);
             btnSetDefault.TabIndex = 3;
             btnSetDefault.Text = "Varsayılan Yap";
-            btnSetDefault.ImageOptions.SvgImage = SvgIcons.StarIcon;
+            btnSetDefault.ImageOptions.SvgImage = DxIcon.Star;
             btnSetDefault.ImageOptions.SvgImageSize = new Size(16, 16);
             btnSetDefault.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
@@ -606,7 +605,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnRemovePhoto.Size = new Size(146, 28);
             btnRemovePhoto.TabIndex = 4;
             btnRemovePhoto.Text = "Kaldır";
-            btnRemovePhoto.ImageOptions.SvgImage = SvgIcons.TrashIcon;
+            btnRemovePhoto.ImageOptions.SvgImage = DxIcon.Delete;
             btnRemovePhoto.ImageOptions.SvgImageSize = new Size(16, 16);
             btnRemovePhoto.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
@@ -645,7 +644,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnCancel.Size = new Size(104, 32);
             btnCancel.TabIndex = 1;
             btnCancel.Text = "İptal";
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
             btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
@@ -660,7 +659,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnSave.Size = new Size(148, 32);
             btnSave.TabIndex = 2;
             btnSave.Text = "Kaydet";
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImage = DxIcon.Check;
             btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
             btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             //
@@ -678,7 +677,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             MinimizeBox = false;
             Name = "UserEditForm";
             StartPosition = FormStartPosition.CenterParent;
-            IconOptions.SvgImage = SvgIcons.Modules[5];
+            IconOptions.SvgImage = DxIcon.Users;
             Text = "Kullanıcı";
             ((System.ComponentModel.ISupportInitialize)pnlHeader).EndInit();
             pnlHeader.ResumeLayout(false);

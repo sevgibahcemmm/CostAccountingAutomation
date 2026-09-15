@@ -106,6 +106,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private System.Windows.Forms.Label lblChartInvoiceTrendTitle;
         private DevExpress.XtraCharts.ChartControl chartInvoiceTrend;
 
+        private DevExpress.XtraEditors.SimpleButton btnRefresh;
         private DevExpress.XtraEditors.PanelControl pnlChartStockMovements;
         private System.Windows.Forms.Label lblChartStockMovementsTitle;
         private DevExpress.XtraCharts.ChartControl chartStockMovements;
@@ -383,6 +384,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             chartStockMovements =
                 new DevExpress.XtraCharts.ChartControl();
 
+            btnRefresh =
+                new DevExpress.XtraEditors.SimpleButton();
+
             pnlHeader.SuspendLayout();
             pnlBody.SuspendLayout();
             tblLayout.SuspendLayout();
@@ -473,6 +477,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             SuspendLayout();
 
             pnlHeader.Controls.Add(lblDate);
+            pnlHeader.Controls.Add(btnRefresh);
             pnlHeader.Controls.Add(lblSub);
             pnlHeader.Controls.Add(lblWelcome);
 
@@ -550,7 +555,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     System.Drawing.FontStyle.Regular);
 
             lblDate.Location =
-                new System.Drawing.Point(850, 30);
+                new System.Drawing.Point(700, 30);
 
             lblDate.Name =
                 "lblDate";
@@ -566,6 +571,36 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             lblDate.TextAlign =
                 System.Drawing.ContentAlignment.MiddleRight;
+
+            btnRefresh.Anchor =
+                System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Right;
+
+            btnRefresh.Appearance.Font =
+                new System.Drawing.Font(
+                    "Segoe UI",
+                    9F,
+                    System.Drawing.FontStyle.Regular);
+
+            btnRefresh.Appearance.Options.UseFont = true;
+
+            btnRefresh.ButtonStyle =
+                DevExpress.XtraEditors.Controls.BorderStyles.HotFlat;
+
+            btnRefresh.Location =
+                new System.Drawing.Point(1108, 26);
+
+            btnRefresh.Name =
+                "btnRefresh";
+
+            btnRefresh.Size =
+                new System.Drawing.Size(140, 32);
+
+            btnRefresh.TabIndex =
+                3;
+
+            btnRefresh.Text =
+                "Yenile";
 
             pnlBody.Controls.Add(tblLayout);
 

@@ -1,6 +1,5 @@
 using Cost.Accounting.Automation.Application.Roles;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraGrid;
@@ -8,6 +7,7 @@ using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Grid;
 using TS.MediatR;
 using TS.Result;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 {
@@ -18,7 +18,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             InitializeDetailView();
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.ShieldIcon;
+        protected override SvgImage ModuleIcon => DxIcon.Shield;
 
         protected override string[] SearchFieldNames =>
         [

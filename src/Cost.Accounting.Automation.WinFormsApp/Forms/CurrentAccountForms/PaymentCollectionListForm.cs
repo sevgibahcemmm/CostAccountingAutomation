@@ -27,7 +27,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             _targetType = targetType;
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.MenuIcons[17];
+        protected override SvgImage ModuleIcon => DxIcon.Payments;
 
         protected override string[] SearchFieldNames =>
         [

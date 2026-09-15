@@ -31,7 +31,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             _supplierId = supplierId;
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.Modules[5];
+        protected override SvgImage ModuleIcon => DxIcon.CurrentAccounts;
 
         protected override string[] SearchFieldNames =>
         [

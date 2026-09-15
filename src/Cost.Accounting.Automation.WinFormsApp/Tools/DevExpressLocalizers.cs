@@ -135,24 +135,52 @@ public static class DevExpressLocalizers
 
 public sealed class TurkishGridLocalizer : GridLocalizer
 {
-    public override string GetLocalizedString(GridStringId id) => id switch
+    // Kesin GridStringId eşlemeleri.
+    private static readonly Dictionary<GridStringId, string> _byId = new()
     {
-        GridStringId.FindControlFindButton => "Ara",
-        GridStringId.FindControlClearButton => "Temizle",
-        GridStringId.MenuColumnSortAscending => "Artan Sırada Sırala",
-        GridStringId.MenuColumnSortDescending => "Azalan Sırada Sırala",
-        GridStringId.MenuColumnClearSorting => "Sıralamayı Temizle",
-        GridStringId.MenuColumnFilterEditor => "Filtre Oluşturucu...",
-        GridStringId.CustomFilterDialogCaption => "Özel Filtreleme",
-        GridStringId.MenuColumnBestFit => "En İyi Genişliği Ayarla",
-        GridStringId.MenuColumnBestFitAllColumns => "Tüm Sütunlara En İyi Genişliği Uygula",
-        GridStringId.MenuColumnGroup => "Bu Sütuna Göre Grupla",
-        GridStringId.MenuColumnUnGroup => "Grubu Kaldır",
-        GridStringId.GridGroupPanelText => "Gruplamak için sütun başlığını buraya sürükleyin.",
-        GridStringId.FindNullPrompt => "Aranacak kelimeyi buraya yazın...",
-        GridStringId.CustomizationCaption => "Gizli Sütunlar",
-        _ => base.GetLocalizedString(id)
+        [GridStringId.FindControlFindButton] = "Ara",
+        [GridStringId.FindControlClearButton] = "Temizle",
+        [GridStringId.MenuColumnSortAscending] = "Artan Sırada Sırala",
+        [GridStringId.MenuColumnSortDescending] = "Azalan Sırada Sırala",
+        [GridStringId.MenuColumnClearSorting] = "Sıralamayı Temizle",
+        [GridStringId.MenuColumnFilterEditor] = "Filtre Oluşturucu...",
+        [GridStringId.CustomFilterDialogCaption] = "Özel Filtreleme",
+        [GridStringId.MenuColumnBestFit] = "En İyi Genişliği Ayarla",
+        [GridStringId.MenuColumnBestFitAllColumns] = "Tüm Sütunlara En İyi Genişliği Uygula",
+        [GridStringId.MenuColumnGroup] = "Bu Sütuna Göre Grupla",
+        [GridStringId.MenuColumnUnGroup] = "Grubu Kaldır",
+        [GridStringId.GridGroupPanelText] = "Gruplamak için sütun başlığını buraya sürükleyin.",
+        [GridStringId.FindNullPrompt] = "Aranacak kelimeyi buraya yazın...",
+        [GridStringId.CustomizationCaption] = "Gizli Sütunlar",
     };
+
+    // GridStringId, sürüme göre farklı isimlerle gelebiliyor (ör. filtre panelindeki
+    // "Edit Filter" düğmesi). Bu yüzden varsayılan (İngilizce) metne göre de bir
+    // yedek eşleme tutuyoruz; hangi id olursa olsun bu şekilde yakalanır.
+    private static readonly Dictionary<string, string> _byDefaultText = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Edit Filter"] = "Filtreyi Düzenle",
+        ["Clear Filter"] = "Filtreyi Temizle",
+        ["Enable Filter"] = "Filtreyi Etkinleştir",
+        ["Disable Filter"] = "Filtreyi Devre Dışı Bırak",
+        ["Show Recent Filters"] = "Son Kullanılan Filtreler",
+        ["Recent Filters"] = "Son Kullanılan Filtreler",
+        ["MRU Filters"] = "Son Kullanılan Filtreler",
+        ["No filter applied"] = "Filtre uygulanmadı",
+        ["Filter Editor"] = "Filtre Düzenleyici",
+        ["(Custom)"] = "(Özel)",
+    };
+
+    public override string GetLocalizedString(GridStringId id)
+    {
+        if (_byId.TryGetValue(id, out string? tr))
+        {
+            return tr;
+        }
+
+        string defaultText = base.GetLocalizedString(id);
+        return _byDefaultText.TryGetValue(defaultText, out string? trByText) ? trByText : defaultText;
+    }
 }
 
 #endregion

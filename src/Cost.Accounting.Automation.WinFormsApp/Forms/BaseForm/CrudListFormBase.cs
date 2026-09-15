@@ -3,7 +3,6 @@ using Cost.Accounting.Automation.Application.Behaviors;
 using DomainEntityDto = Cost.Accounting.Automation.Domain.Abstractions.EntityDto;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
 using DevExpress.XtraEditors.Controls;
@@ -12,6 +11,7 @@ using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 {
@@ -44,7 +44,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
         protected DevExpress.XtraEditors.PanelControl ToolbarPanel => pnlToolbar;
 
-        protected virtual SvgImage ModuleIcon => SvgIcons.Modules[5];
+protected virtual SvgImage ModuleIcon => DxIcon.Module;
 
         protected virtual bool AllowDelete => true;
 
@@ -131,14 +131,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
         private void SetupButtonIcons()
         {
-            SetButtonIcon(btnNew, SvgIcons.PlusIcon, 18);
-            SetButtonIcon(btnEdit, SvgIcons.EditIcon, 18);
-            SetButtonIcon(btnDelete, SvgIcons.TrashIcon, 18);
-            SetButtonIcon(btnRefresh, SvgIcons.RefreshIcon, 18);
-            SetButtonIcon(btnDeleted, SvgIcons.TrashIcon, 18);
-            SetButtonIcon(btnRestore, SvgIcons.RestoreIcon, 18);
-            SetButtonIcon(btnApprove, SvgIcons.CheckIcon, 18);
-            SetButtonIcon(btnClosePage, SvgIcons.CloseIcon, 16);
+            SetButtonIcon(btnNew, DxIcon.Add, 18);
+            SetButtonIcon(btnEdit, DxIcon.Edit, 18);
+            SetButtonIcon(btnDelete, DxIcon.Delete, 18);
+            SetButtonIcon(btnRefresh, DxIcon.Refresh, 18);
+            SetButtonIcon(btnDeleted, DxIcon.Delete, 18);
+            SetButtonIcon(btnRestore, DxIcon.Restore, 18);
+            SetButtonIcon(btnApprove, DxIcon.Check, 18);
+            SetButtonIcon(btnClosePage, DxIcon.Close, 16);
         }
 
         private static void SetButtonIcon(SimpleButton button, SvgImage icon, int size)

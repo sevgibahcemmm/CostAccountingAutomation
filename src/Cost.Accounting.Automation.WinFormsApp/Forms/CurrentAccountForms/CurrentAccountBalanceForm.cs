@@ -3,12 +3,12 @@ using Cost.Accounting.Automation.Application.CurrentAccountMovements;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 {
@@ -33,7 +33,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         {
             SuspendLayout();
 
-            IconOptions.SvgImage = Utils.SvgIcons.MenuIcons[17];
+            IconOptions.SvgImage = DxIcon.Balance;
 
             _lblTitle = new LabelControl
             {
@@ -75,7 +75,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             };
             pic.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
             pic.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.Default;
-            pic.SvgImage = Utils.SvgIcons.MenuIcons[17];
+            pic.SvgImage = DxIcon.Balance;
             pnlHeader.Controls.Add(pic);
 
             var btnClose = new SimpleButton
@@ -85,7 +85,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
                 Location = new Point(1170, 37),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
-            btnClose.ImageOptions.SvgImage = Utils.SvgIcons.CloseIcon;
+            btnClose.ImageOptions.SvgImage = DxIcon.Close;
             btnClose.ImageOptions.SvgImageSize = new Size(16, 16);
             btnClose.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnClose.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);

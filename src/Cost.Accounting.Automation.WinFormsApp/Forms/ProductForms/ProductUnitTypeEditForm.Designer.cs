@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
     public partial class ProductUnitTypeEditForm
@@ -76,7 +75,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             // 
             // lblHeaderIcon
             // 
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Tag;
             lblHeaderIcon.ImageOptions.SvgImageSize = new System.Drawing.Size(24, 24);
             lblHeaderIcon.Location = new System.Drawing.Point(20, 20);
             lblHeaderIcon.Name = "lblHeaderIcon";
@@ -210,7 +209,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnCancel.Cursor = System.Windows.Forms.Cursors.Hand;
             btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             btnCancel.Location = new System.Drawing.Point(252, 13);
             btnCancel.Name = "btnCancel";
@@ -226,7 +225,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             btnSave.Appearance.Options.UseFont = true;
             btnSave.Cursor = System.Windows.Forms.Cursors.Hand;
             btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImage = DxIcon.Check;
             btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnSave.Location = new System.Drawing.Point(348, 13);
             btnSave.Name = "btnSave";

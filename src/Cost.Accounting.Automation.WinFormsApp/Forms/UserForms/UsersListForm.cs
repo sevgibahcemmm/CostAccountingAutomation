@@ -25,7 +25,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             View.CustomUnboundColumnData += UsersListForm_CustomUnboundColumnData;
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.Modules[5];
+        protected override SvgImage ModuleIcon => DxIcon.Users;
 
         protected override string[] SearchFieldNames =>
         [

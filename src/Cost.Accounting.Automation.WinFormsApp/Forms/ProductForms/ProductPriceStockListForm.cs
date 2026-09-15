@@ -18,7 +18,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         {
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.Modules[2];
+        protected override SvgImage ModuleIcon => DxIcon.PriceStock;
 
         protected override bool AllowDelete => false;
 

@@ -1,17 +1,17 @@
 using Cost.Accounting.Automation.Application.Auth;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
     public partial class ResetPasswordForm : DevExpress.XtraEditors.XtraForm
     {
-        private const string SuccessMessage = "Şifreniz başarıyla sıfırlandı. Yeni şifrenizle giriş yapabilirsiniz";
+        private const string SuccessMessage = "�?ifreniz başarıyla sıfırlandı. Yeni şifrenizle giriş yapabilirsiniz";
 
         public bool ResetCompleted { get; private set; }
 
@@ -28,7 +28,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             txtConfirmPassword.Enter += AuthFormStyles.Field_Enter;
             txtConfirmPassword.Leave += AuthFormStyles.Field_Leave;
             btnReset.Paint += AuthFormStyles.Button_Paint;
-            btnReset.ImageOptions.SvgImage = SvgIcons.RefreshWhiteIcon;
+            btnReset.ImageOptions.SvgImage = DxIcon.Refresh;
             btnReset.ImageOptions.SvgImageSize = new Size(18, 18);
             btnReset.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
         }
@@ -58,13 +58,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             if (newPassword.Length < 8)
             {
-                ToastHelper.Show("Şifreniz en az 8 karakter olmalıdır.", ToastType.Error);
+                ToastHelper.Show("�?ifreniz en az 8 karakter olmalıdır.", ToastType.Error);
                 return;
             }
 
             if (newPassword != confirmPassword)
             {
-                ToastHelper.Show("Şifreler birbiriyle uyuşmuyor.", ToastType.Error);
+                ToastHelper.Show("�?ifreler birbiriyle uyuşmuyor.", ToastType.Error);
                 return;
             }
 

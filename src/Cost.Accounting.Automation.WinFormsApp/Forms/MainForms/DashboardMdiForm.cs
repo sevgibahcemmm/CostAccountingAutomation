@@ -6,7 +6,6 @@ using Cost.Accounting.Automation.Domain.Suppliers;
 using Cost.Accounting.Automation.Infrastructure.Context;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
 using DevExpress.XtraCharts;
 using DevExpress.XtraGrid;
@@ -17,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Drawing;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -54,9 +54,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 new Size(1024, 640);
 
             IconOptions.SvgImage =
-                SvgIcons.Modules[0];
+                DxIcon.Home;
 
             InitializeComponent();
+
+            btnRefresh.Click += BtnRefresh_Click;
+            btnRefresh.ImageOptions.SvgImage = DxIcon.Refresh;
 
             _kpiValues[1] = lblKpi1Value;
             _kpiValues[2] = lblKpi2Value;
@@ -112,6 +115,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             finally
             {
                 _refreshing = false;
+            }
+        }
+
+        private async void BtnRefresh_Click(object? sender, EventArgs e)
+        {
+            if (_refreshing || Disposing || IsDisposed)
+            {
+                return;
+            }
+
+            btnRefresh.Enabled = false;
+            _refreshing = true;
+            try
+            {
+                await LoadDashboardDataAsync(quiet: true);
+            }
+            finally
+            {
+                _refreshing = false;
+                btnRefresh.Enabled = true;
             }
         }
 

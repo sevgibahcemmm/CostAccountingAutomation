@@ -1,9 +1,9 @@
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
 using TS.MediatR;
 using TS.Result;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
@@ -14,7 +14,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             InitializeComponent();
         }
 
-        protected override SvgImage ModuleIcon => SvgIcons.TagIcon;
+        protected override SvgImage ModuleIcon => DxIcon.Tag;
 
         protected override string[] SearchFieldNames =>
         [

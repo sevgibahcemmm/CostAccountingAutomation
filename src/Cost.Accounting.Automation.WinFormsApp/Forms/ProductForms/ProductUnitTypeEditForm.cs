@@ -7,6 +7,7 @@ using DevExpress.XtraEditors;
 using FluentValidation.Results;
 using TS.MediatR;
 using TS.Result;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {

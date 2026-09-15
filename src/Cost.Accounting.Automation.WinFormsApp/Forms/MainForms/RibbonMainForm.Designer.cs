@@ -164,7 +164,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // grpStok
             // 
             grpStok.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmUrunler, elmBirimCinsleri, elmKdvOranlari, elmStokGirisi, elmStokCikisi, elmStokHareketleri, elmFiyatStokListesi });
-            grpStok.Expanded = true;
             grpStok.Name = "grpStok";
             grpStok.Tag = 2;
             grpStok.Text = "Stok Yönetimi";
@@ -221,7 +220,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // grpSatinAlma
             // 
             grpSatinAlma.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmSatinAlmaFaturalari, elmFaturaOnaylama });
-            grpSatinAlma.Expanded = true;
             grpSatinAlma.Name = "grpSatinAlma";
             grpSatinAlma.Tag = 3;
             grpSatinAlma.Text = "Fatura Yönetimi";
@@ -243,7 +241,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // grpSatis
             // 
             grpSatis.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmSatisFaturalari });
-            grpSatis.Expanded = true;
             grpSatis.Name = "grpSatis";
             grpSatis.Tag = 4;
             grpSatis.Text = "Satış Yönetimi";
@@ -258,7 +255,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // grpCari
             // 
             grpCari.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmMusteriler, elmTedarikciler, elmCariHareketler, elmCariBorcAlacakOzeti });
-            grpCari.Expanded = true;
             grpCari.Name = "grpCari";
             grpCari.Tag = 5;
             grpCari.Text = "Cari Yönetimi";
@@ -294,7 +290,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // grpMuhasebe
             // 
             grpMuhasebe.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHesapPlani, elmOdemeTahsilat });
-            grpMuhasebe.Expanded = true;
             grpMuhasebe.Name = "grpMuhasebe";
             grpMuhasebe.Tag = 6;
             grpMuhasebe.Text = "Muhasebe Yönetimi";

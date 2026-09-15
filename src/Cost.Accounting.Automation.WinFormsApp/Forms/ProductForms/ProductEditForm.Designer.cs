@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
     public partial class ProductEditForm
@@ -230,7 +229,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(0, 13);
             lblHeaderIcon.TabIndex = 0;
-            lblHeaderIcon.ImageOptions.SvgImage = SvgIcons.BarcodeIcon;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Barcode;
             lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             // 
             // pnlHeaderLine
@@ -265,7 +264,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnCancel.Size = new Size(112, 34);
             btnCancel.TabIndex = 0;
             btnCancel.Text = "Vazgeç";
-            btnCancel.ImageOptions.SvgImage = SvgIcons.CloseIcon;
+            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
             btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
@@ -278,7 +277,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnSave.Size = new Size(110, 34);
             btnSave.TabIndex = 1;
             btnSave.Text = "Kaydet";
-            btnSave.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSave.ImageOptions.SvgImage = DxIcon.Check;
             btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
             btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
@@ -323,7 +322,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             tabBasic.Name = "tabBasic";
             tabBasic.Size = new Size(751, 553);
             tabBasic.Text = "Temel Bilgiler";
-            tabBasic.ImageOptions.SvgImage = SvgIcons.Modules[2];
+            tabBasic.ImageOptions.SvgImage = DxIcon.Products;
             tabBasic.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // chkActive
@@ -368,7 +367,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnAddUnitType.Size = new Size(79, 20);
             btnAddUnitType.TabIndex = 18;
             btnAddUnitType.Text = "Yeni";
-            btnAddUnitType.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddUnitType.ImageOptions.SvgImage = DxIcon.Add;
             btnAddUnitType.ImageOptions.SvgImageSize = new Size(14, 14);
             btnAddUnitType.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
@@ -571,7 +570,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             tabPrices.Name = "tabPrices";
             tabPrices.Size = new Size(751, 553);
             tabPrices.Text = "Fiyatlar";
-            tabPrices.ImageOptions.SvgImage = SvgIcons.TagIcon;
+            tabPrices.ImageOptions.SvgImage = DxIcon.Tag;
             tabPrices.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // gridPrices
@@ -646,7 +645,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnRemovePrice.Size = new Size(110, 32);
             btnRemovePrice.TabIndex = 1;
             btnRemovePrice.Text = "Seçiliyi Sil";
-            btnRemovePrice.ImageOptions.SvgImage = SvgIcons.TrashIcon;
+            btnRemovePrice.ImageOptions.SvgImage = DxIcon.Delete;
             btnRemovePrice.ImageOptions.SvgImageSize = new Size(18, 18);
             btnRemovePrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
@@ -657,7 +656,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnAddPrice.Size = new Size(110, 32);
             btnAddPrice.TabIndex = 0;
             btnAddPrice.Text = "Fiyat Ekle";
-            btnAddPrice.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddPrice.ImageOptions.SvgImage = DxIcon.Add;
             btnAddPrice.ImageOptions.SvgImageSize = new Size(18, 18);
             btnAddPrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
@@ -667,7 +666,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             tabMovements.Name = "tabMovements";
             tabMovements.Size = new Size(751, 553);
             tabMovements.Text = "Stok Hareketleri";
-            tabMovements.ImageOptions.SvgImage = SvgIcons.TrendBlueIcon;
+            tabMovements.ImageOptions.SvgImage = DxIcon.Trend;
             tabMovements.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // gridMovements
@@ -719,7 +718,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             tabImages.Name = "tabImages";
             tabImages.Size = new Size(751, 553);
             tabImages.Text = "Resimler";
-            tabImages.ImageOptions.SvgImage = SvgIcons.PhotoIcon;
+            tabImages.ImageOptions.SvgImage = DxIcon.Photo;
             tabImages.ImageOptions.SvgImageSize = new Size(16, 16);
             // 
             // gridImages
@@ -771,7 +770,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnSetPrimary.Size = new Size(80, 32);
             btnSetPrimary.TabIndex = 2;
             btnSetPrimary.Text = "Ana Yap";
-            btnSetPrimary.ImageOptions.SvgImage = SvgIcons.CheckIcon;
+            btnSetPrimary.ImageOptions.SvgImage = DxIcon.Check;
             btnSetPrimary.ImageOptions.SvgImageSize = new Size(18, 18);
             btnSetPrimary.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
@@ -782,7 +781,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnRemoveImage.Size = new Size(80, 32);
             btnRemoveImage.TabIndex = 1;
             btnRemoveImage.Text = "Kaldır";
-            btnRemoveImage.ImageOptions.SvgImage = SvgIcons.TrashIcon;
+            btnRemoveImage.ImageOptions.SvgImage = DxIcon.Delete;
             btnRemoveImage.ImageOptions.SvgImageSize = new Size(18, 18);
             btnRemoveImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
@@ -793,7 +792,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             btnAddImage.Size = new Size(110, 32);
             btnAddImage.TabIndex = 0;
             btnAddImage.Text = "Resim Ekle";
-            btnAddImage.ImageOptions.SvgImage = SvgIcons.PlusIcon;
+            btnAddImage.ImageOptions.SvgImage = DxIcon.Add;
             btnAddImage.ImageOptions.SvgImageSize = new Size(18, 18);
             btnAddImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
