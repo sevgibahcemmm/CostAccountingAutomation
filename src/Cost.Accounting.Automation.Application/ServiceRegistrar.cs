@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Cost.Accounting.Automation.Application.Auth;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Services;
 using TS.MediatR;
 
@@ -12,6 +13,8 @@ public static class ServiceRegistrar
     {
         services.AddScoped<PermissionService>();
         services.AddSingleton<ICaptchaService, MathCaptchaService>();
+
+        services.AddScoped<IChartOfAccountLedgerPoster, ChartOfAccountLedgerPoster>();
 
         services.AddMediatR(cfr =>
         {

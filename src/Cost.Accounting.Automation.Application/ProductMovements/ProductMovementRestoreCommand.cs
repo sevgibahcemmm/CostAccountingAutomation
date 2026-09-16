@@ -1,5 +1,7 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
 using TS.MediatR;
 using TS.Result;
@@ -10,7 +12,8 @@ namespace Cost.Accounting.Automation.Application.ProductMovements;
 public sealed record ProductMovementRestoreCommand(Guid Id) : IRequest<Result<string>>;
 
 internal sealed class ProductMovementRestoreCommandHandler(
-    IProductMovementRepository productMovementRepository) : IRequestHandler<ProductMovementRestoreCommand, Result<string>>
+    IProductMovementRepository productMovementRepository,
+    IChartOfAccountLedgerRepository ledgerRepository) : IRequestHandler<ProductMovementRestoreCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductMovementRestoreCommand request, CancellationToken cancellationToken)
     {
@@ -20,6 +23,17 @@ internal sealed class ProductMovementRestoreCommandHandler(
         if (movement is null)
         {
             return Result<string>.Failure("Stok hareketi bulunamadı.");
+        }
+
+        List<ChartOfAccountLedger> ledgerEntries = await ledgerRepository
+            .GetBySourceAsync("StokGirisi", request.Id, cancellationToken);
+
+        ledgerEntries.AddRange(await ledgerRepository
+            .GetBySourceAsync("StokCikisi", request.Id, cancellationToken));
+
+        if (ledgerEntries.Count > 0)
+        {
+            ledgerRepository.RestoreRange(ledgerEntries);
         }
 
         productMovementRepository.Restore(movement);

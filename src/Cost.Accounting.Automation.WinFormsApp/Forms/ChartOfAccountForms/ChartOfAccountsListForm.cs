@@ -1,5 +1,8 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.ProductMovements;
+using Cost.Accounting.Automation.Application.Products;
+using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -16,6 +19,11 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
     private static readonly Font Level0Font = new("Segoe UI", 9F, FontStyle.Bold);
 
     private bool _cascading;
+
+    private decimal _totalDebit;
+    private decimal _totalCredit;
+    private decimal _totalDebitBalance;
+    private decimal _totalCreditBalance;
 
     public ChartOfAccountsListForm() : base("Hesap Planı")
     {
@@ -80,10 +88,14 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
     {
         try
         {
-            _lblSub.Text = "Yenileniyor...";
+            _lblSub.Text = "Yevmiye kayıtları güncelleniyor...";
 
             using var scope = Program.Services.CreateScope();
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            await mediator.Send(new ChartOfAccountLedgerSyncCommand(), CancellationToken.None);
+
+            _lblSub.Text = "Yenileniyor...";
 
             List<ChartOfAccountDto> items = (await mediator.Send(new ChartOfAccountGetAllQuery(), CancellationToken.None)).ToList();
 
@@ -102,6 +114,11 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
                 }
             }
 
+            _totalDebit = items.Where(i => i.ParentId is null).Sum(i => i.DebitAmount);
+            _totalCredit = items.Where(i => i.ParentId is null).Sum(i => i.CreditAmount);
+            _totalDebitBalance = items.Where(i => i.ParentId is null).Sum(i => i.DebitBalance);
+            _totalCreditBalance = items.Where(i => i.ParentId is null).Sum(i => i.CreditBalance);
+
             _tree.DataSource = null;
             _tree.DataSource = items;
             _tree.ForceInitialize();
@@ -116,6 +133,8 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
             }
 
             _lblSub.Text = $"{items.Count} hesap listeleniyor (kök: {_tree.Nodes.Count}, düğüm: {_tree.AllNodesCount})";
+
+            _lblFooterTotals.Text = string.Empty;
         }
         catch (AuthorizationException ex)
         {
@@ -139,6 +158,61 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         if (e.Node.Level == 0)
         {
             e.Appearance.Font = Level0Font;
+        }
+    }
+
+    private void Tree_GetCustomSummaryValue(object? sender, DevExpress.XtraTreeList.GetCustomSummaryValueEventArgs e)
+    {
+        if (!e.IsSummaryFooter)
+        {
+            return;
+        }
+
+        switch (e.Column.FieldName)
+        {
+            case nameof(ChartOfAccountDto.Name):
+                e.CustomValue = "Genel toplam";
+                break;
+            case nameof(ChartOfAccountDto.DebitAmount):
+                e.CustomValue = _totalDebit;
+                break;
+            case nameof(ChartOfAccountDto.CreditAmount):
+                e.CustomValue = _totalCredit;
+                break;
+            case nameof(ChartOfAccountDto.DebitBalance):
+                e.CustomValue = _totalDebitBalance;
+                break;
+            case nameof(ChartOfAccountDto.CreditBalance):
+                e.CustomValue = _totalCreditBalance;
+                break;
+        }
+    }
+
+    private void Tree_CustomDrawFooterCell(object? sender, DevExpress.XtraTreeList.CustomDrawFooterCellEventArgs e)
+    {
+        switch (e.Column.FieldName)
+        {
+            case nameof(ChartOfAccountDto.Name):
+                e.Info.DisplayText = "Genel toplam";
+                e.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+                e.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+                break;
+            case nameof(ChartOfAccountDto.DebitAmount):
+                e.Info.DisplayText = _totalDebit.ToString("N2");
+                e.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+                break;
+            case nameof(ChartOfAccountDto.CreditAmount):
+                e.Info.DisplayText = _totalCredit.ToString("N2");
+                e.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+                break;
+            case nameof(ChartOfAccountDto.DebitBalance):
+                e.Info.DisplayText = _totalDebitBalance.ToString("N2");
+                e.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+                break;
+            case nameof(ChartOfAccountDto.CreditBalance):
+                e.Info.DisplayText = _totalCreditBalance.ToString("N2");
+                e.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+                break;
         }
     }
 

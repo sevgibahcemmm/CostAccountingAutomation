@@ -60,6 +60,7 @@ public sealed class Product : Entity, IHardDeletable
 
     public Description Description { get; private set; } = default!;
 
+    public ChartOfAccount? ChartOfAccount { get; private set; }
     public ChartOfAccount? Warehouse { get; private set; }
     public ChartOfAccount? Category { get; private set; }
     public ProductUnitType? ProductUnitType { get; private set; }

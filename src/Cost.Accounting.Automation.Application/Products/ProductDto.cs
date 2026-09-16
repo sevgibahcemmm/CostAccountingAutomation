@@ -153,6 +153,7 @@ public static class ProductExtensions
                 ProductUnitTypeName = s.Entity.ProductUnitType!.Name.Value,
 
                 ChartOfAccountId = s.Entity.ChartOfAccountId == null ? null : s.Entity.ChartOfAccountId.Value,
+                ChartOfAccountCode = s.Entity.ChartOfAccount == null ? null : s.Entity.ChartOfAccount.Code.Value,
                 Description = s.Entity.Description.Value,
 
                 StockQuantity = s.Entity.Movements.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity),

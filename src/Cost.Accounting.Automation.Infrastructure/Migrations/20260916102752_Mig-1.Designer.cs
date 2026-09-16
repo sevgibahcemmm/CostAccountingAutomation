@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cost.Accounting.Automation.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260913163143_Mig-1")]
+    [Migration("20260916102752_Mig-1")]
     partial class Mig1
     {
         /// <inheritdoc />
@@ -254,6 +254,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("DiscountTotal")
+                        .HasColumnType("money");
+
                     b.Property<decimal>("GrandTotal")
                         .HasColumnType("money");
 
@@ -270,6 +273,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("SubTotal")
                         .HasColumnType("money");
@@ -317,6 +323,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("DiscountRate")
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<Guid>("InvoiceId")
                         .HasColumnType("uniqueidentifier");

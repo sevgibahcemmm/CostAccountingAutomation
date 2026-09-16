@@ -79,6 +79,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
         protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
+            View.OptionsView.ColumnAutoWidth = false;
             View.Columns[nameof(ProductMovementListDto.MovementTypeName)]!.Visible = !_targetType.HasValue;
         }
 

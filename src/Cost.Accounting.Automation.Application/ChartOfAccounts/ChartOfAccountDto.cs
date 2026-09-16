@@ -16,6 +16,12 @@ public sealed class ChartOfAccountDto : EntityDto
     public string? SemiFinishedCode { get; set; }
     public string? FinishedCode { get; set; }
 
+    public decimal DebitAmount { get; set; }
+    public decimal CreditAmount { get; set; }
+
+    public decimal DebitBalance => DebitAmount > CreditAmount ? DebitAmount - CreditAmount : 0;
+    public decimal CreditBalance => CreditAmount > DebitAmount ? CreditAmount - DebitAmount : 0;
+
     public string TypeText => Type switch
     {
         ChartOfAccountType.Warehouse => "Depo",

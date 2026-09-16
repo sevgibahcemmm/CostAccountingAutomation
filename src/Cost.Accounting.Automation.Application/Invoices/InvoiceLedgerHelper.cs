@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Invoices;
@@ -13,6 +14,8 @@ internal static class InvoiceLedgerHelper
         Invoice invoice,
         IProductMovementRepository productMovementRepository,
         ICurrentAccountMovementRepository currentAccountMovementRepository,
+        IProductRepository productRepository,
+        IChartOfAccountLedgerPoster ledgerPoster,
         StockCostingMethod costingMethod,
         CancellationToken cancellationToken)
     {
@@ -26,6 +29,13 @@ internal static class InvoiceLedgerHelper
         {
             costMap = await BuildFifoLifoCostMapAsync(invoice, productMovementRepository, costingMethod, cancellationToken);
         }
+
+        HashSet<IdentityId> productIds = invoice.Lines.Select(l => l.ProductId).ToHashSet();
+        Dictionary<Guid, IdentityId?> productAccountMap = (await productRepository
+                .GetAll()
+                .Where(p => productIds.Contains(p.Id))
+                .ToListAsync(cancellationToken))
+            .ToDictionary(p => p.Id.Value, p => p.ChartOfAccountId);
 
         decimal salesCariDebit = 0;
 
@@ -44,6 +54,20 @@ internal static class InvoiceLedgerHelper
                 invoiceId: invoice.Id);
 
             await productMovementRepository.AddAsync(movement, cancellationToken);
+
+            if (productAccountMap.TryGetValue(line.ProductId.Value, out IdentityId? accountId) && accountId is not null)
+            {
+                decimal amount = Math.Round(line.Quantity * unitCost, 2);
+
+                if (isSales)
+                {
+                    await ledgerPoster.PostAsync(accountId, 0, amount, "SatisFaturasi", movement.Id, cancellationToken);
+                }
+                else
+                {
+                    await ledgerPoster.PostAsync(accountId, amount, 0, "SatinalmaFaturasi", movement.Id, cancellationToken);
+                }
+            }
 
             if (isSales)
             {

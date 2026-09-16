@@ -18,6 +18,7 @@ internal sealed class ProductRepository : AuditableRepository<Product, Applicati
     public Task<Product?> GetByIdWithDetailsAsync(IdentityId id, CancellationToken cancellationToken = default)
         => Context.Set<Product>()
             .Include(p => p.TaxRate)
+            .Include(p => p.ChartOfAccount)
             .Include(p => p.Prices)
             .Include(p => p.Movements)
             .Include(p => p.Images)

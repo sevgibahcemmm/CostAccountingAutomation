@@ -111,12 +111,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 NullText = "Ürün Seçiniz...",
                 PopupFilterMode = PopupFilterMode.Contains
             };
-            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.ProductCode)).Caption = "Ürün Kodu";
+            // Popup"ta yalnızca ürün görünsün: gereksiz alt-detail kolonları (Ürün Kodu, Stok) listelenmesin.
+            _riProductLookUp.View.OptionsBehavior.AutoPopulateColumns = false;
             _riProductLookUp.View.Columns.AddField(nameof(ProductDto.Name)).Caption = "Ürün Adı";
-            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.StockQuantity)).Caption = "Stok";
             _riProductLookUp.View.Columns[0].Visible = true;
-            _riProductLookUp.View.Columns[1].Visible = true;
-            _riProductLookUp.View.Columns[2].Visible = true;
             _riProductLookUp.EditValueChanged += RiProductLookUp_EditValueChanged;
 
             RepositoryItemSpinEdit riQuantity = new() { MinValue = 0.0001m, MaxValue = 999999999, Increment = 1 };

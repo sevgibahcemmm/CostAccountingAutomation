@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Invoices;
@@ -77,7 +78,9 @@ public sealed class InvoiceCreateCommandValidator : AbstractValidator<InvoiceCre
 internal sealed class InvoiceCreateCommandHandler(
     IInvoiceRepository invoiceRepository,
     IProductMovementRepository productMovementRepository,
-    ICurrentAccountMovementRepository currentAccountMovementRepository) : IRequestHandler<InvoiceCreateCommand, Result<string>>
+    ICurrentAccountMovementRepository currentAccountMovementRepository,
+    IProductRepository productRepository,
+    IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<InvoiceCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(InvoiceCreateCommand request, CancellationToken cancellationToken)
     {
@@ -131,6 +134,8 @@ internal sealed class InvoiceCreateCommandHandler(
                 invoice,
                 productMovementRepository,
                 currentAccountMovementRepository,
+                productRepository,
+                ledgerPoster,
                 request.CostingMethod,
                 cancellationToken);
 

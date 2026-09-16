@@ -66,7 +66,6 @@ internal sealed class ChartOfAccountImportCommandHandler(
         {
             string fullCode = NormalizeCode(row.Code);
             importedCodes.Add(fullCode);
-            int level = CountLevel(fullCode);
             string name = row.Name?.Trim() ?? string.Empty;
 
 if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
@@ -82,8 +81,7 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
                     }
 
                     account.SetName(new Name(name));
-                account.SetLevel(level);
-                account.SetStatus(row.IsActive);
+                    account.SetStatus(row.IsActive);
                 _nodes[fullCode] = account;
             }
             else
@@ -91,7 +89,7 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
                 ChartOfAccount created = new(
                     new AccountCode(fullCode),
                     new Name(name),
-                    level,
+                    level: 0,
                     ChartOfAccountType.MainGroup);
 
                 created.SetStatus(row.IsActive);
@@ -101,6 +99,7 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         }
 
         LinkParents(_nodes);
+        AssignLevels(_nodes);
         Classify();
 
         foreach (ChartOfAccount existingAccount in existing)
@@ -331,10 +330,29 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         return segment;
     }
 
-    private static int CountLevel(string code)
+    private void AssignLevels(Dictionary<string, ChartOfAccount> nodes)
     {
-        int count = code.Split('.').Length;
-        return Math.Max(count - 1, 0);
+        Dictionary<Guid, int> depthById = [];
+
+        int GetDepth(ChartOfAccount account)
+        {
+            if (depthById.TryGetValue(account.Id.Value, out int cached))
+            {
+                return cached;
+            }
+
+            int depth = account.ParentId is null
+                ? 0
+                : 1 + GetDepth(nodes.Values.First(n => n.Id == account.ParentId));
+
+            depthById[account.Id.Value] = depth;
+            return depth;
+        }
+
+        foreach (ChartOfAccount account in nodes.Values)
+        {
+            account.SetLevel(GetDepth(account));
+        }
     }
 
     private static string? GetParentKey(string code)
@@ -342,6 +360,12 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         int lastDot = code.LastIndexOf('.');
         if (lastDot <= 0)
         {
+            // 150 / 151 / 152 depo kökleri "15 STOKLAR" anagrubunun çocuğudur.
+            if (code.Length == 3 && code.StartsWith("15", StringComparison.Ordinal))
+            {
+                return "15";
+            }
+
             return null;
         }
 

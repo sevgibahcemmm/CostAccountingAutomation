@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -38,14 +39,15 @@ public sealed class ProductMovementCreateCommandValidator : AbstractValidator<Pr
 
 internal sealed class ProductMovementCreateCommandHandler(
     IProductMovementRepository productMovementRepository,
-    IProductRepository productRepository) : IRequestHandler<ProductMovementCreateCommand, Result<string>>
+    IProductRepository productRepository,
+    IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<ProductMovementCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductMovementCreateCommand request, CancellationToken cancellationToken)
     {
         IdentityId productId = new(request.ProductId);
-        bool productExists = await productRepository.AnyAsync(p => p.Id == productId, cancellationToken);
+        Product? product = await productRepository.FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
 
-        if (!productExists)
+        if (product is null)
         {
             return Result<string>.Failure("Seçilen ürün bulunamadı.");
         }
@@ -60,6 +62,20 @@ internal sealed class ProductMovementCreateCommandHandler(
             description: new Description(request.Description ?? string.Empty));
 
         await productMovementRepository.AddAsync(movement, cancellationToken);
+
+        if (product.ChartOfAccountId is { } accountId && request.UnitPrice.HasValue && request.UnitPrice.Value > 0)
+        {
+            decimal amount = Math.Round(request.Quantity * request.UnitPrice.Value, 2);
+
+            if (request.MovementType == ProductMovementType.Input)
+            {
+                await ledgerPoster.PostAsync(accountId, amount, 0, "StokGirisi", movement.Id, cancellationToken);
+            }
+            else
+            {
+                await ledgerPoster.PostAsync(accountId, 0, amount, "StokCikisi", movement.Id, cancellationToken);
+            }
+        }
 
         string actionName = request.MovementType == ProductMovementType.Input ? "Stok girişi" : "Stok çıkışı";
         return Result<string>.Succeed($"{actionName} başarıyla kaydedildi.");

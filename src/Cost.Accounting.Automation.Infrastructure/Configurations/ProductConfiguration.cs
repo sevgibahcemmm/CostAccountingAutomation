@@ -65,7 +65,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(p => p.TaxRateId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<ChartOfAccount>()
+        builder.HasOne(p => p.ChartOfAccount)
             .WithMany()
             .HasForeignKey(p => p.ChartOfAccountId)
             .OnDelete(DeleteBehavior.Restrict);

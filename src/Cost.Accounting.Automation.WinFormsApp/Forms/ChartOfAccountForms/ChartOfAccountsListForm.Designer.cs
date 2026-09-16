@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
+using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraTreeList;
 using DevExpress.XtraTreeList.Columns;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -26,6 +27,9 @@ public sealed partial class ChartOfAccountsListForm
 
     private TreeList _tree = null!;
 
+    private PanelControl _pnlFooter = null!;
+    private LabelControl _lblFooterTotals = null!;
+
     private void InitializeComponent()
     {
         _pnlHeader = new PanelControl();
@@ -44,6 +48,9 @@ public sealed partial class ChartOfAccountsListForm
         _btnClearSelection = new SimpleButton();
 
         _tree = new TreeList();
+
+        _pnlFooter = new PanelControl();
+        _lblFooterTotals = new LabelControl();
 
         ((System.ComponentModel.ISupportInitialize)_picHeaderIcon.Properties).BeginInit();
         ((System.ComponentModel.ISupportInitialize)_tree).BeginInit();
@@ -193,6 +200,24 @@ public sealed partial class ChartOfAccountsListForm
         _pnlToolbar.Controls.Add(_btnClearSelection);
 
         //
+        // _pnlFooter
+        //
+        _pnlFooter.Dock = DockStyle.Bottom;
+        _pnlFooter.Height = 34;
+        _pnlFooter.Padding = new Padding(16, 0, 16, 0);
+        _pnlFooter.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+
+        //
+        // _lblFooterTotals
+        //
+        _lblFooterTotals.Dock = DockStyle.Fill;
+        _lblFooterTotals.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        _lblFooterTotals.Appearance.Options.UseFont = true;
+        _lblFooterTotals.Text = string.Empty;
+
+        _pnlFooter.Controls.Add(_lblFooterTotals);
+
+        //
         // _tree
         //
         ConfigureTree();
@@ -201,6 +226,7 @@ public sealed partial class ChartOfAccountsListForm
         _tree.AfterCheckNode += Tree_AfterCheckNode;
 
         Controls.Add(_tree);
+        Controls.Add(_pnlFooter);
         Controls.Add(_pnlToolbar);
         Controls.Add(_pnlHeader);
 
@@ -220,6 +246,7 @@ public sealed partial class ChartOfAccountsListForm
         _tree.Margin = new Padding(0);
         _tree.KeyFieldName = nameof(ChartOfAccountDto.Id);
         _tree.ParentFieldName = nameof(ChartOfAccountDto.ParentId);
+        _tree.OptionsView.ShowSummaryFooter = true;
 
         _tree.OptionsSelection.MultiSelect = true;
         _tree.OptionsBehavior.Editable = false;
@@ -227,14 +254,35 @@ public sealed partial class ChartOfAccountsListForm
         _tree.OptionsView.ShowCheckBoxes = true;
         _tree.OptionsView.ShowHorzLines = true;
 
-        AddColumn(_tree, "Kod", nameof(ChartOfAccountDto.Code), 130);
-        AddColumn(_tree, "Hesap Adı", nameof(ChartOfAccountDto.Name), 360);
-        AddColumn(_tree, "Tür", nameof(ChartOfAccountDto.TypeText), 90);
-        AddColumn(_tree, "Yarı Mamul Hesabı (151)", nameof(ChartOfAccountDto.SemiFinishedCode), 160);
-        AddColumn(_tree, "Mamul Hesabı (152)", nameof(ChartOfAccountDto.FinishedCode), 160);
+AddColumn(_tree, "Kod", nameof(ChartOfAccountDto.Code), 130);
+        AddColumn(_tree, "Hesap Adı", nameof(ChartOfAccountDto.Name), 200);
+        // AddColumn(_tree, "Tür", nameof(ChartOfAccountDto.TypeText), 90);
+        // AddColumn(_tree, "Yarı Mamul Hesabı (151)", nameof(ChartOfAccountDto.SemiFinishedCode), 150);
+        // AddColumn(_tree, "Mamul Hesabı (152)", nameof(ChartOfAccountDto.FinishedCode), 150);
+
+        AddMoneyColumn(_tree, "Borç", nameof(ChartOfAccountDto.DebitAmount), 120);
+        AddMoneyColumn(_tree, "Alacak", nameof(ChartOfAccountDto.CreditAmount), 120);
+        AddMoneyColumn(_tree, "Borç Bakiyesi", nameof(ChartOfAccountDto.DebitBalance), 120);
+        AddMoneyColumn(_tree, "Alacak Bakiyesi", nameof(ChartOfAccountDto.CreditBalance), 120);
+
+        foreach (TreeListColumn column in _tree.Columns)
+        {
+            if (column.FieldName is nameof(ChartOfAccountDto.Name)
+                or nameof(ChartOfAccountDto.DebitAmount)
+                or nameof(ChartOfAccountDto.CreditAmount)
+                or nameof(ChartOfAccountDto.DebitBalance)
+                or nameof(ChartOfAccountDto.CreditBalance))
+            {
+                column.SummaryFooter = SummaryItemType.Custom;
+                column.AllNodesSummary = false;
+            }
+        }
 
         _tree.Columns[nameof(ChartOfAccountDto.Code)].SortOrder = System.Windows.Forms.SortOrder.Ascending;
         _tree.OptionsCustomization.AllowSort = false;
+
+        _tree.GetCustomSummaryValue += Tree_GetCustomSummaryValue;
+        _tree.CustomDrawFooterCell += Tree_CustomDrawFooterCell;
     }
 
     private static void AddColumn(TreeList tree, string caption, string fieldName, int width)
@@ -246,6 +294,33 @@ public sealed partial class ChartOfAccountsListForm
             Width = width,
             Visible = true
         });
+    }
+
+    private static void AddMoneyColumn(TreeList tree, string caption, string fieldName, int width)
+    {
+        // TreeListColumn'da PropertiesEdit yok; editör/format ataması
+        // ColumnEdit üzerinden (RepositoryItemTextEdit) yapılır.
+        RepositoryItemTextEdit repositoryItem = new()
+        {
+            DisplayFormat =
+            {
+                FormatType = DevExpress.Utils.FormatType.Numeric,
+                FormatString = "N2"
+            }
+        };
+
+        TreeListColumn column = new()
+        {
+            Caption = caption,
+            FieldName = fieldName,
+            Width = width,
+            Visible = true,
+            ColumnEdit = repositoryItem
+        };
+        column.AppearanceCell.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+        column.AppearanceCell.Options.UseTextOptions = true;
+
+        tree.Columns.Add(column);
     }
 
     private static void SetIcon(SimpleButton button, SvgImage icon, int size)
