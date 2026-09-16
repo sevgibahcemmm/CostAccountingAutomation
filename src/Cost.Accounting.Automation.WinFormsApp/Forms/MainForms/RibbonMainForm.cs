@@ -3,12 +3,14 @@ using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.UserForms;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
@@ -40,6 +42,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmStokCikisi"] = DxIcon.StockOutput,
             ["elmStokHareketleri"] = DxIcon.StockMovements,
             ["elmFiyatStokListesi"] = DxIcon.PriceStock,
+            ["elmTuketim"] = DxIcon.StockIssue,
+            ["elmAtolyeTransferi"] = DxIcon.AtelierTransfer,
+            ["elmAtolyeStokRaporu"] = DxIcon.PriceStock,
+            ["elmTuketimBirimleri"] = DxIcon.Tag,
             ["elmSatinAlmaFaturalari"] = DxIcon.Invoices,
             ["elmFaturaOnaylama"] = DxIcon.Check,
             ["elmSatisFaturalari"] = DxIcon.Sales,
@@ -272,6 +278,30 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     return;
                 }
 
+                if (element.Text == "Tüketim")
+                {
+                    OpenConsumptions();
+                    return;
+                }
+
+                if (element.Text == "Atölye Transferi")
+                {
+                    OpenAtelierTransfers();
+                    return;
+                }
+
+                if (element.Text == "Atölye Stok Raporu")
+                {
+                    OpenAtelierTransferStock();
+                    return;
+                }
+
+                if (element.Text == "Tüketim Birimleri")
+                {
+                    OpenConsumptionUnits();
+                    return;
+                }
+
                 if (element.Text == "Hesap Planı")
                 {
                     OpenChartOfAccounts();
@@ -368,6 +398,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void OpenProductPriceStockList()
         {
             MdiFormManager.Instance.OpenForm<ProductPriceStockListForm>(this, "Fiyat & Stok Listesi");
+        }
+
+        private void OpenConsumptions()
+        {
+            MdiFormManager.Instance.OpenForm<ConsumptionsListForm>(this, "Tüketim");
+        }
+
+        private void OpenAtelierTransfers()
+        {
+            MdiFormManager.Instance.OpenForm<AtelierTransfersListForm>(this, "Atölye Transferi");
+        }
+
+        private void OpenAtelierTransferStock()
+        {
+            MdiFormManager.Instance.OpenForm<AtelierTransferStockForm>(this, "Atölye Stok Raporu");
+        }
+
+        private void OpenConsumptionUnits()
+        {
+            MdiFormManager.Instance.OpenForm<ConsumptionUnitsListForm>(this, "Tüketim Birimleri");
         }
 
         private void OpenInvoices(InvoiceType type)

@@ -28,6 +28,7 @@ public sealed class ChartOfAccountDto : EntityDto
         ChartOfAccountType.Category => "Kategori",
         ChartOfAccountType.Workshop => "Atölye",
         ChartOfAccountType.Stok => "Stok",
+        ChartOfAccountType.ConsumptionUnit => "Tüketim Birimi",
         _ => "Anagrup"
     };
 }

@@ -1,4 +1,5 @@
 ﻿using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Domain.Companies;
 using TS.MediatR;
 using TS.Result;
 
@@ -20,16 +21,18 @@ public sealed record ProductBarcodePreviewQuery(
     string UnitTypeName) : IRequest<Result<ProductBarcodePreviewDto>>;
 
 internal sealed class ProductBarcodePreviewQueryHandler(
-    IBarcodeGeneratorService barcodeGeneratorService) : IRequestHandler<ProductBarcodePreviewQuery, Result<ProductBarcodePreviewDto>>
+    IBarcodeGeneratorService barcodeGeneratorService,
+    ICompanyRepository companyRepository) : IRequestHandler<ProductBarcodePreviewQuery, Result<ProductBarcodePreviewDto>>
 {
-    public Task<Result<ProductBarcodePreviewDto>> Handle(ProductBarcodePreviewQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ProductBarcodePreviewDto>> Handle(ProductBarcodePreviewQuery request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.ProductCode))
         {
-            return Task.FromResult(Result<ProductBarcodePreviewDto>.Failure("Ürün kodu boş olamaz"));
+            return Result<ProductBarcodePreviewDto>.Failure("Ürün kodu boş olamaz");
         }
 
-        string gtin = barcodeGeneratorService.GenerateGtin(ProductBarcodeDefaults.CompanyGtinPrefix, request.ProductCode);
+        string companyPrefix = await ProductBarcodePrefixResolver.ResolveAsync(companyRepository, cancellationToken);
+        string gtin = barcodeGeneratorService.GenerateGtin(companyPrefix, request.ProductCode);
 
         string qrContent = ProductQrContentBuilder.Build(
             request.ProductCode,
@@ -44,13 +47,12 @@ internal sealed class ProductBarcodePreviewQueryHandler(
         byte[] qrImage = barcodeGeneratorService.GenerateQrCode(qrContent);
 
         ProductBarcodePreviewDto dto = new(gtin, qrContent, barcodeImage, qrImage);
-        return Task.FromResult<Result<ProductBarcodePreviewDto>>(dto);
+        return Result<ProductBarcodePreviewDto>.Succeed(dto);
     }
 }
 
 /// <summary>
-/// GS1 firma kodu burada merkezi olarak tutulur; gerçek atanmış firma prefiksinizle değiştirin
-/// (ör. appsettings üzerinden IOptions ile de sağlanabilir).
+/// Aktif şirketin CompanyPrefix'i bulunamazsa kullanılan varsayılan firma ön eki.
 /// </summary>
 public static class ProductBarcodeDefaults
 {

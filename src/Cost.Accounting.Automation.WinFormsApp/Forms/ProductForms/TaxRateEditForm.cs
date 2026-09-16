@@ -1,5 +1,4 @@
 using System;
-using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -8,6 +7,7 @@ using FluentValidation.Results;
 using TS.MediatR;
 using TS.Result;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
+using Cost.Accounting.Automation.Application.Products.TaxRates;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {

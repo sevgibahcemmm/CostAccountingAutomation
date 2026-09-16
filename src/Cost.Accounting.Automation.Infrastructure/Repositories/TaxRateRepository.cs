@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using Cost.Accounting.Automation.Infrastructure.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;

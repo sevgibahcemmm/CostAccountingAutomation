@@ -122,11 +122,9 @@ internal static class InvoiceLedgerHelper
 
         List<ProductMovement> all = await productMovementRepository.GetAll()
             .Where(m => productIds.Contains(m.ProductId))
-            .OrderBy(m => m.Date)
-            .ThenBy(m => m.Id.Value)
             .ToListAsync(cancellationToken);
 
-        return ComputeFifoLifoCosts(invoice, all, costingMethod);
+        return ComputeFifoLifoCosts(invoice, all.OrderBy(m => m.Date).ThenBy(m => m.Id.Value).ToList(), costingMethod);
     }
 
     private static Dictionary<IdentityId, decimal> ComputeFifoLifoCosts(

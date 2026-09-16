@@ -30,7 +30,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private readonly Dictionary<string, Image?> _imageCache = [];
         private readonly Dictionary<string, Image?> _barcodeImageCache = [];
         private readonly Dictionary<string, Image?> _qrImageCache = [];
+        private readonly Dictionary<string, Image?> _slidePreviewCache = [];
+        private readonly Dictionary<Guid, int> _slideIndexes = [];
         private IBarcodeGeneratorService? _barcodeService;
+
+        private sealed class ProductSlideContext(Guid productId)
+        {
+            public Guid ProductId { get; } = productId;
+        }
 
         public ProductsListForm() : base("Ürünler")
         {
@@ -143,6 +150,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             View.RowHeight = 55;
             View.CustomUnboundColumnData += View_CustomUnboundColumnData;
             View.MasterRowEmpty += View_MasterRowEmpty;
+            View.MasterRowGetRelationCount += View_MasterRowGetRelationCount;
+            View.MasterRowGetRelationName += View_MasterRowGetRelationName;
+            View.MasterRowGetChildList += View_MasterRowGetChildList;
 
             ToolTipController toolTipController = new();
             toolTipController.GetActiveObjectInfo += ToolTipController_GetActiveObjectInfo;
@@ -160,59 +170,221 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             }
         }
 
+        private void View_MasterRowGetRelationCount(object? sender, MasterRowGetRelationCountEventArgs e)
+        {
+            int rowHandle = View.GetRowHandle(e.RowHandle);
+            if (rowHandle >= 0 && View.GetRow(rowHandle) is ProductDto product)
+            {
+                e.RelationCount = product.Images is { Count: > 0 } ? 1 : 0;
+            }
+        }
+
+        private void View_MasterRowGetRelationName(object? sender, MasterRowGetRelationNameEventArgs e)
+        {
+            e.RelationName = "Slideshow";
+        }
+
+        private void View_MasterRowGetChildList(object? sender, MasterRowGetChildListEventArgs e)
+        {
+            int rowHandle = View.GetRowHandle(e.RowHandle);
+            if (rowHandle < 0 || View.GetRow(rowHandle) is not ProductDto product)
+            {
+                return;
+            }
+
+            if (product.Images is not { Count: > 0 } images)
+            {
+                return;
+            }
+
+            if (!_slideIndexes.ContainsKey(product.Id))
+            {
+                int primaryIndex = images.FindIndex(i => i.IsPrimary);
+                _slideIndexes[product.Id] = primaryIndex >= 0 ? primaryIndex : 0;
+            }
+
+            System.Collections.IList childList = new System.Collections.ArrayList();
+            childList.Add(new ProductSlideContext(product.Id));
+            e.ChildList = childList;
+        }
+
         private void ConfigureImagesDetailView()
         {
             GridView detailView = new(View.GridControl) { Name = "ImagesDetailView" };
             detailView.OptionsBehavior.Editable = false;
-            detailView.RowHeight = 35;
+            detailView.OptionsBehavior.AutoPopulateColumns = false;
+            detailView.OptionsView.ShowColumnHeaders = false;
+            detailView.OptionsView.ShowGroupPanel = false;
+            detailView.OptionsView.ShowVerticalLines = DefaultBoolean.False;
+            detailView.OptionsView.ShowHorizontalLines = DefaultBoolean.False;
+            detailView.OptionsSelection.EnableAppearanceFocusedCell = false;
+            detailView.OptionsSelection.EnableAppearanceFocusedRow = false;
+            detailView.RowHeight = 170;
 
-            RepositoryItemPictureEdit riDetailPicture = new()
+            RepositoryItemPictureEdit riSlidePicture = new()
             {
                 SizeMode = PictureSizeMode.Zoom,
+                AllowZoom = DefaultBoolean.True,
+                ShowZoomSubMenu = DefaultBoolean.True,
                 NullText = "Yok"
             };
 
-            GridColumn colDetailImage = new()
+            RepositoryItemButtonEdit riPrev = CreateSlideButton(DxIcon.Previous, "Önceki Resim");
+            RepositoryItemButtonEdit riNext = CreateSlideButton(DxIcon.Forward, "Sonraki Resim");
+
+            GridColumn colSlidePrev = new()
+            {
+                Caption = "Önceki",
+                FieldName = "SlidePrevUnbound",
+                UnboundDataType = typeof(string),
+                Visible = true,
+                Width = 60,
+                ColumnEdit = riPrev
+            };
+            colSlidePrev.OptionsColumn.FixedWidth = true;
+            colSlidePrev.AppearanceCell.TextOptions.VAlignment = VertAlignment.Center;
+
+            GridColumn colSlideImage = new()
             {
                 Caption = "Resim",
-                FieldName = "DetailImageUnbound",
+                FieldName = "SlideImageUnbound",
                 UnboundDataType = typeof(Image),
                 Visible = true,
-                Width = 45,
-                ColumnEdit = riDetailPicture
+                Width = 260,
+                ColumnEdit = riSlidePicture
             };
-            colDetailImage.OptionsColumn.FixedWidth = true;
 
-            GridColumn colDetailIsPrimary = new()
+            GridColumn colSlideNext = new()
             {
-                Caption = "Ana Resim",
-                FieldName = nameof(ProductImageDto.IsPrimary),
+                Caption = "Sonraki",
+                FieldName = "SlideNextUnbound",
+                UnboundDataType = typeof(string),
                 Visible = true,
-                Width = 100
+                Width = 60,
+                ColumnEdit = riNext
             };
+            colSlideNext.OptionsColumn.FixedWidth = true;
+            colSlideNext.AppearanceCell.TextOptions.VAlignment = VertAlignment.Center;
 
-            detailView.Columns.AddRange([colDetailImage, colDetailIsPrimary]);
+            GridColumn colSlideInfo = new()
+            {
+                Caption = "Bilgi",
+                FieldName = "SlideInfoUnbound",
+                UnboundDataType = typeof(string),
+                Visible = true,
+                Width = 160
+            };
+            colSlideInfo.AppearanceCell.TextOptions.VAlignment = VertAlignment.Center;
 
-            // Detay view klonlandığında (açıldığında) un-bound veri olayını yakala
+            detailView.Columns.AddRange([colSlidePrev, colSlideImage, colSlideNext, colSlideInfo]);
+
+            // Detay view klonlandığında (açıldığında) un-bound veri ve tıklama olaylarını yakala
             View.GridControl.ViewRegistered += (sender, e) =>
             {
                 if (e.View is GridView targetDetailView && targetDetailView.Name == "ImagesDetailView")
                 {
-                    targetDetailView.CustomUnboundColumnData += (s, ev) =>
-                    {
-                        if (ev.Column.FieldName == "DetailImageUnbound" && ev.IsGetData)
-                        {
-                            int rowHandle = targetDetailView.GetRowHandle(ev.ListSourceRowIndex);
-                            if (rowHandle >= 0 && targetDetailView.GetRow(rowHandle) is ProductImageDto imgDto && !string.IsNullOrWhiteSpace(imgDto.Path))
-                            {
-                                ev.Value = GetOrLoadImage(imgDto.Path);
-                            }
-                        }
-                    };
+                    targetDetailView.CustomUnboundColumnData -= SlideshowDetailView_CustomUnboundColumnData;
+                    targetDetailView.CustomUnboundColumnData += SlideshowDetailView_CustomUnboundColumnData;
+                    targetDetailView.RowCellClick -= SlideshowDetailView_OnRowCellClick;
+                    targetDetailView.RowCellClick += SlideshowDetailView_OnRowCellClick;
                 }
             };
 
-            View.GridControl.LevelTree.Nodes.Add("Images", detailView);
+            View.GridControl.LevelTree.Nodes.Add("Slideshow", detailView);
+        }
+
+        private RepositoryItemButtonEdit CreateSlideButton(SvgImage icon, string toolTip)
+        {
+            RepositoryItemButtonEdit button = new()
+            {
+                TextEditStyle = TextEditStyles.HideTextEditor,
+                AutoHeight = false
+            };
+            button.Buttons[0].Kind = ButtonPredefines.Glyph;
+            button.Buttons[0].ToolTip = toolTip;
+            button.Buttons[0].ImageOptions.SvgImage = icon;
+
+            return button;
+        }
+
+        private void SlideshowDetailView_OnRowCellClick(object? sender, RowCellClickEventArgs e)
+        {
+            if (sender is not GridView detailView || e.Column is null)
+            {
+                return;
+            }
+
+            switch (e.Column.FieldName)
+            {
+                case "SlidePrevUnbound":
+                    NavigateSlide(detailView, e.RowHandle, -1);
+                    break;
+                case "SlideNextUnbound":
+                    NavigateSlide(detailView, e.RowHandle, +1);
+                    break;
+            }
+        }
+
+        private void NavigateSlide(GridView detailView, int rowHandle, int direction)
+        {
+            if (detailView.GetRow(rowHandle) is not ProductSlideContext context)
+            {
+                return;
+            }
+
+            ProductDto? product = _allItems.FirstOrDefault(p => p.Id == context.ProductId);
+            if (product?.Images is not { Count: > 0 } images)
+            {
+                return;
+            }
+
+            int count = images.Count;
+            int next = (GetSlideIndex(context.ProductId, count) + direction + count) % count;
+            _slideIndexes[context.ProductId] = next;
+            detailView.RefreshData();
+        }
+
+        private int GetSlideIndex(Guid productId, int count)
+        {
+            int index = _slideIndexes.TryGetValue(productId, out int current) ? current : 0;
+            return Math.Clamp(index, 0, count - 1);
+        }
+
+        private void SlideshowDetailView_CustomUnboundColumnData(object? sender, DevExpress.XtraGrid.Views.Base.CustomColumnDataEventArgs e)
+        {
+            if (sender is not GridView detailView || !e.IsGetData)
+            {
+                return;
+            }
+
+            int rowHandle = detailView.GetRowHandle(e.ListSourceRowIndex);
+            if (rowHandle < 0 || detailView.GetRow(rowHandle) is not ProductSlideContext context)
+            {
+                return;
+            }
+
+            ProductDto? product = _allItems.FirstOrDefault(p => p.Id == context.ProductId);
+            if (product?.Images is not { Count: > 0 } images)
+            {
+                return;
+            }
+
+            int index = GetSlideIndex(context.ProductId, images.Count);
+            ProductImageDto slide = images[index];
+
+            switch (e.Column.FieldName)
+            {
+                case "SlideImageUnbound":
+                    if (!string.IsNullOrWhiteSpace(slide.Path))
+                    {
+                        e.Value = GetOrLoadImage(slide.Path);
+                    }
+                    break;
+
+                case "SlideInfoUnbound":
+                    e.Value = $"{index + 1} / {images.Count}" + (slide.IsPrimary ? "   •   Ana Resim" : "");
+                    break;
+            }
         }
 
         private void View_CustomUnboundColumnData(object? sender, DevExpress.XtraGrid.Views.Base.CustomColumnDataEventArgs e)
@@ -320,6 +492,46 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             return null;
         }
 
+        private Image? GetSlideImagePreview(string? relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                return null;
+            }
+
+            const string cacheKeyPrefix = "preview|";
+            if (_slidePreviewCache.TryGetValue(cacheKeyPrefix + relativePath, out Image? cached))
+            {
+                return cached;
+            }
+
+            Image? full = GetOrLoadImage(relativePath);
+            if (full is null)
+            {
+                return null;
+            }
+
+            const int maxWidth = 480;
+            const int maxHeight = 400;
+            Image? preview = full;
+            double ratio = Math.Min((double)maxWidth / full.Width, (double)maxHeight / full.Height);
+            if (ratio < 1.0)
+            {
+                int w = Math.Max(1, (int)(full.Width * ratio));
+                int h = Math.Max(1, (int)(full.Height * ratio));
+                Bitmap scaled = new(w, h);
+                using (Graphics g = Graphics.FromImage(scaled))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.DrawImage(full, 0, 0, w, h);
+                }
+                preview = scaled;
+            }
+
+            _slidePreviewCache[cacheKeyPrefix + relativePath] = preview;
+            return preview;
+        }
+
         private Image? GetOrLoadImage(string relativePath)
         {
             if (_imageCache.TryGetValue(relativePath, out Image? cached))
@@ -387,17 +599,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                     };
                 }
             }
-            else if (hitView.Name == "ImagesDetailView" && hitInfo.Column.FieldName == "DetailImageUnbound"
-                     && hitView.GetRow(rowHandle) is ProductImageDto imgDto)
+            else if (hitView.Name == "ImagesDetailView" && hitInfo.Column.FieldName == "SlideImageUnbound"
+                     && hitView.GetRow(rowHandle) is ProductSlideContext slideContext
+                     && _allItems.FirstOrDefault(p => p.Id == slideContext.ProductId) is ProductDto slideProduct
+                     && slideProduct.Images is { Count: > 0 } slideImages)
             {
-                SuperToolTip stp = new();
-                ToolTipItem item = new();
-                item.Text = imgDto.IsPrimary ? "Ana Resim" : "Ürün Resmi";
-                stp.Items.Add(item);
+                int slideIndex = GetSlideIndex(slideContext.ProductId, slideImages.Count);
+                ProductImageDto slide = slideImages[slideIndex];
+                Image? preview = GetSlideImagePreview(slide.Path);
+                if (preview is null)
+                {
+                    return;
+                }
 
+                string title = $"{slideIndex + 1} / {slideImages.Count}" + (slide.IsPrimary ? "   •   Ana Resim" : "   •   Ürün Resmi");
                 e.Info = new ToolTipControlInfo(new CellToolTipInfo(hitInfo.RowHandle, hitInfo.Column, "cell"), "")
                 {
-                    SuperTip = stp
+                    Title = title,
+                    ToolTipImage = preview
                 };
             }
         }

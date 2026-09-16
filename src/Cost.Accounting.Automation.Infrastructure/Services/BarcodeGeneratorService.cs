@@ -41,23 +41,34 @@ internal sealed class BarcodeGeneratorService : IBarcodeGeneratorService
         return MatrixToPngBytes(matrix);
     }
 
-    public string GenerateGtin(string companyCode, string productCode)
+    public string GenerateGtin(string companyPrefix, string productCode)
     {
-        ArgumentNullException.ThrowIfNull(companyCode);
+        ArgumentNullException.ThrowIfNull(companyPrefix);
         ArgumentNullException.ThrowIfNull(productCode);
 
+        // Sadece sayısal haneler kullanılır
+        string prefixDigits = new(companyPrefix.Where(char.IsDigit).ToArray());
         string productDigits = new(productCode.Where(char.IsDigit).ToArray());
 
-        if (string.IsNullOrEmpty(productDigits))
+        if (productDigits.Length == 0)
             throw new ArgumentException("Ürün kodunda sayısal karakter bulunamadı.", nameof(productCode));
 
-        string baseCode = companyCode + productDigits;
-        string base12 = baseCode.Length > 12
-            ? baseCode[^12..]
-            : baseCode.PadLeft(12, '0');
+        // EAN-13 yapısı: Ülke kodu + Firma kodu (CompanyPrefix) + Ürün kodu + Kontrol rakamı
+        // Kontrol rakamı hariç toplam 12 hane olmalıdır.
+        if (prefixDigits.Length >= 12)
+        {
+            string truncated = prefixDigits[^12..];
+            return truncated + CalculateEan13CheckDigit(truncated);
+        }
 
-        int checkDigit = CalculateEan13CheckDigit(base12);
-        return $"{base12}{checkDigit}";
+        int availableSlots = 12 - prefixDigits.Length;
+
+        string itemReference = productDigits.Length <= availableSlots
+            ? productDigits.PadLeft(availableSlots, '0')
+            : productDigits[^availableSlots..];
+
+        string base12 = prefixDigits + itemReference;
+        return base12 + CalculateEan13CheckDigit(base12);
     }
 
     private static int CalculateEan13CheckDigit(string code12)

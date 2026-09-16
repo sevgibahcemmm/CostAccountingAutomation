@@ -28,6 +28,13 @@ internal sealed class ChartOfAccountLedgerSyncCommandHandler(
 
         foreach (ProductMovement movement in movements)
         {
+            // Tüketim / Atölye transferi hareketleri kendi yevmiye kayıtlarını
+            // (depo + hedef hesap) oluşturduğu için burada tekrar işlenmez.
+            if (movement.StockIssueId is not null)
+            {
+                continue;
+            }
+
             if (movement.UnitPrice is not { } price || price.Value <= 0)
             {
                 continue;

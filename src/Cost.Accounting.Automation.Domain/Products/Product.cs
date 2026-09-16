@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Photos;
+using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using Cost.Accounting.Automation.Domain.Products.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
 

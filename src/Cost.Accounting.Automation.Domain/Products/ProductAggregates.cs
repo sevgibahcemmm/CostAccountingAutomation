@@ -88,16 +88,19 @@ public sealed class ProductMovement : Entity, IHardDeletable
         DateOnly date,
         string? referenceNo,
         Description description,
-        IdentityId? invoiceId = null)
+        IdentityId? invoiceId = null,
+        IdentityId? stockIssueId = null)
         : this(movementType, quantity, unitPrice, date, referenceNo, description)
     {
         ProductId = productId;
         InvoiceId = invoiceId;
+        StockIssueId = stockIssueId;
     }
 
     public IdentityId ProductId { get; private set; } = default!;
     public Product? Product { get; private set; }
     public IdentityId? InvoiceId { get; private set; }
+    public IdentityId? StockIssueId { get; private set; }
     public ProductMovementType MovementType { get; private set; }
     public decimal Quantity { get; private set; }
     public Price? UnitPrice { get; private set; }
@@ -107,4 +110,5 @@ public sealed class ProductMovement : Entity, IHardDeletable
 
     public void SetProduct(IdentityId productId) => ProductId = productId;
     public void SetInvoiceId(IdentityId? invoiceId) => InvoiceId = invoiceId;
+    public void SetStockIssueId(IdentityId? stockIssueId) => StockIssueId = stockIssueId;
 }

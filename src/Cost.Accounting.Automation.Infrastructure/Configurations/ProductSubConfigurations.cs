@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -65,5 +66,6 @@ internal sealed class ProductMovementConfiguration : IEntityTypeConfiguration<Pr
 
         builder.HasIndex(x => x.ProductId);
         builder.HasIndex(x => x.InvoiceId);
+        builder.HasIndex(x => x.StockIssueId);
     }
 }

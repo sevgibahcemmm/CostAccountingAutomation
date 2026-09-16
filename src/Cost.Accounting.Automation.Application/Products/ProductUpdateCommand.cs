@@ -2,8 +2,11 @@ using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.Photos;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
+using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using Cost.Accounting.Automation.Domain.Products.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
@@ -56,6 +59,7 @@ internal sealed class ProductUpdateCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository,
     IProductUnitTypeRepository unitTypeRepository,
     ITaxRateRepository taxRateRepository,
+    ICompanyRepository companyRepository,
     IBarcodeGeneratorService barcodeGeneratorService) : IRequestHandler<ProductUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductUpdateCommand request, CancellationToken cancellationToken)
@@ -65,6 +69,8 @@ internal sealed class ProductUpdateCommandHandler(
         {
             return Result<string>.Failure("Ürün bulunamadı");
         }
+
+        string companyPrefix = await ProductBarcodePrefixResolver.ResolveAsync(companyRepository, cancellationToken);
 
         List<ChartOfAccount> accounts = await chartOfAccountRepository.GetAllIncludingDeletedAsync(cancellationToken);
 
@@ -117,7 +123,7 @@ internal sealed class ProductUpdateCommandHandler(
 
             product.SetProductCode(new ProductCode(productCode));
 
-            string gtin = barcodeGeneratorService.GenerateGtin(ProductBarcodeDefaults.CompanyGtinPrefix, productCode);
+            string gtin = barcodeGeneratorService.GenerateGtin(companyPrefix, productCode);
             product.SetBarcode(new Barcode(gtin));
 
             if (node is not null)
@@ -139,7 +145,7 @@ internal sealed class ProductUpdateCommandHandler(
         // Eski kayıtlarda boş kalmış olabilecek barkodu eksikse yeniden üret
         if (string.IsNullOrWhiteSpace(product.Barcode.Value))
         {
-            string gtin = barcodeGeneratorService.GenerateGtin(ProductBarcodeDefaults.CompanyGtinPrefix, product.ProductCode.Value);
+            string gtin = barcodeGeneratorService.GenerateGtin(companyPrefix, product.ProductCode.Value);
             product.SetBarcode(new Barcode(gtin));
         }
 

@@ -9,7 +9,8 @@ public enum ChartOfAccountType
     Warehouse = 1,
     Category = 2,
     Workshop = 3,
-    Stok = 4,   
+    Stok = 4,
+    ConsumptionUnit = 5,
 }
 
 public sealed class ChartOfAccount : Entity, IHardDeletable

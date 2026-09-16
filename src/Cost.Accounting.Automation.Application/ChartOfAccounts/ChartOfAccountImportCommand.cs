@@ -35,6 +35,8 @@ internal sealed class ChartOfAccountImportCommandHandler(
     private static readonly HashSet<string> WarehouseCodes =
         new(StringComparer.OrdinalIgnoreCase) { "150", "150.98", "151", "152" };
 
+    private const string ConsumptionRootCode = "900";
+
     private readonly Dictionary<string, ChartOfAccount> _nodes =
         new(StringComparer.OrdinalIgnoreCase);
 
@@ -104,6 +106,12 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
 
         foreach (ChartOfAccount existingAccount in existing)
         {
+            // Manuel oluşturulan tüketim birimleri içe aktarma ile silinmez.
+            if (existingAccount.Type == ChartOfAccountType.ConsumptionUnit)
+            {
+                continue;
+            }
+
             if (!importedCodes.Contains(existingAccount.Code.Value) && !existingAccount.IsDeleted)
             {
                 existingAccount.Delete();
@@ -119,10 +127,11 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         int workshops = _nodes.Values.Count(n => n.Type == ChartOfAccountType.Workshop);
         int categories = _nodes.Values.Count(n => n.Type == ChartOfAccountType.Category);
         int mainGroups = _nodes.Values.Count(n => n.Type == ChartOfAccountType.MainGroup);
+        int consumptionUnits = _nodes.Values.Count(n => n.Type == ChartOfAccountType.ConsumptionUnit);
         int linked = _nodes.Values.Count(n => n.SemiFinishedAccountId is not null || n.FinishedAccountId is not null);
 
         return $"Hesap planı başarıyla içe aktarıldı: {_nodes.Count} hesap " +
-            $"({mainGroups} anagrup, {warehouses} depo, {categories} kategori, {workshops} atölye, {linked} atölye 151/152 bağlantısı).";
+            $"({mainGroups} anagrup, {warehouses} depo, {categories} kategori, {workshops} atölye, {consumptionUnits} tüketim birimi, {linked} atölye 151/152 bağlantısı).";
     }
 
     private void LinkParents(Dictionary<string, ChartOfAccount> nodes)
@@ -170,6 +179,15 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
             if (IsUnderWorkshopRoot(account.Code.Value) && !_children.ContainsKey(account.Code.Value))
             {
                 account.SetType(ChartOfAccountType.Workshop);
+            }
+        }
+
+        // Tüketim Birimi: 900 (Tüketimler) altındaki en son düzey (yaprak) hesaplar.
+        foreach (ChartOfAccount account in _nodes.Values)
+        {
+            if (IsConsumptionUnitCode(account.Code.Value) && !_children.ContainsKey(account.Code.Value))
+            {
+                account.SetType(ChartOfAccountType.ConsumptionUnit);
             }
         }
 
@@ -286,6 +304,12 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
     {
         string[] segments = code.Split('.');
         return segments.Length >= 3 && segments[0] == "150" && segments[1] == "55";
+    }
+
+    private static bool IsConsumptionUnitCode(string code)
+    {
+        string[] segments = code.Split('.');
+        return segments.Length >= 2 && segments[0] == ConsumptionRootCode;
     }
 
     private static bool IsUnderRoot(string code, string rootKey)

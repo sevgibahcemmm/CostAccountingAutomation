@@ -15,6 +15,8 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
+using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
+using Cost.Accounting.Automation.Domain.Products.TaxRates;
 
 namespace Cost.Accounting.Automation.Infrastructure;
 

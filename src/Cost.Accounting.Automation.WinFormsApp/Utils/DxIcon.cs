@@ -37,6 +37,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage CollapseAll => Icon("svgimages/icon%20builder/actions_arrow1up.svg");
         public static SvgImage Import => Icon("svgimages/pdf%20viewer/import.svg");
         public static SvgImage Next => Icon("svgimages/icon%20builder/actions_next.svg");
+        public static SvgImage Previous => Icon("svgimages/arrows/prev.svg");
+        public static SvgImage Forward => Icon("svgimages/arrows/next.svg");
         public static SvgImage Trend => Icon("svgimages/icon%20builder/business_linearchart.svg");
 
         // Form / field icons
@@ -73,6 +75,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage StockInput => Icon("svgimages/icon%20builder/shopping_box.svg");
         public static SvgImage StockOutput => Icon("svgimages/icon%20builder/shopping_shoppingbasket.svg");
         public static SvgImage StockMovements => Icon("svgimages/icon%20builder/actions_reload.svg");
+        public static SvgImage StockIssue => Icon("svgimages/icon%20builder/shopping_shoppingbasket.svg");
+        public static SvgImage AtelierTransfer => Icon("svgimages/icon%20builder/actions_arrow1right.svg");
         public static SvgImage CurrentAccounts => Icon("svgimages/icon%20builder/business_money.svg");
         public static SvgImage Payments => Icon("svgimages/icon%20builder/business_cash.svg");
         public static SvgImage Balance => Icon("svgimages/icon%20builder/business_dollarcircled.svg");

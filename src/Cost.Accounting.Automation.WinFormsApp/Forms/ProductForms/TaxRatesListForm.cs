@@ -6,6 +6,7 @@ using DevExpress.Utils.Svg;
 using TS.MediatR;
 using TS.Result;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
+using Cost.Accounting.Automation.Application.Products.TaxRates;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {

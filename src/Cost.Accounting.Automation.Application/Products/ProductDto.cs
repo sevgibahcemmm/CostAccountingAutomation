@@ -158,12 +158,23 @@ public static class ProductExtensions
 
                 StockQuantity = s.Entity.Movements.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity),
 
-                Images = s.Entity.Images.Select(i => new ProductImageDto
-                {
-                    Id = i.Id,
-                    Path = i.Path,
-                    IsPrimary = i.IsDefault
-                }).ToList(),
+Images = s.Entity.Images.Select(i => new ProductImageDto
+                    {
+                        Id = i.Id,
+                        Path = i.Path,
+                        IsPrimary = i.IsDefault
+                    }).ToList(),
+
+                    Movements = s.Entity.Movements.Select(m => new ProductMovementDto
+                    {
+                        Id = m.Id,
+                        Date = m.Date,
+                        MovementType = m.MovementType,
+                        Quantity = m.Quantity,
+                        UnitPrice = m.UnitPrice == null ? null : m.UnitPrice.Value,
+                        ReferenceNo = m.ReferenceNo,
+                        Description = m.Description.Value
+                    }).ToList(),
 
                 Prices = s.Entity.Prices.Select(p => new ProductPriceDto
                 {

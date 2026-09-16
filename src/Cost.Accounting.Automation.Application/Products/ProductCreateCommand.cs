@@ -2,8 +2,11 @@ using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.Photos;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
+using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using Cost.Accounting.Automation.Domain.Products.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
@@ -67,6 +70,7 @@ internal sealed class ProductCreateCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository,
     IProductUnitTypeRepository unitTypeRepository,
     ITaxRateRepository taxRateRepository,
+    ICompanyRepository companyRepository,
     IBarcodeGeneratorService barcodeGeneratorService) : IRequestHandler<ProductCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductCreateCommand request, CancellationToken cancellationToken)
@@ -108,7 +112,8 @@ internal sealed class ProductCreateCommandHandler(
 
         (string productCode, string nodeCode) = ProductCodeHelper.BuildNextCodes(category.Code.Value, productCodes, accountCodes);
 
-        string gtin = barcodeGeneratorService.GenerateGtin(ProductBarcodeDefaults.CompanyGtinPrefix, productCode);
+        string companyPrefix = await ProductBarcodePrefixResolver.ResolveAsync(companyRepository, cancellationToken);
+        string gtin = barcodeGeneratorService.GenerateGtin(companyPrefix, productCode);
         string qrContent = ProductQrContentBuilder.Build(
             productCode,
             gtin,
