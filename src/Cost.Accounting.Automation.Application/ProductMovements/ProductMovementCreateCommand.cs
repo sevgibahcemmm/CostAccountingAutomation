@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -50,6 +51,25 @@ internal sealed class ProductMovementCreateCommandHandler(
         if (product is null)
         {
             return Result<string>.Failure("Seçilen ürün bulunamadı.");
+        }
+
+        if (request.MovementType == ProductMovementType.Output)
+        {
+            List<ProductMovement> movements = await StockIssueCostingHelper.LoadMovementsAsync(
+                [productId],
+                productMovementRepository,
+                cancellationToken);
+
+            decimal available = StockIssueCostingHelper.ComputeAvailableQuantity(
+                movements,
+                productId,
+                request.Date);
+
+            if (request.Quantity > available)
+            {
+                return Result<string>.Failure(
+                    $"'{product.Name.Value}' için bu tarihe kadar yeterli giriş (stok) yok. Mevcut: {available:n2}, istenen: {request.Quantity:n2}.");
+            }
         }
 
         ProductMovement movement = new(

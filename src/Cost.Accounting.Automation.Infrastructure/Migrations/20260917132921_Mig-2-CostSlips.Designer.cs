@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cost.Accounting.Automation.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260916161040_Mig-1")]
-    partial class Mig1
+    [Migration("20260917132921_Mig-2-CostSlips")]
+    partial class Mig2CostSlips
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -174,6 +174,141 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("CostDate")
+                        .HasColumnType("date");
+
+                    b.Property<byte>("CostSlipType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("money");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ProducedProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SlipNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WorkshopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CostDate");
+
+                    b.HasIndex("CostSlipType");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ProducedProductId");
+
+                    b.HasIndex("SlipNumber");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("WorkshopId");
+
+                    b.ToTable("CostSlips", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems.CostSlipItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CostSlipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("ExpenseAccountType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProductUnitTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("money");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CostSlipId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductUnitTypeId");
+
+                    b.ToTable("CostSlipItems", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.CurrentAccounts.CurrentAccountMovement", b =>
@@ -627,6 +762,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<string>("ReferenceNo")
                         .HasColumnType("nvarchar(MAX)");
 
+                    b.Property<Guid?>("StockIssueId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -638,6 +776,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasIndex("InvoiceId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("StockIssueId");
 
                     b.ToTable("ProductMovements", (string)null);
                 });
@@ -724,7 +864,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.ToTable("ProductUnitTypes", (string)null);
                 });
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRate", b =>
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRates.TaxRate", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -794,6 +934,117 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.StockIssues.StockIssue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CostingMethod")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DocumentNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("IssueType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SourceWarehouseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TargetAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("DocumentNumber");
+
+                    b.HasIndex("IssueType");
+
+                    b.HasIndex("SourceWarehouseId");
+
+                    b.HasIndex("TargetAccountId");
+
+                    b.ToTable("StockIssues", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.StockIssues.StockIssueLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<Guid>("StockIssueId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StockIssueId");
+
+                    b.ToTable("StockIssueLines", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Suppliers.Supplier", b =>
@@ -1168,6 +1419,99 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.Customers.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "ProducedProduct")
+                        .WithMany()
+                        .HasForeignKey("ProducedProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "Workshop")
+                        .WithMany()
+                        .HasForeignKey("WorkshopId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Description", "Description", b1 =>
+                        {
+                            b1.Property<Guid>("CostSlipId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Description");
+
+                            b1.HasKey("CostSlipId");
+
+                            b1.ToTable("CostSlips");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CostSlipId");
+                        });
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("ProducedProduct");
+
+                    b.Navigation("Workshop");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems.CostSlipItem", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", "CostSlip")
+                        .WithMany("CostSlipItems")
+                        .HasForeignKey("CostSlipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.ProductUnitType", "ProductUnitType")
+                        .WithMany()
+                        .HasForeignKey("ProductUnitTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Description", "Description", b1 =>
+                        {
+                            b1.Property<Guid>("CostSlipItemId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Description");
+
+                            b1.HasKey("CostSlipItemId");
+
+                            b1.ToTable("CostSlipItems");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CostSlipItemId");
+                        });
+
+                    b.Navigation("CostSlip");
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductUnitType");
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.CurrentAccounts.CurrentAccountMovement", b =>
                 {
                     b.HasOne("Cost.Accounting.Automation.Domain.Customers.Customer", "Customer")
@@ -1524,7 +1868,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Cost.Accounting.Automation.Domain.Products.TaxRate", "TaxRate")
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.TaxRates.TaxRate", "TaxRate")
                         .WithMany()
                         .HasForeignKey("TaxRateId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1694,7 +2038,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRate", b =>
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRates.TaxRate", b =>
                 {
                     b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Name", "Name", b1 =>
                         {
@@ -1765,6 +2109,105 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Permissions");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.StockIssues.StockIssue", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "SourceWarehouse")
+                        .WithMany()
+                        .HasForeignKey("SourceWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "TargetAccount")
+                        .WithMany()
+                        .HasForeignKey("TargetAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Description", "Description", b1 =>
+                        {
+                            b1.Property<Guid>("StockIssueId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Description");
+
+                            b1.HasKey("StockIssueId");
+
+                            b1.ToTable("StockIssues");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StockIssueId");
+                        });
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("SourceWarehouse");
+
+                    b.Navigation("TargetAccount");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.StockIssues.StockIssueLine", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.StockIssues.StockIssue", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("StockIssueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Description", "Description", b1 =>
+                        {
+                            b1.Property<Guid>("StockIssueLineId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Description");
+
+                            b1.HasKey("StockIssueLineId");
+
+                            b1.ToTable("StockIssueLines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StockIssueLineId");
+                        });
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Price", "UnitCost", b1 =>
+                        {
+                            b1.Property<Guid>("StockIssueLineId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Value")
+                                .HasColumnType("money")
+                                .HasColumnName("UnitCost");
+
+                            b1.HasKey("StockIssueLineId");
+
+                            b1.ToTable("StockIssueLines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StockIssueLineId");
+                        });
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("UnitCost")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Suppliers.Supplier", b =>
@@ -2119,6 +2562,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
+                {
+                    b.Navigation("CostSlipItems");
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Invoices.Invoice", b =>
                 {
                     b.Navigation("Lines");
@@ -2131,6 +2579,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Navigation("Movements");
 
                     b.Navigation("Prices");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.StockIssues.StockIssue", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Users.User", b =>

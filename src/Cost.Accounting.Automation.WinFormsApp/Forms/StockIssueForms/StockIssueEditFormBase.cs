@@ -1,11 +1,14 @@
 using System.ComponentModel;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.StockIssues;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
@@ -16,6 +19,7 @@ using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
 using DevExpress.XtraGrid.Views.Grid;
+using DevExpress.XtraReports.UI;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 
@@ -57,7 +61,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
         private SimpleButton btnDeleteLine = default!;
         private SimpleButton btnSave = default!;
         private SimpleButton btnCancel = default!;
+        private SimpleButton btnPrintSlip = default!;
         private RepositoryItemSearchLookUpEdit riProduct = default!;
+
+        private bool _saved;
 
         protected StockIssueEditFormBase(StockIssueType issueType, StockIssueListDto? existing)
         {
@@ -182,12 +189,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 Size = new Size(92, 32),
                 Anchor = AnchorStyles.Right | AnchorStyles.Bottom
             };
+            btnPrintSlip = new SimpleButton
+            {
+                Text = "Taşınır İşlem Fişi Yazdır",
+                Location = new Point(24, 612),
+                Size = new Size(180, 32),
+                Enabled = false,
+                Anchor = AnchorStyles.Left | AnchorStyles.Bottom
+            };
 
             Controls.AddRange([
                 lblTitle, lblSubtitle, lblDate, dtDate, lblDocumentNumber, txtDocumentNumber,
                 lblCosting, cmbCosting, lblWarehouse, txtWarehouse, lblTarget, lookUpTarget,
                 lblDescription, memoDescription, lblLines, gridLinesControl,
-                btnAddLine, btnDeleteLine, lblTotalCaption, lblTotalValue, btnSave, btnCancel
+                btnAddLine, btnDeleteLine, lblTotalCaption, lblTotalValue, btnSave, btnCancel, btnPrintSlip
             ]);
 
             ConfigureGrid();
@@ -322,6 +337,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             btnDeleteLine.Click += (_, _) => DeleteSelectedLine();
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
+            btnPrintSlip.Click += async (_, _) => await ShowSlipPreviewAsync();
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
             WireDateAndTargetEvents();
         }
@@ -485,6 +501,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
                 UpdateTotal();
                 gridLinesView.RefreshData();
+                btnPrintSlip.Enabled = true;
             }
             catch (Exception ex)
             {
@@ -510,6 +527,58 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             }
         }
 
+        private bool TryMergeDuplicateProduct(int rowHandle, Guid productId)
+        {
+            if (productId == Guid.Empty)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < _lines.Count; i++)
+            {
+                if (i == rowHandle || _lines[i].ProductId != productId)
+                {
+                    continue;
+                }
+
+                LineRow target = _lines[i];
+                decimal mergedQuantity = target.Quantity + _lines[rowHandle].Quantity;
+                _lines.RemoveAt(rowHandle);
+
+                int targetIndex = rowHandle < i ? i - 1 : i;
+
+                target.Quantity = mergedQuantity;
+                target.UnitCost = ResolveProductUnitPrice(productId);
+                target.AvailableStock = GetProductStockQuantity(productId);
+                UpdateAutoDescription(targetIndex);
+
+                gridLinesView.RefreshData();
+                gridLinesView.FocusedRowHandle = _lines.Count - 1 > targetIndex ? targetIndex : _lines.Count - 1;
+
+                UpdateTotal();
+                UpdateGeneralDescription();
+
+                ToastHelper.Show(
+                    $"'{GetProductName(productId)}' zaten listede; miktarlar tek satırda birleştirildi (toplam {mergedQuantity:n2}).",
+                    ToastType.Info,
+                    4000);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private decimal GetProductStockQuantity(Guid productId)
+        {
+            if (productId == Guid.Empty)
+            {
+                return 0m;
+            }
+
+            return _filteredProducts.FirstOrDefault(p => p.Id == productId)?.StockQuantity ?? 0m;
+        }
+
         private void UpdateTotal()
         {
             decimal total = _lines.Sum(l => l.Quantity * l.UnitCost);
@@ -527,6 +596,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
             if (e.Column.FieldName == nameof(LineRow.ProductId) && row.ProductId != Guid.Empty)
             {
+                if (TryMergeDuplicateProduct(e.RowHandle, row.ProductId))
+                {
+                    return;
+                }
+
                 ProductDto? selectedProduct = _filteredProducts.FirstOrDefault(p => p.Id == row.ProductId);
                 if (selectedProduct is null)
                 {
@@ -843,14 +917,154 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 bool ok = await CrudExecutor.ExecuteAsync(command);
                 if (ok)
                 {
-                    DialogResult = DialogResult.OK;
-                    Close();
+                    _saved = true;
+                    btnPrintSlip.Enabled = true;
+                    btnSave.Enabled = false;
+                    btnAddLine.Enabled = false;
+                    btnDeleteLine.Enabled = false;
+                    dtDate.ReadOnly = true;
+                    txtDocumentNumber.ReadOnly = true;
+                    cmbCosting.ReadOnly = true;
+                    lookUpTarget.ReadOnly = true;
+                    memoDescription.ReadOnly = true;
+                    gridLinesView.OptionsBehavior.Editable = false;
                 }
             }
             finally
             {
-                btnSave.Enabled = true;
+                if (!_saved)
+                {
+                    btnSave.Enabled = true;
+                }
             }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (_saved && DialogResult == DialogResult.None)
+            {
+                DialogResult = DialogResult.OK;
+            }
+
+            base.OnFormClosing(e);
+        }
+
+        private async Task ShowSlipPreviewAsync()
+        {
+            WaitForm? waitForm = null;
+            try
+            {
+                MovableAssetTransactionSlipData data = await BuildSlipDataAsync();
+                MovableAssetTransactionSlipReport report = new(data);
+
+                waitForm = WaitFormHelper.Show<WaitForm>("Rapor hazırlanıyor...", "Lütfen bekleyin...");
+                await report.CreateDocumentAsync(CancellationToken.None);
+
+                waitForm.Close();
+                waitForm.Dispose();
+                waitForm = null;
+
+                ReportPrintTool tool = new(report);
+                tool.ShowRibbonPreviewDialog();
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Taşınır işlem fişi açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
+            finally
+            {
+                waitForm?.Close();
+                waitForm?.Dispose();
+            }
+        }
+
+        private async Task<MovableAssetTransactionSlipData> BuildSlipDataAsync()
+        {
+            CompanyDto company = await LoadCompanyAsync();
+
+            string targetName = GetSelectedTargetName();
+            string targetCode = string.Empty;
+            if (lookUpTarget.EditValue is Guid targetId)
+            {
+                ChartOfAccountLookUpDto? target = _targetAccounts.FirstOrDefault(a => a.Id == targetId);
+                if (target is not null)
+                {
+                    targetCode = target.Code;
+                    targetName = target.Name;
+                }
+            }
+
+            ChartOfAccountLookUpDto? warehouse = _accounts.FirstOrDefault(a => a.Id == _sourceWarehouseId);
+            string warehouseName = warehouse?.Name ?? _sourceWarehouseDisplay;
+            string warehouseCode = warehouse?.Code ?? string.Empty;
+
+            string city = string.IsNullOrWhiteSpace(company.City) ? string.Empty : company.City.Trim();
+            string district = string.IsNullOrWhiteSpace(company.District) ? string.Empty : company.District.Trim();
+            string ilIlce = city.Length > 0 && district.Length > 0 ? $"{city} / {district}" : city + district;
+
+            MovableAssetTransactionSlipData data = new()
+            {
+                DocumentNumber = txtDocumentNumber.Text.Trim(),
+                Date = dtDate.DateTime,
+                IslemCesidi = IsConsumption ? "Tüketim" : "Atölye Transferi",
+                NeredenGeldigi = warehouseName,
+                KimeVerildigi = targetName,
+                NereyeVerildigi = string.IsNullOrWhiteSpace(targetCode) ? targetName : $"{targetCode} - {targetName}",
+                IlIlceAdi = ilIlce,
+                IlIlceKodu = string.Empty,
+                HarcamaBirimiAdi = company.ExpenditureUnitName ?? string.Empty,
+                HarcamaBirimiKodu = company.ExpenditureUnitCode ?? string.Empty,
+                AmbarAdi = warehouseName,
+                AmbarKodu = warehouseCode,
+                MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
+                MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
+                DayanakTarihi = dtDate.DateTime,
+                DayanakKodu = txtDocumentNumber.Text.Trim()
+            };
+
+            int order = 0;
+            foreach (LineRow line in _lines.Where(l => l.ProductId != Guid.Empty && l.Quantity > 0))
+            {
+                ProductDto? product = _allProducts.FirstOrDefault(p => p.Id == line.ProductId);
+                order++;
+                data.Rows.Add(new MovableAssetTransactionSlipRow
+                {
+                    SiraNo = order,
+                    Kodu = string.IsNullOrWhiteSpace(product?.ChartOfAccountCode) ? product?.ProductCode ?? string.Empty : product.ChartOfAccountCode,
+                    BarkodNo = product?.Barcode ?? string.Empty,
+                    Adi = product?.Name ?? string.Empty,
+                    OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
+                    Miktari = line.Quantity,
+                    BirimFiyati = line.UnitCost,
+                    Tutari = line.Quantity * line.UnitCost
+                });
+            }
+
+            data.ApplyCodeTotals(IsConsumption ? 3 : 4);
+
+            return data;
+        }
+
+        private async Task<CompanyDto> LoadCompanyAsync()
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                SessionClaimContext session = Program.Services.GetRequiredService<SessionClaimContext>();
+
+                var result = await mediator.Send(new CompanyGetQuery(session.GetCompanyId()), CancellationToken.None);
+                if (result.IsSuccessful && result.Data is not null)
+                {
+                    return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("SlipReport.Company", ex);
+            }
+
+            return new CompanyDto();
         }
 
         private sealed class LineRow

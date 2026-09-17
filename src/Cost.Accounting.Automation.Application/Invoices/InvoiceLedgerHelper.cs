@@ -71,8 +71,8 @@ internal static class InvoiceLedgerHelper
 
             if (isSales)
             {
-                decimal rate = line.TaxRateRate > 1 ? line.TaxRateRate / 100m : line.TaxRateRate;
-                decimal discountRate = line.DiscountRate > 1 && line.DiscountRate <= 100 ? line.DiscountRate / 100m : line.DiscountRate;
+                decimal rate = line.TaxRateRate / 100m;
+                decimal discountRate = line.DiscountRate / 100m;
                 decimal lineCostedNet = line.Quantity * unitCost * (1m - discountRate);
                 decimal lineTax = Math.Round(lineCostedNet * rate, 2);
                 salesCariDebit += lineCostedNet + lineTax;
@@ -137,6 +137,7 @@ internal static class InvoiceLedgerHelper
         var group = priorMovements
             .Where(m => m.InvoiceId != invoice.Id)
             .Where(m => !m.IsDeleted)
+            .Where(m => m.Date <= invoice.Date)
             .GroupBy(m => m.ProductId);
 
         foreach (var product in group)

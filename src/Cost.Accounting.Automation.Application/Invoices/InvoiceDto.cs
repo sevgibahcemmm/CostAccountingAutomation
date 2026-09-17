@@ -28,7 +28,7 @@ public sealed class InvoiceLineDto
 
     [Column("İskonto Tutarı", Order = 50, Width = 95, Alignment = "Right")]
     public decimal DiscountAmount => Math.Round(
-        Quantity * UnitPrice * (DiscountRate > 1 && DiscountRate <= 100 ? DiscountRate / 100m : DiscountRate), 2);
+        Quantity * UnitPrice * (DiscountRate / 100m), 2);
 
     [Column("KDV %", Order = 60, Width = 65, Alignment = "Right")]
     public decimal TaxRateRate { get; set; }

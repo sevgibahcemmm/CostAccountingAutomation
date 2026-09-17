@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cost.Accounting.Automation.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260916175640_Mig-2")]
-    partial class Mig2
+    [Migration("20260917053240_Mig-1")]
+    partial class Mig1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -729,7 +729,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.ToTable("ProductUnitTypes", (string)null);
                 });
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRate", b =>
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRates.TaxRate", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1640,7 +1640,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Cost.Accounting.Automation.Domain.Products.TaxRate", "TaxRate")
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.TaxRates.TaxRate", "TaxRate")
                         .WithMany()
                         .HasForeignKey("TaxRateId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1810,7 +1810,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRate", b =>
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Products.TaxRates.TaxRate", b =>
                 {
                     b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Name", "Name", b1 =>
                         {

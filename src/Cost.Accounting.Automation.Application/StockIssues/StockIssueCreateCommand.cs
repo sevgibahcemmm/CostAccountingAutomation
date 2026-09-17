@@ -153,11 +153,12 @@ internal sealed class StockIssueCreateCommandHandler(
             productMovementRepository,
             cancellationToken);
 
-        Dictionary<IdentityId, decimal> availableMap = StockIssueCostingHelper.BuildAvailableMap(movements);
-
         foreach (KeyValuePair<IdentityId, decimal> requested in requestedQuantities)
         {
-            decimal available = availableMap.TryGetValue(requested.Key, out decimal stock) ? stock : 0m;
+            decimal available = StockIssueCostingHelper.ComputeAvailableQuantity(
+                movements,
+                requested.Key,
+                request.Date);
 
             if (requested.Value > available)
             {
@@ -166,14 +167,15 @@ internal sealed class StockIssueCreateCommandHandler(
                     : requested.Key.Value.ToString();
 
                 return Result<string>.Failure(
-                    $"'{productName}' için yeterli stok yok. Mevcut: {available:n2}, istenen: {requested.Value:n2}.");
+                    $"'{productName}' için bu tarihe kadar yeterli giriş (stok) yok. Mevcut: {available:n2}, istenen: {requested.Value:n2}.");
             }
         }
 
         Dictionary<IdentityId, decimal> costMap = StockIssueCostingHelper.BuildUnitCostMap(
             movements,
             requestedQuantities,
-            request.CostingMethod);
+            request.CostingMethod,
+            request.Date);
 
         StockIssue issue = new(
             issueType: request.IssueType,
@@ -186,7 +188,15 @@ internal sealed class StockIssueCreateCommandHandler(
 
         List<StockIssueLine> lines = [];
 
-        foreach (StockIssueCreateLine line in request.Lines)
+        List<StockIssueCreateLine> mergedLines = request.Lines
+            .GroupBy(l => l.ProductId)
+            .Select(g => new StockIssueCreateLine(
+                g.Key,
+                g.Sum(x => x.Quantity),
+                g.First().Description))
+            .ToList();
+
+        foreach (StockIssueCreateLine line in mergedLines)
         {
             decimal unitCost = costMap.TryGetValue(new IdentityId(line.ProductId), out decimal cost) ? cost : 0m;
 

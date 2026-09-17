@@ -275,9 +275,12 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
                 using var scope = Program.Services.CreateScope();
                 ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
                 TListQuery query = BuildListQuery();
-                CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
+CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
                 gridControl.DataSource = null;
-                List<TDto> items = (await mediator.Send(query, CancellationToken.None)).ToList();
+                List<TDto> items = (await mediator.Send(query, CancellationToken.None))
+                    .OrderByDescending(x => x.CreatedAt)
+                    .ThenByDescending(x => x.Id)
+                    .ToList();
                 CrashLog.Write("Reload", $"{typeof(TListQuery).Name} returned {items.Count} items");
                 _allItems = items;
                 gridControl.DataSource = items;

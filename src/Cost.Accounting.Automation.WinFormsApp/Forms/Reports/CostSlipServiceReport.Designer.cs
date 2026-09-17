@@ -1,4 +1,4 @@
-ï»¿namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
+namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
 {
     partial class CostSlipServiceReport
     {
@@ -162,7 +162,7 @@
             this.xrLabel25.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel25.SizeF = new System.Drawing.SizeF(556.1667F, 12.58333F);
             this.xrLabel25.StylePriority.UseTextAlignment = false;
-            this.xrLabel25.Text = "MÃ¼ÅŸterinin AdÄ±:";
+            this.xrLabel25.Text = "Müþterinin Adý:";
             this.xrLabel25.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel26
@@ -175,7 +175,7 @@
             this.xrLabel26.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel26.SizeF = new System.Drawing.SizeF(556.1667F, 12.58333F);
             this.xrLabel26.StylePriority.UseTextAlignment = false;
-            this.xrLabel26.Text = "Ãœretilen MamÃ¼l  AdÄ±:";
+            this.xrLabel26.Text = "Üretilen Mamül  Adý:";
             this.xrLabel26.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel27
@@ -188,7 +188,7 @@
             this.xrLabel27.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel27.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel27.StylePriority.UseTextAlignment = false;
-            this.xrLabel27.Text = "Ãœretilen MamÃ¼l MiktarÄ± :";
+            this.xrLabel27.Text = "Üretilen Mamül Miktarý :";
             this.xrLabel27.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel21
@@ -212,7 +212,7 @@
             this.xrLabel20.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel20.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel20.StylePriority.UseTextAlignment = false;
-            this.xrLabel20.Text = "Ãœretilen MamÃ¼l MiktarÄ± :";
+            this.xrLabel20.Text = "Üretilen Mamül Miktarý :";
             this.xrLabel20.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel19
@@ -223,7 +223,7 @@
             this.xrLabel19.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel19.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel19.StylePriority.UseTextAlignment = false;
-            this.xrLabel19.Text = "Ãœretilen MamÃ¼l AdÄ±      :";
+            this.xrLabel19.Text = "Üretilen Mamül Adý      :";
             this.xrLabel19.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrTable2
@@ -264,7 +264,7 @@
             this.xrTableCell7.Multiline = true;
             this.xrTableCell7.Name = "xrTableCell7";
             this.xrTableCell7.StylePriority.UseTextAlignment = false;
-            this.xrTableCell7.Text = "KullanÄ±lan Hammadde ve YapÄ±lan Masraflar";
+            this.xrTableCell7.Text = "Kullanýlan Hammadde ve Yapýlan Masraflar";
             this.xrTableCell7.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell7.Weight = 2.9854171752929686D;
             // 
@@ -286,7 +286,7 @@
             // 
             this.xrTableCell10.Multiline = true;
             this.xrTableCell10.Name = "xrTableCell10";
-            this.xrTableCell10.Text = "Birim FiyatÄ± (TL)";
+            this.xrTableCell10.Text = "Birim Fiyatý (TL)";
             this.xrTableCell10.Weight = 0.98822470578567034D;
             // 
             // xrTableCell11
@@ -311,7 +311,7 @@
             this.xrLabel6.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel6.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel6.StylePriority.UseTextAlignment = false;
-            this.xrLabel6.Text = "MÃ¼ÅŸterinin AdÄ±              :";
+            this.xrLabel6.Text = "Müþterinin Adý              :";
             this.xrLabel6.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel2
@@ -337,7 +337,7 @@
             this.xrLabel1.StylePriority.UseFont = false;
             this.xrLabel1.StylePriority.UseForeColor = false;
             this.xrLabel1.StylePriority.UseTextAlignment = false;
-            this.xrLabel1.Text = "HÄ°ZMET MALÄ°YET PUSULASI";
+            this.xrLabel1.Text = "HÝZMET MALÝYET PUSULASI";
             this.xrLabel1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             // 
             // BottomMargin
@@ -394,7 +394,7 @@
             this.xrTableCell1.Multiline = true;
             this.xrTableCell1.Name = "xrTableCell1";
             this.xrTableCell1.StylePriority.UseTextAlignment = false;
-            this.xrTableCell1.Text = "KullanÄ±lan Hammadde ve YapÄ±lan Masraflar";
+            this.xrTableCell1.Text = "Kullanýlan Hammadde ve Yapýlan Masraflar";
             this.xrTableCell1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell1.Weight = 2.9854171752929686D;
             // 
@@ -428,7 +428,7 @@
             this.xrTableCell5.Multiline = true;
             this.xrTableCell5.Name = "xrTableCell5";
             this.xrTableCell5.StylePriority.UseTextAlignment = false;
-            this.xrTableCell5.Text = "Birim FiyatÄ± (TL)";
+            this.xrTableCell5.Text = "Birim Fiyatý (TL)";
             this.xrTableCell5.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.xrTableCell5.TextFormatString = "{0:N2}";
             this.xrTableCell5.Weight = 0.98822470578567034D;
@@ -490,7 +490,7 @@
             this.xrTableCell13.Multiline = true;
             this.xrTableCell13.Name = "xrTableCell13";
             this.xrTableCell13.StylePriority.UseTextAlignment = false;
-            this.xrTableCell13.Text = "740 - Hizmet Ãœretim Maliyeti";
+            this.xrTableCell13.Text = "740 - Hizmet Üretim Maliyeti";
             this.xrTableCell13.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell13.Weight = 5.9200854860550658D;
             // 
@@ -536,7 +536,7 @@
             this.xrTableCell28.Name = "xrTableCell28";
             this.xrTableCell28.StylePriority.UseFont = false;
             this.xrTableCell28.StylePriority.UseTextAlignment = false;
-            this.xrTableCell28.Text = "750- AraÅŸtÄ±rma ve GeliÅŸtirme Giderleri";
+            this.xrTableCell28.Text = "750- Araþtýrma ve Geliþtirme Giderleri";
             this.xrTableCell28.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell28.Weight = 5.9200854860550658D;
             // 
@@ -580,7 +580,7 @@
             this.xrTableCell31.Name = "xrTableCell31";
             this.xrTableCell31.StylePriority.UseFont = false;
             this.xrTableCell31.StylePriority.UseTextAlignment = false;
-            this.xrTableCell31.Text = "760- Pazarlama, SatÄ±ÅŸ ve DaÄŸÄ±tÄ±m GiderleriÂ ";
+            this.xrTableCell31.Text = "760- Pazarlama, Satýþ ve Daðýtým Giderleri ";
             this.xrTableCell31.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell31.Weight = 5.9200854860550658D;
             // 
@@ -624,7 +624,7 @@
             this.xrTableCell34.Name = "xrTableCell34";
             this.xrTableCell34.StylePriority.UseFont = false;
             this.xrTableCell34.StylePriority.UseTextAlignment = false;
-            this.xrTableCell34.Text = "770- Genel YÃ¶netim Giderleri";
+            this.xrTableCell34.Text = "770- Genel Yönetim Giderleri";
             this.xrTableCell34.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell34.Weight = 5.9200854860550658D;
             // 
@@ -713,7 +713,7 @@
             this.xrTableCell40.Name = "xrTableCell40";
             this.xrTableCell40.StylePriority.UseFont = false;
             this.xrTableCell40.StylePriority.UseTextAlignment = false;
-            this.xrTableCell40.Text = "DiÄŸer Giderler ToplamÄ± (750+760+770+780)";
+            this.xrTableCell40.Text = "Diðer Giderler Toplamý (750+760+770+780)";
             this.xrTableCell40.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.xrTableCell40.Weight = 5.9200854860550658D;
             // 
@@ -770,7 +770,7 @@
             this.xrTableCell47.Name = "xrTableCell47";
             this.xrTableCell47.StylePriority.UseBackColor = false;
             this.xrTableCell47.StylePriority.UseTextAlignment = false;
-            this.xrTableCell47.Text = "â†’";
+            this.xrTableCell47.Text = "›";
             this.xrTableCell47.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell47.Weight = 1.522375948930466D;
             // 
@@ -800,7 +800,7 @@
             this.xrLabel7.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel7.StylePriority.UseFont = false;
             this.xrLabel7.StylePriority.UseTextAlignment = false;
-            this.xrLabel7.Text = "Ä°ÅŸyurdu MÃ¼dÃ¼rÃ¼ ";
+            this.xrLabel7.Text = "Ýþyurdu Müdürü ";
             this.xrLabel7.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel8
@@ -813,7 +813,7 @@
             this.xrLabel8.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel8.StylePriority.UseFont = false;
             this.xrLabel8.StylePriority.UseTextAlignment = false;
-            this.xrLabel8.Text = "AdÄ± SoyadÄ±";
+            this.xrLabel8.Text = "Adý Soyadý";
             this.xrLabel8.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel9
@@ -826,7 +826,7 @@
             this.xrLabel9.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel9.StylePriority.UseFont = false;
             this.xrLabel9.StylePriority.UseTextAlignment = false;
-            this.xrLabel9.Text = "Ä°mza";
+            this.xrLabel9.Text = "Ýmza";
             this.xrLabel9.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel10
@@ -839,7 +839,7 @@
             this.xrLabel10.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel10.StylePriority.UseFont = false;
             this.xrLabel10.StylePriority.UseTextAlignment = false;
-            this.xrLabel10.Text = "AtÃ¶lye Åžefi";
+            this.xrLabel10.Text = "Atölye Þefi";
             this.xrLabel10.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel11
@@ -852,7 +852,7 @@
             this.xrLabel11.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel11.StylePriority.UseFont = false;
             this.xrLabel11.StylePriority.UseTextAlignment = false;
-            this.xrLabel11.Text = "AdÄ± SoyadÄ±";
+            this.xrLabel11.Text = "Adý Soyadý";
             this.xrLabel11.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel12
@@ -865,7 +865,7 @@
             this.xrLabel12.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel12.StylePriority.UseFont = false;
             this.xrLabel12.StylePriority.UseTextAlignment = false;
-            this.xrLabel12.Text = "Ä°mza";
+            this.xrLabel12.Text = "Ýmza";
             this.xrLabel12.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel13
@@ -893,7 +893,7 @@
             this.xrLabel14.SizeF = new System.Drawing.SizeF(393.2361F, 19.87497F);
             this.xrLabel14.StylePriority.UseFont = false;
             this.xrLabel14.StylePriority.UseTextAlignment = false;
-            this.xrLabel14.Text = "         YukarÄ±da yazÄ±lÄ± mamul eÅŸyalar teslim alÄ±nmÄ±ÅŸtÄ±r.";
+            this.xrLabel14.Text = "         Yukarýda yazýlý mamul eþyalar teslim alýnmýþtýr.";
             this.xrLabel14.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel15
@@ -921,7 +921,7 @@
             this.xrLabel16.SizeF = new System.Drawing.SizeF(239.751F, 19.875F);
             this.xrLabel16.StylePriority.UseFont = false;
             this.xrLabel16.StylePriority.UseTextAlignment = false;
-            this.xrLabel16.Text = "TaÅŸÄ±nÄ±r KayÄ±t Yetkilisi";
+            this.xrLabel16.Text = "Taþýnýr Kayýt Yetkilisi";
             this.xrLabel16.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel17
@@ -934,7 +934,7 @@
             this.xrLabel17.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel17.StylePriority.UseFont = false;
             this.xrLabel17.StylePriority.UseTextAlignment = false;
-            this.xrLabel17.Text = "Ä°mza";
+            this.xrLabel17.Text = "Ýmza";
             this.xrLabel17.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel18
@@ -947,7 +947,7 @@
             this.xrLabel18.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel18.StylePriority.UseFont = false;
             this.xrLabel18.StylePriority.UseTextAlignment = false;
-            this.xrLabel18.Text = "AdÄ± SoyadÄ±";
+            this.xrLabel18.Text = "Adý Soyadý";
             this.xrLabel18.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // ReportFooter
@@ -980,14 +980,14 @@
             this.xrLabel28.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel28.SizeF = new System.Drawing.SizeF(737.0001F, 50.08334F);
             this.xrLabel28.StylePriority.UseTextAlignment = false;
-            this.xrLabel28.Text = "Ä°ÅŸyurdu MÃ¼dÃ¼rÃ¼ ";
+            this.xrLabel28.Text = "Ýþyurdu Müdürü ";
             this.xrLabel28.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopJustify;
             // 
             // M740
             // 
             this.M740.Description = "740";
             this.M740.Name = "M740";
-            this.M740.Type = typeof(int);
+            this.M740.Type = typeof(decimal);
             this.M740.ValueInfo = "0";
             this.M740.Visible = false;
             // 
@@ -995,7 +995,7 @@
             // 
             this.M750.Description = "750";
             this.M750.Name = "M750";
-            this.M750.Type = typeof(int);
+            this.M750.Type = typeof(decimal);
             this.M750.ValueInfo = "0";
             this.M750.Visible = false;
             // 
@@ -1003,7 +1003,7 @@
             // 
             this.M760.Description = "760";
             this.M760.Name = "M760";
-            this.M760.Type = typeof(int);
+            this.M760.Type = typeof(decimal);
             this.M760.ValueInfo = "0";
             this.M760.Visible = false;
             // 
@@ -1011,7 +1011,7 @@
             // 
             this.M770.Description = "770";
             this.M770.Name = "M770";
-            this.M770.Type = typeof(int);
+            this.M770.Type = typeof(decimal);
             this.M770.ValueInfo = "0";
             this.M770.Visible = false;
             // 
@@ -1019,25 +1019,25 @@
             // 
             this.M780.Description = "780";
             this.M780.Name = "M780";
-            this.M780.Type = typeof(int);
+            this.M780.Type = typeof(decimal);
             this.M780.ValueInfo = "0";
             this.M780.Visible = false;
             // 
             // MamulAdi
             // 
-            this.MamulAdi.Description = "MamÃ¼l AdÄ±";
+            this.MamulAdi.Description = "Mamül Adý";
             this.MamulAdi.Name = "MamulAdi";
             // 
             // Miktari
             // 
-            this.Miktari.Description = "MamÃ¼l MiktarÄ±";
+            this.Miktari.Description = "Mamül Miktarý";
             this.Miktari.Name = "Miktari";
             this.Miktari.Type = typeof(int);
             this.Miktari.ValueInfo = "1";
             // 
             // Musteri
             // 
-            this.Musteri.Description = "MÃ¼ÅŸteri";
+            this.Musteri.Description = "Müþteri";
             this.Musteri.Name = "Musteri";
             this.Musteri.Visible = false;
             // 
@@ -1063,13 +1063,13 @@
             // 
             // SiparisNo
             // 
-            this.SiparisNo.Description = "SipariÅŸ No";
+            this.SiparisNo.Description = "Sipariþ No";
             this.SiparisNo.Name = "SiparisNo";
             this.SiparisNo.Visible = false;
             // 
             // Isyurdu
             // 
-            this.Isyurdu.Description = "IÅŸyurdu";
+            this.Isyurdu.Description = "Iþyurdu";
             this.Isyurdu.Name = "Isyurdu";
             // 
             // Antet
@@ -1086,13 +1086,13 @@
             // 
             this.Toplam.Description = "Toplam";
             this.Toplam.Name = "Toplam";
-            this.Toplam.Type = typeof(int);
+            this.Toplam.Type = typeof(decimal);
             this.Toplam.ValueInfo = "0";
             this.Toplam.Visible = false;
             // 
             // Atolye
             // 
-            this.Atolye.Description = "AtÃ¶lye";
+            this.Atolye.Description = "Atölye";
             this.Atolye.Name = "Atolye";
             this.Atolye.Visible = false;
             // 
@@ -1106,7 +1106,7 @@
             this.xrLabel5.SizeF = new System.Drawing.SizeF(105.2083F, 14.66667F);
             this.xrLabel5.StylePriority.UseFont = false;
             this.xrLabel5.StylePriority.UseTextAlignment = false;
-            this.xrLabel5.Text = "SipariÅŸ FiÅŸi No :";
+            this.xrLabel5.Text = "Sipariþ Fiþi No :";
             this.xrLabel5.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             // 
             // xrLabel4
@@ -1177,7 +1177,7 @@
             this.xrLabel29.SizeF = new System.Drawing.SizeF(111.458F, 14.66667F);
             this.xrLabel29.StylePriority.UseFont = false;
             this.xrLabel29.StylePriority.UseTextAlignment = false;
-            this.xrLabel29.Text = "SipariÅŸ FiÅŸi No :";
+            this.xrLabel29.Text = "Sipariþ Fiþi No :";
             this.xrLabel29.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // CostSlipReport

@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Customers;
 using Cost.Accounting.Automation.Application.Invoices;
 using Cost.Accounting.Automation.Application.Products;
@@ -6,7 +7,9 @@ using Cost.Accounting.Automation.Application.Suppliers;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
@@ -15,6 +18,7 @@ using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
+using DevExpress.XtraReports.UI;
 using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Data;
@@ -32,6 +36,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private List<ChartOfAccountLookUpDto> _warehouses = [];
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
         private string? _lastAutoDescription;
+        private bool _saved;
 
         public InvoiceEditForm() : this(null)
         {
@@ -74,6 +79,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             ConfigureCatalogGrid();
 
             btnApprove.Visible = false;
+            btnPrintSlip.Visible = cmbInvoiceType.SelectedIndex == 1;
             lblStatusValue.Text = "";
 
             if (_editing is not null)
@@ -90,6 +96,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
                 if (!isDraft)
                 {
+                    btnPrintSlip.Enabled = true;
                     cmbInvoiceType.ReadOnly = true;
                     txtInvoiceNumber.ReadOnly = true;
                     dtDate.ReadOnly = true;
@@ -251,6 +258,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             btnSave.Click += BtnSave_Click;
             btnSaveDraft.Click += BtnSaveDraft_Click;
             btnApprove.Click += BtnApprove_Click;
+            btnPrintSlip.Click += (_, _) => ShowSlipPreviewAsync();
             btnCancel.Click += (_, _) => Close();
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
             gridLinesView.ValidatingEditor += GridLinesView_ValidatingEditor;
@@ -659,10 +667,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             foreach (var line in _lines)
             {
                 decimal lineSub = line.Quantity * line.UnitPrice;
-                decimal discountRate = line.DiscountRate > 1 && line.DiscountRate <= 100 ? line.DiscountRate / 100m : line.DiscountRate;
+                decimal discountRate = line.DiscountRate / 100m;
                 decimal discountAmount = Math.Round(lineSub * discountRate, 2);
                 decimal netAmount = lineSub - discountAmount;
-                decimal rate = line.TaxRateRate > 1 ? line.TaxRateRate / 100m : line.TaxRateRate;
+                decimal rate = line.TaxRateRate / 100m;
                 decimal tax = Math.Round(netAmount * rate, 2);
 
                 line.TaxAmount = tax;
@@ -681,10 +689,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 byRate[line.TaxRateRate] = acc;
             }
 
-            lblSubTotalValue.Text = subTotal.ToString("n2") + " ₺";
+            decimal netTotal = subTotal - discountTotal;
+            lblSubTotalValue.Text = netTotal.ToString("n2") + " ₺";
             lblDiscountTotalValue.Text = "- " + discountTotal.ToString("n2") + " ₺";
             lblTaxTotalValue.Text = taxTotal.ToString("n2") + " ₺";
-            lblGrandTotalValue.Text = (subTotal - discountTotal + taxTotal).ToString("n2") + " ₺";
+            lblGrandTotalValue.Text = (netTotal + taxTotal).ToString("n2") + " ₺";
 
             var breakdown = byRate
                 .OrderByDescending(kv => kv.Key)
@@ -785,19 +794,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
                 if (ok)
                 {
-                    ToastHelper.Show(_editing is { Status: InvoiceStatus.Draft }
+                    string message = _editing is { Status: InvoiceStatus.Draft }
                         ? "Fatura taslağı güncellendi."
                         : approve
                             ? "Fatura onaylandı; stok ve cari hareketleri oluşturuldu."
-                            : "Fatura taslak olarak kaydedildi.", ToastType.Success);
+                            : "Fatura taslak olarak kaydedildi.";
+                    ToastHelper.Show(message, ToastType.Success);
+
+                    if (approve && invoiceType == InvoiceType.Purchase)
+                    {
+                        _saved = true;
+                        LockAfterApproval();
+                        return;
+                    }
+
                     DialogResult = DialogResult.OK;
                     Close();
                 }
             }
             finally
             {
-                btnSave.Enabled = true;
-                btnSaveDraft.Enabled = true;
+                if (!_saved)
+                {
+                    btnSave.Enabled = true;
+                    btnSaveDraft.Enabled = true;
+                }
             }
         }
 
@@ -815,6 +836,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 if (ok)
                 {
                     ToastHelper.Show("Fatura onaylandı; stok ve cari hareketleri oluşturuldu.", ToastType.Success);
+
+                    if (_editing.InvoiceType == InvoiceType.Purchase)
+                    {
+                        _saved = true;
+                        LockAfterApproval();
+                        return;
+                    }
+
                     DialogResult = DialogResult.OK;
                     Close();
                 }
@@ -823,6 +852,138 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 btnApprove.Enabled = true;
             }
+        }
+
+        private void LockAfterApproval()
+        {
+            btnPrintSlip.Enabled = true;
+            btnSave.Enabled = false;
+            btnSaveDraft.Enabled = false;
+            btnApprove.Enabled = false;
+            btnApprove.Visible = false;
+            btnAddLine.Enabled = false;
+            btnDeleteLine.Enabled = false;
+            btnAddProduct.Enabled = false;
+            cmbInvoiceType.ReadOnly = true;
+            txtInvoiceNumber.ReadOnly = true;
+            dtDate.ReadOnly = true;
+            lookUpAccount.ReadOnly = true;
+            txtDescription.ReadOnly = true;
+            gridLinesView.OptionsBehavior.Editable = false;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (_saved && DialogResult == DialogResult.None)
+            {
+                DialogResult = DialogResult.OK;
+            }
+
+            base.OnFormClosing(e);
+        }
+
+        private async void ShowSlipPreviewAsync()
+        {
+            WaitForm? waitForm = null;
+            try
+            {
+                MovableAssetTransactionSlipData data = await BuildSlipDataAsync();
+                MovableAssetTransactionSlipReport report = new(data);
+
+                waitForm = WaitFormHelper.Show<WaitForm>("Rapor hazırlanıyor...", "Lütfen bekleyin...");
+                await report.CreateDocumentAsync(CancellationToken.None);
+
+                waitForm.Close();
+                waitForm.Dispose();
+                waitForm = null;
+
+                ReportPrintTool tool = new(report);
+                tool.ShowRibbonPreviewDialog();
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Taşınır işlem fişi açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
+            finally
+            {
+                waitForm?.Close();
+                waitForm?.Dispose();
+            }
+        }
+
+        private async Task<MovableAssetTransactionSlipData> BuildSlipDataAsync()
+        {
+            CompanyDto company = await LoadCompanyAsync();
+
+            string supplierName = GetSelectedAccountName();
+
+            string city = string.IsNullOrWhiteSpace(company.City) ? string.Empty : company.City.Trim();
+            string district = string.IsNullOrWhiteSpace(company.District) ? string.Empty : company.District.Trim();
+            string ilIlce = city.Length > 0 && district.Length > 0 ? $"{city} / {district}" : city + district;
+
+            MovableAssetTransactionSlipData data = new()
+            {
+                DocumentNumber = txtInvoiceNumber.Text.Trim(),
+                Date = dtDate.DateTime,
+                IslemCesidi = "Giriş",
+                NeredenGeldigi = supplierName,
+                KimeVerildigi = string.Empty,
+                NereyeVerildigi = string.Empty,
+                IlIlceAdi = ilIlce,
+                IlIlceKodu = string.Empty,
+                HarcamaBirimiAdi = company.ExpenditureUnitName ?? string.Empty,
+                HarcamaBirimiKodu = company.ExpenditureUnitCode ?? string.Empty,
+                AmbarAdi = string.Empty,
+                AmbarKodu = string.Empty,
+                MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
+                MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
+                DayanakTarihi = dtDate.DateTime,
+                DayanakKodu = txtInvoiceNumber.Text.Trim()
+            };
+
+            int order = 0;
+            foreach (InvoiceLineDto line in _lines.Where(l => l.ProductId != Guid.Empty && l.Quantity > 0))
+            {
+                ProductDto? product = _products.FirstOrDefault(p => p.Id == line.ProductId);
+                order++;
+                data.Rows.Add(new MovableAssetTransactionSlipRow
+                {
+                    SiraNo = order,
+                    Kodu = string.IsNullOrWhiteSpace(product?.ChartOfAccountCode) ? product?.ProductCode ?? string.Empty : product.ChartOfAccountCode,
+                    BarkodNo = product?.Barcode ?? string.Empty,
+                    Adi = product?.Name ?? string.Empty,
+                    OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
+                    Miktari = line.Quantity,
+                    BirimFiyati = line.UnitPrice,
+                    Tutari = line.Quantity * line.UnitPrice
+                });
+            }
+
+            data.ApplyCodeTotals(3);
+
+            return data;
+        }
+
+        private async Task<CompanyDto> LoadCompanyAsync()
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                SessionClaimContext session = Program.Services.GetRequiredService<SessionClaimContext>();
+
+                var result = await mediator.Send(new CompanyGetQuery(session.GetCompanyId()), CancellationToken.None);
+                if (result.IsSuccessful && result.Data is not null)
+                {
+                    return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("InvoiceSlip.Company", ex);
+            }
+
+            return new CompanyDto();
         }
     }
 }

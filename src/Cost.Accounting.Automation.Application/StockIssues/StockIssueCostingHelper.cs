@@ -23,19 +23,36 @@ internal static class StockIssueCostingHelper
             .ToList();
     }
 
-    public static Dictionary<IdentityId, decimal> BuildAvailableMap(List<ProductMovement> movements)
+    /// <summary>
+    /// FIFO/LIFO giriş takibi için bir ürünün belirli bir tarihe kadar
+    /// tüketilmemiş giriş (layer) toplamını hesaplar.
+    /// Hareketler tarih sırasıyla işlenir; bir çıkış kendinden önceki girişleri
+    /// aşamaz. Gelecek tarihli girişler (<paramref name="asOfDate"/> sonrası)
+    /// mevcut stoka dahil edilmez.
+    /// </summary>
+    public static decimal ComputeAvailableQuantity(
+        List<ProductMovement> movements,
+        IdentityId productId,
+        DateOnly asOfDate)
     {
-        return movements
-            .GroupBy(m => m.ProductId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity));
+        decimal balance = 0m;
+
+        foreach (ProductMovement movement in movements
+                     .Where(m => m.ProductId == productId && m.Date <= asOfDate))
+        {
+            balance += movement.MovementType == ProductMovementType.Input
+                ? movement.Quantity
+                : -movement.Quantity;
+        }
+
+        return balance;
     }
 
     public static Dictionary<IdentityId, decimal> BuildUnitCostMap(
         List<ProductMovement> movements,
         IReadOnlyDictionary<IdentityId, decimal> quantities,
-        StockCostingMethod costingMethod)
+        StockCostingMethod costingMethod,
+        DateOnly asOfDate)
     {
         Dictionary<IdentityId, decimal> result = [];
 
@@ -49,7 +66,8 @@ internal static class StockIssueCostingHelper
 
             List<(decimal Quantity, decimal UnitPrice)> layers = [];
 
-            foreach (ProductMovement input in product.Where(m => m.MovementType == ProductMovementType.Input))
+            foreach (ProductMovement input in product.Where(m =>
+                         m.MovementType == ProductMovementType.Input && m.Date <= asOfDate))
             {
                 if (input.UnitPrice is { } price)
                 {
@@ -58,7 +76,7 @@ internal static class StockIssueCostingHelper
             }
 
             decimal priorOutputs = product
-                .Where(m => m.MovementType == ProductMovementType.Output)
+                .Where(m => m.MovementType == ProductMovementType.Output && m.Date <= asOfDate)
                 .Sum(m => m.Quantity);
 
             ConsumeLayers(layers, priorOutputs, costingMethod);

@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Customers;
 using Cost.Accounting.Automation.Domain.Invoices;
@@ -6,6 +7,7 @@ using Cost.Accounting.Automation.Domain.Suppliers;
 using Cost.Accounting.Automation.Infrastructure.Context;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using DevExpress.Utils;
 using DevExpress.XtraCharts;
 using DevExpress.XtraGrid;
@@ -127,6 +129,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             btnRefresh.Enabled = false;
             _refreshing = true;
+            UpdateLastUpdatedStamp();
             try
             {
                 await LoadDashboardDataAsync(quiet: true);
@@ -194,33 +197,52 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             try
             {
-                using IServiceScope scope =
-                    Program.Services.CreateScope();
+                Task<(int Customers, int Suppliers)> countsTask = LoadCountsAsync();
 
-                ApplicationDbContext db =
-                    scope.ServiceProvider
-                        .GetRequiredService<ApplicationDbContext>();
+                Task<(List<BalanceRow> Receivables, List<BalanceRow> Payables)> balancesTask =
+                    LoadBalanceRowsAsync();
 
-                int customerCount =
-                    await db.Set<Customer>()
-                        .CountAsync();
+                Task<Dictionary<IdentityId, decimal>> stockTotalsTask = LoadStockTotalsAsync();
 
-                int supplierCount =
-                    await db.Set<Supplier>()
-                        .CountAsync();
+                Task<List<BalancePoint>> invoiceTrendTask = LoadInvoiceTrendAsync();
 
-                int approvedInvoiceCount =
-                    await db.Set<Invoice>()
-                        .CountAsync(
-                            i => i.Status == InvoiceStatus.Approved);
+                Task<List<StockPoint>> stockMovementsTask = LoadStockMovementsAsync();
 
-                int draftInvoiceCount =
-                    await db.Set<Invoice>()
-                        .CountAsync(
-                            i => i.Status == InvoiceStatus.Draft);
+                await Task.WhenAll(
+                    countsTask,
+                    balancesTask,
+                    stockTotalsTask,
+                    invoiceTrendTask,
+                    stockMovementsTask);
 
-                (List<BalanceRow> receivables, List<BalanceRow> payables) =
-                    await LoadBalanceRowsAsync(db);
+                Dictionary<IdentityId, decimal> stockTotals =
+                    await stockTotalsTask;
+
+                Task<(int Approved, int Draft)> invoiceStatusTask =
+                    LoadInvoiceStatusAsync();
+
+                Task<List<CriticalStockRow>> criticalStockTask =
+                    LoadCriticalStockRowsAsync(stockTotals);
+
+                await Task.WhenAll(invoiceStatusTask, criticalStockTask);
+
+                var counts =
+                    await countsTask;
+
+                var (receivables, payables) =
+                    await balancesTask;
+
+                var (approvedInvoiceCount, draftInvoiceCount) =
+                    await invoiceStatusTask;
+
+                List<CriticalStockRow> criticalStock =
+                    await criticalStockTask;
+
+                List<BalancePoint> invoiceTrend =
+                    await invoiceTrendTask;
+
+                List<StockPoint> stockMovements =
+                    await stockMovementsTask;
 
                 decimal totalReceivables =
                     receivables.Sum(r => r.Balance);
@@ -228,31 +250,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 decimal totalPayables =
                     payables.Sum(r => -r.Balance);
 
-                List<CriticalStockRow> criticalStock =
-                    await LoadCriticalStockRowsAsync(db);
-
                 int inStockCount =
-                    await db.Set<Product>()
-                        .Select(
-                            p => p.Movements.Sum(
-                                m => m.MovementType == ProductMovementType.Input
-                                    ? m.Quantity
-                                    : -m.Quantity))
-                        .CountAsync(q => q > 0);
+                    stockTotals.Values.Count(v => v > 0);
 
                 List<ChartPoint> invoiceStatus =
                     BuildInvoiceStatus(
                         approvedInvoiceCount,
                         draftInvoiceCount);
 
-                List<BalancePoint> invoiceTrend =
-                    await LoadInvoiceTrendAsync(db);
-
-                List<StockPoint> stockMovements =
-                    await LoadStockMovementsAsync(db);
-
-                SetKpi(1, customerCount.ToString("N0"));
-                SetKpi(2, supplierCount.ToString("N0"));
+                SetKpi(1, counts.Customers.ToString("N0"));
+                SetKpi(2, counts.Suppliers.ToString("N0"));
                 SetKpi(3, totalReceivables.ToString("N2"));
                 SetKpi(4, totalPayables.ToString("N2"));
                 SetKpi(5, criticalStock.Count.ToString("N0"));
@@ -302,11 +309,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 _hasLoadedOnce =
                     true;
-
-                UpdateLastUpdatedStamp();
             }
-            catch
+            catch (Exception ex)
             {
+                CrashLog.WriteException("Dashboard.Load", ex);
+
                 // İlk yükleme başarısızsa kartlar boş gösterilir;
                 // arka plandaki otomatik yenileme başarısızsa mevcut değerler korunur.
                 if (!quiet || !_hasLoadedOnce)
@@ -316,6 +323,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                         SetKpi(i, null);
                     }
                 }
+            }
+            finally
+            {
+                // "Son güncelleme" damgası, veri adımlarından biri hata verse bile
+                // yükleme girişiminde bulunulduğunu göstersin.
+                UpdateLastUpdatedStamp();
             }
         }
 
@@ -394,73 +407,154 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             view.Columns.Add(column);
         }
 
-        private static async Task<(List<BalanceRow> Receivables, List<BalanceRow> Payables)>
-            LoadBalanceRowsAsync(
-                ApplicationDbContext db)
+        private static async Task<(int Customers, int Suppliers)> LoadCountsAsync()
         {
-            List<CurrentAccountMovement> movements =
-                await db.Set<CurrentAccountMovement>()
-                    .Where(
-                        m => m.CustomerId != null
-                            || m.SupplierId != null)
-                    .ToListAsync();
+            using IServiceScope scope = Program.Services.CreateScope();
+            ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            Dictionary<Guid, string> customerNames =
+            int customers = await db.Set<Customer>().AsNoTracking().CountAsync();
+            int suppliers = await db.Set<Supplier>().AsNoTracking().CountAsync();
+
+            return (customers, suppliers);
+        }
+
+        private static async Task<(int Approved, int Draft)> LoadInvoiceStatusAsync()
+        {
+            using IServiceScope scope = Program.Services.CreateScope();
+            ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            int approved = await db.Set<Invoice>().AsNoTracking().CountAsync(i => i.Status == InvoiceStatus.Approved);
+            int draft = await db.Set<Invoice>().AsNoTracking().CountAsync(i => i.Status == InvoiceStatus.Draft);
+
+            return (approved, draft);
+        }
+
+        private static async Task<Dictionary<IdentityId, decimal>> LoadStockTotalsAsync()
+        {
+            using IServiceScope scope = Program.Services.CreateScope();
+            ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var rows = await db.Set<ProductMovement>()
+                .AsNoTracking()
+                .GroupBy(m => m.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    Stock = g.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity)
+                })
+                .ToListAsync();
+
+            return rows.ToDictionary(r => r.ProductId, r => r.Stock);
+        }
+
+        private static async Task<(List<BalanceRow> Receivables, List<BalanceRow> Payables)>
+            LoadBalanceRowsAsync()
+        {
+            using IServiceScope scope = Program.Services.CreateScope();
+            ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            Dictionary<IdentityId, string> customerNames =
                 await db.Set<Customer>()
+                    .AsNoTracking()
                     .ToDictionaryAsync(
-                        c => c.Id.Value,
+                        c => c.Id,
                         c => c.Name.Value);
 
-            Dictionary<Guid, string> supplierNames =
+            Dictionary<IdentityId, string> supplierNames =
                 await db.Set<Supplier>()
+                    .AsNoTracking()
                     .ToDictionaryAsync(
-                        s => s.Id.Value,
+                        s => s.Id,
                         s => s.Name.Value);
 
-            List<BalanceRow> receivables =
-                movements
+            var receivableTotals =
+                (await db.Set<CurrentAccountMovement>()
+                    .AsNoTracking()
                     .Where(
                         m => m.CurrentAccountType == CurrentAccountType.Customer
                             && m.CustomerId != null)
-                    .GroupBy(m => m.CustomerId!.Value)
-                    .Select(g =>
+                    .GroupBy(m => m.CustomerId)
+                    .Select(
+                        g => new
+                        {
+                            CustomerId = g.Key,
+                            Debit = g.Sum(m => m.Debit),
+                            Credit = g.Sum(m => m.Credit)
+                        })
+                    .ToListAsync())
+                .Select(
+                    t => new
                     {
-                        decimal debit = g.Sum(m => m.Debit);
-                        decimal credit = g.Sum(m => m.Credit);
-
-                        return new BalanceRow(
-                            "Müşteri",
-                            customerNames.TryGetValue(g.Key, out string? name)
-                                ? name
-                                : "-",
-                            debit,
-                            credit,
-                            debit - credit);
+                        t.CustomerId,
+                        t.Debit,
+                        t.Credit
                     })
+                .ToList();
+
+            var payableTotals =
+                (await db.Set<CurrentAccountMovement>()
+                    .AsNoTracking()
+                    .Where(
+                        m => m.CurrentAccountType == CurrentAccountType.Supplier
+                            && m.SupplierId != null)
+                    .GroupBy(m => m.SupplierId)
+                    .Select(
+                        g => new
+                        {
+                            SupplierId = g.Key,
+                            Debit = g.Sum(m => m.Debit),
+                            Credit = g.Sum(m => m.Credit)
+                        })
+                    .ToListAsync())
+                .Select(
+                    t => new
+                    {
+                        t.SupplierId,
+                        t.Debit,
+                        t.Credit
+                    })
+                .ToList();
+
+            List<BalanceRow> receivables =
+                receivableTotals
+                    .Select(
+                        b =>
+                        {
+                            string name =
+                                b.CustomerId != null
+                                && customerNames.TryGetValue(b.CustomerId, out string? n)
+                                    ? n ?? "-"
+                                    : "-";
+
+                            return new BalanceRow(
+                                "Müşteri",
+                                name,
+                                b.Debit,
+                                b.Credit,
+                                b.Debit - b.Credit);
+                        })
                     .Where(r => r.Balance > 0)
                     .OrderByDescending(r => r.Balance)
                     .ToList();
 
             List<BalanceRow> payables =
-                movements
-                    .Where(
-                        m => m.CurrentAccountType == CurrentAccountType.Supplier
-                            && m.SupplierId != null)
-                    .GroupBy(m => m.SupplierId!.Value)
-                    .Select(g =>
-                    {
-                        decimal debit = g.Sum(m => m.Debit);
-                        decimal credit = g.Sum(m => m.Credit);
+                payableTotals
+                    .Select(
+                        b =>
+                        {
+                            string name =
+                                b.SupplierId != null
+                                && supplierNames.TryGetValue(b.SupplierId, out string? n)
+                                    ? n ?? "-"
+                                    : "-";
 
-                        return new BalanceRow(
-                            "Tedarikçi",
-                            supplierNames.TryGetValue(g.Key, out string? name)
-                                ? name
-                                : "-",
-                            debit,
-                            credit,
-                            debit - credit);
-                    })
+                            return new BalanceRow(
+                                "Tedarikçi",
+                                name,
+                                b.Debit,
+                                b.Credit,
+                                b.Debit - b.Credit);
+                        })
                     .Where(r => r.Balance < 0)
                     .OrderBy(r => r.Balance)
                     .ToList();
@@ -470,37 +564,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private static async Task<List<CriticalStockRow>>
             LoadCriticalStockRowsAsync(
-                ApplicationDbContext db)
+                Dictionary<IdentityId, decimal> stockTotals)
         {
-            var rows =
+            using IServiceScope scope = Program.Services.CreateScope();
+            ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var products =
                 await db.Set<Product>()
+                    .AsNoTracking()
                     .Select(
                         p => new
                         {
+                            Id = p.Id,
                             ProductCode = p.ProductCode.Value,
                             ProductName = p.Name.Value,
                             CategoryName = p.Category!.Name.Value,
-                            MinimumLevel = p.MinimumProductLevel,
-                            Stock = p.Movements.Sum(
-                                m => m.MovementType == ProductMovementType.Input
-                                    ? m.Quantity
-                                    : -m.Quantity)
+                            MinimumLevel = p.MinimumProductLevel
                         })
                     .ToListAsync();
 
-            return rows
+            return products
+                .Select(
+                    p => new CriticalStockRow(
+                        p.ProductCode,
+                        p.ProductName,
+                        p.CategoryName,
+                        stockTotals.GetValueOrDefault(p.Id),
+                        p.MinimumLevel))
                 .Where(
                     r => r.Stock <= 0
                         || (r.MinimumLevel != null && r.Stock <= r.MinimumLevel))
                 .OrderBy(r => r.Stock)
                 .Take(50)
-                .Select(
-                    r => new CriticalStockRow(
-                        r.ProductCode,
-                        r.ProductName,
-                        r.CategoryName,
-                        r.Stock,
-                        r.MinimumLevel))
                 .ToList();
         }
 
@@ -523,14 +618,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             return points;
         }
 
-        private static async Task<List<BalancePoint>> LoadInvoiceTrendAsync(
-            ApplicationDbContext db)
+        private static async Task<List<BalancePoint>> LoadInvoiceTrendAsync()
         {
-            var raw =
-                await db.Set<Invoice>()
-                    .Where(i => i.Status == InvoiceStatus.Approved)
-                    .Select(i => new { i.Date, i.GrandTotal })
-                    .ToListAsync();
+            using IServiceScope scope = Program.Services.CreateScope();
+            ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             DateOnly firstMonth =
                 new DateOnly(
@@ -539,9 +630,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     1).AddMonths(-5);
 
             var grouped =
-                raw
-                    .Where(x => x.Date >= firstMonth)
-                    .GroupBy(x => new { x.Date.Year, x.Date.Month })
+                await db.Set<Invoice>()
+                    .AsNoTracking()
+                    .Where(i => i.Status == InvoiceStatus.Approved && i.Date >= firstMonth)
+                    .GroupBy(i => new { i.Date.Year, i.Date.Month })
                     .Select(
                         g => new
                         {
@@ -549,7 +641,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                             g.Key.Month,
                             Total = g.Sum(x => x.GrandTotal)
                         })
-                    .ToList();
+                    .ToListAsync();
 
             CultureInfo culture =
                 CultureInfo.GetCultureInfo("tr-TR");
@@ -575,25 +667,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             return result;
         }
 
-        private static async Task<List<StockPoint>> LoadStockMovementsAsync(
-            ApplicationDbContext db)
+        private static async Task<List<StockPoint>> LoadStockMovementsAsync()
         {
-            var raw =
-                await db.Set<ProductMovement>()
-                    .Select(
-                        m => new
-                        {
-                            m.Date,
-                            m.MovementType,
-                            m.Quantity
-                        })
-                    .ToListAsync();
+            using IServiceScope scope = Program.Services.CreateScope();
+            ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             DateOnly firstMonth =
                 new DateOnly(
                     DateTime.Today.Year,
                     DateTime.Today.Month,
                     1).AddMonths(-5);
+
+            var grouped =
+                await db.Set<ProductMovement>()
+                    .AsNoTracking()
+                    .Where(m => m.Date >= firstMonth)
+                    .GroupBy(m => new { m.Date.Year, m.Date.Month, m.MovementType })
+                    .Select(
+                        g => new
+                        {
+                            g.Key.Year,
+                            g.Key.Month,
+                            Type = g.Key.MovementType,
+                            Quantity = g.Sum(x => x.Quantity)
+                        })
+                    .ToListAsync();
 
             CultureInfo culture =
                 CultureInfo.GetCultureInfo("tr-TR");
@@ -606,20 +704,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     firstMonth.AddMonths(i);
 
                 decimal input =
-                    raw
+                    grouped
                         .Where(
-                            m => m.Date.Year == month.Year
-                                && m.Date.Month == month.Month
-                                && m.MovementType == ProductMovementType.Input)
-                        .Sum(m => m.Quantity);
+                            g => g.Year == month.Year
+                                && g.Month == month.Month
+                                && g.Type == ProductMovementType.Input)
+                        .Sum(g => g.Quantity);
 
                 decimal output =
-                    raw
+                    grouped
                         .Where(
-                            m => m.Date.Year == month.Year
-                                && m.Date.Month == month.Month
-                                && m.MovementType == ProductMovementType.Output)
-                        .Sum(m => m.Quantity);
+                            g => g.Year == month.Year
+                                && g.Month == month.Month
+                                && g.Type == ProductMovementType.Output)
+                        .Sum(g => g.Quantity);
 
                 result.Add(
                     new StockPoint(

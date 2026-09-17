@@ -39,6 +39,9 @@ internal sealed class ChartOfAccountLookUpQueryHandler(
             })
             .ToList();
 
+        result.Sort(Comparer<ChartOfAccountLookUpDto>.Create(
+            (a, b) => AccountCodeComparer.Instance.Compare(a.Code, b.Code)));
+
         return result;
     }
 }

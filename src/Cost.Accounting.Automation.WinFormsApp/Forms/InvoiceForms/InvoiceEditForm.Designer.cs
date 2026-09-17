@@ -53,6 +53,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private DevExpress.XtraEditors.SimpleButton btnSave;
         private DevExpress.XtraEditors.SimpleButton btnApprove;
         private DevExpress.XtraEditors.SimpleButton btnCancel;
+        private DevExpress.XtraEditors.SimpleButton btnPrintSlip;
 
         protected override void Dispose(bool disposing)
         {
@@ -115,6 +116,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnSave = new DevExpress.XtraEditors.SimpleButton();
             this.btnApprove = new DevExpress.XtraEditors.SimpleButton();
             this.btnCancel = new DevExpress.XtraEditors.SimpleButton();
+            this.btnPrintSlip = new DevExpress.XtraEditors.SimpleButton();
 
             ((System.ComponentModel.ISupportInitialize)(this.pnlHeader)).BeginInit();
             this.pnlHeader.SuspendLayout();
@@ -489,8 +491,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.lblSubTotalTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.lblSubTotalTitle.Location = new System.Drawing.Point(15, 8);
             this.lblSubTotalTitle.Name = "lblSubTotalTitle";
-            this.lblSubTotalTitle.Size = new System.Drawing.Size(65, 15);
-            this.lblSubTotalTitle.Text = "Ara Toplam:";
+            this.lblSubTotalTitle.Size = new System.Drawing.Size(90, 15);
+            this.lblSubTotalTitle.Text = "KDV'siz Tutar:";
 
             // 
             // lblSubTotalValue
@@ -498,7 +500,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.lblSubTotalValue.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.lblSubTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
             this.lblSubTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            this.lblSubTotalValue.Location = new System.Drawing.Point(105, 8);
+            this.lblSubTotalValue.Location = new System.Drawing.Point(115, 8);
             this.lblSubTotalValue.Name = "lblSubTotalValue";
             this.lblSubTotalValue.Size = new System.Drawing.Size(130, 15);
             this.lblSubTotalValue.Text = "0,00 ₺";
@@ -593,6 +595,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.pnlFooter.Appearance.BackColor = System.Drawing.Color.FromArgb(248, 249, 250);
             this.pnlFooter.Appearance.Options.UseBackColor = true;
             this.pnlFooter.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            this.pnlFooter.Controls.Add(this.btnPrintSlip);
             this.pnlFooter.Controls.Add(this.btnCancel);
             this.pnlFooter.Controls.Add(this.btnSave);
             this.pnlFooter.Controls.Add(this.btnSaveDraft);
@@ -614,6 +617,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.pnlFooterLine.Location = new System.Drawing.Point(0, 0);
             this.pnlFooterLine.Name = "pnlFooterLine";
             this.pnlFooterLine.Size = new System.Drawing.Size(1420, 1);
+
+            // 
+            // btnPrintSlip
+            // 
+            this.btnPrintSlip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnPrintSlip.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.btnPrintSlip.Enabled = false;
+            this.btnPrintSlip.Location = new System.Drawing.Point(15, 14);
+            this.btnPrintSlip.Name = "btnPrintSlip";
+            this.btnPrintSlip.Size = new System.Drawing.Size(190, 34);
+            this.btnPrintSlip.Text = "Taşınır İşlem Fişi Yazdır";
 
             // 
             // btnSaveDraft

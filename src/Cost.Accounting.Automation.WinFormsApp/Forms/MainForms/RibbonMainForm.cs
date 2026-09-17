@@ -4,6 +4,7 @@ using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
@@ -55,6 +56,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmCariBorcAlacakOzeti"] = DxIcon.Balance,
             ["elmHesapPlani"] = DxIcon.ChartAccounts,
             ["elmOdemeTahsilat"] = DxIcon.Payments,
+            ["elmMaliyetPusulasi"] = DxIcon.Balance,
             ["elmSirketAyarlari"] = DxIcon.Company,
             ["elmKullanicilar"] = DxIcon.Users,
             ["elmRoller"] = DxIcon.Roles
@@ -308,6 +310,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     return;
                 }
 
+                if (element.Text == "Maliyet Pusulası")
+                {
+                    OpenCostSlips();
+                    return;
+                }
+
                 if (element.Text == "Ürünler")
                 {
                     OpenProducts();
@@ -358,6 +366,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void OpenChartOfAccounts()
         {
             MdiFormManager.Instance.OpenForm<ChartOfAccountsListForm>(this, "Hesap Planı");
+        }
+
+        private void OpenCostSlips()
+        {
+            MdiFormManager.Instance.OpenForm<CostSlipsListForm>(this, "Maliyet Pusulası");
         }
 
         private void OpenProducts()

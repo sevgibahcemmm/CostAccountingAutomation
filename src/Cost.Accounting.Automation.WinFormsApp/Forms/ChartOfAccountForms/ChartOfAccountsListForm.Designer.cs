@@ -161,7 +161,7 @@ public sealed partial class ChartOfAccountsListForm
         // _btnDelete
         //
         _btnDelete.Text = "Seçileni Sil";
-        _btnDelete.Size = new Size(96, 36);
+        _btnDelete.Size = new Size(110, 36);
         _btnDelete.Location = new Point(574, 10);
         _btnDelete.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         _btnDelete.Appearance.Options.UseFont = true;
@@ -172,7 +172,7 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnSelectAll.Text = "Hepsini Seç";
         _btnSelectAll.Size = new Size(100, 36);
-        _btnSelectAll.Location = new Point(682, 10);
+        _btnSelectAll.Location = new Point(692, 10);
         _btnSelectAll.Click += BtnSelectAll_Click;
 
         //
@@ -180,7 +180,7 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnClearSelection.Text = "Seçili Olanları Kaldır";
         _btnClearSelection.Size = new Size(150, 36);
-        _btnClearSelection.Location = new Point(794, 10);
+        _btnClearSelection.Location = new Point(800, 10);
         _btnClearSelection.Click += BtnClearSelection_Click;
 
         SetIcon(_btnImport, DxIcon.Import, 18);

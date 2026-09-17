@@ -57,6 +57,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             grpMuhasebe = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmHesapPlani = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmOdemeTahsilat = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmMaliyetPusulasi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             grpSistem = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmSirketAyarlari = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmKullanicilar = new DevExpress.XtraBars.Navigation.AccordionControlElement();
@@ -321,7 +322,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpMuhasebe
             // 
-            grpMuhasebe.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHesapPlani, elmOdemeTahsilat });
+            grpMuhasebe.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHesapPlani, elmOdemeTahsilat, elmMaliyetPusulasi });
             grpMuhasebe.Name = "grpMuhasebe";
             grpMuhasebe.Tag = 6;
             grpMuhasebe.Text = "Muhasebe Yönetimi";
@@ -339,6 +340,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmOdemeTahsilat.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmOdemeTahsilat.Tag = 6;
             elmOdemeTahsilat.Text = "Ödeme / Tahsilat";
+            // 
+            // elmMaliyetPusulasi
+            // 
+            elmMaliyetPusulasi.Name = "elmMaliyetPusulasi";
+            elmMaliyetPusulasi.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmMaliyetPusulasi.Tag = 6;
+            elmMaliyetPusulasi.Text = "Maliyet Pusulası";
             // 
             // grpSistem
             // 
@@ -428,6 +436,7 @@ private DevExpress.XtraBars.Navigation.AccordionControlElement grpSatinAlma;
         private DevExpress.XtraBars.Navigation.AccordionControlElement grpMuhasebe;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmHesapPlani;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmOdemeTahsilat;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmMaliyetPusulasi;
         private DevExpress.XtraBars.Navigation.AccordionControlElement grpSistem;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmSirketAyarlari;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmKullanicilar;

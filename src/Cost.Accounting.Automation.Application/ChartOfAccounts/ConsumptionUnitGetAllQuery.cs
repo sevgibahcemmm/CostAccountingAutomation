@@ -32,6 +32,7 @@ internal sealed class ConsumptionUnitGetAllQueryHandler(
 
         IQueryable<ConsumptionUnitDto> query = source
             .Where(i => i.Entity.Type == ChartOfAccountType.ConsumptionUnit)
+            .OrderBy(i => i.Entity.Code.Value)
             .Select(s => new ConsumptionUnitDto
             {
                 Id = s.Entity.Id,

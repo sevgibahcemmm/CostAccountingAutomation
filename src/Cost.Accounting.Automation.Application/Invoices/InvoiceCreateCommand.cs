@@ -107,9 +107,9 @@ internal sealed class InvoiceCreateCommandHandler(
         foreach (var lineItem in request.Lines)
         {
             decimal lineSubTotal = lineItem.Quantity * lineItem.UnitPrice;
-            decimal discountAmount = Math.Round(lineSubTotal * (lineItem.DiscountRate > 1 && lineItem.DiscountRate <= 100 ? lineItem.DiscountRate / 100m : lineItem.DiscountRate), 2);
+            decimal discountAmount = Math.Round(lineSubTotal * (lineItem.DiscountRate / 100m), 2);
             decimal netAmount = lineSubTotal - discountAmount;
-            decimal taxAmount = Math.Round(netAmount * (lineItem.TaxRateRate > 1 ? lineItem.TaxRateRate / 100m : lineItem.TaxRateRate), 2);
+            decimal taxAmount = Math.Round(netAmount * (lineItem.TaxRateRate / 100m), 2);
             decimal totalAmount = netAmount + taxAmount;
 
             InvoiceLine line = new(

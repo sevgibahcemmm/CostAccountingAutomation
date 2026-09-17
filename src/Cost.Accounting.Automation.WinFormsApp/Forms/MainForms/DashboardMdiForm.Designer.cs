@@ -548,6 +548,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Right;
 
+            lblDate.AutoSize =
+                true;
+
             lblDate.Font =
                 new System.Drawing.Font(
                     "Segoe UI",
