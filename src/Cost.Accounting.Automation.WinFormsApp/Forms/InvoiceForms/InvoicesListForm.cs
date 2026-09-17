@@ -1,6 +1,12 @@
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Invoices;
+using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Data;
 using DevExpress.Utils;
@@ -136,5 +142,72 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         protected override IRequest<Result<string>> BuildRestoreCommand(InvoiceDto item)
             => new InvoiceRestoreCommand(item.Id);
+
+        protected override bool SupportsSlipPrint => _targetType != InvoiceType.Sales;
+
+        protected override bool CanPrintSlip(InvoiceDto item) => item.InvoiceType == InvoiceType.Purchase;
+
+        protected override async Task<MovableAssetTransactionSlipData?> BuildSlipDataAsync(InvoiceDto invoice)
+        {
+            List<InvoiceLineDto> lines = invoice.Lines
+                .Where(l => l.ProductId != Guid.Empty && l.Quantity > 0)
+                .ToList();
+
+            if (lines.Count == 0)
+            {
+                ToastHelper.Show("Faturada taşınır işlem fişine aktarılacak kalem yok.", ToastType.Warning);
+                return null;
+            }
+
+            CompanyDto company = await MovableAssetTransactionSlipPresenter.LoadCompanyAsync();
+            List<ChartOfAccountLookUpDto> accounts = await MovableAssetTransactionSlipPresenter.LoadAccountsAsync();
+            Dictionary<Guid, ProductDto> productsById = await MovableAssetTransactionSlipPresenter.LoadProductsByIdAsync();
+
+            string city = string.IsNullOrWhiteSpace(company.City) ? string.Empty : company.City.Trim();
+            string district = string.IsNullOrWhiteSpace(company.District) ? string.Empty : company.District.Trim();
+            string ilIlce = city.Length > 0 && district.Length > 0 ? $"{city} / {district}" : city + district;
+
+            DateTime date = invoice.Date.ToDateTime(TimeOnly.MinValue);
+
+            MovableAssetTransactionSlipData data = new()
+            {
+                DocumentNumber = invoice.InvoiceNumber,
+                Date = date,
+                IslemCesidi = "Giriş",
+                NeredenGeldigi = invoice.SupplierName ?? string.Empty,
+                KimeVerildigi = string.Empty,
+                NereyeVerildigi = string.Empty,
+                IlIlceAdi = ilIlce,
+                IlIlceKodu = string.Empty,
+                HarcamaBirimiAdi = company.ExpenditureUnitName ?? string.Empty,
+                HarcamaBirimiKodu = company.ExpenditureUnitCode ?? string.Empty,
+                MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
+                MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
+                DayanakTarihi = date,
+                DayanakKodu = invoice.InvoiceNumber,
+                AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(accounts)
+            };
+
+            foreach (InvoiceLineDto line in lines)
+            {
+                ProductDto? product = productsById.GetValueOrDefault(line.ProductId);
+                data.Rows.Add(new MovableAssetTransactionSlipRow
+                {
+                    Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
+                    DepoKodu = product?.WarehouseCode ?? string.Empty,
+                    DepoAdi = product?.WarehouseName ?? string.Empty,
+                    BarkodNo = product?.Barcode ?? string.Empty,
+                    Adi = product?.Name ?? line.ProductName,
+                    OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
+                    Miktari = line.Quantity,
+                    BirimFiyati = line.UnitPrice,
+                    Tutari = line.Quantity * line.UnitPrice
+                });
+            }
+
+            data.Prepare();
+
+            return data;
+        }
     }
 }

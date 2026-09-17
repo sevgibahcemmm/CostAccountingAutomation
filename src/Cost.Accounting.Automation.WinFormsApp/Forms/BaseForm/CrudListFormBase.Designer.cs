@@ -13,6 +13,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private DevExpress.XtraEditors.SimpleButton btnEdit;
         private DevExpress.XtraEditors.SimpleButton btnDelete;
         private DevExpress.XtraEditors.SimpleButton btnRefresh;
+        private DevExpress.XtraEditors.SimpleButton btnSlipPrint;
         private DevExpress.XtraEditors.SimpleButton btnApprove;
         private DevExpress.XtraEditors.CheckButton btnDeleted;
         private DevExpress.XtraEditors.SimpleButton btnRestore;
@@ -41,6 +42,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnClosePage = new DevExpress.XtraEditors.SimpleButton();
             pnlToolbar = new DevExpress.XtraEditors.PanelControl();
             btnRefresh = new DevExpress.XtraEditors.SimpleButton();
+            btnSlipPrint = new DevExpress.XtraEditors.SimpleButton();
             btnDelete = new DevExpress.XtraEditors.SimpleButton();
             btnEdit = new DevExpress.XtraEditors.SimpleButton();
             btnNew = new DevExpress.XtraEditors.SimpleButton();
@@ -112,6 +114,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             pnlToolbar.Controls.Add(btnDeleted);
             pnlToolbar.Controls.Add(btnApprove);
             pnlToolbar.Controls.Add(btnRefresh);
+            pnlToolbar.Controls.Add(btnSlipPrint);
             pnlToolbar.Controls.Add(btnDelete);
             pnlToolbar.Controls.Add(btnEdit);
             pnlToolbar.Controls.Add(btnNew);
@@ -162,11 +165,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnRefresh.TabIndex = 3;
             btnRefresh.Text = "";
             // 
+            // btnSlipPrint
+            // 
+            btnSlipPrint.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            btnSlipPrint.Appearance.Options.UseFont = true;
+            btnSlipPrint.Location = new System.Drawing.Point(470, 10);
+            btnSlipPrint.Name = "btnSlipPrint";
+            btnSlipPrint.Size = new System.Drawing.Size(120, 36);
+            btnSlipPrint.TabIndex = 9;
+            btnSlipPrint.Text = "TIF Yazdır";
+            // 
             // btnApprove
             // 
             btnApprove.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnApprove.Appearance.Options.UseFont = true;
-            btnApprove.Location = new System.Drawing.Point(470, 10);
+            btnApprove.Location = new System.Drawing.Point(596, 10);
             btnApprove.Name = "btnApprove";
             btnApprove.Size = new System.Drawing.Size(100, 36);
             btnApprove.TabIndex = 7;
@@ -176,7 +189,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnDeleted.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnDeleted.Appearance.Options.UseFont = true;
-            btnDeleted.Location = new System.Drawing.Point(596, 10);
+            btnDeleted.Location = new System.Drawing.Point(722, 10);
             btnDeleted.Name = "btnDeleted";
             btnDeleted.Size = new System.Drawing.Size(120, 36);
             btnDeleted.TabIndex = 5;
@@ -186,7 +199,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnRestore.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnRestore.Appearance.Options.UseFont = true;
-            btnRestore.Location = new System.Drawing.Point(722, 10);
+            btnRestore.Location = new System.Drawing.Point(848, 10);
             btnRestore.Name = "btnRestore";
             btnRestore.Size = new System.Drawing.Size(115, 36);
             btnRestore.TabIndex = 6;

@@ -2,6 +2,7 @@ using System.Drawing;
 using Cost.Accounting.Automation.Application.Behaviors;
 using DomainEntityDto = Cost.Accounting.Automation.Domain.Abstractions.EntityDto;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
@@ -60,6 +61,22 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
 
         protected virtual IRequest<Result<string>>? BuildApproveCommand(TDto item) => null;
 
+        /// <summary>
+        /// Liste ekranında "TIF Yazdır" butonu ve sağ tık menüsünün gösterilip gösterilmeyeceği.
+        /// </summary>
+        protected virtual bool SupportsSlipPrint => false;
+
+        /// <summary>
+        /// Belirli bir kaydın taşınır işlem fişi olarak yazdırılıp yazdırılamayacağı.
+        /// </summary>
+        protected virtual bool CanPrintSlip(TDto item) => SupportsSlipPrint;
+
+        /// <summary>
+        /// Kaydın taşınır işlem fişi verisini üretir. Desteklenmiyorsa null döner.
+        /// </summary>
+        protected virtual Task<MovableAssetTransactionSlipData?> BuildSlipDataAsync(TDto item)
+            => Task.FromResult<MovableAssetTransactionSlipData?>(null);
+
         protected virtual TListQuery BuildListQuery() => new();
 
         protected virtual IRequest<Result<string>>? BuildRestoreCommand(TDto item) => null;
@@ -85,6 +102,8 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
                 btnDelete.Visible = false;
             }
             btnApprove.Visible = SupportsApprove;
+            btnSlipPrint.Visible = SupportsSlipPrint;
+            SetupSlipContextMenu();
             ConfigureColumns();
             _ = ReloadAsync();
         }
@@ -109,6 +128,7 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             };
             btnDelete.Click += BtnDelete_Click;
             btnRefresh.Click += async (_, _) => await ReloadAsync();
+            btnSlipPrint.Click += async (_, _) => await ShowSelectedSlipAsync();
             btnApprove.Click += BtnApprove_Click;
             btnDeleted.CheckedChanged += BtnDeleted_CheckedChanged;
             btnRestore.Click += BtnRestore_Click;
@@ -135,6 +155,7 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             SetButtonIcon(btnEdit, DxIcon.Edit, 18);
             SetButtonIcon(btnDelete, DxIcon.Delete, 18);
             SetButtonIcon(btnRefresh, DxIcon.Refresh, 18);
+            SetButtonIcon(btnSlipPrint, DxIcon.Receipt, 18);
             SetButtonIcon(btnDeleted, DxIcon.Delete, 18);
             SetButtonIcon(btnRestore, DxIcon.Restore, 18);
             SetButtonIcon(btnApprove, DxIcon.Check, 18);
@@ -237,6 +258,7 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             bool showDeleted = _showDeleted;
             bool allEditable = true;
             bool allDeletable = true;
+            bool allPrintable = true;
 
             foreach (int row in gridView.GetSelectedRows())
             {
@@ -254,17 +276,104 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
                 {
                     allDeletable = false;
                 }
+
+                if (!CanPrintSlip(dto))
+                {
+                    allPrintable = false;
+                }
             }
 
             btnNew.Enabled = !showDeleted;
             btnEdit.Enabled = !showDeleted && selected == 1 && allEditable;
             btnDelete.Enabled = !showDeleted && selected >= 1 && allDeletable;
             btnDelete.Visible = AllowDelete && !showDeleted;
+            btnSlipPrint.Visible = SupportsSlipPrint;
+            btnSlipPrint.Enabled = !showDeleted && selected == 1 && allPrintable;
             btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1;
             btnApprove.Visible = SupportsApprove && !showDeleted;
             btnRestore.Enabled = showDeleted && selected >= 1;
             btnRestore.Visible = showDeleted && SupportsRestore;
             btnDeleted.Checked = showDeleted;
+        }
+
+        private ContextMenuStrip? _slipMenu;
+        private ToolStripMenuItem? _slipMenuItem;
+
+        private void SetupSlipContextMenu()
+        {
+            if (!SupportsSlipPrint)
+            {
+                gridControl.ContextMenuStrip = null;
+                return;
+            }
+
+            if (_slipMenu is not null)
+            {
+                return;
+            }
+
+            _slipMenu = new ContextMenuStrip();
+            _slipMenuItem = new ToolStripMenuItem("Taşınır İşlem Fişi Yazdır");
+            _slipMenuItem.Click += async (_, _) => await ShowFocusedSlipAsync();
+            _slipMenu.Items.Add(_slipMenuItem);
+            _slipMenu.Opening += (_, _) =>
+            {
+                if (_slipMenuItem is not null)
+                {
+                    _slipMenuItem.Enabled = CanPrintSlipItem(gridView.GetFocusedRow() as TDto);
+                }
+            };
+            gridControl.ContextMenuStrip = _slipMenu;
+        }
+
+        private bool CanPrintSlipItem(TDto? item)
+            => !_showDeleted && item is not null && CanPrintSlip(item);
+
+        private async Task ShowSelectedSlipAsync()
+        {
+            int[] rows = gridView.GetSelectedRows();
+            if (rows.Length != 1 || gridView.GetRow(rows[0]) is not TDto dto)
+            {
+                ToastHelper.Show("Taşınır işlem fişi için tek bir kayıt seçin.", ToastType.Warning);
+                return;
+            }
+
+            await PrintSlipAsync(dto);
+        }
+
+        private async Task ShowFocusedSlipAsync()
+        {
+            if (gridView.GetFocusedRow() is not TDto dto)
+            {
+                return;
+            }
+
+            await PrintSlipAsync(dto);
+        }
+
+        private async Task PrintSlipAsync(TDto item)
+        {
+            if (!CanPrintSlip(item))
+            {
+                ToastHelper.Show("Bu kayıt için taşınır işlem fişi oluşturulamaz.", ToastType.Warning);
+                return;
+            }
+
+            try
+            {
+                MovableAssetTransactionSlipData? data = await BuildSlipDataAsync(item);
+                if (data is null)
+                {
+                    return;
+                }
+
+                await MovableAssetTransactionSlipPresenter.ShowAsync(data);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("SlipPrint", ex);
+                ToastHelper.Show("Taşınır işlem fişi açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
         }
 
         protected virtual async Task ReloadAsync()

@@ -68,7 +68,7 @@ public static class DatabaseInitializer
                 new Address("Manisa", "Demirci", "www"),
                 new Contact("02161234567", "", "info@merkez.com"),
                 new ExpenditureUnit("MERKEZ HARCAMA BİRİMİ", "45.05"),
-                new AccountingUnit("MERKEZ MUHASEBE BİRİMİ", "45103"),
+                new AccountingUnit("DEMİRCİ MAL MÜDÜRLÜĞÜ", "45103"),
                 true);
 
             Company anadoluCompany = new(
@@ -263,9 +263,10 @@ public static class DatabaseInitializer
         {
             foreach ((string name, decimal rate) in new[]
             {
-                ("KDV %0", 0m),
-                ("KDV %10", 0.10m),
-                ("KDV %20", 0.20m)
+                ("KDV % 00", 0m),
+                ("KDV % 01", 0.01m),
+                ("KDV % 10", 0.10m),
+                ("KDV % 20", 0.20m)
             })
             {
                 await taxRateRepository.AddAsync(new TaxRate(new Name(name), rate, true));

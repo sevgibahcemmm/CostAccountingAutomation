@@ -33,6 +33,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private List<CustomerDto> _customers = [];
         private List<SupplierDto> _suppliers = [];
         private List<ProductDto> _products = [];
+        private Dictionary<Guid, ProductDto> _productsById = [];
+        private List<ChartOfAccountLookUpDto> _accounts = [];
         private List<ChartOfAccountLookUpDto> _warehouses = [];
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
         private string? _lastAutoDescription;
@@ -337,7 +339,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         {
             List<string> names = _lines
                 .Where(l => l.ProductId != Guid.Empty)
-                .Select(l => _products.FirstOrDefault(p => p.Id == l.ProductId)?.Name)
+                .Select(l => _productsById.GetValueOrDefault(l.ProductId)?.Name)
                 .Where(n => !string.IsNullOrWhiteSpace(n))
                 .Select(n => n!)
                 .Distinct()
@@ -377,7 +379,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 _customers = (await mediator.Send(new CustomerGetAllQuery())).ToList();
                 _suppliers = (await mediator.Send(new SupplierGetAllQuery())).ToList();
                 _products = (await mediator.Send(new ProductGetAllQuery())).ToList();
-                _warehouses = ((await mediator.Send(new ChartOfAccountLookUpQuery())).Data ?? [])
+                _productsById = _products.ToDictionary(p => p.Id);
+                _accounts = (await mediator.Send(new ChartOfAccountLookUpQuery())).Data ?? [];
+                _warehouses = _accounts
                     .Where(w => w.Type == ChartOfAccountType.Warehouse)
                     .ToList();
 
@@ -567,7 +571,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         {
             if (sender is SearchLookUpEdit edit && edit.EditValue is Guid productId)
             {
-                ProductDto? prod = _products.FirstOrDefault(p => p.Id == productId);
+                ProductDto? prod = _productsById.GetValueOrDefault(productId);
                 if (prod is not null)
                 {
                     int rowHandle = gridLinesView.FocusedRowHandle;
@@ -646,7 +650,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return;
             }
 
-            ToastHelper.Show($"'{_products.FirstOrDefault(p => p.Id == newProductId)?.Name ?? "Ürün"}' faturaya zaten eklenmiş.", ToastType.Warning);
+            ToastHelper.Show($"'{_productsById.GetValueOrDefault(newProductId)?.Name ?? "Ürün"}' faturaya zaten eklenmiş.", ToastType.Warning);
             e.Valid = false;
             e.ErrorText = "Bu ürün faturada zaten mevcut.";
         }
@@ -874,7 +878,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (_saved && DialogResult == DialogResult.None)
+            // TIF önizlemesi gibi iç içe modal pencereler, formun DialogResult değerini
+            // None dışında bir değere çevirebilir. Kaydedilmiş bir form her durumda OK
+            // döndürmeli ki liste kendini yenilesin.
+            if (_saved)
             {
                 DialogResult = DialogResult.OK;
             }
@@ -884,31 +891,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         private async void ShowSlipPreviewAsync()
         {
-            WaitForm? waitForm = null;
-            try
-            {
-                MovableAssetTransactionSlipData data = await BuildSlipDataAsync();
-                MovableAssetTransactionSlipReport report = new(data);
-
-                waitForm = WaitFormHelper.Show<WaitForm>("Rapor hazırlanıyor...", "Lütfen bekleyin...");
-                await report.CreateDocumentAsync(CancellationToken.None);
-
-                waitForm.Close();
-                waitForm.Dispose();
-                waitForm = null;
-
-                ReportPrintTool tool = new(report);
-                tool.ShowRibbonPreviewDialog();
-            }
-            catch (Exception ex)
-            {
-                ToastHelper.Show("Taşınır işlem fişi açılamadı: " + ex.Message, ToastType.Error, 6000);
-            }
-            finally
-            {
-                waitForm?.Close();
-                waitForm?.Dispose();
-            }
+            await MovableAssetTransactionSlipPresenter.ShowAsync(await BuildSlipDataAsync());
         }
 
         private async Task<MovableAssetTransactionSlipData> BuildSlipDataAsync()
@@ -938,18 +921,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
                 MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
                 DayanakTarihi = dtDate.DateTime,
-                DayanakKodu = txtInvoiceNumber.Text.Trim()
+                DayanakKodu = txtInvoiceNumber.Text.Trim(),
+                AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(_accounts)
             };
 
             int order = 0;
             foreach (InvoiceLineDto line in _lines.Where(l => l.ProductId != Guid.Empty && l.Quantity > 0))
             {
-                ProductDto? product = _products.FirstOrDefault(p => p.Id == line.ProductId);
+                ProductDto? product = _productsById.GetValueOrDefault(line.ProductId);
                 order++;
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
                     SiraNo = order,
-                    Kodu = string.IsNullOrWhiteSpace(product?.ChartOfAccountCode) ? product?.ProductCode ?? string.Empty : product.ChartOfAccountCode,
+                    Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
+                    DepoKodu = product?.WarehouseCode ?? string.Empty,
+                    DepoAdi = product?.WarehouseName ?? string.Empty,
                     BarkodNo = product?.Barcode ?? string.Empty,
                     Adi = product?.Name ?? string.Empty,
                     OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
@@ -959,7 +945,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 });
             }
 
-            data.ApplyCodeTotals(3);
+            data.Prepare();
 
             return data;
         }

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cost.Accounting.Automation.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260917053240_Mig-1")]
+    [Migration("20260917150446_Mig-1")]
     partial class Mig1
     {
         /// <inheritdoc />
@@ -174,6 +174,141 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("CostDate")
+                        .HasColumnType("date");
+
+                    b.Property<byte>("CostSlipType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("money");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ProducedProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SlipNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WorkshopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CostDate");
+
+                    b.HasIndex("CostSlipType");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ProducedProductId");
+
+                    b.HasIndex("SlipNumber");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("WorkshopId");
+
+                    b.ToTable("CostSlips", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems.CostSlipItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CostSlipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("ExpenseAccountType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProductUnitTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("money");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CostSlipId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductUnitTypeId");
+
+                    b.ToTable("CostSlipItems", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.CurrentAccounts.CurrentAccountMovement", b =>
@@ -1284,6 +1419,99 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.Customers.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "ProducedProduct")
+                        .WithMany()
+                        .HasForeignKey("ProducedProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "Workshop")
+                        .WithMany()
+                        .HasForeignKey("WorkshopId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Description", "Description", b1 =>
+                        {
+                            b1.Property<Guid>("CostSlipId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Description");
+
+                            b1.HasKey("CostSlipId");
+
+                            b1.ToTable("CostSlips");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CostSlipId");
+                        });
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("ProducedProduct");
+
+                    b.Navigation("Workshop");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems.CostSlipItem", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", "CostSlip")
+                        .WithMany("CostSlipItems")
+                        .HasForeignKey("CostSlipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.ProductUnitType", "ProductUnitType")
+                        .WithMany()
+                        .HasForeignKey("ProductUnitTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Description", "Description", b1 =>
+                        {
+                            b1.Property<Guid>("CostSlipItemId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Description");
+
+                            b1.HasKey("CostSlipItemId");
+
+                            b1.ToTable("CostSlipItems");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CostSlipItemId");
+                        });
+
+                    b.Navigation("CostSlip");
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductUnitType");
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.CurrentAccounts.CurrentAccountMovement", b =>
                 {
                     b.HasOne("Cost.Accounting.Automation.Domain.Customers.Customer", "Customer")
@@ -2332,6 +2560,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Companies.Company", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
+                {
+                    b.Navigation("CostSlipItems");
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Invoices.Invoice", b =>

@@ -33,6 +33,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
         private List<ProductDto> _allProducts = [];
         private List<ProductDto> _filteredProducts = [];
+        private Dictionary<Guid, ProductDto> _allProductsById = [];
+        private Dictionary<Guid, ProductDto> _filteredProductsById = [];
         private List<ChartOfAccountLookUpDto> _accounts = [];
         private List<ChartOfAccountLookUpDto> _targetAccounts = [];
         private Guid _sourceWarehouseId;
@@ -371,6 +373,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
                 _accounts = (await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [];
                 _allProducts = (await mediator.Send(new ProductGetAllQuery(), CancellationToken.None)).ToList();
+                _allProductsById = _allProducts.ToDictionary(p => p.Id);
 
                 ChartOfAccountLookUpDto? warehouse = _accounts.FirstOrDefault(a =>
                     a.Type == ChartOfAccountType.Warehouse &&
@@ -388,6 +391,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                     _filteredProducts = _allProducts
                         .Where(p => p.WarehouseId == _sourceWarehouseId && p.StockQuantity > 0)
                         .ToList();
+                    _filteredProductsById = _filteredProducts.ToDictionary(p => p.Id);
                     riProduct.DataSource = _filteredProducts;
 
                     if (_filteredProducts.Count == 0)
@@ -576,7 +580,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 return 0m;
             }
 
-            return _filteredProducts.FirstOrDefault(p => p.Id == productId)?.StockQuantity ?? 0m;
+            return _filteredProductsById.GetValueOrDefault(productId)?.StockQuantity ?? 0m;
         }
 
         private void UpdateTotal()
@@ -601,7 +605,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                     return;
                 }
 
-                ProductDto? selectedProduct = _filteredProducts.FirstOrDefault(p => p.Id == row.ProductId);
+                ProductDto? selectedProduct = _filteredProductsById.GetValueOrDefault(row.ProductId);
                 if (selectedProduct is null)
                 {
                     WarnAndClearProductLine(
@@ -656,7 +660,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             }
 
             LineRow row = _lines[rowHandle];
-            ProductDto? product = _filteredProducts.FirstOrDefault(p => p.Id == productId);
+            ProductDto? product = _filteredProductsById.GetValueOrDefault(productId);
             if (product is null)
             {
                 WarnAndClearProductLine(rowHandle, edit, productId);
@@ -679,7 +683,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 return 0m;
             }
 
-            ProductDto? product = _filteredProducts.FirstOrDefault(p => p.Id == productId);
+            ProductDto? product = _filteredProductsById.GetValueOrDefault(productId);
             if (product is null)
             {
                 return 0m;
@@ -770,7 +774,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 return string.Empty;
             }
 
-            return _filteredProducts.FirstOrDefault(p => p.Id == productId)?.Name ?? string.Empty;
+            return _filteredProductsById.GetValueOrDefault(productId)?.Name ?? string.Empty;
         }
 
         private void WarnAndClearProductLine(int rowHandle, BaseEdit editor, Guid productId)
@@ -783,7 +787,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             editor.EditValue = null;
             gridLinesView.RefreshRow(rowHandle);
 
-            string message = _allProducts.Any(p => p.Id == productId)
+            string message = _allProductsById.ContainsKey(productId)
                 ? "Ürün stokta bulunamadı (mevcut stok 0). Yalnızca stoklu ürünler seçilebilir."
                 : "Ürün bulunamadı.";
             ToastHelper.Show(message, ToastType.Warning, 4000);
@@ -810,7 +814,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             }
 
             LineRow row = _lines[rowHandle];
-            ProductDto? product = _filteredProducts.FirstOrDefault(p => p.Id == row.ProductId);
+            ProductDto? product = _filteredProductsById.GetValueOrDefault(row.ProductId);
             if (product is null)
             {
                 return;
@@ -941,7 +945,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (_saved && DialogResult == DialogResult.None)
+            // TIF önizlemesi gibi iç içe modal pencereler, formun DialogResult değerini
+            // None dışında bir değere çevirebilir. Kaydedilmiş bir form her durumda OK
+            // döndürmeli ki liste kendini yenilesin.
+            if (_saved)
             {
                 DialogResult = DialogResult.OK;
             }
@@ -951,31 +958,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
         private async Task ShowSlipPreviewAsync()
         {
-            WaitForm? waitForm = null;
-            try
-            {
-                MovableAssetTransactionSlipData data = await BuildSlipDataAsync();
-                MovableAssetTransactionSlipReport report = new(data);
-
-                waitForm = WaitFormHelper.Show<WaitForm>("Rapor hazırlanıyor...", "Lütfen bekleyin...");
-                await report.CreateDocumentAsync(CancellationToken.None);
-
-                waitForm.Close();
-                waitForm.Dispose();
-                waitForm = null;
-
-                ReportPrintTool tool = new(report);
-                tool.ShowRibbonPreviewDialog();
-            }
-            catch (Exception ex)
-            {
-                ToastHelper.Show("Taşınır işlem fişi açılamadı: " + ex.Message, ToastType.Error, 6000);
-            }
-            finally
-            {
-                waitForm?.Close();
-                waitForm?.Dispose();
-            }
+            await MovableAssetTransactionSlipPresenter.ShowAsync(await BuildSlipDataAsync());
         }
 
         private async Task<MovableAssetTransactionSlipData> BuildSlipDataAsync()
@@ -1019,18 +1002,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
                 MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
                 DayanakTarihi = dtDate.DateTime,
-                DayanakKodu = txtDocumentNumber.Text.Trim()
+                DayanakKodu = txtDocumentNumber.Text.Trim(),
+                AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(_accounts)
             };
 
             int order = 0;
             foreach (LineRow line in _lines.Where(l => l.ProductId != Guid.Empty && l.Quantity > 0))
             {
-                ProductDto? product = _allProducts.FirstOrDefault(p => p.Id == line.ProductId);
+                ProductDto? product = _allProductsById.GetValueOrDefault(line.ProductId);
                 order++;
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
                     SiraNo = order,
-                    Kodu = string.IsNullOrWhiteSpace(product?.ChartOfAccountCode) ? product?.ProductCode ?? string.Empty : product.ChartOfAccountCode,
+                    Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, string.Empty),
+                    DepoKodu = product?.WarehouseCode ?? string.Empty,
+                    DepoAdi = product?.WarehouseName ?? string.Empty,
                     BarkodNo = product?.Barcode ?? string.Empty,
                     Adi = product?.Name ?? string.Empty,
                     OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
@@ -1040,7 +1026,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 });
             }
 
-            data.ApplyCodeTotals(IsConsumption ? 3 : 4);
+            data.Prepare();
 
             return data;
         }
