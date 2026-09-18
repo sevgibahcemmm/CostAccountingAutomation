@@ -139,6 +139,12 @@ public sealed class CostSlipItemEditDto : INotifyPropertyChanged
     private decimal _totalAmount;
     public decimal TotalAmount { get => _totalAmount; set { _totalAmount = value; OnPropertyChanged(); } }
 
+    private decimal _transferredQuantity;
+    public decimal TransferredQuantity { get => _transferredQuantity; set { _transferredQuantity = value; OnPropertyChanged(); } }
+
+    private decimal _availableQuantity;
+    public decimal AvailableQuantity { get => _availableQuantity; set { _availableQuantity = value; OnPropertyChanged(); } }
+
     private string _description = string.Empty;
     public string Description { get => _description; set { _description = value; OnPropertyChanged(); } }
 }

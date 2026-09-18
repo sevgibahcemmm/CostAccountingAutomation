@@ -59,6 +59,18 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
 
         protected virtual bool SupportsApprove => false;
 
+        protected virtual bool AllowsApprove(TDto item) => true;
+
+        /// <summary>
+        /// Liste ekranında "Maliyet Pusulası Yazdır" gibi bir rapor butonunun gösterilip gösterilmeyeceği.
+        /// </summary>
+        protected virtual bool SupportsSlipReport => false;
+
+        /// <summary>
+        /// Liste ekranında "Gider Dağıtım Tablosu Yazdır" butonunun gösterilip gösterilmeyeceği.
+        /// </summary>
+        protected virtual bool SupportsDistributionReport => false;
+
         protected virtual IRequest<Result<string>>? BuildApproveCommand(TDto item) => null;
 
         /// <summary>
@@ -76,6 +88,16 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
         /// </summary>
         protected virtual Task<MovableAssetTransactionSlipData?> BuildSlipDataAsync(TDto item)
             => Task.FromResult<MovableAssetTransactionSlipData?>(null);
+
+        /// <summary>
+        /// Seçili kaydın raporu (ör. maliyet pusulası) açılır. Desteklenmiyorsa hiçbir işlem yapılmaz.
+        /// </summary>
+        protected virtual Task ShowSlipReportAsync(TDto item) => Task.CompletedTask;
+
+        /// <summary>
+        /// Seçili kaydın gider dağıtım tablosu raporu açılır. Desteklenmiyorsa hiçbir işlem yapılmaz.
+        /// </summary>
+        protected virtual Task ShowDistributionReportAsync(TDto item) => Task.CompletedTask;
 
         protected virtual TListQuery BuildListQuery() => new();
 
@@ -103,6 +125,8 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             }
             btnApprove.Visible = SupportsApprove;
             btnSlipPrint.Visible = SupportsSlipPrint;
+            btnSlipReport.Visible = SupportsSlipReport;
+            btnDistributionReport.Visible = SupportsDistributionReport;
             SetupSlipContextMenu();
             ConfigureColumns();
             _ = ReloadAsync();
@@ -128,7 +152,9 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             };
             btnDelete.Click += BtnDelete_Click;
             btnRefresh.Click += async (_, _) => await ReloadAsync();
-            btnSlipPrint.Click += async (_, _) => await ShowSelectedSlipAsync();
+btnSlipPrint.Click += async (_, _) => await ShowSelectedSlipAsync();
+            btnSlipReport.Click += async (_, _) => await ShowSelectedSlipReportAsync();
+            btnDistributionReport.Click += async (_, _) => await ShowSelectedDistributionReportAsync();
             btnApprove.Click += BtnApprove_Click;
             btnDeleted.CheckedChanged += BtnDeleted_CheckedChanged;
             btnRestore.Click += BtnRestore_Click;
@@ -156,6 +182,8 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             SetButtonIcon(btnDelete, DxIcon.Delete, 18);
             SetButtonIcon(btnRefresh, DxIcon.Refresh, 18);
             SetButtonIcon(btnSlipPrint, DxIcon.Receipt, 18);
+            SetButtonIcon(btnSlipReport, DxIcon.Receipt, 18);
+            SetButtonIcon(btnDistributionReport, DxIcon.Receipt, 18);
             SetButtonIcon(btnDeleted, DxIcon.Delete, 18);
             SetButtonIcon(btnRestore, DxIcon.Restore, 18);
             SetButtonIcon(btnApprove, DxIcon.Check, 18);
@@ -259,6 +287,7 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             bool allEditable = true;
             bool allDeletable = true;
             bool allPrintable = true;
+            bool allApprovable = true;
 
             foreach (int row in gridView.GetSelectedRows())
             {
@@ -281,6 +310,11 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
                 {
                     allPrintable = false;
                 }
+
+                if (!AllowsApprove(dto))
+                {
+                    allApprovable = false;
+                }
             }
 
             btnNew.Enabled = !showDeleted;
@@ -289,8 +323,12 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             btnDelete.Visible = AllowDelete && !showDeleted;
             btnSlipPrint.Visible = SupportsSlipPrint;
             btnSlipPrint.Enabled = !showDeleted && selected == 1 && allPrintable;
-            btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1;
+btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allApprovable;
             btnApprove.Visible = SupportsApprove && !showDeleted;
+            btnSlipReport.Visible = SupportsSlipReport;
+            btnSlipReport.Enabled = !showDeleted && selected == 1;
+            btnDistributionReport.Visible = SupportsDistributionReport;
+            btnDistributionReport.Enabled = !showDeleted && selected == 1;
             btnRestore.Enabled = showDeleted && selected >= 1;
             btnRestore.Visible = showDeleted && SupportsRestore;
             btnDeleted.Checked = showDeleted;
@@ -339,6 +377,46 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             }
 
             await PrintSlipAsync(dto);
+        }
+
+        private async Task ShowSelectedSlipReportAsync()
+        {
+            int[] rows = gridView.GetSelectedRows();
+            if (rows.Length != 1 || gridView.GetRow(rows[0]) is not TDto dto)
+            {
+                ToastHelper.Show("Rapor için tek bir kayıt seçin.", ToastType.Warning);
+                return;
+            }
+
+            try
+            {
+                await ShowSlipReportAsync(dto);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("SlipReport", ex);
+                ToastHelper.Show("Rapor açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
+        }
+
+        private async Task ShowSelectedDistributionReportAsync()
+        {
+            int[] rows = gridView.GetSelectedRows();
+            if (rows.Length != 1 || gridView.GetRow(rows[0]) is not TDto dto)
+            {
+                ToastHelper.Show("Rapor için tek bir kayıt seçin.", ToastType.Warning);
+                return;
+            }
+
+            try
+            {
+                await ShowDistributionReportAsync(dto);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("DistributionReport", ex);
+                ToastHelper.Show("Rapor açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
         }
 
         private async Task ShowFocusedSlipAsync()

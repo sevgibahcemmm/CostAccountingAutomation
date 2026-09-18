@@ -1,8 +1,8 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.CostSlips;
-using Cost.Accounting.Automation.Application.Customers;
 using Cost.Accounting.Automation.Application.Products;
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Infrastructure.Services;
@@ -17,6 +17,7 @@ using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
+using DevExpress.XtraGrid.Views.Grid;
 using DevExpress.XtraReports.UI;
 using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
@@ -32,12 +33,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         private readonly CostSlipListDto? _editing;
         private readonly BindingList<CostSlipItemEditDto> _lines = [];
         private List<ProductDto> _products = [];
-        private List<CustomerDto> _customers = [];
+        private readonly Dictionary<Guid, List<AtelierTransferProductDto>> _transferredByWorkshop = [];
+        private Dictionary<Guid, WorkshopLink> _workshopLinks = [];
+        private readonly Dictionary<ExpenseAccountType, decimal> _accountAmounts = [];
+        private readonly Dictionary<ExpenseAccountType, TextEdit> _accountInputs = [];
+        private readonly List<TextEdit> _accountInputList = [];
+        private FlowLayoutPanel _flpAccounts = default!;
+        private bool _syncingTotals;
+        private decimal _grandTotal;
+        private decimal _unitCost;
+        private ExpenseAccountType? _roundingTargetAccount;
+        private decimal _roundingDiff;
         private List<ChartOfAccountLookUpDto> _workshops = [];
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
-        private RepositoryItemLookUpEdit _riAccountLookUp = default!;
         private string _workshopName = string.Empty;
         private bool _saved;
+
+        private sealed record WorkshopLink(string Code, Guid? SemiFinishedAccountId, Guid? FinishedAccountId);
+
+        private sealed record ProductLookUpItem(Guid Id, string Name, string Code, string UnitType, decimal Balance)
+        {
+            public string DisplayName => $"{Name}  [Bakiye: {Balance:n2}]";
+        }
 
         public CostSlipEditForm() : this(null)
         {
@@ -78,6 +95,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLines.DataSource = _lines;
             ConfigureGrid();
 
+            _flpAccounts = new FlowLayoutPanel
+            {
+                Location = new Point(10, 40),
+                Size = new Size(Math.Max(500, pnlAccounts.Width - 28), 240),
+                AutoScroll = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true
+            };
+            pnlAccounts.Controls.Add(_flpAccounts);
+
+            RebuildAccountPanel();
+
             btnApprove.Visible = false;
             btnApprove.Text = "Pusulayı Onayla";
             btnPrintSlip.Enabled = false;
@@ -102,9 +131,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     dtCostDate.ReadOnly = true;
                     lookUpWorkshop.ReadOnly = true;
                     lookUpProducedProduct.ReadOnly = true;
-                    lookUpCustomer.ReadOnly = true;
                     txtQuantity.ReadOnly = true;
                     txtDescription.ReadOnly = true;
+
+                    foreach (TextEdit input in _accountInputList)
+                    {
+                        input.ReadOnly = true;
+                    }
                 }
             }
         }
@@ -116,43 +149,43 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             _riProductLookUp = new RepositoryItemSearchLookUpEdit
             {
-                ValueMember = nameof(ProductDto.Id),
-                DisplayMember = nameof(ProductDto.Name),
+                ValueMember = nameof(ProductLookUpItem.Id),
+                DisplayMember = nameof(ProductLookUpItem.Name),
                 NullText = "Ürün / Masraf Seçiniz...",
                 PopupFilterMode = PopupFilterMode.Contains
             };
             _riProductLookUp.View.OptionsBehavior.AutoPopulateColumns = false;
-            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.Name)).Caption = "Ürün Adı";
+            _riProductLookUp.View.Columns.AddField(nameof(ProductLookUpItem.DisplayName)).Caption = "Ürün Adı";
             _riProductLookUp.View.Columns[0].Visible = true;
+            _riProductLookUp.View.Columns[0].Width = 320;
             _riProductLookUp.EditValueChanged += RiProductLookUp_EditValueChanged;
 
-            _riAccountLookUp = new RepositoryItemLookUpEdit
-            {
-                PopupFilterMode = PopupFilterMode.Contains
-            };
-
-            RepositoryItemSpinEdit riQuantity = new() { MinValue = 0.0001m, MaxValue = 999999999, Increment = 1, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } };
-            RepositoryItemSpinEdit riPrice = new() { MinValue = 0, MaxValue = 999999999, Increment = 10, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } };
-            RepositoryItemSpinEdit riReadOnlyMoney = new() { ReadOnly = true, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } };
+            RepositoryItemSpinEdit riQuantity = new() { MinValue = 0.0001m, MaxValue = 999999999, Increment = 1, Mask = { MaskType = DevExpress.XtraEditors.Mask.MaskType.Numeric, EditMask = "n2", UseMaskAsDisplayFormat = true } };
+            RepositoryItemSpinEdit riPrice = new() { MinValue = 0, ReadOnly = true, Mask = { MaskType = DevExpress.XtraEditors.Mask.MaskType.Numeric, EditMask = "n2", UseMaskAsDisplayFormat = true } };
+            RepositoryItemSpinEdit riReadOnlyMoney = new() { ReadOnly = true, Mask = { MaskType = DevExpress.XtraEditors.Mask.MaskType.Numeric, EditMask = "n2", UseMaskAsDisplayFormat = true } };
             RepositoryItemTextEdit riDesc = new();
 
-            gridLines.RepositoryItems.AddRange([_riProductLookUp, _riAccountLookUp, riQuantity, riPrice, riReadOnlyMoney, riDesc]);
+            gridLines.RepositoryItems.AddRange([_riProductLookUp, riQuantity, riPrice, riReadOnlyMoney, riDesc]);
 
             GridColumn[] columns =
             [
-                new() { Caption = "Ürün / Masraf", FieldName = nameof(CostSlipItemEditDto.ProductId), Visible = true, Width = 300, ColumnEdit = _riProductLookUp },
-                new() { Caption = "Hesap", FieldName = nameof(CostSlipItemEditDto.ExpenseAccountType), Visible = true, Width = 280, ColumnEdit = _riAccountLookUp },
+                new() { Caption = "Ürün / Masraf", FieldName = nameof(CostSlipItemEditDto.ProductId), Visible = true, Width = 280, ColumnEdit = _riProductLookUp },
+                new() { Caption = "Birim", FieldName = nameof(CostSlipItemEditDto.ProductUnitTypeName), Visible = true, Width = 60, OptionsColumn = { AllowEdit = false }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Center } } },
                 new() { Caption = "Miktar", FieldName = nameof(CostSlipItemEditDto.Quantity), Visible = true, Width = 90, ColumnEdit = riQuantity, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
-                new() { Caption = "Birim Fiyat", FieldName = nameof(CostSlipItemEditDto.UnitPrice), Visible = true, Width = 110, ColumnEdit = riPrice, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
-                new() { Caption = "Tutar", FieldName = nameof(CostSlipItemEditDto.TotalAmount), Visible = true, Width = 120, ColumnEdit = riReadOnlyMoney, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
-                new() { Caption = "Açıklama", FieldName = nameof(CostSlipItemEditDto.Description), Visible = true, MinWidth = 200, Width = 460, ColumnEdit = riDesc }
+                new() { Caption = "Birim Fiyat", FieldName = nameof(CostSlipItemEditDto.UnitPrice), Visible = true, Width = 100, ColumnEdit = riPrice, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
+                new() { Caption = "Tutar", FieldName = nameof(CostSlipItemEditDto.TotalAmount), Visible = true, Width = 110, ColumnEdit = riReadOnlyMoney, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
+                new() { Caption = "Gelen", FieldName = nameof(CostSlipItemEditDto.TransferredQuantity), Visible = true, Width = 90, ColumnEdit = riReadOnlyMoney, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
+                new() { Caption = "Kalan", FieldName = nameof(CostSlipItemEditDto.AvailableQuantity), Visible = true, Width = 90, ColumnEdit = riReadOnlyMoney, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" } },
+                new() { Caption = "Açıklama", FieldName = nameof(CostSlipItemEditDto.Description), Visible = true, MinWidth = 160, Width = 400, ColumnEdit = riDesc }
             ];
 
             foreach (GridColumn column in columns)
             {
                 bool isNumeric = column.FieldName is nameof(CostSlipItemEditDto.Quantity)
                     or nameof(CostSlipItemEditDto.UnitPrice)
-                    or nameof(CostSlipItemEditDto.TotalAmount);
+                    or nameof(CostSlipItemEditDto.TotalAmount)
+                    or nameof(CostSlipItemEditDto.TransferredQuantity)
+                    or nameof(CostSlipItemEditDto.AvailableQuantity);
 
                 if (isNumeric)
                 {
@@ -166,12 +199,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLinesView.Columns.AddRange(columns);
             gridLinesView.OptionsView.ColumnAutoWidth = true;
             gridLinesView.OptionsCustomization.AllowColumnResizing = true;
+
+            gridLinesView.OptionsView.ShowFooter = true;
+            GridColumn totalColumn = columns.First(c => c.FieldName == nameof(CostSlipItemEditDto.TotalAmount));
+            totalColumn.SummaryItem.SummaryType = DevExpress.Data.SummaryItemType.Sum;
+            totalColumn.SummaryItem.DisplayFormat = "{0:n2} ₺";
+
+            GridColumn priceColumn = columns.First(c => c.FieldName == nameof(CostSlipItemEditDto.UnitPrice));
+            priceColumn.SummaryItem.SummaryType = DevExpress.Data.SummaryItemType.Sum;
+            priceColumn.SummaryItem.DisplayFormat = "";
+
+            GridColumn descriptionColumn = columns.First(c => c.FieldName == nameof(CostSlipItemEditDto.Description));
+            descriptionColumn.SummaryItem.SummaryType = DevExpress.Data.SummaryItemType.Sum;
+            descriptionColumn.SummaryItem.DisplayFormat = "";
         }
 
         private void WireEvents()
         {
             Load += CostSlipEditForm_Load;
             cmbCostSlipType.SelectedIndexChanged += CmbCostSlipType_SelectedIndexChanged;
+            lookUpWorkshop.EditValueChanged += LookUpWorkshop_EditValueChanged;
             btnAddLine.Click += (_, _) => AddEmptyLine();
             btnDeleteLine.Click += (_, _) => DeleteSelectedLine();
             btnSave.Click += BtnSave_Click;
@@ -181,6 +228,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnCancel.Click += (_, _) => Close();
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
             gridLinesView.ValidatingEditor += GridLinesView_ValidatingEditor;
+            gridLinesView.CustomDrawFooterCell += GridLinesView_CustomDrawFooterCell;
+            txtQuantity.EditValueChanged += (_, _) => RecalculateGrandTotal();
         }
 
         private async void CostSlipEditForm_Load(object? sender, EventArgs e)
@@ -192,8 +241,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 await LoadDetailsAndPopulateAsync();
             }
 
+            RebuildAccountPanel();
+            SyncAccountAmountsToInputs();
+            RecalculateTotals();
             UpdateProducedProductAvailability();
-            UpdateAccountDataSource();
+            await LoadMaterialProductsAsync();
 
             if (_editing is null)
             {
@@ -209,10 +261,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
                 _products = (await mediator.Send(new ProductGetAllQuery())).ToList();
-                _customers = (await mediator.Send(new CustomerGetAllQuery())).ToList();
                 _workshops = ((await mediator.Send(new ChartOfAccountLookUpQuery())).Data ?? [])
                     .Where(w => w.Type == ChartOfAccountType.Workshop)
                     .ToList();
+
+                List<ChartOfAccountDto> allAccounts = (await mediator.Send(new ChartOfAccountGetAllQuery())).ToList();
+                _workshopLinks = allAccounts
+                    .Where(a => a.Type == ChartOfAccountType.Workshop)
+                    .ToDictionary(a => a.Id, a => new WorkshopLink(a.Code, a.SemiFinishedAccountId, a.FinishedAccountId));
 
                 lookUpWorkshop.Properties.DataSource = _workshops;
                 lookUpWorkshop.Properties.ValueMember = nameof(ChartOfAccountLookUpDto.Id);
@@ -225,23 +281,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 workshopColumn.VisibleIndex = 0;
                 workshopColumn.Width = 300;
                 lookUpWorkshopView.BestFitColumns();
-
-                lookUpCustomer.Properties.DataSource = _customers;
-                lookUpCustomer.Properties.ValueMember = nameof(CustomerDto.Id);
-                lookUpCustomer.Properties.DisplayMember = nameof(CustomerDto.Name);
-                lookUpCustomer.Properties.BestFitMode = BestFitMode.BestFit;
-                lookUpCustomerView.Columns.Clear();
-                lookUpCustomerView.OptionsBehavior.AutoPopulateColumns = false;
-                GridColumn customerColumn = lookUpCustomerView.Columns.AddField(nameof(CustomerDto.Name));
-                customerColumn.Caption = "Müşteri Adı";
-                customerColumn.VisibleIndex = 0;
-                customerColumn.Width = 220;
-                lookUpCustomerView.Columns.AddField(nameof(CustomerDto.City)).Caption = "Şehir";
-                foreach (GridColumn col in lookUpCustomerView.Columns)
-                {
-                    col.Visible = true;
-                }
-                lookUpCustomerView.BestFitColumns();
 
                 lookUpProducedProduct.Properties.DataSource = _products;
                 lookUpProducedProduct.Properties.ValueMember = nameof(ProductDto.Id);
@@ -261,7 +300,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 }
                 lookUpProducedProductView.BestFitColumns();
 
-                _riProductLookUp.DataSource = _products;
+                _riProductLookUp.DataSource = Array.Empty<ProductLookUpItem>();
             }
             catch (Exception ex)
             {
@@ -301,7 +340,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             lookUpWorkshop.EditValue = slip.WorkshopId;
             _workshopName = slip.WorkshopName;
             lookUpProducedProduct.EditValue = slip.ProducedProductId;
-            lookUpCustomer.EditValue = slip.CustomerId;
             txtQuantity.EditValue = slip.Quantity;
             txtDescription.Text = slip.Description;
 
@@ -313,6 +351,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             _lines.Clear();
             foreach (var item in slip.CostSlipItems)
             {
+                if (item.ProductId is null)
+                {
+                    _accountAmounts[item.ExpenseAccountType] = Math.Round(
+                        _accountAmounts.GetValueOrDefault(item.ExpenseAccountType) + item.TotalAmount,
+                        2);
+                    continue;
+                }
+
                 _lines.Add(new CostSlipItemEditDto
                 {
                     ProductId = item.ProductId,
@@ -349,6 +395,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             if (rowHandle >= 0 && rowHandle < _lines.Count)
             {
                 _lines.RemoveAt(rowHandle);
+                RefreshAvailableQuantities();
                 RecalculateTotals();
             }
         }
@@ -360,10 +407,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             _ => CostSlipType.Product
         };
 
+        private Guid? SelectedWorkshopId
+            => lookUpWorkshop.EditValue is Guid id && id != Guid.Empty ? id : null;
+
+        private ExpenseAccountType DerivedAccount => CurrentType == CostSlipType.Service
+            ? ExpenseAccountType.Account740_1
+            : ExpenseAccountType.Account710;
+
         private async void CmbCostSlipType_SelectedIndexChanged(object? sender, EventArgs e)
         {
+            RebuildAccountPanel();
+            SyncAccountAmountsToInputs();
+            RecalculateTotals();
             UpdateProducedProductAvailability();
-            UpdateAccountDataSource();
+            await LoadMaterialProductsAsync();
 
             if (_editing is null)
             {
@@ -371,28 +428,312 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
         }
 
+        private void LookUpWorkshop_EditValueChanged(object? sender, EventArgs e)
+        {
+            UpdateProducedProductAvailability();
+            _ = LoadMaterialProductsAsync();
+        }
+
+        private async Task LoadMaterialProductsAsync()
+        {
+            try
+            {
+                if (SelectedWorkshopId is Guid workshopId && !_transferredByWorkshop.ContainsKey(workshopId))
+                {
+                    await LoadTransferredProductsAsync(workshopId);
+                }
+
+                UpdateMaterialProductDataSource();
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("CostSlip.MaterialProducts", ex);
+                ToastHelper.Show("Atölyeye ait ürünler yüklenirken bir hata oluştu.", ToastType.Error);
+            }
+        }
+
+        private async Task LoadTransferredProductsAsync(Guid workshopId)
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            List<AtelierTransferProductDto> transferred =
+                (await mediator.Send(new AtelierTransferProductsQuery(workshopId))).Data ?? [];
+
+            _transferredByWorkshop[workshopId] = transferred;
+        }
+
         private void UpdateProducedProductAvailability()
         {
-            bool isService = CurrentType == CostSlipType.Service;
+            CostSlipType type = CurrentType;
+            bool isService = type == CostSlipType.Service;
+
             lookUpProducedProduct.Enabled = !isService;
-            lookUpProducedProduct.Properties.NullText = isService ? "Hizmet pusulasında gerekmez" : "Üretilen Ürün Seçiniz...";
+
+            string warehouseCode = type == CostSlipType.SemiFinishedProduct ? "151" : "152";
+            Guid? targetAccountId = isService ? null : GetWorkshopProducedAccountId(SelectedWorkshopId, type);
+            string? workshopName = GetSelectedWorkshopName();
+
+            bool hasSelector = targetAccountId is not null || !string.IsNullOrWhiteSpace(workshopName);
+
+            List<ProductDto> filtered = isService
+                ? []
+                : !hasSelector
+                    ? []
+                    : _products
+                        .Where(p => MatchesWarehouse(p, warehouseCode) &&
+                                    (targetAccountId is Guid tid
+                                        ? p.CategoryId == tid
+                                        : string.Equals(p.CategoryName.Trim(), workshopName!.Trim(), StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+
+            if (lookUpProducedProduct.EditValue is Guid producedId && producedId != Guid.Empty
+                && !filtered.Any(p => p.Id == producedId))
+            {
+                lookUpProducedProduct.EditValue = null;
+            }
+
+            lookUpProducedProduct.Properties.DataSource = filtered;
+            lookUpProducedProduct.Properties.NullText = isService
+                ? "Hizmet pusulasında gerekmez"
+                : SelectedWorkshopId is null
+                    ? "Önce atölye seçin"
+                    : filtered.Count == 0
+                        ? "Bu atölye için üretilen ürün (151/152 bağlantısı veya aynı adlı kategori) tanımlı değil"
+                        : "Üretilen Ürün Seçiniz...";
         }
 
-        private void UpdateAccountDataSource()
+        private string? GetSelectedWorkshopName()
         {
-            List<ExpenseAccountType> accounts = ExpenseAccountHelper.GetFilteredAccounts(CurrentType);
+            if (SelectedWorkshopId is not Guid workshopId)
+            {
+                return null;
+            }
 
-            _riAccountLookUp.DataSource = accounts
-                .Select(a => new
-                {
-                    Value = a,
-                    Name = Cost.Accounting.Automation.Application.Helpers.EnumDisplay.GetDisplayName(a)
-                })
-                .ToList();
-            _riAccountLookUp.ValueMember = "Value";
-            _riAccountLookUp.DisplayMember = "Name";
-            _riAccountLookUp.BestFitMode = BestFitMode.BestFit;
+            string? name = _workshops.FirstOrDefault(w => w.Id == workshopId)?.Name?.Trim();
+            return string.IsNullOrWhiteSpace(name) ? null : name;
         }
+
+        private Guid? GetWorkshopProducedAccountId(Guid? workshopId, CostSlipType type)
+        {
+            if (workshopId is not Guid id || !_workshopLinks.TryGetValue(id, out WorkshopLink? link))
+            {
+                return null;
+            }
+
+            return type == CostSlipType.SemiFinishedProduct
+                ? link.SemiFinishedAccountId
+                : link.FinishedAccountId;
+        }
+
+        private void UpdateMaterialProductDataSource()
+        {
+            Guid? workshopId = SelectedWorkshopId;
+
+            List<ProductDto> filtered;
+            List<ProductLookUpItem> lookupItems;
+            if (workshopId is Guid wid
+                && _transferredByWorkshop.TryGetValue(wid, out List<AtelierTransferProductDto>? transferred))
+            {
+                filtered = _products
+                    .Where(p => transferred.Any(t => t.ProductId == p.Id && t.AvailableQuantity > 0m))
+                    .ToList();
+
+                lookupItems = filtered.Select(p => new ProductLookUpItem(
+                    p.Id,
+                    p.Name,
+                    p.ProductCode,
+                    p.ProductUnitTypeName,
+                    transferred.FirstOrDefault(t => t.ProductId == p.Id)?.AvailableQuantity ?? 0m)).ToList();
+            }
+            else
+            {
+                filtered = [];
+                lookupItems = [];
+            }
+
+            _riProductLookUp.DataSource = lookupItems;
+            _riProductLookUp.NullText = workshopId is null
+                ? "Önce atölye seçin"
+                : _transferredByWorkshop.ContainsKey(workshopId.Value)
+                    ? filtered.Count == 0
+                        ? "Bu atölyeye transfer edilen ürün bulunamadı"
+                        : "Ürün / Masraf Seçiniz..."
+                    : "Atölyeye transfer edilen ürünler yükleniyor...";
+
+            foreach (var line in _lines)
+            {
+                if (line.ProductId is Guid pid && !filtered.Any(p => p.Id == pid))
+                {
+                    line.ProductId = null;
+                    line.ProductName = string.Empty;
+                    line.ProductUnitTypeId = null;
+                    line.ProductUnitTypeName = string.Empty;
+                    line.UnitPrice = 0;
+                    line.TransferredQuantity = 0;
+                    line.AvailableQuantity = 0;
+                }
+            }
+
+            RefreshAvailableQuantities();
+            gridLinesView.RefreshData();
+        }
+
+        private void RefreshAvailableQuantities()
+        {
+            foreach (var line in _lines)
+            {
+                line.AvailableQuantity = GetDisplayedAvailable(line);
+            }
+        }
+
+        private decimal GetDisplayedAvailable(CostSlipItemEditDto line)
+        {
+            if (line.ProductId is not Guid pid || SelectedWorkshopId is not Guid workshopId
+                || !_transferredByWorkshop.TryGetValue(workshopId, out List<AtelierTransferProductDto>? transferred))
+            {
+                return 0m;
+            }
+
+            decimal baseAvailable = transferred
+                .FirstOrDefault(t => t.ProductId == pid)?.AvailableQuantity ?? 0m;
+
+            decimal consumedByOtherRows = _lines
+                .Where(l => !ReferenceEquals(l, line) && l.ProductId == pid)
+                .Sum(l => l.Quantity);
+
+            return Math.Max(0m, baseAvailable - consumedByOtherRows);
+        }
+
+        private AtelierTransferProductDto? GetTransferInfo(Guid productId)
+        {
+            if (SelectedWorkshopId is not Guid workshopId
+                || !_transferredByWorkshop.TryGetValue(workshopId, out List<AtelierTransferProductDto>? transferred))
+            {
+                return null;
+            }
+
+            return transferred.FirstOrDefault(t => t.ProductId == productId);
+        }
+
+        private static bool MatchesWarehouse(ProductDto product, string warehouseCode)
+            => product.WarehouseCode.Equals(warehouseCode, StringComparison.OrdinalIgnoreCase)
+               || product.WarehouseCode.StartsWith(warehouseCode + ".", StringComparison.OrdinalIgnoreCase);
+
+        private void RebuildAccountPanel()
+        {
+            _flpAccounts.Controls.Clear();
+            _accountInputs.Clear();
+            _accountInputList.Clear();
+
+            CostSlipType type = CurrentType;
+
+            foreach (ExpenseAccountType account in ExpenseAccountHelper.GetFilteredAccounts(type))
+            {
+                _accountAmounts.TryAdd(account, 0m);
+
+                bool isDerived = account == DerivedAccount;
+                string caption = AccountDisplayName(account) + (isDerived ? "  (Grid Toplamı)" : string.Empty);
+
+                int rowWidth = Math.Max(430, (_flpAccounts.ClientSize.Width - 16) / 2);
+                int labelWidth = (int)(rowWidth * 0.66);
+
+                Panel row = new()
+                {
+                    Width = rowWidth,
+                    Height = 26,
+                    Margin = new Padding(0, 1, 0, 1)
+                };
+
+                Label lbl = new()
+                {
+                    Text = caption,
+                    Location = new Point(0, 3),
+                    Size = new Size(labelWidth, 20),
+                    AutoSize = false,
+                    AutoEllipsis = true,
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    Font = new Font("Segoe UI", 8.25F)
+                };
+
+                TextEdit input = new()
+                {
+                    Location = new Point(labelWidth + 2, 1),
+                    Size = new Size(rowWidth - labelWidth - 4, 24),
+                    ReadOnly = isDerived
+                };
+                input.Properties.Mask.MaskType = DevExpress.XtraEditors.Mask.MaskType.Numeric;
+                input.Properties.Mask.EditMask = "n2";
+                input.Properties.Mask.UseMaskAsDisplayFormat = true;
+                input.Properties.DisplayFormat.FormatType = DevExpress.Utils.FormatType.Numeric;
+                input.Properties.DisplayFormat.FormatString = "n2";
+                input.Properties.NullValuePrompt = "0,00";
+                input.Properties.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+                input.EditValue = 0m;
+
+                row.Controls.Add(lbl);
+                row.Controls.Add(input);
+                _flpAccounts.Controls.Add(row);
+
+                _accountInputs[account] = input;
+                _accountInputList.Add(input);
+
+                ExpenseAccountType captured = account;
+                input.EditValueChanged += (_, _) =>
+                {
+                    if (_syncingTotals)
+                    {
+                        return;
+                    }
+
+                    _accountAmounts[captured] = ReadAmount(input);
+                    RecalculateGrandTotal();
+                };
+            }
+        }
+
+        private void SyncAccountAmountsToInputs()
+        {
+            if (_editing is null)
+            {
+                return;
+            }
+
+            _syncingTotals = true;
+            try
+            {
+                foreach ((ExpenseAccountType account, TextEdit input) in _accountInputs)
+                {
+                    input.EditValue = _accountAmounts.GetValueOrDefault(account);
+                }
+            }
+            finally
+            {
+                _syncingTotals = false;
+            }
+        }
+
+        private static decimal ReadAmount(TextEdit input)
+        {
+            if (input.EditValue is decimal d)
+            {
+                return d;
+            }
+
+            if (decimal.TryParse(
+                input.EditValue?.ToString(),
+                System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out decimal parsed))
+            {
+                return parsed;
+            }
+
+            return 0m;
+        }
+
+        private static string AccountDisplayName(ExpenseAccountType account)
+            => Cost.Accounting.Automation.Application.Helpers.EnumDisplay.GetDisplayName(account);
 
         private async Task AutoAssignNumberAsync()
         {
@@ -429,6 +770,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         line.ProductUnitTypeId = prod.ProductUnitTypeId;
                         line.ProductUnitTypeName = prod.ProductUnitTypeName;
 
+                        AtelierTransferProductDto? transferInfo = GetTransferInfo(prod.Id);
+                        line.TransferredQuantity = transferInfo?.TransferredQuantity ?? 0m;
+                        line.UnitPrice = transferInfo?.UnitPrice ?? 0m;
+
+                        RefreshAvailableQuantities();
                         gridLinesView.RefreshRow(rowHandle);
                         RecalculateTotals();
                     }
@@ -447,15 +793,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 return;
             }
 
-            if (columnName == nameof(CostSlipItemEditDto.Quantity) && e.Value is decimal qty && qty <= 0)
+            if (columnName == nameof(CostSlipItemEditDto.Quantity) && e.Value is decimal qty)
             {
-                e.Valid = false;
-                e.ErrorText = "Miktar sıfırdan büyük olmalıdır.";
+                if (qty <= 0)
+                {
+                    e.Valid = false;
+                    e.ErrorText = "Miktar sıfırdan büyük olmalıdır.";
+                    return;
+                }
+
+                int rowHandle = gridLinesView.FocusedRowHandle;
+                if (rowHandle >= 0 && rowHandle < _lines.Count)
+                {
+                    CostSlipItemEditDto line = _lines[rowHandle];
+                    if (line.ProductId is Guid pid && GetTransferInfo(pid) is not null)
+                    {
+                        decimal displayed = GetDisplayedAvailable(line);
+                        if (qty > displayed)
+                        {
+                            e.Valid = false;
+                            e.ErrorText = $"Yetersiz stok. Bu üründen atölyede kalan: {displayed:n2}.";
+                        }
+                    }
+                }
             }
         }
 
         private void GridLinesView_CellValueChanged(object? sender, CellValueChangedEventArgs e)
         {
+            RefreshAvailableQuantities();
             RecalculateTotals();
         }
 
@@ -466,47 +832,165 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 line.TotalAmount = Math.Round(line.Quantity * line.UnitPrice, 2);
             }
 
-            Dictionary<string, decimal> byGroup = [];
-            foreach (var line in _lines)
-            {
-                string param = GetReportAccountParam(line.ExpenseAccountType);
-                byGroup.TryGetValue(param, out decimal current);
-                byGroup[param] = current + line.TotalAmount;
-            }
+            decimal gridTotal = _lines.Sum(l => l.TotalAmount);
 
-            CostSlipType type = CurrentType;
-            bool isService = type == CostSlipType.Service;
-            decimal direct = 0;
-            decimal other = 0;
-
-            foreach (var (param, amount) in byGroup)
+            if (_accountInputs.TryGetValue(DerivedAccount, out TextEdit? derivedInput))
             {
-                if (isService ? param == "M740" : param is "M710" or "M720" or "M730")
+                _accountAmounts[DerivedAccount] = gridTotal;
+
+                _syncingTotals = true;
+                try
                 {
-                    direct += amount;
+                    derivedInput.EditValue = gridTotal;
                 }
-                else if (param is "M750" or "M760" or "M770" or "M780")
+                finally
                 {
-                    other += amount;
+                    _syncingTotals = false;
                 }
             }
 
-            decimal grand = direct + other;
-
-            lblDirectValue.Text = direct.ToString("n2") + " ₺";
-            lblOtherValue.Text = other.ToString("n2") + " ₺";
-            lblGrandTotalValue.Text = grand.ToString("n2") + " ₺";
-
-            var breakdown = _lines
-                .GroupBy(l => l.ExpenseAccountType)
-                .OrderBy(g => (int)g.Key)
-                .Select(g => $"{Cost.Accounting.Automation.Application.Helpers.EnumDisplay.GetDisplayName(g.Key)}: {g.Sum(l => l.TotalAmount):n2} ₺");
-
-            lblBreakdownLabel.Text = breakdown.Any()
-                ? string.Join(Environment.NewLine, breakdown)
-                : "Gider kalemi ekleyin.";
-
+            RecalculateGrandTotal();
             gridLinesView.RefreshData();
+        }
+
+        private void RecalculateGrandTotal()
+        {
+            int qty = ParseQuantity();
+            decimal total = Math.Round(_accountAmounts.Values.Sum(), 2);
+
+            decimal unitCost = 0m;
+            decimal reconciled = total;
+            decimal diff = 0m;
+            ExpenseAccountType? target = null;
+
+            if (qty > 0 && total > 0)
+            {
+                unitCost = Math.Round(total / qty, 2);
+                reconciled = Math.Round(unitCost * qty, 2);
+                diff = Math.Round(reconciled - total, 2);
+                target = CurrentType == CostSlipType.Service
+                    ? ExpenseAccountType.Account740_7
+                    : ExpenseAccountType.Account730_07;
+            }
+
+            _unitCost = unitCost;
+            _roundingDiff = diff;
+            _roundingTargetAccount = target;
+
+            if (target is not null && _accountInputs.TryGetValue(target.Value, out TextEdit? targetInput))
+            {
+                decimal displayed = Math.Round(_accountAmounts.GetValueOrDefault(target.Value) + diff, 2);
+                if (displayed < 0m)
+                {
+                    displayed = 0m;
+                }
+
+                _syncingTotals = true;
+                try
+                {
+                    targetInput.EditValue = displayed;
+                }
+                finally
+                {
+                    _syncingTotals = false;
+                }
+            }
+
+            _grandTotal = reconciled;
+            gridLinesView.RefreshData();
+        }
+
+        private int ParseQuantity()
+        {
+            if (int.TryParse(txtQuantity.Text.Trim(), out int qty) && qty > 0)
+            {
+                return qty;
+            }
+
+            return 0;
+        }
+
+        private void ApplyRoundingAdjustmentToAccounts()
+        {
+            if (_roundingTargetAccount is not ExpenseAccountType target
+                || _roundingDiff == 0m
+                || !_accountAmounts.ContainsKey(target))
+            {
+                return;
+            }
+
+            _accountAmounts[target] = Math.Round(_accountAmounts[target] + _roundingDiff, 2);
+        }
+
+        private void GridLinesView_CustomDrawFooterCell(object? sender, FooterCellCustomDrawEventArgs e)
+        {
+            if (e.Column?.FieldName == nameof(CostSlipItemEditDto.TotalAmount))
+            {
+                e.Info.DisplayText = _grandTotal.ToString("n2") + " ₺";
+                e.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+                return;
+            }
+
+            if (e.Column?.FieldName == nameof(CostSlipItemEditDto.Description))
+            {
+                GridColumn? rightTotalColumn = gridLinesView.Columns[nameof(CostSlipItemEditDto.TotalAmount)];
+                if (rightTotalColumn is null)
+                {
+                    return;
+                }
+
+                int rightSpanWidth = gridLinesView.Columns
+                    .Cast<GridColumn>()
+                    .Where(c => c.Visible && c.VisibleIndex >= 0 && c.VisibleIndex > rightTotalColumn.VisibleIndex)
+                    .Sum(c => c.VisibleWidth);
+
+                Rectangle rightSpan = new(e.Bounds.Right - rightSpanWidth, e.Bounds.Top, rightSpanWidth, e.Bounds.Height);
+                Rectangle rightTextRect = new(rightSpan.X + 12, rightSpan.Y, rightSpan.Width - 12, rightSpan.Height);
+
+                e.Appearance.FillRectangle(e.Cache, rightSpan);
+                using (StringFormat format = new()
+                {
+                    Alignment = StringAlignment.Far,
+                    LineAlignment = StringAlignment.Center
+                })
+                {
+                    e.Appearance.DrawString(e.Cache, $"Birim Maliyet: {_unitCost:n2} ₺", rightTextRect, format);
+                }
+
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Column?.FieldName != nameof(CostSlipItemEditDto.UnitPrice))
+            {
+                return;
+            }
+
+            GridColumn? totalColumn = gridLinesView.Columns[nameof(CostSlipItemEditDto.TotalAmount)];
+            if (totalColumn is null)
+            {
+                return;
+            }
+
+            int spanWidth = gridLinesView.Columns
+                .Cast<GridColumn>()
+                .Where(c => c.Visible && c.VisibleIndex >= 0 && c.VisibleIndex < totalColumn.VisibleIndex)
+                .Sum(c => c.VisibleWidth);
+
+            Rectangle span = new(e.Bounds.Right - spanWidth, e.Bounds.Top, spanWidth, e.Bounds.Height);
+            Rectangle textRect = new(span.X + 12, span.Y, span.Width - 12, span.Height);
+
+            e.Appearance.FillRectangle(e.Cache, span);
+            using (StringFormat format = new()
+            {
+                Alignment = StringAlignment.Far,
+                LineAlignment = StringAlignment.Center
+            })
+            {
+                e.Appearance.DrawString(e.Cache, "Maliyet Genel Toplamı", textRect, format);
+            }
+
+            e.Handled = true;
         }
 
         private static string GetReportAccountParam(ExpenseAccountType account)
@@ -570,15 +1054,68 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 return;
             }
 
-            var validLines = _lines.Where(l => l.Quantity > 0).ToList();
-            if (validLines.Count == 0 || validLines.Any(l => l.UnitPrice < 0))
+            var materialLines = _lines.Where(l => l.Quantity > 0).ToList();
+            if (materialLines.Any(l => l.UnitPrice < 0))
             {
-                ToastHelper.Show("En az bir geçerli gider kalemi (miktarı sıfırdan büyük) olmalıdır.", ToastType.Warning);
+                ToastHelper.Show("Birim fiyat negatif olamaz.", ToastType.Warning);
                 return;
             }
 
-            decimal grandTotal = validLines.Sum(l => l.Quantity * l.UnitPrice);
-            if (grandTotal <= 0)
+            CostSlipItemEditDto? missingProductLine = materialLines.FirstOrDefault(l => l.ProductId is null);
+            if (missingProductLine is not null)
+            {
+                ToastHelper.Show("Miktarı sıfırdan büyük her satır için bir ürün seçilmelidir.", ToastType.Warning);
+                int row = _lines.IndexOf(missingProductLine);
+                if (row >= 0)
+                {
+                    gridLinesView.FocusedRowHandle = row;
+                }
+                return;
+            }
+
+            if (SelectedWorkshopId is Guid saveWorkshopId
+                && _transferredByWorkshop.TryGetValue(saveWorkshopId, out List<AtelierTransferProductDto>? saveTransferred))
+            {
+                foreach (var productGroup in materialLines
+                    .Where(l => l.ProductId is not null)
+                    .GroupBy(l => l.ProductId!.Value))
+                {
+                    decimal totalQty = productGroup.Sum(l => l.Quantity);
+                    decimal available = saveTransferred
+                        .FirstOrDefault(t => t.ProductId == productGroup.Key)?.AvailableQuantity ?? 0m;
+
+                    if (totalQty > available)
+                    {
+                        string name = productGroup.First().ProductName;
+                        ToastHelper.Show($"'{name}' için yetersiz stok. Atölyede kalan: {available:n2}.", ToastType.Warning);
+                        return;
+                    }
+                }
+            }
+
+            ExpenseAccountType derivedAccount = DerivedAccount;
+            RecalculateTotals();
+            ApplyRoundingAdjustmentToAccounts();
+
+            List<CostSlipItemModel> itemModels = materialLines.Select(l => new CostSlipItemModel(
+                l.ProductId,
+                l.ProductUnitTypeId,
+                derivedAccount,
+                l.Quantity,
+                l.UnitPrice,
+                l.Description)).ToList();
+
+            foreach ((ExpenseAccountType account, decimal amount) in _accountAmounts)
+            {
+                if (account == derivedAccount || amount <= 0)
+                {
+                    continue;
+                }
+
+                itemModels.Add(new CostSlipItemModel(null, null, account, 1m, amount, null));
+            }
+
+            if (itemModels.Count == 0 || itemModels.Sum(i => i.Quantity * i.UnitPrice) <= 0)
             {
                 ToastHelper.Show("Pusula genel toplamı sıfırdan büyük olmalıdır.", ToastType.Warning);
                 return;
@@ -586,16 +1123,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             DateOnly date = DateOnly.FromDateTime(dtCostDate.DateTime);
 
-            List<CostSlipItemModel> itemModels = validLines.Select(l => new CostSlipItemModel(
-                l.ProductId,
-                l.ProductUnitTypeId,
-                l.ExpenseAccountType,
-                l.Quantity,
-                l.UnitPrice,
-                l.Description)).ToList();
-
             Guid? producedProductId = lookUpProducedProduct.EditValue is Guid pid && pid != Guid.Empty ? pid : null;
-            Guid? customerId = lookUpCustomer.EditValue is Guid cid && cid != Guid.Empty ? cid : null;
 
             btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
@@ -611,7 +1139,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         date,
                         workshopId,
                         producedProductId,
-                        customerId,
+                        null,
                         quantity,
                         txtDescription.Text.Trim(),
                         itemModels));
@@ -624,7 +1152,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         CostDate: date,
                         WorkshopId: workshopId,
                         ProducedProductId: producedProductId,
-                        CustomerId: customerId,
+                        CustomerId: null,
                         Quantity: quantity,
                         Description: txtDescription.Text.Trim(),
                         Items: itemModels,
@@ -633,15 +1161,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
                 if (ok)
                 {
-                    string message = _editing is { Status: CostSlipStatus.Draft }
+                    bool isEditingDraft = _editing is { Status: CostSlipStatus.Draft };
+                    bool becomesApproved = approve && !isEditingDraft;
+
+                    string message = isEditingDraft
                         ? "Maliyet pusulası taslağı güncellendi."
                         : approve
                             ? "Maliyet pusulası onaylandı; stok hareketleri oluşturuldu."
                             : "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.";
                     ToastHelper.Show(message, ToastType.Success);
 
-                    DialogResult = DialogResult.OK;
-                    Close();
+                    _saved = true;
+                    LockAfterSave(becomesApproved);
                 }
             }
             finally
@@ -675,7 +1206,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
         }
 
-        private void LockAfterApproval()
+        private void LockAfterApproval() => LockAfterSave(approved: true);
+
+        private void LockAfterSave(bool approved)
         {
             btnPrintSlip.Enabled = true;
             btnSave.Enabled = false;
@@ -689,13 +1222,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             dtCostDate.ReadOnly = true;
             lookUpWorkshop.ReadOnly = true;
             lookUpProducedProduct.ReadOnly = true;
-            lookUpCustomer.ReadOnly = true;
             txtQuantity.ReadOnly = true;
             txtDescription.ReadOnly = true;
             gridLinesView.OptionsBehavior.Editable = false;
 
-            lblStatusValue.Text = "Durum: Onaylı";
-            lblStatusValue.Appearance.ForeColor = SkinTheme.Success;
+            foreach (TextEdit input in _accountInputList)
+            {
+                input.ReadOnly = true;
+            }
+
+            lblStatusValue.Text = approved ? "Durum: Onaylı" : "Durum: Taslak";
+            lblStatusValue.Appearance.ForeColor = approved ? SkinTheme.Success : SkinTheme.Warning;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -731,20 +1268,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         UnitPrice = l.UnitPrice,
                         Quantity = l.Quantity,
                         TotalAmount = l.TotalAmount,
-                        ExpenseAccountType = l.ExpenseAccountType
+                        ExpenseAccountType = DerivedAccount
                     })
                     .ToList();
 
                 report.DataSource = items;
 
-                var totals = _lines.Where(l => l.Quantity > 0).ToDictionary(
-                    l => GetReportAccountParam(l.ExpenseAccountType),
-                    l => l.Quantity * l.UnitPrice,
-                    StringComparer.Ordinal);
+                Dictionary<string, decimal> totals = _accountAmounts
+                    .GroupBy(kv => GetReportAccountParam(kv.Key))
+                    .ToDictionary(
+                        g => g.Key,
+                        g => Math.Round(g.Sum(kv => kv.Value), 2),
+                        StringComparer.Ordinal);
 
                 CompanyDto company = await LoadCompanyAsync();
 
-                SetReportParam(report, "Musteri", _customers.FirstOrDefault(c => c.Id == (lookUpCustomer.EditValue is Guid g1 && g1 != Guid.Empty ? g1 : Guid.Empty))?.Name ?? string.Empty);
                 SetReportParam(report, "MamulAdi", lookUpProducedProduct.EditValue is Guid pid && pid != Guid.Empty
                     ? _products.FirstOrDefault(p => p.Id == pid)?.Name ?? string.Empty
                     : string.Empty);
@@ -765,7 +1303,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     SetReportParam(report, param, value);
                 }
 
-                decimal grandTotal = _lines.Where(l => l.Quantity > 0).Sum(l => l.Quantity * l.UnitPrice);
+                decimal grandTotal = _accountAmounts.Values.Sum();
                 SetReportParam(report, "Toplam", Math.Round(grandTotal, 2));
 
                 waitForm = WaitFormHelper.Show<WaitForm>("Pusula hazırlanıyor...", "Lütfen bekleyin...");

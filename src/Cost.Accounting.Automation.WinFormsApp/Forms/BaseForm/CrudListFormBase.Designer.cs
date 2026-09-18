@@ -9,11 +9,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private DevExpress.XtraEditors.LabelControl lblSub;
         private DevExpress.XtraEditors.SimpleButton btnClosePage;
         private DevExpress.XtraEditors.PanelControl pnlToolbar;
+        private System.Windows.Forms.FlowLayoutPanel flpToolbar;
         private DevExpress.XtraEditors.SimpleButton btnNew;
         private DevExpress.XtraEditors.SimpleButton btnEdit;
         private DevExpress.XtraEditors.SimpleButton btnDelete;
         private DevExpress.XtraEditors.SimpleButton btnRefresh;
         private DevExpress.XtraEditors.SimpleButton btnSlipPrint;
+        private DevExpress.XtraEditors.SimpleButton btnSlipReport;
+        private DevExpress.XtraEditors.SimpleButton btnDistributionReport;
         private DevExpress.XtraEditors.SimpleButton btnApprove;
         private DevExpress.XtraEditors.CheckButton btnDeleted;
         private DevExpress.XtraEditors.SimpleButton btnRestore;
@@ -41,8 +44,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             lblSub = new DevExpress.XtraEditors.LabelControl();
             btnClosePage = new DevExpress.XtraEditors.SimpleButton();
             pnlToolbar = new DevExpress.XtraEditors.PanelControl();
+            flpToolbar = new System.Windows.Forms.FlowLayoutPanel();
             btnRefresh = new DevExpress.XtraEditors.SimpleButton();
             btnSlipPrint = new DevExpress.XtraEditors.SimpleButton();
+            btnSlipReport = new DevExpress.XtraEditors.SimpleButton();
+            btnDistributionReport = new DevExpress.XtraEditors.SimpleButton();
             btnDelete = new DevExpress.XtraEditors.SimpleButton();
             btnEdit = new DevExpress.XtraEditors.SimpleButton();
             btnNew = new DevExpress.XtraEditors.SimpleButton();
@@ -110,14 +116,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             pnlToolbar.Controls.Add(txtSearch);
             pnlToolbar.Controls.Add(cmbFilter);
             pnlToolbar.Controls.Add(lblFilter);
-            pnlToolbar.Controls.Add(btnRestore);
-            pnlToolbar.Controls.Add(btnDeleted);
-            pnlToolbar.Controls.Add(btnApprove);
-            pnlToolbar.Controls.Add(btnRefresh);
-            pnlToolbar.Controls.Add(btnSlipPrint);
-            pnlToolbar.Controls.Add(btnDelete);
-            pnlToolbar.Controls.Add(btnEdit);
-            pnlToolbar.Controls.Add(btnNew);
+            pnlToolbar.Controls.Add(flpToolbar);
             pnlToolbar.Dock = System.Windows.Forms.DockStyle.Top;
             pnlToolbar.Location = new System.Drawing.Point(0, 110);
             pnlToolbar.Name = "pnlToolbar";
@@ -129,9 +128,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnNew.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             btnNew.Appearance.Options.UseFont = true;
-            btnNew.Location = new System.Drawing.Point(16, 10);
+            btnNew.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnNew.Name = "btnNew";
-            btnNew.Size = new System.Drawing.Size(140, 36);
+            btnNew.Size = new System.Drawing.Size(84, 36);
             btnNew.TabIndex = 0;
             btnNew.Text = "Yeni";
             // 
@@ -139,9 +138,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnEdit.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnEdit.Appearance.Options.UseFont = true;
-            btnEdit.Location = new System.Drawing.Point(162, 10);
+            btnEdit.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnEdit.Name = "btnEdit";
-            btnEdit.Size = new System.Drawing.Size(120, 36);
+            btnEdit.Size = new System.Drawing.Size(104, 36);
             btnEdit.TabIndex = 1;
             btnEdit.Text = "Düzenle";
             // 
@@ -149,9 +148,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnDelete.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnDelete.Appearance.Options.UseFont = true;
-            btnDelete.Location = new System.Drawing.Point(288, 10);
+            btnDelete.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new System.Drawing.Size(110, 36);
+            btnDelete.Size = new System.Drawing.Size(74, 36);
             btnDelete.TabIndex = 2;
             btnDelete.Text = "Sil";
             // 
@@ -159,9 +158,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnRefresh.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnRefresh.Appearance.Options.UseFont = true;
-            btnRefresh.Location = new System.Drawing.Point(404, 10);
+            btnRefresh.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new System.Drawing.Size(60, 36);
+            btnRefresh.Size = new System.Drawing.Size(40, 36);
             btnRefresh.TabIndex = 3;
             btnRefresh.Text = "";
             // 
@@ -169,19 +168,41 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnSlipPrint.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnSlipPrint.Appearance.Options.UseFont = true;
-            btnSlipPrint.Location = new System.Drawing.Point(470, 10);
+            btnSlipPrint.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnSlipPrint.Name = "btnSlipPrint";
-            btnSlipPrint.Size = new System.Drawing.Size(120, 36);
+            btnSlipPrint.Size = new System.Drawing.Size(118, 36);
             btnSlipPrint.TabIndex = 9;
             btnSlipPrint.Text = "TIF Yazdır";
+            // 
+            // btnSlipReport
+            // 
+            btnSlipReport.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            btnSlipReport.Appearance.Options.UseFont = true;
+            btnSlipReport.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            btnSlipReport.Name = "btnSlipReport";
+            btnSlipReport.Size = new System.Drawing.Size(200, 36);
+            btnSlipReport.TabIndex = 10;
+            btnSlipReport.Text = "Maliyet Pusulası Yazdır";
+            btnSlipReport.Visible = false;
+            // 
+            // btnDistributionReport
+            // 
+            btnDistributionReport.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            btnDistributionReport.Appearance.Options.UseFont = true;
+            btnDistributionReport.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            btnDistributionReport.Name = "btnDistributionReport";
+            btnDistributionReport.Size = new System.Drawing.Size(235, 36);
+            btnDistributionReport.TabIndex = 11;
+            btnDistributionReport.Text = "Gider Dağıtım Tablosu Yazdır";
+            btnDistributionReport.Visible = false;
             // 
             // btnApprove
             // 
             btnApprove.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnApprove.Appearance.Options.UseFont = true;
-            btnApprove.Location = new System.Drawing.Point(596, 10);
+            btnApprove.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnApprove.Name = "btnApprove";
-            btnApprove.Size = new System.Drawing.Size(100, 36);
+            btnApprove.Size = new System.Drawing.Size(84, 36);
             btnApprove.TabIndex = 7;
             btnApprove.Text = "Onayla";
             // 
@@ -189,9 +210,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnDeleted.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnDeleted.Appearance.Options.UseFont = true;
-            btnDeleted.Location = new System.Drawing.Point(722, 10);
+            btnDeleted.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDeleted.Name = "btnDeleted";
-            btnDeleted.Size = new System.Drawing.Size(120, 36);
+            btnDeleted.Size = new System.Drawing.Size(94, 36);
             btnDeleted.TabIndex = 5;
             btnDeleted.Text = "Silinenler";
             // 
@@ -199,11 +220,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnRestore.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnRestore.Appearance.Options.UseFont = true;
-            btnRestore.Location = new System.Drawing.Point(848, 10);
+            btnRestore.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnRestore.Name = "btnRestore";
-            btnRestore.Size = new System.Drawing.Size(115, 36);
+            btnRestore.Size = new System.Drawing.Size(90, 36);
             btnRestore.TabIndex = 6;
             btnRestore.Text = "Geri Yükle";
+            // 
+            // flpToolbar
+            // 
+            flpToolbar.Controls.Add(btnNew);
+            flpToolbar.Controls.Add(btnEdit);
+            flpToolbar.Controls.Add(btnDelete);
+            flpToolbar.Controls.Add(btnRefresh);
+            flpToolbar.Controls.Add(btnSlipPrint);
+            flpToolbar.Controls.Add(btnSlipReport);
+            flpToolbar.Controls.Add(btnDistributionReport);
+            flpToolbar.Controls.Add(btnApprove);
+            flpToolbar.Controls.Add(btnDeleted);
+            flpToolbar.Controls.Add(btnRestore);
+            flpToolbar.Location = new System.Drawing.Point(16, 10);
+            flpToolbar.Name = "flpToolbar";
+            flpToolbar.Size = new System.Drawing.Size(1050, 36);
+            flpToolbar.TabIndex = 12;
+            flpToolbar.WrapContents = false;
             // 
             // lblFilter
             // 

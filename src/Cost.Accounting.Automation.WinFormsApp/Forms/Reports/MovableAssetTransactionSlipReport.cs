@@ -31,7 +31,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
             TopMargin = new TopMarginBand { HeightF = 22F, Name = "TopMargin" };
             ReportHeader = new ReportHeaderBand { HeightF = 22F, Name = "ReportHeader" };
             PageHeader = new PageHeaderBand { HeightF = 46F, Name = "PageHeader" };
-            GroupHeader = new GroupHeaderBand { HeightF = 18F, Name = "GroupHeader", RepeatEveryPage = true };
+            GroupHeader = new GroupHeaderBand { HeightF = 0F, Name = "GroupHeader" };
             Detail = new DetailBand { HeightF = RowHeight, Name = "Detail" };
             GroupFooter = new GroupFooterBand { HeightF = RowHeight, Name = "GroupFooter" };
             ReportFooter = new ReportFooterBand { HeightF = 1F, Name = "ReportFooter" };
@@ -45,7 +45,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
 
             GroupHeader.GroupFields.Add(
                 new GroupField(nameof(MovableAssetTransactionSlipRow.GroupCode), XRColumnSortOrder.Ascending));
-            GroupHeader.Controls.Add(BuildGroupHeaderTable());
 
             ReportHeader.SubBands.AddRange(
             [
@@ -313,15 +312,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
                     MakeCell(1D, "TUTARI", bold: true, header: true, align: TextAlignment.MiddleCenter)));
         }
 
-        private XRTable BuildGroupHeaderTable()
-        {
-            return MakeTable(
-                18F,
-                MakeRow(
-                    1D,
-                    MakeCell(8D, bindMember: nameof(MovableAssetTransactionSlipRow.GroupDisplay), bold: true, header: true)));
-        }
-
         private XRTable BuildDetailTable()
         {
             return MakeTable(
@@ -344,9 +334,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
                 RowHeight,
                 MakeRow(
                     1D,
-                    MakeCell(5D, bold: true, header: true, expression: "[GroupCode] + '  TOPLAMI'"),
+                    MakeCell(5D, bold: true, header: true, bindMember: nameof(MovableAssetTransactionSlipRow.GroupDisplay)),
                     MakeCell(1D, bold: true, header: true, align: TextAlignment.MiddleRight, bindMember: nameof(MovableAssetTransactionSlipRow.Miktari), bindFormat: "{0:n2}", summary: new XRSummary(SummaryRunning.Group, SummaryFunc.Sum, "{0:n2}")),
-                    MakeCell(1D, bold: true, header: true),
+                    MakeCell(1D, "TOPLAM", bold: true, header: true, align: TextAlignment.MiddleCenter),
                     MakeCell(1D, bold: true, header: true, align: TextAlignment.MiddleRight, bindMember: nameof(MovableAssetTransactionSlipRow.Tutari), bindFormat: "{0:n2}", summary: new XRSummary(SummaryRunning.Group, SummaryFunc.Sum, "{0:n2}"))));
         }
 

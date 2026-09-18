@@ -45,8 +45,8 @@ public sealed class CostSlipListDto : EntityDto
     [Column("TÃ¼r", Order = 20, Width = 90, Alignment = "Center")]
     public string CostSlipTypeName => CostSlipDto.GetDisplayName(CostSlipType);
 
-    [Column("Durum", Order = 25, Width = 75, Alignment = "Center")]
-    public string StatusName => Status == CostSlipStatus.Approved ? "OnaylÄ±" : "Taslak";
+[Column("Durum", Order = 25, Width = 75, Alignment = "Center")]
+    public string StatusName => Status == CostSlipStatus.Approved ? "Onaylı" : "Taslak";
 
     [Column("Tarih", Order = 30, Width = 90, Format = "dd.MM.yyyy", Alignment = "Center")]
     public DateOnly CostDate { get; set; }
@@ -81,8 +81,10 @@ public sealed class CostSlipListDto : EntityDto
     [Column("Ãœretilen ÃœrÃ¼n Id", IsVisible = false)]
     public Guid? ProducedProductId { get; set; }
 
-    [Column("MÃ¼ÅŸteri Id", IsVisible = false)]
+[Column("MÃ¼ÅŸteri Id", IsVisible = false)]
     public Guid? CustomerId { get; set; }
+
+    public List<CostSlipItemDto> CostSlipItems { get; set; } = [];
 }
 
 public sealed class CostSlipDto : EntityDto
@@ -131,9 +133,24 @@ public static class CostSlipExtensions
                 ProducedProductName = s.Entity.ProducedProduct == null ? string.Empty : s.Entity.ProducedProduct.Name.Value,
                 CustomerId = s.Entity.CustomerId == null ? null : s.Entity.CustomerId.Value,
                 CustomerName = s.Entity.Customer == null ? string.Empty : s.Entity.Customer.Name.Value,
-                Quantity = s.Entity.Quantity,
+Quantity = s.Entity.Quantity,
                 GrandTotal = s.Entity.GrandTotal,
                 Description = s.Entity.Description.Value,
+                CostSlipItems = s.Entity.CostSlipItems
+                    .Select(i => new CostSlipItemDto
+                    {
+                        Id = i.Id,
+                        ProductId = i.ProductId == null ? null : i.ProductId.Value,
+                        ProductName = i.Product == null ? string.Empty : i.Product.Name.Value,
+                        ProductUnitTypeId = i.ProductUnitTypeId == null ? null : i.ProductUnitTypeId.Value,
+                        ProductUnitTypeName = i.ProductUnitType == null ? string.Empty : i.ProductUnitType.Name.Value,
+                        ExpenseAccountType = i.ExpenseAccountType,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        TotalAmount = i.TotalAmount,
+                        Description = i.Description.Value
+                    })
+                    .ToList(),
 
                 CreatedAt = s.Entity.CreatedAt,
                 CreatedBy = s.Entity.CreatedBy,

@@ -33,6 +33,7 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
+        _btnManualAdd.Enabled = false;
         _ = ReloadAsync();
     }
 
@@ -54,6 +55,13 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         {
             _cascading = false;
         }
+
+        UpdateManualAddButtonState();
+    }
+
+    private void UpdateManualAddButtonState()
+    {
+        _btnManualAdd.Enabled = _tree.GetAllCheckedNodes().Any();
     }
 
     private static void SetDescendantsChecked(TreeListNode node, bool check)
@@ -126,6 +134,8 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
 
             _tree.Refresh();
             System.Windows.Forms.Application.DoEvents();
+
+            UpdateManualAddButtonState();
 
             if (_tree.Nodes.Count > 0)
             {
@@ -239,11 +249,13 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
     private void BtnSelectAll_Click(object? sender, EventArgs e)
     {
         SetAllChecked(true);
+        UpdateManualAddButtonState();
     }
 
     private void BtnClearSelection_Click(object? sender, EventArgs e)
     {
         SetAllChecked(false);
+        UpdateManualAddButtonState();
     }
 
     private async void BtnDelete_Click(object? sender, EventArgs e)
@@ -272,6 +284,37 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         {
             await ReloadAsync();
         }
+    }
+
+    private void BtnManualAdd_Click(object? sender, EventArgs e)
+    {
+        Guid? parentId = SelectCheckedParent();
+
+        using ManualAccountEditForm form = new(parentId);
+        if (form.ShowDialog(this) == DialogResult.OK)
+        {
+            _ = ReloadAsync();
+        }
+    }
+
+    private Guid? SelectCheckedParent()
+    {
+        List<TreeListNode> checkedNodes = _tree.GetAllCheckedNodes().ToList();
+
+        if (checkedNodes.Count == 0)
+        {
+            ToastHelper.Show("Alt hesap eklemek için önce bir hesabı işaretleyin.", ToastType.Warning, 3200);
+            return null;
+        }
+
+        if (_tree.FocusedNode is { } focused
+            && focused.Checked
+            && focused.GetValue(nameof(ChartOfAccountDto.Id)) is Guid focusedId)
+        {
+            return focusedId;
+        }
+
+        return checkedNodes[0].GetValue(nameof(ChartOfAccountDto.Id)) is Guid firstId ? firstId : null;
     }
 
     private async void BtnImport_Click(object? sender, EventArgs e)

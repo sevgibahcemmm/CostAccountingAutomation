@@ -17,6 +17,7 @@ public sealed partial class ChartOfAccountsListForm
     private SimpleButton _btnClosePage = null!;
 
     private PanelControl _pnlToolbar = null!;
+    private SimpleButton _btnManualAdd = null!;
     private SimpleButton _btnImport = null!;
     private SimpleButton _btnRefresh = null!;
     private SimpleButton _btnExpandAll = null!;
@@ -39,6 +40,7 @@ public sealed partial class ChartOfAccountsListForm
         _btnClosePage = new SimpleButton();
 
         _pnlToolbar = new PanelControl();
+        _btnManualAdd = new SimpleButton();
         _btnImport = new SimpleButton();
         _btnRefresh = new SimpleButton();
         _btnExpandAll = new SimpleButton();
@@ -124,11 +126,21 @@ public sealed partial class ChartOfAccountsListForm
         _pnlToolbar.Padding = new Padding(16, 10, 16, 10);
 
         //
+        // _btnManualAdd
+        //
+        _btnManualAdd.Text = "Alt Hesap Ekle";
+        _btnManualAdd.Size = new Size(140, 36);
+        _btnManualAdd.Location = new Point(16, 10);
+        _btnManualAdd.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        _btnManualAdd.Appearance.Options.UseFont = true;
+        _btnManualAdd.Click += BtnManualAdd_Click;
+
+        //
         // _btnImport
         //
         _btnImport.Text = "Hesap Planı İçe Aktar";
         _btnImport.Size = new Size(190, 36);
-        _btnImport.Location = new Point(16, 10);
+        _btnImport.Location = new Point(166, 10);
         _btnImport.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         _btnImport.Appearance.Options.UseFont = true;
         _btnImport.Click += BtnImport_Click;
@@ -138,7 +150,7 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnRefresh.Text = "Yenile";
         _btnRefresh.Size = new Size(92, 36);
-        _btnRefresh.Location = new Point(216, 10);
+        _btnRefresh.Location = new Point(366, 10);
         _btnRefresh.Click += BtnRefresh_Click;
 
         //
@@ -146,7 +158,7 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnExpandAll.Text = "Tümünü Genişlet";
         _btnExpandAll.Size = new Size(118, 36);
-        _btnExpandAll.Location = new Point(318, 10);
+        _btnExpandAll.Location = new Point(468, 10);
         _btnExpandAll.Click += BtnExpandAll_Click;
 
         //
@@ -154,7 +166,7 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnCollapseAll.Text = "Tümünü Daralt";
         _btnCollapseAll.Size = new Size(118, 36);
-        _btnCollapseAll.Location = new Point(446, 10);
+        _btnCollapseAll.Location = new Point(596, 10);
         _btnCollapseAll.Click += BtnCollapseAll_Click;
 
         //
@@ -162,7 +174,7 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnDelete.Text = "Seçileni Sil";
         _btnDelete.Size = new Size(110, 36);
-        _btnDelete.Location = new Point(574, 10);
+        _btnDelete.Location = new Point(724, 10);
         _btnDelete.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         _btnDelete.Appearance.Options.UseFont = true;
         _btnDelete.Click += BtnDelete_Click;
@@ -172,7 +184,7 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnSelectAll.Text = "Hepsini Seç";
         _btnSelectAll.Size = new Size(100, 36);
-        _btnSelectAll.Location = new Point(692, 10);
+        _btnSelectAll.Location = new Point(842, 10);
         _btnSelectAll.Click += BtnSelectAll_Click;
 
         //
@@ -180,9 +192,10 @@ public sealed partial class ChartOfAccountsListForm
         //
         _btnClearSelection.Text = "Seçili Olanları Kaldır";
         _btnClearSelection.Size = new Size(150, 36);
-        _btnClearSelection.Location = new Point(800, 10);
+        _btnClearSelection.Location = new Point(950, 10);
         _btnClearSelection.Click += BtnClearSelection_Click;
 
+        SetIcon(_btnManualAdd, DxIcon.Add, 18);
         SetIcon(_btnImport, DxIcon.Import, 18);
         SetIcon(_btnRefresh, DxIcon.Refresh, 18);
         SetIcon(_btnExpandAll, DxIcon.ExpandAll, 18);
@@ -191,6 +204,7 @@ public sealed partial class ChartOfAccountsListForm
         SetIcon(_btnSelectAll, DxIcon.CheckAll, 18);
         SetIcon(_btnClearSelection, DxIcon.Uncheck, 18);
 
+        _pnlToolbar.Controls.Add(_btnManualAdd);
         _pnlToolbar.Controls.Add(_btnImport);
         _pnlToolbar.Controls.Add(_btnRefresh);
         _pnlToolbar.Controls.Add(_btnExpandAll);
