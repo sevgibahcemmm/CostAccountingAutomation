@@ -44,6 +44,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => p.ProductUnitTypeId);
         builder.HasIndex(p => p.ChartOfAccountId);
         builder.HasIndex(p => p.TaxRateId);
+        builder.HasIndex(p => p.SemiFinishedProductId);
 
         builder.HasOne(p => p.Warehouse)
             .WithMany()
@@ -68,6 +69,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasOne(p => p.ChartOfAccount)
             .WithMany()
             .HasForeignKey(p => p.ChartOfAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(p => p.SemiFinishedProduct)
+            .WithMany()
+            .HasForeignKey(p => p.SemiFinishedProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(p => p.Prices)

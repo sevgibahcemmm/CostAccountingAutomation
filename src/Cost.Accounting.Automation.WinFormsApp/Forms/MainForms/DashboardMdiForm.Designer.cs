@@ -111,6 +111,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private System.Windows.Forms.Label lblChartStockMovementsTitle;
         private DevExpress.XtraCharts.ChartControl chartStockMovements;
 
+        private DevExpress.XtraEditors.PanelControl pnlTableProductStocks;
+        private System.Windows.Forms.Label lblTableProductStocksTitle;
+        private DevExpress.XtraGrid.GridControl gridProductStocks;
+        private DevExpress.XtraGrid.Views.Grid.GridView viewProductStocks;
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && components != null)
@@ -384,6 +389,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             chartStockMovements =
                 new DevExpress.XtraCharts.ChartControl();
 
+            pnlTableProductStocks =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblTableProductStocksTitle =
+                new System.Windows.Forms.Label();
+
+            gridProductStocks =
+                new DevExpress.XtraGrid.GridControl();
+
+            viewProductStocks =
+                new DevExpress.XtraGrid.Views.Grid.GridView();
+
             btnRefresh =
                 new DevExpress.XtraEditors.SimpleButton();
 
@@ -473,6 +490,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlChartStockMovements.SuspendLayout();
 
             ((System.ComponentModel.ISupportInitialize)chartStockMovements).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlTableProductStocks).BeginInit();
+            pnlTableProductStocks.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)gridProductStocks).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)viewProductStocks).BeginInit();
 
             SuspendLayout();
 
@@ -661,12 +684,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             tblLayout.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    31F));
+                    14F));
 
             tblLayout.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    69F));
+                    86F));
 
             tblLayout.Size =
                 new System.Drawing.Size(1248, 592);
@@ -675,36 +698,56 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 0;
 
             tblKpi.ColumnCount =
-                4;
+                8;
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    25F));
+                    12.5F));
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    25F));
+                    12.5F));
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    25F));
+                    12.5F));
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    25F));
+                    12.5F));
+
+            tblKpi.ColumnStyles.Add(
+                new System.Windows.Forms.ColumnStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    12.5F));
+
+            tblKpi.ColumnStyles.Add(
+                new System.Windows.Forms.ColumnStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    12.5F));
+
+            tblKpi.ColumnStyles.Add(
+                new System.Windows.Forms.ColumnStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    12.5F));
+
+            tblKpi.ColumnStyles.Add(
+                new System.Windows.Forms.ColumnStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    12.5F));
 
             tblKpi.Controls.Add(kpi1, 0, 0);
             tblKpi.Controls.Add(kpi2, 1, 0);
             tblKpi.Controls.Add(kpi3, 2, 0);
             tblKpi.Controls.Add(kpi4, 3, 0);
-            tblKpi.Controls.Add(kpi5, 0, 1);
-            tblKpi.Controls.Add(kpi6, 1, 1);
-            tblKpi.Controls.Add(kpi7, 2, 1);
-            tblKpi.Controls.Add(kpi8, 3, 1);
+            tblKpi.Controls.Add(kpi5, 4, 0);
+            tblKpi.Controls.Add(kpi6, 5, 0);
+            tblKpi.Controls.Add(kpi7, 6, 0);
+            tblKpi.Controls.Add(kpi8, 7, 0);
 
             tblKpi.Dock =
                 System.Windows.Forms.DockStyle.Fill;
@@ -719,17 +762,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 "tblKpi";
 
             tblKpi.RowCount =
-                2;
+                1;
 
             tblKpi.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    50F));
-
-            tblKpi.RowStyles.Add(
-                new System.Windows.Forms.RowStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    50F));
+                    100F));
 
             tblKpi.Size =
                 new System.Drawing.Size(1248, 183);
@@ -745,7 +783,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 pnlKpi1IconBadge,
                 lblKpi1Icon,
                 "MÜŞTERİ",
-                "🤝");
+                "●",
+                "#26A69A");
 
             ConfigureKpiCard(
                 kpi2,
@@ -755,7 +794,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 pnlKpi2IconBadge,
                 lblKpi2Icon,
                 "TEDARİKÇİ",
-                "🚚");
+                "▲",
+                "#FF9800");
 
             ConfigureKpiCard(
                 kpi3,
@@ -764,8 +804,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi3Title,
                 pnlKpi3IconBadge,
                 lblKpi3Icon,
-                "TOPLAM ALACAK",
-                "💰");
+                "MAMÜL SAYISI",
+                "■",
+                "#2E75B6");
 
             ConfigureKpiCard(
                 kpi4,
@@ -774,8 +815,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi4Title,
                 pnlKpi4IconBadge,
                 lblKpi4Icon,
-                "TOPLAM BORÇ",
-                "🏦");
+                "STOKTAKİ ÜRÜN",
+                "◼",
+                "#28A745");
 
             ConfigureKpiCard(
                 kpi5,
@@ -785,7 +827,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 pnlKpi5IconBadge,
                 lblKpi5Icon,
                 "KRİTİK STOK",
-                "⚠️");
+                "⚠",
+                "#FD7E14");
 
             ConfigureKpiCard(
                 kpi6,
@@ -794,8 +837,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi6Title,
                 pnlKpi6IconBadge,
                 lblKpi6Icon,
-                "STOKTAKİ ÜRÜN",
-                "📦");
+                "TOPLAM ALACAK",
+                "♦",
+                "#6F42C1");
 
             ConfigureKpiCard(
                 kpi7,
@@ -804,8 +848,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi7Title,
                 pnlKpi7IconBadge,
                 lblKpi7Icon,
-                "ONAYLI FATURA",
-                "✅");
+                "TOPLAM BORÇ",
+                "◆",
+                "#DC3545");
 
             ConfigureKpiCard(
                 kpi8,
@@ -814,8 +859,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblKpi8Title,
                 pnlKpi8IconBadge,
                 lblKpi8Icon,
-                "TASLAK FATURA",
-                "📝");
+                "ONAYLI FATURA",
+                "✓",
+                "#17A2B8");
 
             tblBottom.ColumnCount =
                 3;
@@ -880,6 +926,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 2,
                 2);
 
+            tblBottom.Controls.Add(
+                pnlTableProductStocks,
+                0,
+                3);
+
+            tblBottom.SetColumnSpan(
+                pnlTableProductStocks,
+                3);
+
             tblBottom.Dock =
                 System.Windows.Forms.DockStyle.Fill;
 
@@ -897,22 +952,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 "tblBottom";
 
             tblBottom.RowCount =
-                3;
+                4;
 
             tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    36F));
+                    28F));
 
             tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    32F));
+                    24F));
 
             tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    32F));
+                    24F));
+
+            tblBottom.RowStyles.Add(
+                new System.Windows.Forms.RowStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    24F));
 
             tblBottom.Size =
                 new System.Drawing.Size(1248, 405);
@@ -940,6 +1000,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 gridCriticalStock,
                 viewCriticalStock,
                 "Kritik Stok");
+
+            ConfigureTablePanel(
+                pnlTableProductStocks,
+                lblTableProductStocksTitle,
+                gridProductStocks,
+                viewProductStocks,
+                "Stok Hareketleri ve Maliyet");
 
             ConfigureChartPanel(
                 pnlChartReceivables,
@@ -1038,6 +1105,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ((System.ComponentModel.ISupportInitialize)viewCriticalStock).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridCriticalStock).EndInit();
 
+            pnlTableProductStocks.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)viewProductStocks).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridProductStocks).EndInit();
+
             pnlChartReceivables.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)chartReceivables).EndInit();
 
@@ -1067,9 +1138,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             System.Windows.Forms.Panel badge,
             System.Windows.Forms.Label icon,
             string caption,
-            string iconText)
+            string iconText,
+            string accentHex)
         {
-            // Kartları belirgin yapmak için Simple border ve aralarında boşluk için Margin (8px)
             card.BorderStyle =
                 DevExpress.XtraEditors.Controls.BorderStyles.Simple;
 
@@ -1077,7 +1148,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 System.Windows.Forms.DockStyle.Fill;
 
             card.Margin =
-                new System.Windows.Forms.Padding(8);
+                new System.Windows.Forms.Padding(6);
 
             card.Padding =
                 new System.Windows.Forms.Padding(0);
@@ -1087,20 +1158,59 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             card.Controls.Add(title);
             card.Controls.Add(badge);
 
+            System.Drawing.Color accentColor =
+                System.Drawing.ColorTranslator.FromHtml(accentHex);
+
+            bool isDarkSkin =
+                Cost.Accounting.Automation.WinFormsApp.Utils.SkinTheme.IsDarkSkin;
+
+            System.Drawing.Color displayAccent =
+                isDarkSkin
+                    ? Cost.Accounting.Automation.WinFormsApp.Utils.SkinTheme.Blend(
+                        accentColor,
+                        System.Drawing.Color.White,
+                        0.35F)
+                    : accentColor;
+
             accent.Dock =
                 System.Windows.Forms.DockStyle.Left;
 
             accent.Width =
                 4;
 
+            accent.BackColor =
+                displayAccent;
+
+            badge.Size =
+                new System.Drawing.Size(
+                    30,
+                    30);
+
+            badge.BackColor =
+                accentColor;
+
+            badge.Controls.Add(icon);
+
+            icon.Dock =
+                System.Windows.Forms.DockStyle.Fill;
+
+            icon.Font =
+                new System.Drawing.Font(
+                    "Segoe UI",
+                    13F,
+                    System.Drawing.FontStyle.Bold);
+
+            icon.ForeColor =
+                System.Drawing.Color.White;
+
+            icon.Text =
+                iconText;
+
+            icon.TextAlign =
+                System.Drawing.ContentAlignment.MiddleCenter;
+
             value.AutoSize =
                 false;
-
-            value.Location =
-                new System.Drawing.Point(18, 10);
-
-            value.Size =
-                new System.Drawing.Size(180, 32);
 
             value.Text =
                 "-";
@@ -1111,17 +1221,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             value.Font =
                 new System.Drawing.Font(
                     "Segoe UI",
-                    18F,
+                    13F,
                     System.Drawing.FontStyle.Bold);
+
+            value.ForeColor =
+                isDarkSkin
+                    ? System.Drawing.Color.FromArgb(232, 236, 243)
+                    : System.Drawing.Color.FromArgb(32, 32, 32);
 
             title.AutoSize =
                 false;
-
-            title.Location =
-                new System.Drawing.Point(18, 45);
-
-            title.Size =
-                new System.Drawing.Size(210, 18);
 
             title.Text =
                 caption;
@@ -1132,47 +1241,44 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             title.Font =
                 new System.Drawing.Font(
                     "Segoe UI",
-                    7.5F,
+                    8F,
                     System.Drawing.FontStyle.Bold);
 
-            badge.Anchor =
-                System.Windows.Forms.AnchorStyles.Top |
-                System.Windows.Forms.AnchorStyles.Right;
-
-            badge.Location =
-                new System.Drawing.Point(
-                    card.Width - 46,
-                    12);
-
-            badge.Size =
-                new System.Drawing.Size(
-                    32,
-                    32);
-
-            badge.Controls.Add(icon);
-
-            icon.Dock =
-                System.Windows.Forms.DockStyle.Fill;
-
-            icon.Font =
-                new System.Drawing.Font(
-                    "Segoe UI Emoji",
-                    12F);
-
-            icon.Text =
-                iconText;
-
-            icon.TextAlign =
-                System.Drawing.ContentAlignment.MiddleCenter;
+            title.ForeColor =
+                displayAccent;
 
             card.Resize += (_, _) =>
             {
                 badge.Location =
                     new System.Drawing.Point(
-                        card.ClientSize.Width -
-                        badge.Width -
-                        14,
-                        12);
+                        card.ClientSize.Width - badge.Width - 4,
+                        4);
+
+                int textWidth =
+                    System.Math.Max(
+                        40,
+                        badge.Left - 16);
+
+                value.Location =
+                    new System.Drawing.Point(
+                        8,
+                        4);
+
+                value.Width =
+                    textWidth;
+
+                value.Height =
+                    System.Math.Max(
+                        22,
+                        card.ClientSize.Height / 2);
+
+                title.Location =
+                    new System.Drawing.Point(
+                        8,
+                        value.Bottom + 1);
+
+                title.Width =
+                    textWidth;
             };
         }
 

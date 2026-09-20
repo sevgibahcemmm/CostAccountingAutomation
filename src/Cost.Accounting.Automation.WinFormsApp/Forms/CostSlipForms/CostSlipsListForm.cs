@@ -1,11 +1,16 @@
 using Cost.Accounting.Automation.Application.CostSlips;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
+using Cost.Accounting.Automation.WinFormsApp.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Grid;
+using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
 
@@ -24,7 +29,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             nameof(CostSlipListDto.SlipNumber),
             nameof(CostSlipListDto.WorkshopName),
             nameof(CostSlipListDto.ProducedProductName),
-            nameof(CostSlipListDto.CustomerName),
             nameof(CostSlipListDto.Description)
         ];
 
@@ -105,7 +109,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             => new CostSlipDeleteCommand(item.Id);
 
         protected override string GetDeleteSummary(CostSlipListDto item)
-            => $"{item.SlipNumber} ({item.CustomerName})";
+            => item.SlipNumber;
 
         protected override bool SupportsRestore => true;
 
@@ -130,7 +134,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         protected override Task ShowSlipReportAsync(CostSlipListDto item)
             => CostSlipReportPresenter.ShowAsync(item);
 
-        protected override Task ShowDistributionReportAsync(CostSlipListDto item)
-            => GiderDagitimReportPresenter.ShowAsync(item);
+        protected override async Task ShowDistributionReportAsync(CostSlipListDto? item)
+        {
+            using var dateForm = new DateRangePromptForm(item?.CostDate, item?.CostDate);
+            if (dateForm.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            GiderDagilimReportResult result = await mediator.Send(
+                new GiderDagilimReportQuery(dateForm.StartDate, dateForm.EndDate));
+
+            if (result.Rows.Count == 0)
+            {
+                ToastHelper.Show("Seçilen tarih aralığında atölye kaydı bulunamadı.", ToastType.Warning);
+                return;
+            }
+
+            var report = new ProductCostAllocationTable();
+            report.SetData(dateForm.StartDate, dateForm.EndDate, result);
+            report.PrintReport();
+        }
     }
 }

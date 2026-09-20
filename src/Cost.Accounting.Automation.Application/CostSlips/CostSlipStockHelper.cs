@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CostSlips;
@@ -10,16 +11,20 @@ namespace Cost.Accounting.Automation.Application.CostSlips;
 
 internal static class CostSlipStockHelper
 {
+    private const string LedgerSourceType = "MaliyetTuketimi";
+
     /// <summary>
     /// Maliyet pusulası onaylandığında stok yan etkilerini üretir:
-    /// - Malzeme kalemleri için atölyedeki stoklardan FIFO/LIFO birim maliyetle ÇIKIŞ hareketi.
+    /// - Malzeme kalemleri için atölyedeki stoklardan FIFO/LIFO birim maliyetle ÇIKIŞ hareketi
+    ///   ve karşılığında yevmiye kaydı: atölye hesabı ALACAK (malzeme tutarı atölye bakiyesinden düşülür).
     /// - Mamul / Yarı mamul için birim maliyet = Genel Toplam / Miktar ile GİRİŞ hareketi.
-    /// Cari / yevmiye hareketi üretilmez.
     /// </summary>
     public static async Task<Result<string>> ApplyStockEffectsAsync(
         CostSlip slip,
         StockCostingMethod costingMethod,
         IProductMovementRepository productMovementRepository,
+        IChartOfAccountLedgerPoster ledgerPoster,
+        IProductRepository productRepository,
         CancellationToken cancellationToken)
     {
         var materialLines = slip.CostSlipItems
@@ -30,6 +35,13 @@ internal static class CostSlipStockHelper
             .Select(i => i.ProductId!)
             .Distinct()
             .ToList();
+
+        List<Product> products = await productRepository.GetAll()
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        Dictionary<IdentityId, Product> productMap = products.ToDictionary(p => p.Id);
 
         Dictionary<IdentityId, decimal> requestedQuantities = materialLines
             .GroupBy(i => i.ProductId!)
@@ -75,6 +87,24 @@ internal static class CostSlipStockHelper
                 description: new Description($"Maliyet Pusulası Tüketimi - {slip.SlipNumber}"));
 
             await productMovementRepository.AddAsync(output, cancellationToken);
+
+            decimal amount = Math.Round(line.Quantity * unitCost, 2);
+            if (amount > 0)
+            {
+                // Yarı mamul tüketendiğinde değer yarı mamulün kendi hesabında
+                // (151.10.xx) taşınır; bu yüzden düşüm oraya alacak yazılmalıdır.
+                // Atölyeye transfer edilmiş normal malzemelerde ise atölye hesabına
+                // alacak yazılır (değer zaten transfer ile atölyede toplanmıştır).
+                Product? product = productMap.TryGetValue(productId, out Product? p) ? p : null;
+                IdentityId ledgerAccountId = product is not null
+                    && product.SemiFinishedProductId is not null
+                    && product.ChartOfAccountId is IdentityId productAccountId
+                        ? productAccountId
+                        : slip.WorkshopId;
+
+                await ledgerPoster.PostAsync(
+                    ledgerAccountId, 0, amount, LedgerSourceType, output.Id, cancellationToken);
+            }
         }
 
         if (slip.ProducedProductId is { } producedProductId)

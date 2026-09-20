@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.Products;
 
@@ -9,7 +9,7 @@ public sealed class CostSlipItemDto
     [Column("Id", IsVisible = false)]
     public Guid Id { get; set; }
 
-    [Column("ÃœrÃ¼n / Masraf", Order = 10, Width = 220)]
+    [Column("Ürün / Masraf", Order = 10, Width = 220)]
     public string ProductName { get; set; } = string.Empty;
 
     [Column("Birim", Order = 20, Width = 80, Alignment = "Center")]
@@ -27,7 +27,7 @@ public sealed class CostSlipItemDto
     [Column("Tutar", Order = 60, Width = 110, Format = "n2", Alignment = "Right")]
     public decimal TotalAmount { get; set; }
 
-    [Column("AÃ§Ä±klama", IsVisible = false)]
+    [Column("Açıklama", IsVisible = false)]
     public string Description { get; set; } = string.Empty;
 
     public Guid? ProductId { get; set; }
@@ -42,22 +42,22 @@ public sealed class CostSlipListDto : EntityDto
     [Column("Pusula No", Order = 10, Width = 130)]
     public string SlipNumber { get; set; } = default!;
 
-    [Column("TÃ¼r", Order = 20, Width = 90, Alignment = "Center")]
+    [Column("Tür", Order = 20, Width = 90, Alignment = "Center")]
     public string CostSlipTypeName => CostSlipDto.GetDisplayName(CostSlipType);
 
-[Column("Durum", Order = 25, Width = 75, Alignment = "Center")]
+    [Column("Durum", Order = 25, Width = 75, Alignment = "Center")]
     public string StatusName => Status == CostSlipStatus.Approved ? "Onaylı" : "Taslak";
 
     [Column("Tarih", Order = 30, Width = 90, Format = "dd.MM.yyyy", Alignment = "Center")]
     public DateOnly CostDate { get; set; }
 
-    [Column("AtÃ¶lye", Order = 40, Width = 170)]
+    [Column("Atölye", Order = 40, Width = 170)]
     public string WorkshopName { get; set; } = string.Empty;
 
-    [Column("Ãœretilen ÃœrÃ¼n", Order = 45, Width = 190)]
+    [Column("Üretilen Ürün", Order = 45, Width = 190)]
     public string ProducedProductName { get; set; } = string.Empty;
 
-    [Column("MÃ¼ÅŸteri", Order = 50, Width = 170)]
+    [Column("Müşteri", Order = 50, Width = 170, IsVisible = false)]
     public string CustomerName { get; set; } = string.Empty;
 
     [Column("Miktar", Order = 55, Width = 70, Alignment = "Center")]
@@ -66,7 +66,7 @@ public sealed class CostSlipListDto : EntityDto
     [Column("Genel Toplam", Order = 60, Width = 120, Format = "n2", Alignment = "Right")]
     public decimal GrandTotal { get; set; }
 
-    [Column("AÃ§Ä±klama", Order = 70, Width = 200)]
+    [Column("Açıklama", Order = 70, Width = 200)]
     public string Description { get; set; } = string.Empty;
 
     [Column("Pusula Tipi", IsVisible = false)]
@@ -75,13 +75,13 @@ public sealed class CostSlipListDto : EntityDto
     [Column("Durum Kodu", IsVisible = false)]
     public CostSlipStatus Status { get; set; }
 
-    [Column("AtÃ¶lye Id", IsVisible = false)]
+    [Column("Atölye Id", IsVisible = false)]
     public Guid WorkshopId { get; set; }
 
-    [Column("Ãœretilen ÃœrÃ¼n Id", IsVisible = false)]
+    [Column("Üretilen Ürün Id", IsVisible = false)]
     public Guid? ProducedProductId { get; set; }
 
-[Column("MÃ¼ÅŸteri Id", IsVisible = false)]
+    [Column("Müşteri Id", IsVisible = false)]
     public Guid? CustomerId { get; set; }
 
     public List<CostSlipItemDto> CostSlipItems { get; set; } = [];
@@ -133,7 +133,7 @@ public static class CostSlipExtensions
                 ProducedProductName = s.Entity.ProducedProduct == null ? string.Empty : s.Entity.ProducedProduct.Name.Value,
                 CustomerId = s.Entity.CustomerId == null ? null : s.Entity.CustomerId.Value,
                 CustomerName = s.Entity.Customer == null ? string.Empty : s.Entity.Customer.Name.Value,
-Quantity = s.Entity.Quantity,
+                Quantity = s.Entity.Quantity,
                 GrandTotal = s.Entity.GrandTotal,
                 Description = s.Entity.Description.Value,
                 CostSlipItems = s.Entity.CostSlipItems

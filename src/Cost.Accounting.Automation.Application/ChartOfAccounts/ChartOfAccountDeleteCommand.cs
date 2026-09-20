@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
@@ -48,10 +49,33 @@ internal sealed class ChartOfAccountDeleteCommandHandler(
             return Result<string>.Failure("Seçilen hesaplar silinecek durumda değil");
         }
 
+        AccountDeletionCheck check = await chartOfAccountRepository.GetDeletionCheckAsync(targets, cancellationToken);
+        if (check.MovementAccountIds.Count > 0)
+        {
+            string codes = string.Join(", ", all
+                .Where(a => check.MovementAccountIds.Contains(a.Id.Value))
+                .Select(a => a.Code.Value)
+                .Take(5));
+
+            return Result<string>.Failure($"İşlem/hareket gören hesap(lar) silinemez: {codes}");
+        }
+
         ClearDeletedReferences(targets, all);
         chartOfAccountRepository.SoftDeleteRange(toDelete);
 
-        return $"{toDelete.Count} hesap silindi (silinenler İçe Aktar ile yeniden yüklenebilir)";
+        if (check.RelatedAccountIds.Count == 0)
+        {
+            return $"{toDelete.Count} hesap silindi (silinenler İçe Aktar ile yeniden yüklenebilir)";
+        }
+
+        string relatedCodes = string.Join(", ", all
+            .Where(a => check.RelatedAccountIds.Contains(a.Id.Value))
+            .Select(a => a.Code.Value)
+            .Take(5));
+
+        return DeleteWarnings.Compose(
+            $"{toDelete.Count} hesap silindi. NOT: {relatedCodes} kodlu hesaplar ilişkili kayıtlarda kullanılıyor; " +
+            $"hareket görmedikleri için silme gerçekleştirildi.");
     }
 
     private static void CollectDescendants(Guid parentId, List<ChartOfAccount> all, HashSet<Guid> targets)

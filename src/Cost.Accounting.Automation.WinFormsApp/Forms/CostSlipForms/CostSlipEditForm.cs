@@ -23,14 +23,15 @@ using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Data;
 using TS.MediatR;
-using ReportItemDto = Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips.CostSlipItemDto;
+using ReportItemDto = Cost.Accounting.Automation.WinFormsApp.Reports.CostSlipReport.CostSlipItemDto;
 using AppCostSlip = Cost.Accounting.Automation.Application.CostSlips.CostSlipDto;
+using Cost.Accounting.Automation.WinFormsApp.Reports.CostSlipReport;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 {
     public partial class CostSlipEditForm : XtraForm
     {
-        private readonly CostSlipListDto? _editing;
+        private CostSlipListDto? _editing;
         private readonly BindingList<CostSlipItemEditDto> _lines = [];
         private List<ProductDto> _products = [];
         private readonly Dictionary<Guid, List<AtelierTransferProductDto>> _transferredByWorkshop = [];
@@ -48,10 +49,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
         private string _workshopName = string.Empty;
         private bool _saved;
+        private string _autoDescription = string.Empty;
+        private Guid? _semiFinishedProductId;
+        private decimal _semiFinishedBalance;
 
         private sealed record WorkshopLink(string Code, Guid? SemiFinishedAccountId, Guid? FinishedAccountId);
 
-        private sealed record ProductLookUpItem(Guid Id, string Name, string Code, string UnitType, decimal Balance)
+        private sealed record ProductLookUpItem(Guid Id, string Name, string Code, string UnitType, decimal Balance, decimal Draft)
         {
             public string DisplayName => $"{Name}  [Bakiye: {Balance:n2}]";
         }
@@ -67,6 +71,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             IconOptions.SvgImage = DxIcon.Percent;
             lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Percent;
+
+            lblTitle.Appearance.ForeColor = SkinTheme.Text;
+            lblSubtitle.Appearance.ForeColor = SkinTheme.SecondaryText;
+            lblStatusValue.Appearance.ForeColor = SkinTheme.Primary;
 
             Text = _editing is null ? "Yeni Maliyet Pusulası" : "Maliyet Pusulası İncele";
             lblTitle.Text = Text;
@@ -155,9 +163,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 PopupFilterMode = PopupFilterMode.Contains
             };
             _riProductLookUp.View.OptionsBehavior.AutoPopulateColumns = false;
-            _riProductLookUp.View.Columns.AddField(nameof(ProductLookUpItem.DisplayName)).Caption = "Ürün Adı";
+            _riProductLookUp.View.Columns.AddField(nameof(ProductLookUpItem.Name)).Caption = "Ürün Adı";
             _riProductLookUp.View.Columns[0].Visible = true;
-            _riProductLookUp.View.Columns[0].Width = 320;
+            _riProductLookUp.View.Columns[0].Width = 240;
+            GridColumn colBalance = _riProductLookUp.View.Columns.AddField(nameof(ProductLookUpItem.Balance));
+            colBalance.Caption = "Bakiye";
+            colBalance.Visible = true;
+            colBalance.Width = 80;
+            colBalance.DisplayFormat.FormatType = DevExpress.Utils.FormatType.Numeric;
+            colBalance.DisplayFormat.FormatString = "n2";
+            colBalance.AppearanceCell.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+            GridColumn colDraft = _riProductLookUp.View.Columns.AddField(nameof(ProductLookUpItem.Draft));
+            colDraft.Caption = "Taslak";
+            colDraft.Visible = true;
+            colDraft.Width = 80;
+            colDraft.DisplayFormat.FormatType = DevExpress.Utils.FormatType.Numeric;
+            colDraft.DisplayFormat.FormatString = "n2";
+            colDraft.AppearanceCell.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
             _riProductLookUp.EditValueChanged += RiProductLookUp_EditValueChanged;
 
             RepositoryItemSpinEdit riQuantity = new() { MinValue = 0.0001m, MaxValue = 999999999, Increment = 1, Mask = { MaskType = DevExpress.XtraEditors.Mask.MaskType.Numeric, EditMask = "n2", UseMaskAsDisplayFormat = true } };
@@ -229,7 +251,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
             gridLinesView.ValidatingEditor += GridLinesView_ValidatingEditor;
             gridLinesView.CustomDrawFooterCell += GridLinesView_CustomDrawFooterCell;
-            txtQuantity.EditValueChanged += (_, _) => RecalculateGrandTotal();
+            lookUpProducedProduct.EditValueChanged += (_, _) =>
+            {
+                UpdateAutoDescription();
+                _ = CheckSemiFinishedBalanceAsync();
+            };
+            dtCostDate.EditValueChanged += (_, _) => UpdateAutoDescription();
+            txtQuantity.EditValueChanged += (_, _) =>
+            {
+                RecalculateGrandTotal();
+                UpdateAutoDescription();
+            };
         }
 
         private async void CostSlipEditForm_Load(object? sender, EventArgs e)
@@ -373,6 +405,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 });
             }
 
+            ProductDto? produced = _products.FirstOrDefault(p => p.Id == slip.ProducedProductId);
+            if (produced?.SemiFinishedProductId is Guid semiId)
+            {
+                _semiFinishedProductId = semiId;
+                _semiFinishedBalance = _lines
+                    .Where(l => l.ProductId == semiId)
+                    .Sum(l => l.Quantity);
+            }
+
             RecalculateTotals();
         }
 
@@ -394,7 +435,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             int rowHandle = gridLinesView.FocusedRowHandle;
             if (rowHandle >= 0 && rowHandle < _lines.Count)
             {
+                bool removedSemi = _lines[rowHandle].ProductId == _semiFinishedProductId;
                 _lines.RemoveAt(rowHandle);
+                if (removedSemi)
+                {
+                    _semiFinishedProductId = null;
+                    _semiFinishedBalance = 0m;
+                }
                 RefreshAvailableQuantities();
                 RecalculateTotals();
             }
@@ -426,12 +473,221 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             {
                 await AutoAssignNumberAsync();
             }
+
+            UpdateAutoDescription();
         }
 
         private void LookUpWorkshop_EditValueChanged(object? sender, EventArgs e)
         {
             UpdateProducedProductAvailability();
             _ = LoadMaterialProductsAsync();
+            UpdateAutoDescription();
+            _ = CheckSemiFinishedBalanceAsync();
+        }
+
+        private async Task CheckSemiFinishedBalanceAsync()
+        {
+            if (_editing is not null)
+            {
+                return;
+            }
+
+            if (CurrentType != CostSlipType.Product)
+            {
+                return;
+            }
+
+            Guid? workshopId = SelectedWorkshopId;
+            if (workshopId is null || lookUpProducedProduct.EditValue is not Guid productId)
+            {
+                return;
+            }
+
+            CostSlipSemiFinishedBalanceDto? balanceDto = await GetSemiFinishedBalanceAsync(workshopId.Value, productId);
+            if (balanceDto is null)
+            {
+                return;
+            }
+
+            decimal balance = balanceDto.Balance;
+            if (balance <= 0)
+            {
+                return;
+            }
+
+            Guid semiProductId = balanceDto.SemiProductId ?? productId;
+            string productName = _products.FirstOrDefault(p => p.Id == productId)?.Name ?? "Seçilen ürün";
+            string workshopName = _workshops.FirstOrDefault(w => w.Id == workshopId)?.Display ?? string.Empty;
+            decimal totalAmount = balance * balanceDto.UnitPrice;
+
+            bool included = _lines.Any(l => l.ProductId == semiProductId && l.Quantity > 0);
+            if (included)
+            {
+                return;
+            }
+
+            DialogResult answer = MsgBox.Confirm(
+                $"Seçilen mamül ({productName}) için {balance:0.##} adet, {totalAmount:n2} tutarında yarımamül mevcut.\n\n" +
+                "Maliyete eklensin mi?",
+                "Yarı Mamul Bakiyesi Uyarısı");
+
+            if (answer == DialogResult.Yes)
+            {
+                AddSemiFinishedLine(semiProductId, balance, balanceDto.UnitPrice);
+                lookUpProducedProduct.EditValue = productId;
+            }
+            else if (answer == DialogResult.No)
+            {
+                ToastHelper.Show("Yarı mamul maliyeti eklenmeden devam ediliyor.", ToastType.Warning);
+            }
+        }
+
+        private async Task<bool> ConfirmSemiFinishedBalanceAsync()
+        {
+            if (CurrentType != CostSlipType.Product)
+            {
+                return true;
+            }
+
+            Guid? workshopId = SelectedWorkshopId;
+            Guid? producedProductId = lookUpProducedProduct.EditValue is Guid pid && pid != Guid.Empty ? pid : null;
+            if (workshopId is null || producedProductId is null)
+            {
+                return true;
+            }
+
+            CostSlipSemiFinishedBalanceDto? balanceDto = await GetSemiFinishedBalanceAsync(workshopId.Value, producedProductId.Value);
+            if (balanceDto is null)
+            {
+                return true;
+            }
+
+            decimal balance = balanceDto.Balance;
+            if (balance <= 0)
+            {
+                return true;
+            }
+
+            Guid semiProductId = balanceDto.SemiProductId ?? producedProductId.Value;
+            string productName = _products.FirstOrDefault(p => p.Id == producedProductId)?.Name ?? "Seçilen ürün";
+            string workshopName = _workshops.FirstOrDefault(w => w.Id == workshopId)?.Display ?? string.Empty;
+            decimal totalAmount = balance * balanceDto.UnitPrice;
+
+            bool included = _lines.Any(l => l.ProductId == semiProductId && l.Quantity > 0);
+            if (included)
+            {
+                return true;
+            }
+
+            DialogResult answer = MsgBox.Confirm(
+                $"Seçilen mamül ({productName}) için {balance:0.##} adet, {totalAmount:n2} tutarında yarımamül mevcut.\n\n" +
+                "Maliyete eklensin mi?",
+                "Yarı Mamul Bakiyesi Uyarısı");
+
+            if (answer == DialogResult.Yes)
+            {
+                AddSemiFinishedLine(semiProductId, balance, balanceDto.UnitPrice);
+            }
+
+            RefreshAvailableQuantities();
+
+            return true;
+        }
+
+        private void AddSemiFinishedLine(Guid productId, decimal quantity, decimal unitPrice)
+        {
+            ProductDto? prod = _products.FirstOrDefault(p => p.Id == productId);
+
+            _lines.Add(new CostSlipItemEditDto
+            {
+                ProductId = productId,
+                ProductName = prod?.Name ?? string.Empty,
+                ProductUnitTypeId = prod?.ProductUnitTypeId,
+                ProductUnitTypeName = prod?.ProductUnitTypeName ?? string.Empty,
+                ExpenseAccountType = ExpenseAccountType.Account710,
+                Quantity = quantity,
+                UnitPrice = unitPrice
+            });
+
+            _semiFinishedProductId = productId;
+            _semiFinishedBalance = quantity;
+            UpdateMaterialProductDataSource();
+
+            gridLinesView.RefreshData();
+            RecalculateTotals();
+        }
+
+        private async Task<CostSlipSemiFinishedBalanceDto?> GetSemiFinishedBalanceAsync(Guid workshopId, Guid productId)
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                var result = await mediator.Send(
+                    new CostSlipSemiFinishedBalanceQuery(workshopId, productId),
+                    CancellationToken.None);
+
+                return result.IsSuccessful ? result.Data : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private void UpdateAutoDescription()
+        {
+            string generated = BuildAutoDescription();
+            if (string.IsNullOrWhiteSpace(generated))
+            {
+                return;
+            }
+
+            bool currentIsAuto = !string.IsNullOrEmpty(_autoDescription)
+                && txtDescription.Text.Trim() == _autoDescription.Trim();
+            _autoDescription = generated;
+
+            if (string.IsNullOrWhiteSpace(txtDescription.Text) || currentIsAuto)
+            {
+                txtDescription.Text = generated;
+            }
+        }
+
+        private string BuildAutoDescription()
+        {
+            Guid? workshopId = SelectedWorkshopId;
+            if (workshopId is null)
+            {
+                return string.Empty;
+            }
+
+            string workshop = _workshops.FirstOrDefault(w => w.Id == workshopId)?.Display ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(workshop))
+            {
+                return string.Empty;
+            }
+
+            int qty = int.TryParse(txtQuantity.Text.Trim(), out int q) ? q : 0;
+            string date = dtCostDate.DateTime.ToString("dd.MM.yyyy");
+
+            if (CurrentType == CostSlipType.Service)
+            {
+                return $"{date} tarihinde {workshop} atölyesinde verilen {qty} adet hizmetin maliyeti";
+            }
+
+            if (lookUpProducedProduct.EditValue is not Guid pid)
+            {
+                return string.Empty;
+            }
+
+            string product = _products.FirstOrDefault(p => p.Id == pid)?.Name ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(product))
+            {
+                return string.Empty;
+            }
+
+            return $"{date} tarihinde {workshop} atölyesinde üretilen {qty} adet {product} adlı mamülün maliyeti";
         }
 
         private async Task LoadMaterialProductsAsync()
@@ -544,12 +800,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     p.Name,
                     p.ProductCode,
                     p.ProductUnitTypeName,
-                    transferred.FirstOrDefault(t => t.ProductId == p.Id)?.AvailableQuantity ?? 0m)).ToList();
+                    transferred.FirstOrDefault(t => t.ProductId == p.Id)?.AvailableQuantity ?? 0m,
+                    transferred.FirstOrDefault(t => t.ProductId == p.Id)?.DraftQuantity ?? 0m)).ToList();
             }
             else
             {
                 filtered = [];
                 lookupItems = [];
+            }
+
+            if (_semiFinishedProductId is Guid semiId)
+            {
+                ProductDto? semi = _products.FirstOrDefault(p => p.Id == semiId);
+                if (semi is not null && !lookupItems.Any(x => x.Id == semiId))
+                {
+                    lookupItems.Add(new ProductLookUpItem(
+                        semi.Id,
+                        semi.Name,
+                        semi.ProductCode,
+                        semi.ProductUnitTypeName,
+                        _semiFinishedBalance,
+                        0m));
+                }
             }
 
             _riProductLookUp.DataSource = lookupItems;
@@ -563,7 +835,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             foreach (var line in _lines)
             {
-                if (line.ProductId is Guid pid && !filtered.Any(p => p.Id == pid))
+                if (line.ProductId is Guid pid
+                    && pid != _semiFinishedProductId
+                    && !filtered.Any(p => p.Id == pid))
                 {
                     line.ProductId = null;
                     line.ProductName = string.Empty;
@@ -595,14 +869,48 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 return 0m;
             }
 
+            if (pid == _semiFinishedProductId)
+            {
+                decimal semiConsumed = _lines
+                    .Where(l => !ReferenceEquals(l, line) && l.ProductId == pid)
+                    .Sum(l => l.Quantity);
+
+                return Math.Max(0m, _semiFinishedBalance - semiConsumed);
+            }
+
             decimal baseAvailable = transferred
                 .FirstOrDefault(t => t.ProductId == pid)?.AvailableQuantity ?? 0m;
+
+            decimal reservedByDrafts = GetReservedByOtherDrafts(pid);
+            decimal netAvailable = Math.Max(0m, baseAvailable - reservedByDrafts);
 
             decimal consumedByOtherRows = _lines
                 .Where(l => !ReferenceEquals(l, line) && l.ProductId == pid)
                 .Sum(l => l.Quantity);
 
-            return Math.Max(0m, baseAvailable - consumedByOtherRows);
+            return Math.Max(0m, netAvailable - consumedByOtherRows);
+        }
+
+        private decimal GetReservedByOtherDrafts(Guid productId)
+        {
+            AtelierTransferProductDto? info = GetTransferInfo(productId);
+            if (info is null)
+            {
+                return 0m;
+            }
+
+            decimal drafted = info.DraftQuantity;
+
+            if (_editing is { Status: CostSlipStatus.Draft })
+            {
+                decimal ownQuantity = _editing.CostSlipItems
+                    .Where(i => i.ProductId == productId)
+                    .Sum(i => i.Quantity);
+
+                drafted = Math.Max(0m, drafted - ownQuantity);
+            }
+
+            return drafted;
         }
 
         private AtelierTransferProductDto? GetTransferInfo(Guid productId)
@@ -1077,12 +1385,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 && _transferredByWorkshop.TryGetValue(saveWorkshopId, out List<AtelierTransferProductDto>? saveTransferred))
             {
                 foreach (var productGroup in materialLines
-                    .Where(l => l.ProductId is not null)
+                    .Where(l => l.ProductId is not null
+                        && l.ProductId != _semiFinishedProductId)
                     .GroupBy(l => l.ProductId!.Value))
                 {
                     decimal totalQty = productGroup.Sum(l => l.Quantity);
                     decimal available = saveTransferred
                         .FirstOrDefault(t => t.ProductId == productGroup.Key)?.AvailableQuantity ?? 0m;
+                    available = Math.Max(0m, available - GetReservedByOtherDrafts(productGroup.Key));
 
                     if (totalQty > available)
                     {
@@ -1091,6 +1401,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         return;
                     }
                 }
+            }
+
+            if (!await ConfirmSemiFinishedBalanceAsync())
+            {
+                return;
             }
 
             ExpenseAccountType derivedAccount = DerivedAccount;
@@ -1125,11 +1440,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             Guid? producedProductId = lookUpProducedProduct.EditValue is Guid pid && pid != Guid.Empty ? pid : null;
 
+            bool ok = false;
             btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
             try
             {
-                bool ok;
                 if (_editing is { Status: CostSlipStatus.Draft })
                 {
                     ok = await CrudExecutor.ExecuteAsync(new CostSlipUpdateCommand(
@@ -1158,27 +1473,56 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         Items: itemModels,
                         IsApproved: approve));
                 }
-
-                if (ok)
-                {
-                    bool isEditingDraft = _editing is { Status: CostSlipStatus.Draft };
-                    bool becomesApproved = approve && !isEditingDraft;
-
-                    string message = isEditingDraft
-                        ? "Maliyet pusulası taslağı güncellendi."
-                        : approve
-                            ? "Maliyet pusulası onaylandı; stok hareketleri oluşturuldu."
-                            : "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.";
-                    ToastHelper.Show(message, ToastType.Success);
-
-                    _saved = true;
-                    LockAfterSave(becomesApproved);
-                }
             }
             finally
             {
-                btnSave.Enabled = true;
-                btnSaveDraft.Enabled = true;
+                btnSave.Enabled = !ok;
+                btnSaveDraft.Enabled = !ok;
+            }
+
+            if (!ok)
+            {
+                return;
+            }
+
+            bool isEditingDraft = _editing is { Status: CostSlipStatus.Draft };
+            bool becomesApproved = approve && !isEditingDraft;
+
+            if (!becomesApproved && _editing is null)
+            {
+                _editing = await FindCreatedDraftAsync(number, workshopId, CurrentType, date);
+            }
+
+            string message = isEditingDraft
+                ? "Maliyet pusulası taslağı güncellendi."
+                : approve
+                    ? "Maliyet pusulası onaylandı; stok hareketleri oluşturuldu."
+                    : "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.";
+            ToastHelper.Show(message, ToastType.Success);
+
+            _saved = true;
+            LockAfterSave(becomesApproved);
+        }
+
+        private async Task<CostSlipListDto?> FindCreatedDraftAsync(string number, Guid workshopId, CostSlipType type, DateOnly date)
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                IQueryable<CostSlipListDto> query = await mediator.Send(
+                    new CostSlipGetAllQuery(CostSlipType: type, OnlyDeleted: false, Status: CostSlipStatus.Draft),
+                    CancellationToken.None);
+                List<CostSlipListDto> drafts = await Task.Run(() => query.ToList());
+                return drafts.FirstOrDefault(d =>
+                    d.SlipNumber.Equals(number.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && d.WorkshopId == workshopId
+                    && d.CostDate == date);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("CostSlip.FindCreatedDraft", ex);
+                return null;
             }
         }
 
@@ -1186,12 +1530,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         {
             if (_editing is null)
             {
+                ToastHelper.Show("Pusula onaylanamadı. Listeden yeniden açıp onaylayabilirsiniz.", ToastType.Warning);
                 return;
             }
 
             btnApprove.Enabled = false;
             try
             {
+                if (!await ConfirmSemiFinishedBalanceAsync())
+                {
+                    return;
+                }
+
                 bool ok = await CrudExecutor.ExecuteAsync(new CostSlipApproveCommand(_editing.Id));
                 if (ok)
                 {
@@ -1213,8 +1563,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnPrintSlip.Enabled = true;
             btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
-            btnApprove.Enabled = false;
-            btnApprove.Visible = false;
+            btnApprove.Enabled = !approved;
+            btnApprove.Visible = !approved;
             btnAddLine.Enabled = false;
             btnDeleteLine.Enabled = false;
             cmbCostSlipType.ReadOnly = true;
@@ -1255,7 +1605,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     ? new CostSlipServiceReport()
                     : new CostSlipProductReport();
 
+                if (report is CostSlipProductReport productReport)
+                {
+                    productReport.SlipTypeTitle = CurrentType == CostSlipType.SemiFinishedProduct
+                        ? "YARI MAMÜL MALİYET PUSULASI"
+                        : "MAMÜL MALİYET PUSULASI";
+                }
+                else if (report is CostSlipServiceReport serviceReport)
+                {
+                    serviceReport.SlipTypeTitle = "HİZMET MALİYET PUSULASI";
+                }
+
                 report.RequestParameters = false;
+                foreach (DevExpress.XtraReports.Parameters.Parameter parameter in report.Parameters)
+                {
+                    parameter.Visible = false;
+                }
 
                 List<ReportItemDto> items = _lines
                     .Where(l => l.Quantity > 0)
@@ -1288,6 +1653,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     : string.Empty);
                 SetReportParam(report, "Miktari", int.TryParse(txtQuantity.Text.Trim(), out int qty) ? qty : 0);
                 SetReportParam(report, "Tarih", DateOnly.FromDateTime(dtCostDate.DateTime));
+                SetReportParam(report, "Donem", dtCostDate.DateTime.ToString(
+                    "MM'. Ay - 'MMMM'-'yyyy",
+                    System.Globalization.CultureInfo.GetCultureInfo("tr-TR")));
                 SetReportParam(report, "Isyurdu", company.Name);
 
                 string workshopName = lookUpWorkshop.EditValue is Guid wid && wid != Guid.Empty
@@ -1295,6 +1663,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     : _workshopName;
                 SetReportParam(report, "Atolye", workshopName);
                 SetReportParam(report, "Antet", company.Name);
+
+                SetReportParam(report, "CiltNo", dtCostDate.DateTime.Year);
+                SetReportParam(report, "SeriNo", txtSlipNumber.Text.Trim());
+                SetReportParam(report, "SiparisNo", txtSlipNumber.Text.Trim());
 
                 string[] moneyParams = ["M710", "M720", "M730", "M740", "M750", "M760", "M770", "M780"];
                 foreach (string param in moneyParams)

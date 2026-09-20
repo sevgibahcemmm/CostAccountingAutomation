@@ -1,4 +1,4 @@
-namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
+namespace Cost.Accounting.Automation.WinFormsApp.Reports
 {
     public sealed class MovableAssetTransactionSlipRow
     {

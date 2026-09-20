@@ -31,6 +31,9 @@ internal sealed class CurrentAccountMovementConfiguration : IEntityTypeConfigura
         builder.HasIndex(x => x.MovementType);
         builder.HasIndex(x => x.InvoiceId);
 
+        builder.HasIndex(x => new { x.CurrentAccountType, x.CustomerId });
+        builder.HasIndex(x => new { x.CurrentAccountType, x.SupplierId });
+
         builder.HasOne(x => x.Customer)
             .WithMany()
             .HasForeignKey(x => x.CustomerId)

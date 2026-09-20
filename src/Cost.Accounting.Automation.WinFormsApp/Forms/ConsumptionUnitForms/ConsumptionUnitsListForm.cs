@@ -1,7 +1,9 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
+using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
 
@@ -31,6 +33,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
 
         protected override IRequest<Result<string>> BuildDeleteCommand(ConsumptionUnitDto item)
             => new ConsumptionUnitDeleteCommand(item.Id);
+
+        protected override async Task<List<ConsumptionUnitDto>> GetUndeletableAsync(
+            List<ConsumptionUnitDto> selected, CancellationToken cancellationToken)
+        {
+            List<ConsumptionUnitDto> blocked = [];
+            using var scope = Program.Services.CreateScope();
+            IChartOfAccountRepository accounts = scope.ServiceProvider.GetRequiredService<IChartOfAccountRepository>();
+            foreach (ConsumptionUnitDto item in selected)
+            {
+                AccountDeletionCheck check = await accounts.GetDeletionCheckAsync([item.Id], cancellationToken);
+                if (check.MovementAccountIds.Count > 0)
+                {
+                    blocked.Add(item);
+                }
+            }
+            return blocked;
+        }
 
         protected override string GetDeleteSummary(ConsumptionUnitDto item)
             => $"{item.Code} - {item.Name}";

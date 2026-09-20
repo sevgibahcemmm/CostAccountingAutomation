@@ -2,7 +2,6 @@ using System.Drawing;
 using Cost.Accounting.Automation.Application.Behaviors;
 using DomainEntityDto = Cost.Accounting.Automation.Domain.Abstractions.EntityDto;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
-using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraEditors;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
+using Cost.Accounting.Automation.WinFormsApp.Reports;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 {
@@ -111,6 +111,13 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
 
         protected virtual string GetDeleteSummary(TDto item) => item.Id.ToString();
 
+        /// <summary>
+        /// Hareket görüldüğü vb. nedenle silinemeyen kayıtları döndürür. Boş değilse silme
+        /// onayı hiç sorulmaz; yalnızca bir bilgi toast'ı gösterilir ve silme çalıştırılmaz.
+        /// </summary>
+        protected virtual Task<List<TDto>> GetUndeletableAsync(List<TDto> selected, CancellationToken cancellationToken)
+            => Task.FromResult(new List<TDto>());
+
         protected virtual string GetSubtitle(int count)
             => _showDeleted ? $"{count} silinen kayıt" : $"{count} kayıt listeleniyor";
 
@@ -170,9 +177,10 @@ btnSlipPrint.Click += async (_, _) => await ShowSelectedSlipAsync();
             gridView.OptionsView.ShowGroupPanel = false;
             gridView.OptionsSelection.MultiSelect = true;
             gridView.OptionsSelection.MultiSelectMode = GridMultiSelectMode.CheckBoxRowSelect;
-            gridView.OptionsBehavior.Editable = false;
+gridView.OptionsBehavior.Editable = false;
             gridView.OptionsView.EnableAppearanceEvenRow = true;
             gridView.OptionsView.EnableAppearanceOddRow = true;
+            gridView.OptionsView.ColumnAutoWidth = false;
         }
 
         private void SetupButtonIcons()
@@ -186,8 +194,28 @@ btnSlipPrint.Click += async (_, _) => await ShowSelectedSlipAsync();
             SetButtonIcon(btnDistributionReport, DxIcon.Receipt, 18);
             SetButtonIcon(btnDeleted, DxIcon.Delete, 18);
             SetButtonIcon(btnRestore, DxIcon.Restore, 18);
-            SetButtonIcon(btnApprove, DxIcon.Check, 18);
+SetButtonIcon(btnApprove, DxIcon.Check, 18);
             SetButtonIcon(btnClosePage, DxIcon.Close, 16);
+            AutoSizeToolbarButtons();
+        }
+
+        private void AutoSizeToolbarButtons()
+        {
+            foreach (SimpleButton button in flpToolbar.Controls.OfType<SimpleButton>())
+            {
+                button.Width = MeasureButtonWidth(button);
+            }
+        }
+
+        private static int MeasureButtonWidth(SimpleButton button)
+        {
+            bool hasIcon = button.ImageOptions.SvgImage is not null;
+            int textWidth = string.IsNullOrEmpty(button.Text)
+                ? 0
+                : System.Windows.Forms.TextRenderer.MeasureText(button.Text, button.Appearance.Font).Width;
+            int iconWidth = hasIcon ? button.ImageOptions.SvgImageSize.Width + 6 : 0;
+            int padding = string.IsNullOrEmpty(button.Text) ? 16 : 32;
+            return textWidth + iconWidth + padding;
         }
 
         private static void SetButtonIcon(SimpleButton button, SvgImage icon, int size)
@@ -470,8 +498,8 @@ CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
                     .ToList();
                 CrashLog.Write("Reload", $"{typeof(TListQuery).Name} returned {items.Count} items");
                 _allItems = items;
-                gridControl.DataSource = items;
-                gridView.BestFitColumns();
+gridControl.DataSource = items;
+                FitColumnsToContent();
                 lblSub.Text = GetSubtitle(items.Count);
             }
             catch (AuthorizationException ex)
@@ -489,6 +517,31 @@ CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
             finally
             {
                 UpdateButtonStates();
+            }
+        }
+
+        /// <summary>
+        /// Kolon genişliklerini içeriklere göre ayarlar; metin kolonları devasa büyümesin diye
+        /// tavan değer uygulanır. Sabit genişlikli (görsel) kolonlar etkilenmez.
+        /// </summary>
+        private void FitColumnsToContent()
+        {
+            gridView.BeginUpdate();
+            try
+            {
+                foreach (GridColumn column in gridView.Columns)
+                {
+                    if (column.MaxWidth == 0)
+                    {
+                        column.MaxWidth = Math.Max(280, column.Width * 2);
+                    }
+                }
+
+                gridView.BestFitColumns();
+            }
+            finally
+            {
+                gridView.EndUpdate();
             }
         }
 
@@ -510,15 +563,13 @@ CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
                 return;
             }
 
-            using (form)
+using (form)
             {
                 try
                 {
                     CrashLog.Write("Editor", "Showing edit dialog");
-                    if (form.ShowDialog(this) == DialogResult.OK)
-                    {
-                        await ReloadAsync();
-                    }
+                    form.ShowDialog(this);
+                    await ReloadAsync();
                     CrashLog.Write("Editor", "Edit dialog closed");
                 }
                 catch (Exception ex)
@@ -581,9 +632,33 @@ CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
                 return;
             }
 
-            if (selected.Any(item => !AllowsDelete(item)))
+if (selected.Any(item => !AllowsDelete(item)))
             {
                 ToastHelper.Show("Silinemeyen kayıt(lar) seçildi. İşlem iptal edildi.", ToastType.Warning);
+                return;
+            }
+
+            List<TDto> blocked;
+            try
+            {
+                blocked = await GetUndeletableAsync(selected, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("Delete.PreCheck", ex);
+                ToastHelper.Show("Silme kontrolü yapılamadı: " + ex.Message, ToastType.Error, 6000);
+                return;
+            }
+
+            if (blocked.Count > 0)
+            {
+                string blockedPreview = string.Join(", ", blocked.Take(3).Select(GetDeleteSummary));
+                if (blocked.Count > 3)
+                {
+                    blockedPreview += $" ve {blocked.Count - 3} kayıt daha";
+                }
+
+                ToastHelper.Show($"{blocked.Count} kayıt hareket gördüğü için silinemez: {blockedPreview}", ToastType.Warning, 6000);
                 return;
             }
 

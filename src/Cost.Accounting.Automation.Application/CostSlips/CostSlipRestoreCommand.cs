@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.Products;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,8 @@ public sealed record CostSlipRestoreCommand(Guid Id) : IRequest<Result<string>>;
 
 internal sealed class CostSlipRestoreCommandHandler(
     ICostSlipRepository costSlipRepository,
-    IProductMovementRepository productMovementRepository) : IRequestHandler<CostSlipRestoreCommand, Result<string>>
+    IProductMovementRepository productMovementRepository,
+    IChartOfAccountLedgerRepository ledgerRepository) : IRequestHandler<CostSlipRestoreCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CostSlipRestoreCommand request, CancellationToken cancellationToken)
     {
@@ -37,6 +39,14 @@ internal sealed class CostSlipRestoreCommandHandler(
         foreach (var movement in relatedMovements)
         {
             productMovementRepository.Restore(movement);
+
+            List<ChartOfAccountLedger> ledgerEntries =
+                await ledgerRepository.GetBySourceAsync("MaliyetTuketimi", movement.Id.Value, cancellationToken);
+
+            if (ledgerEntries.Count > 0)
+            {
+                ledgerRepository.RestoreRange(ledgerEntries);
+            }
         }
 
         return Result<string>.Succeed("Maliyet pusulası ve ilişkili stok hareketleri başarıyla geri yüklendi.");

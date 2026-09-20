@@ -1,4 +1,6 @@
+using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using TS.MediatR;
 using TS.Result;
@@ -10,7 +12,8 @@ public sealed record TaxRateDeleteCommand(
     Guid Id) : IRequest<Result<string>>;
 
 internal sealed class TaxRateDeleteCommandHandler(
-    ITaxRateRepository taxRateRepository) : IRequestHandler<TaxRateDeleteCommand, Result<string>>
+    ITaxRateRepository taxRateRepository,
+    IProductRepository productRepository) : IRequestHandler<TaxRateDeleteCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(TaxRateDeleteCommand request, CancellationToken cancellationToken)
     {
@@ -20,8 +23,17 @@ internal sealed class TaxRateDeleteCommandHandler(
             return Result<string>.Failure("KDV oranı bulunamadı");
         }
 
+        bool usedByProduct = await productRepository.AnyAsync(p => p.TaxRateId == request.Id, cancellationToken);
+
         taxRate.Delete();
         taxRateRepository.Update(taxRate);
+
+        if (usedByProduct)
+        {
+            return DeleteWarnings.Compose(
+                $"'{taxRate.Name.Value}' KDV oranı silindi, ancak ilişkili ürün kayıtlarında kullanıldığı için " +
+                $"ilgili ürünlerin gözden geçirilmesi gerekir.");
+        }
 
         return "KDV oranı başarıyla silindi";
     }

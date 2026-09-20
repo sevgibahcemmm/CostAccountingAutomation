@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.WinFormsApp.Reports;
 using DevExpress.Drawing;
 using DevExpress.XtraPrinting;
 using DevExpress.XtraReports.Parameters;

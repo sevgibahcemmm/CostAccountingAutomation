@@ -26,6 +26,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
     public partial class ProductEditForm : XtraForm
     {
+        private sealed record SemiFinishedOption(Guid Id, string Display);
         private readonly ProductDto? _editing;
         private readonly BindingList<ProductPriceDto> _prices = [];
         private readonly BindingList<ProductImageDto> _images = [];
@@ -34,6 +35,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private List<ProductUnitTypeDto> _unitTypes = [];
         private List<TaxRateDto> _taxRates = [];
         private List<ChartOfAccountLookUpDto> _accounts = [];
+        private List<SemiFinishedOption> _semiFinishedOptions = [];
         private string _productCode = string.Empty;
 
         private bool _isPopulating;
@@ -179,6 +181,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
                 await LoadLookupsAsync();
 
+                if (_editing is null)
+                {
+                    // Create mode: show pair creation if warehouse is 151 or 152
+                    if (cmbWarehouse.EditValue is Guid whId)
+                    {
+                        var wh = _accounts.FirstOrDefault(a => a.Id == whId);
+if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("151.") || wh.Code.StartsWith("152.")))
+                        {
+                            chkCreatePair.Visible = true;
+                            chkCreatePair.Checked = true;
+                        }
+                        else
+                        {
+                            chkCreatePair.Visible = false;
+                        }
+                    }
+                    else
+                    {
+                        chkCreatePair.Visible = false;
+                    }
+                }
+
                 if (_editing is not null)
                 {
                     await PopulateAsync(_editing);
@@ -204,6 +228,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             _taxRates = (await mediator.Send(new TaxRateGetAllQuery(), CancellationToken.None)).ToList();
             _accounts = (await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [];
 
+            IQueryable<ProductDto> productsQuery = await mediator.Send(new ProductGetAllQuery(), CancellationToken.None);
             List<ChartOfAccountLookUpDto> warehouses = _accounts.Where(a => a.Type == ChartOfAccountType.Warehouse).ToList();
 
             ConfigureLookUp(cmbWarehouse, warehouses, nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Depo", 440);
@@ -247,6 +272,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             }
 
             LoadCategoriesForWarehouse(warehouseId);
+
+            if (_editing is null) // create mode only
+            {
+                var wh = _accounts.FirstOrDefault(a => a.Id == warehouseId);
+                if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("151.") || wh.Code.StartsWith("152.")))
+                {
+                    chkCreatePair.Visible = true;
+                    chkCreatePair.Checked = true;
+                }
+                else
+                {
+                    chkCreatePair.Visible = false;
+                    chkCreatePair.Checked = false;
+                }
+            }
         }
 
         private void LoadCategoriesForWarehouse(Guid warehouseId)
@@ -333,6 +373,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 cmbWarehouse.EditValue = full.WarehouseId;
                 LoadCategoriesForWarehouse(full.WarehouseId);
                 cmbCategory.EditValue = full.CategoryId;
+                
             }
             finally
             {
@@ -712,6 +753,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             Guid? warehouseId = cmbWarehouse.EditValue as Guid?;
             Guid? categoryId = cmbCategory.EditValue as Guid?;
             Guid? unitTypeId = cmbUnitType.EditValue as Guid?;
+            bool createPair = _editing is null && chkCreatePair.Visible && chkCreatePair.Checked;
+            Guid? semiFinishedProductId = _editing?.SemiFinishedProductId;
             bool isActive = chkActive.Checked;
 
             List<ProductPriceRow> priceRows = _prices.Select(p => new ProductPriceRow(
@@ -724,8 +767,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             List<ProductImageRow> imageRows = _images.Select(i => new ProductImageRow(null, i.Path, i.IsPrimary)).ToList();
 
             IRequest<Result<string>> command = _editing is null
-                ? new ProductCreateCommand(name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, priceRows, _images.Select(i => i.Path).ToList())
-                : new ProductUpdateCommand(_editing.Id, name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, priceRows, imageRows);
+                ? new ProductCreateCommand(name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, createPair, priceRows, _images.Select(i => i.Path).ToList())
+                : new ProductUpdateCommand(_editing.Id, name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, semiFinishedProductId, priceRows, imageRows);
 
             if (!RunApplicationValidator(command))
             {

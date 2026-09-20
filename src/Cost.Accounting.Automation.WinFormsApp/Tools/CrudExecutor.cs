@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using FluentValidation;
@@ -24,7 +25,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                 }
 
                 string message = result.Data is string s ? s : "İşlem başarılı";
-                ToastHelper.Show(message, ToastType.Success);
+                if (message.StartsWith(DeleteWarnings.Prefix, StringComparison.Ordinal))
+                {
+                    ToastHelper.Show(message[DeleteWarnings.Prefix.Length..], ToastType.Warning, 5000);
+                }
+                else
+                {
+                    ToastHelper.Show(message, ToastType.Success);
+                }
                 return true;
             }
             catch (ValidationException ex)

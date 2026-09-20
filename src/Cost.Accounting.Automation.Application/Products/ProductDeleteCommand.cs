@@ -1,6 +1,11 @@
+using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.StockIssues;
 using TS.MediatR;
 using TS.Result;
 
@@ -12,7 +17,11 @@ public sealed record ProductDeleteCommand(
 
 internal sealed class ProductDeleteCommandHandler(
     IProductRepository productRepository,
-    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ProductDeleteCommand, Result<string>>
+    IChartOfAccountRepository chartOfAccountRepository,
+    IProductMovementRepository productMovementRepository,
+    IInvoiceRepository invoiceRepository,
+    ICostSlipRepository costSlipRepository,
+    IStockIssueRepository stockIssueRepository) : IRequestHandler<ProductDeleteCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductDeleteCommand request, CancellationToken cancellationToken)
     {
@@ -21,6 +30,25 @@ internal sealed class ProductDeleteCommandHandler(
         {
             return Result<string>.Failure("Ürün bulunamadı");
         }
+
+        bool hasMovement = await productMovementRepository.AnyAsync(
+            m => m.ProductId == request.Id, cancellationToken);
+        if (hasMovement)
+        {
+            return Result<string>.Failure(
+                $"'{product.Name.Value}' ürünü işlem/hareket gördüğü için silinemez.");
+        }
+
+        bool hasInvoiceLine = await invoiceRepository.AnyAsync(
+            i => i.Lines.Any(l => l.ProductId == request.Id), cancellationToken);
+        bool hasCostSlipItem = await costSlipRepository.AnyAsync(
+            c => c.ProducedProductId == new IdentityId(request.Id)
+                 || c.CostSlipItems.Any(i => i.ProductId == new IdentityId(request.Id)),
+            cancellationToken);
+        bool hasStockIssueLine = await stockIssueRepository.AnyAsync(
+            s => s.Lines.Any(l => l.ProductId == request.Id), cancellationToken);
+        bool hasLinkedProduct = await productRepository.AnyAsync(
+            p => p.SemiFinishedProductId == new IdentityId(request.Id), cancellationToken);
 
         if (product.ChartOfAccountId is { } nodeId)
         {
@@ -35,6 +63,13 @@ internal sealed class ProductDeleteCommandHandler(
 
         product.Delete();
         productRepository.Update(product);
+
+        if (hasInvoiceLine || hasCostSlipItem || hasStockIssueLine || hasLinkedProduct)
+        {
+            return DeleteWarnings.Compose(
+                $"'{product.Name.Value}' ürünü silindi. NOT: irsaliye/maliyet pusulası/stok çıkışı kayıtlarında " +
+                $"kullanılıyor; hareket görmediği için silme gerçekleştirildi.");
+        }
 
         return "Ürün başarıyla silindi";
     }

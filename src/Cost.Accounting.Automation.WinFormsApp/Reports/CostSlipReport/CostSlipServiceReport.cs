@@ -12,5 +12,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
         {
             InitializeComponent();
         }
+
+        [System.ComponentModel.DesignerSerializationVisibility(
+            System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public string SlipTypeTitle
+        {
+            get => xrLabel1.Text;
+            set => xrLabel1.Text = value;
+        }
     }
 }

@@ -35,6 +35,13 @@ internal sealed class ChartOfAccountLedgerSyncCommandHandler(
                 continue;
             }
 
+            // Maliyet pusulası malzeme tüketimi kayıtları onay anında oluşturulur
+            // (710/740.01 BORÇ + atölye ALACAK); burada ürün hesabına tekrar ALACAK yazılmamalı.
+            if (movement.Description.Value.StartsWith("Maliyet Pusulası Tüketimi", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             if (movement.UnitPrice is not { } price || price.Value <= 0)
             {
                 continue;

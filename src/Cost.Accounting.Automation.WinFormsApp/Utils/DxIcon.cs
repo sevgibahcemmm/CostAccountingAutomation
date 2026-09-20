@@ -61,6 +61,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage EyeOff => Icon("svgimages/icon%20builder/security_visibilityoff.svg");
         public static SvgImage Receipt => Icon("svgimages/business%20objects/bo_invoice.svg");
 
+        // Actions
+        public static SvgImage Save => Icon("devav/actions/save.svg");
+        public static SvgImage Print => Icon("svgimages/icon%20builder/actions_print.svg");
+
         // Module icons
         public static SvgImage Home => Icon("svgimages/icon%20builder/actions_home.svg");
         public static SvgImage Products => Icon("svgimages/business%20objects/bo_product.svg");

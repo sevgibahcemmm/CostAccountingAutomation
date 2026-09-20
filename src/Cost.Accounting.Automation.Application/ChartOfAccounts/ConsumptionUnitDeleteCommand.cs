@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
@@ -25,8 +26,22 @@ internal sealed class ConsumptionUnitDeleteCommandHandler(
             return Result<string>.Failure("Tüketim birimi bulunamadı.");
         }
 
+        AccountDeletionCheck check = await chartOfAccountRepository.GetDeletionCheckAsync([request.Id], cancellationToken);
+        if (check.MovementAccountIds.Count > 0)
+        {
+            return Result<string>.Failure(
+                $"'{unit.Name.Value}' tüketim birimi işlem/hareket gördüğü için silinemez.");
+        }
+
         chartOfAccountRepository.SoftDelete(unit);
 
-        return $"'{unit.Name.Value}' tüketim birimi silindi.";
+        if (check.RelatedAccountIds.Count == 0)
+        {
+            return $"'{unit.Name.Value}' tüketim birimi silindi.";
+        }
+
+        return DeleteWarnings.Compose(
+            $"'{unit.Name.Value}' tüketim birimi silindi. NOT: ilişkili kayıtlarda kullanılıyor; " +
+            $"hareket görmediği için silme gerçekleştirildi.");
     }
 }

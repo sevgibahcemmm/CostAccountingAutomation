@@ -67,5 +67,8 @@ internal sealed class ProductMovementConfiguration : IEntityTypeConfiguration<Pr
         builder.HasIndex(x => x.ProductId);
         builder.HasIndex(x => x.InvoiceId);
         builder.HasIndex(x => x.StockIssueId);
+
+        builder.HasIndex(x => new { x.Date, x.MovementType });
+        builder.HasIndex(x => new { x.ProductId, x.Date });
     }
 }

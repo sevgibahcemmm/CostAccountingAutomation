@@ -37,6 +37,7 @@ public sealed record ProductCreateCommand(
     Guid ProductUnitTypeId,
     string Description,
     bool IsActive,
+    bool CreatePair,
     IReadOnlyCollection<ProductPriceRow> Prices,
     IReadOnlyCollection<string> ImagePaths) : IRequest<Result<string>>;
 
@@ -113,6 +114,137 @@ internal sealed class ProductCreateCommandHandler(
         (string productCode, string nodeCode) = ProductCodeHelper.BuildNextCodes(category.Code.Value, productCodes, accountCodes);
 
         string companyPrefix = await ProductBarcodePrefixResolver.ResolveAsync(companyRepository, cancellationToken);
+
+        bool isSemi = warehouse.Code.Value == "151" || warehouse.Code.Value == "152" || warehouse.Code.Value.StartsWith("151.") || warehouse.Code.Value.StartsWith("152.");
+
+        if (request.CreatePair && isSemi)
+        {
+            string pairWarehouseCode = warehouse.Code.Value == "151" || warehouse.Code.Value.StartsWith("151.")
+                ? ("152" + warehouse.Code.Value.Substring(3))
+                : ("151" + warehouse.Code.Value.Substring(3));
+
+            ChartOfAccount? pairWarehouse = accounts.FirstOrDefault(a => a.Type == ChartOfAccountType.Warehouse && !a.IsDeleted && (a.Code.Value == pairWarehouseCode || a.Code.Value.StartsWith(pairWarehouseCode + ".")));
+
+            string pairCategoryCode = warehouse.Code.Value == "151" || warehouse.Code.Value.StartsWith("151.")
+                ? ("152" + category.Code.Value.Substring(3))
+                : ("151" + category.Code.Value.Substring(3));
+
+            ChartOfAccount? pairCategory = accounts.FirstOrDefault(a =>
+                a.Type == ChartOfAccountType.Category &&
+                !a.IsDeleted &&
+                a.Code.Value == pairCategoryCode &&
+                IsDescendantOf(a, pairWarehouse, accounts));
+
+            if (pairWarehouse is null || pairCategory is null)
+            {
+                return Result<string>.Failure("151/152 karşılık depo veya kategori hesap planında bulunamadı");
+            }
+
+            string baseName = request.Name.Trim();
+            string mamulName = baseName + " (MAMÜL)";
+            string yarimamulName = baseName + " (YARIMAMÜL)";
+
+            // 152 = Mamüller (MAMÜL ürünü), 151 = Yarı Mamüller (YARIMAMÜL ürünü).
+            // Kullanıcı hangi depodan başlarsa başlasın, tür her zaman doğru tarafa yazılır.
+            bool selectedIs152 = warehouse.Code.Value.StartsWith("152");
+
+            ChartOfAccount mamulWarehouse = selectedIs152 ? warehouse : pairWarehouse;
+            ChartOfAccount mamulCategory = selectedIs152 ? category : pairCategory;
+            ChartOfAccount yarimamulWarehouse = selectedIs152 ? pairWarehouse : warehouse;
+            ChartOfAccount yarimamulCategory = selectedIs152 ? pairCategory : category;
+
+            (string mamulCode, string mamulNodeCode) = ProductCodeHelper.BuildNextCodes(mamulCategory.Code.Value, productCodes, accountCodes);
+            (string yarimamulCode, string yarimamulNodeCode) = ProductCodeHelper.BuildNextCodes(yarimamulCategory.Code.Value, productCodes, accountCodes);
+
+            productCodes.Add(mamulCode); accountCodes.Add(mamulNodeCode);
+            productCodes.Add(yarimamulCode); accountCodes.Add(yarimamulNodeCode);
+
+            ChartOfAccount mamulNode = new(
+                new AccountCode(mamulNodeCode),
+                new Name(mamulName),
+                mamulCategory.Level + 1,
+                ChartOfAccountType.Stok);
+            mamulNode.SetParent(mamulCategory.Id);
+            await chartOfAccountRepository.AddAsync(mamulNode, cancellationToken);
+
+            ChartOfAccount yarimamulNode = new(
+                new AccountCode(yarimamulNodeCode),
+                new Name(yarimamulName),
+                yarimamulCategory.Level + 1,
+                ChartOfAccountType.Stok);
+            yarimamulNode.SetParent(yarimamulCategory.Id);
+            await chartOfAccountRepository.AddAsync(yarimamulNode, cancellationToken);
+
+            string gtinMamul = barcodeGeneratorService.GenerateGtin(companyPrefix, mamulCode);
+            string qrMamul = ProductQrContentBuilder.Build(
+                mamulCode, gtinMamul, mamulName, taxRate.Rate,
+                mamulWarehouse.Name.Value, mamulCategory.Name.Value, unitType.Name.Value);
+
+            string gtinYarimamul = barcodeGeneratorService.GenerateGtin(companyPrefix, yarimamulCode);
+            string qrYarimamul = ProductQrContentBuilder.Build(
+                yarimamulCode, gtinYarimamul, yarimamulName, taxRate.Rate,
+                yarimamulWarehouse.Name.Value, yarimamulCategory.Name.Value, unitType.Name.Value);
+
+            Product productMamul = new(
+                new Name(mamulName),
+                new ProductCode(mamulCode),
+                new Barcode(gtinMamul),
+                new QRCode(qrMamul),
+                request.MinimumProductLevel,
+                new IdentityId(request.TaxRateId),
+                mamulWarehouse.Id,
+                mamulCategory.Id,
+                new IdentityId(request.ProductUnitTypeId),
+                mamulNode.Id,
+                new Description(request.Description),
+                request.IsActive);
+
+            productMamul.ReplacePrices(request.Prices.Select(p => new ProductPrice(
+                new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
+
+            productMamul.ReplaceImages(request.ImagePaths
+                .Select((path, index) => new Photo(
+                    PhotoOwnerType.Product,
+                    productMamul.Id,
+                    System.IO.Path.GetFileName(path),
+                    GetContentType(path),
+                    path,
+                    index == 0)));
+
+            await productRepository.AddAsync(productMamul, cancellationToken);
+
+            Product productYarimamul = new(
+                new Name(yarimamulName),
+                new ProductCode(yarimamulCode),
+                new Barcode(gtinYarimamul),
+                new QRCode(qrYarimamul),
+                request.MinimumProductLevel,
+                new IdentityId(request.TaxRateId),
+                yarimamulWarehouse.Id,
+                yarimamulCategory.Id,
+                new IdentityId(request.ProductUnitTypeId),
+                yarimamulNode.Id,
+                new Description(request.Description),
+                request.IsActive);
+
+            productYarimamul.ReplacePrices(request.Prices.Select(p => new ProductPrice(
+                new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
+
+            productYarimamul.ReplaceImages(request.ImagePaths
+                .Select((path, index) => new Photo(
+                    PhotoOwnerType.Product,
+                    productYarimamul.Id,
+                    System.IO.Path.GetFileName(path),
+                    GetContentType(path),
+                    path,
+                    index == 0)));
+
+            productYarimamul.SetSemiFinishedProduct(productMamul.Id);
+            await productRepository.AddAsync(productYarimamul, cancellationToken);
+
+            return "Mamül ve yarımamül ürünleri başarıyla kaydedildi";
+        }
+
         string gtin = barcodeGeneratorService.GenerateGtin(companyPrefix, productCode);
         string qrContent = ProductQrContentBuilder.Build(
             productCode,
@@ -162,6 +294,39 @@ internal sealed class ProductCreateCommandHandler(
         await productRepository.AddAsync(product, cancellationToken);
 
         return "Ürün başarıyla kaydedildi";
+    }
+
+    private static bool IsDescendantOf(
+        ChartOfAccount? account,
+        ChartOfAccount? ancestor,
+        List<ChartOfAccount> accounts)
+    {
+        if (account is null || ancestor is null)
+        {
+            return false;
+        }
+
+        HashSet<Guid> visited = new();
+        while (account.ParentId is { } parentId)
+        {
+            if (parentId == ancestor.Id)
+            {
+                return true;
+            }
+
+            if (!visited.Add(parentId.Value))
+            {
+                return false;
+            }
+
+            account = accounts.FirstOrDefault(a => a.Id == parentId);
+            if (account is null)
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private static string GetContentType(string path)

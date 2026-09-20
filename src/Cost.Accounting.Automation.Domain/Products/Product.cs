@@ -59,12 +59,15 @@ public sealed class Product : Entity, IHardDeletable
     public IdentityId ProductUnitTypeId { get; private set; } = default!;
     public IdentityId? ChartOfAccountId { get; private set; }
 
+    public IdentityId? SemiFinishedProductId { get; private set; }
+
     public Description Description { get; private set; } = default!;
 
     public ChartOfAccount? ChartOfAccount { get; private set; }
     public ChartOfAccount? Warehouse { get; private set; }
     public ChartOfAccount? Category { get; private set; }
     public ProductUnitType? ProductUnitType { get; private set; }
+    public Product? SemiFinishedProduct { get; private set; }
     public IReadOnlyCollection<ProductPrice> Prices => _prices;
     public IReadOnlyCollection<ProductMovement> Movements => _movements;
     public ICollection<Photo> Images => _images;
@@ -88,6 +91,8 @@ public sealed class Product : Entity, IHardDeletable
     public void SetProductUnitType(IdentityId productUnitTypeId) => ProductUnitTypeId = productUnitTypeId;
 
     public void SetChartOfAccountId(IdentityId? chartOfAccountId) => ChartOfAccountId = chartOfAccountId;
+
+    public void SetSemiFinishedProduct(IdentityId? semiFinishedProductId) => SemiFinishedProductId = semiFinishedProductId;
 
     public void SetDescription(Description description) => Description = description;
 

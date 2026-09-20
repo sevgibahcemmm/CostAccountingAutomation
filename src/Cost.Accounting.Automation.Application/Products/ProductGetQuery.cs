@@ -47,6 +47,8 @@ internal sealed class ProductGetQueryHandler(
 
             ChartOfAccountId = product.ChartOfAccountId == null ? null : product.ChartOfAccountId.Value,
             ChartOfAccountCode = product.ChartOfAccount?.Code.Value,
+            SemiFinishedProductId = product.SemiFinishedProductId == null ? null : product.SemiFinishedProductId.Value,
+            SemiFinishedProductName = product.SemiFinishedProduct?.Name.Value,
             Description = product.Description.Value,
             IsActive = product.IsActive,
             CreatedAt = product.CreatedAt,

@@ -43,6 +43,8 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.HasIndex(x => x.CustomerId);
         builder.HasIndex(x => x.SupplierId);
 
+        builder.HasIndex(x => new { x.Date, x.Status });
+
         builder.HasOne(x => x.Customer)
             .WithMany()
             .HasForeignKey(x => x.CustomerId)

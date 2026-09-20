@@ -142,6 +142,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.Toplam = new DevExpress.XtraReports.Parameters.Parameter();
             this.Atolye = new DevExpress.XtraReports.Parameters.Parameter();
             this.M730 = new DevExpress.XtraReports.Parameters.Parameter();
+            this.xrLabel29 = new DevExpress.XtraReports.UI.XRLabel();
+            this.Donem = new DevExpress.XtraReports.Parameters.Parameter();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable3)).BeginInit();
@@ -151,6 +153,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // TopMargin
             // 
             this.TopMargin.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+            this.xrLabel29,
             this.xrLabel25,
             this.xrLabel26,
             this.xrLabel27,
@@ -1377,8 +1380,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // 
             // objectDataSource1
             // 
-           // this.objectDataSource1.DataSource = typeof(global::Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips.CostSlipItemDto);
-            this.objectDataSource1.DataSource = typeof(global::Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips.CostSlipItemDto);
+            this.objectDataSource1.DataSource = typeof(global::Cost.Accounting.Automation.WinFormsApp.Reports.CostSlipReport.CostSlipItemDto);
             this.objectDataSource1.Name = "objectDataSource1";
             // 
             // Toplam
@@ -1402,6 +1404,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.M730.Type = typeof(decimal);
             this.M730.ValueInfo = "0";
             this.M730.Visible = false;
+            // 
+            // xrLabel29
+            // 
+            this.xrLabel29.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?Donem")});
+            this.xrLabel29.Font = new DevExpress.Drawing.DXFont("Arial", 9F);
+            this.xrLabel29.LocationFloat = new DevExpress.Utils.PointFloat(530.7507F, 185.0209F);
+            this.xrLabel29.Multiline = true;
+            this.xrLabel29.Name = "xrLabel29";
+            this.xrLabel29.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrLabel29.SizeF = new System.Drawing.SizeF(206.2493F, 14.66667F);
+            this.xrLabel29.StylePriority.UseFont = false;
+            this.xrLabel29.StylePriority.UseTextAlignment = false;
+            this.xrLabel29.Text = "Sipariþ Fiþi No :";
+            this.xrLabel29.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
+            // 
+            // Donem
+            // 
+            this.Donem.Description = "Dönem";
+            this.Donem.Name = "Donem";
+            this.Donem.Visible = false;
             // 
             // CostSlipProductReport
             // 
@@ -1452,7 +1475,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.Antet,
             this.Toplam,
             this.Atolye,
-            this.M730});
+            this.M730,
+            this.Donem});
             this.Version = "25.2";
             ((System.ComponentModel.ISupportInitialize)(this.xrTable2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable1)).EndInit();
@@ -1576,5 +1600,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
         private DevExpress.XtraReports.Parameters.Parameter Toplam;
         private DevExpress.XtraReports.Parameters.Parameter Atolye;
         private DevExpress.XtraReports.Parameters.Parameter M730;
+        private DevExpress.XtraReports.UI.XRLabel xrLabel29;
+        private DevExpress.XtraReports.Parameters.Parameter Donem;
     }
 }

@@ -113,6 +113,17 @@ public sealed class ProductDto : EntityDto
     [Column("Hesap Planı Kodu", Order = 80, Width = 120)]
     public string? ChartOfAccountCode { get; set; }
 
+    [Column("Yarımamül Ürün Id", IsVisible = false)]
+    public Guid? SemiFinishedProductId { get; set; }
+
+    [Column("Yarımamül Karşılığı", Order = 25, Width = 220)]
+    public string? SemiFinishedProductName
+    {
+        get => _semiFinishedProductName;
+        set => _semiFinishedProductName = value;
+    }
+    private string? _semiFinishedProductName;
+
     [Column("Açıklama", IsVisible = false)]
     public string Description { get; set; } = default!;
 
@@ -154,6 +165,8 @@ public static class ProductExtensions
 
                 ChartOfAccountId = s.Entity.ChartOfAccountId == null ? null : s.Entity.ChartOfAccountId.Value,
                 ChartOfAccountCode = s.Entity.ChartOfAccount == null ? null : s.Entity.ChartOfAccount.Code.Value,
+                SemiFinishedProductId = s.Entity.SemiFinishedProductId == null ? null : s.Entity.SemiFinishedProductId.Value,
+                SemiFinishedProductName = s.Entity.SemiFinishedProduct == null ? null : s.Entity.SemiFinishedProduct.Name.Value,
                 Description = s.Entity.Description.Value,
 
                 StockQuantity = s.Entity.Movements.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity),

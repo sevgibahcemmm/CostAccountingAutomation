@@ -2,6 +2,7 @@ using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -654,6 +655,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         protected override IRequest<Result<string>> BuildDeleteCommand(ProductDto item)
             => new ProductDeleteCommand(item.Id);
+
+        protected override async Task<List<ProductDto>> GetUndeletableAsync(
+            List<ProductDto> selected, CancellationToken cancellationToken)
+        {
+            List<ProductDto> blocked = [];
+            using var scope = Program.Services.CreateScope();
+            IProductMovementRepository movements = scope.ServiceProvider.GetRequiredService<IProductMovementRepository>();
+            foreach (ProductDto item in selected)
+            {
+                if (await movements.AnyAsync(m => m.ProductId == item.Id, cancellationToken))
+                {
+                    blocked.Add(item);
+                }
+            }
+            return blocked;
+        }
 
         protected override string GetDeleteSummary(ProductDto item) => item.Name;
 

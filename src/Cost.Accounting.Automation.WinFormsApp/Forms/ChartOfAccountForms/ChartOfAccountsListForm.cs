@@ -2,11 +2,13 @@ using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.ProductMovements;
 using Cost.Accounting.Automation.Application.Products;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
+using DevExpress.XtraEditors;
 using DevExpress.XtraTreeList;
 using DevExpress.XtraTreeList.Nodes;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,8 +35,19 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
+        _filterMoved = true;
+        _tswShowMoved.IsOn = true;
         _btnManualAdd.Enabled = false;
         _ = ReloadAsync();
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        _tswShowMoved.Left = _pnlToolbar.ClientSize.Width - _tswShowMoved.Width - 14;
+        _tswShowMoved.Top = Math.Max(10, (_pnlToolbar.ClientSize.Height - _tswShowMoved.Height) / 2);
+        _tswShowMoved.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        _tswShowMoved.BringToFront();
     }
 
     private void Tree_AfterCheckNode(object? sender, NodeEventArgs e)
@@ -122,29 +135,8 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
                 }
             }
 
-            _totalDebit = items.Where(i => i.ParentId is null).Sum(i => i.DebitAmount);
-            _totalCredit = items.Where(i => i.ParentId is null).Sum(i => i.CreditAmount);
-            _totalDebitBalance = items.Where(i => i.ParentId is null).Sum(i => i.DebitBalance);
-            _totalCreditBalance = items.Where(i => i.ParentId is null).Sum(i => i.CreditBalance);
-
-            _tree.DataSource = null;
-            _tree.DataSource = items;
-            _tree.ForceInitialize();
-            _tree.ExpandAll();
-
-            _tree.Refresh();
-            System.Windows.Forms.Application.DoEvents();
-
-            UpdateManualAddButtonState();
-
-            if (_tree.Nodes.Count > 0)
-            {
-                _tree.MakeNodeVisible(_tree.Nodes[0]);
-            }
-
-            _lblSub.Text = $"{items.Count} hesap listeleniyor (kök: {_tree.Nodes.Count}, düğüm: {_tree.AllNodesCount})";
-
-            _lblFooterTotals.Text = string.Empty;
+            _items = items;
+            ApplyTreeFilter();
         }
         catch (AuthorizationException ex)
         {
@@ -156,6 +148,51 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
             ToastHelper.Show("Hesap planı yüklenemedi: " + ex.Message, ToastType.Error, 4000);
             _lblSub.Text = "Yükleme hatası";
         }
+    }
+
+    private List<ChartOfAccountDto> _items = [];
+
+    private bool _filterMoved;
+
+    private void TswShowMoved_IsOnChanged(object? sender, EventArgs e)
+    {
+        _filterMoved = _tswShowMoved.IsOn;
+        ApplyTreeFilter();
+    }
+
+    private static bool HasMovement(ChartOfAccountDto item)
+        => item.DebitAmount != 0 || item.CreditAmount != 0 || item.DebitBalance != 0 || item.CreditBalance != 0;
+
+    private void ApplyTreeFilter()
+    {
+        List<ChartOfAccountDto> display = _filterMoved
+            ? _items.Where(HasMovement).ToList()
+            : _items;
+
+        _totalDebit = display.Where(i => i.ParentId is null).Sum(i => i.DebitAmount);
+        _totalCredit = display.Where(i => i.ParentId is null).Sum(i => i.CreditAmount);
+        _totalDebitBalance = display.Where(i => i.ParentId is null).Sum(i => i.DebitBalance);
+        _totalCreditBalance = display.Where(i => i.ParentId is null).Sum(i => i.CreditBalance);
+
+        _tree.DataSource = null;
+        _tree.DataSource = display;
+        _tree.ForceInitialize();
+        _tree.ExpandAll();
+        _tree.Refresh();
+        System.Windows.Forms.Application.DoEvents();
+
+        UpdateManualAddButtonState();
+
+        if (_tree.Nodes.Count > 0)
+        {
+            _tree.MakeNodeVisible(_tree.Nodes[0]);
+        }
+
+        _lblSub.Text = _filterMoved
+            ? $"{display.Count} hesap hareket görüyor (kök: {_tree.Nodes.Count}, düğüm: {_tree.AllNodesCount})"
+            : $"{display.Count} hesap listeleniyor (kök: {_tree.Nodes.Count}, düğüm: {_tree.AllNodesCount})";
+
+        _lblFooterTotals.Text = string.Empty;
     }
 
     private void Tree_CustomDrawNodeCell(object? sender, DevExpress.XtraTreeList.CustomDrawNodeCellEventArgs e)
@@ -269,6 +306,29 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         if (ids.Count == 0)
         {
             ToastHelper.Show("Silmek için önce satırları işaretleyin", ToastType.Warning, 3200);
+            return;
+        }
+
+        AccountDeletionCheck check;
+        try
+        {
+            using var scope = Program.Services.CreateScope();
+            IChartOfAccountRepository accounts = scope.ServiceProvider.GetRequiredService<IChartOfAccountRepository>();
+            check = await accounts.GetDeletionCheckAsync(ids, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            CrashLog.WriteException("ChartAccount.Delete.PreCheck", ex);
+            ToastHelper.Show("Silme kontrolü yapılamadı: " + ex.Message, ToastType.Error, 6000);
+            return;
+        }
+
+        if (check.MovementAccountIds.Count > 0)
+        {
+            string codes = string.Join(", ", check.MovementAccountIds.Take(5));
+            string suffix = check.MovementAccountIds.Count > 5 ? $" ve {check.MovementAccountIds.Count - 5} hesap daha" : "";
+            ToastHelper.Show($"{check.MovementAccountIds.Count} hesap hareket gördüğü için silinemez: {codes}{suffix}",
+                ToastType.Warning, 6000);
             return;
         }
 

@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
@@ -104,18 +105,34 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         AssignLevels(_nodes);
         Classify();
 
-        foreach (ChartOfAccount existingAccount in existing)
-        {
-            // Manuel oluşturulan tüketim birimleri içe aktarma ile silinmez.
-            if (existingAccount.Type == ChartOfAccountType.ConsumptionUnit)
-            {
-                continue;
-            }
+        List<ChartOfAccount> toDelete = existing
+            .Where(a => a.Type != ChartOfAccountType.ConsumptionUnit
+                        && !importedCodes.Contains(a.Code.Value)
+                        && !a.IsDeleted)
+            .ToList();
 
-            if (!importedCodes.Contains(existingAccount.Code.Value) && !existingAccount.IsDeleted)
+        AccountDeletionCheck check = new([], []);
+        if (toDelete.Count > 0)
+        {
+            check = await chartOfAccountRepository.GetDeletionCheckAsync(
+                toDelete.Select(a => a.Id.Value).ToList(),
+                cancellationToken);
+
+            if (check.MovementAccountIds.Count > 0)
             {
-                existingAccount.Delete();
+                string movedCodes = string.Join(", ", existing
+                    .Where(a => check.MovementAccountIds.Contains(a.Id.Value))
+                    .Select(a => a.Code.Value)
+                    .Take(5));
+
+                return Result<string>.Failure(
+                    $"İçe aktarma iptal edildi. İşlem/hareket gören hesap(lar) silinemez: {movedCodes}");
             }
+        }
+
+        foreach (ChartOfAccount existingAccount in toDelete)
+        {
+            existingAccount.Delete();
         }
 
         foreach (ChartOfAccount account in toAdd)
@@ -130,8 +147,22 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         int consumptionUnits = _nodes.Values.Count(n => n.Type == ChartOfAccountType.ConsumptionUnit);
         int linked = _nodes.Values.Count(n => n.SemiFinishedAccountId is not null || n.FinishedAccountId is not null);
 
-        return $"Hesap planı başarıyla içe aktarıldı: {_nodes.Count} hesap " +
+        string summary = $"Hesap planı başarıyla içe aktarıldı: {_nodes.Count} hesap " +
             $"({mainGroups} anagrup, {warehouses} depo, {categories} kategori, {workshops} atölye, {consumptionUnits} tüketim birimi, {linked} atölye 151/152 bağlantısı).";
+
+        if (check.RelatedAccountIds.Count == 0)
+        {
+            return summary;
+        }
+
+        string codes = string.Join(", ", existing
+            .Where(a => check.RelatedAccountIds.Contains(a.Id.Value))
+            .Select(a => a.Code.Value)
+            .Take(5));
+
+        return DeleteWarnings.Compose(
+            $"{summary} NOT: {codes} kodlu hesap(lar) ilişkili kayıtlarda kullanılıyor; " +
+            $"hareket görmedikleri için silme gerçekleştirildi.");
     }
 
     private void LinkParents(Dictionary<string, ChartOfAccount> nodes)

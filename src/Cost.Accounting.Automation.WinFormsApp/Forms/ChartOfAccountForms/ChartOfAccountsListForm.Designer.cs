@@ -10,7 +10,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms;
 
 public sealed partial class ChartOfAccountsListForm
 {
-    private PanelControl _pnlHeader = null!;
+private PanelControl _pnlHeader = null!;
     private LabelControl _lblTitle = null!;
     private LabelControl _lblSub = null!;
     private PictureEdit _picHeaderIcon = null!;
@@ -24,7 +24,8 @@ public sealed partial class ChartOfAccountsListForm
     private SimpleButton _btnCollapseAll = null!;
     private SimpleButton _btnDelete = null!;
     private SimpleButton _btnSelectAll = null!;
-    private SimpleButton _btnClearSelection = null!;
+private SimpleButton _btnClearSelection = null!;
+    private ToggleSwitch _tswShowMoved = null!;
 
     private TreeList _tree = null!;
 
@@ -48,6 +49,7 @@ public sealed partial class ChartOfAccountsListForm
         _btnDelete = new SimpleButton();
         _btnSelectAll = new SimpleButton();
         _btnClearSelection = new SimpleButton();
+        _tswShowMoved = new ToggleSwitch();
 
         _tree = new TreeList();
 
@@ -55,6 +57,7 @@ public sealed partial class ChartOfAccountsListForm
         _lblFooterTotals = new LabelControl();
 
         ((System.ComponentModel.ISupportInitialize)_picHeaderIcon.Properties).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)_tswShowMoved.Properties).BeginInit();
         ((System.ComponentModel.ISupportInitialize)_tree).BeginInit();
         SuspendLayout();
 
@@ -195,6 +198,18 @@ public sealed partial class ChartOfAccountsListForm
         _btnClearSelection.Location = new Point(950, 10);
         _btnClearSelection.Click += BtnClearSelection_Click;
 
+        //
+        // _tswShowMoved
+        //
+        _tswShowMoved.Size = new Size(150, 36);
+        _tswShowMoved.Location = new Point(1110, 10);
+        _tswShowMoved.AutoSize = false;
+        _tswShowMoved.Properties.ShowText = true;
+        _tswShowMoved.Properties.OnText = "Hareketli";
+        _tswShowMoved.Properties.OffText = "Tümü";
+        _tswShowMoved.ToolTip = "Hareket görüyor";
+        _tswShowMoved.IsOnChanged += TswShowMoved_IsOnChanged;
+
         SetIcon(_btnManualAdd, DxIcon.Add, 18);
         SetIcon(_btnImport, DxIcon.Import, 18);
         SetIcon(_btnRefresh, DxIcon.Refresh, 18);
@@ -212,6 +227,8 @@ public sealed partial class ChartOfAccountsListForm
         _pnlToolbar.Controls.Add(_btnDelete);
         _pnlToolbar.Controls.Add(_btnSelectAll);
         _pnlToolbar.Controls.Add(_btnClearSelection);
+        _pnlToolbar.Controls.Add(_tswShowMoved);
+        _tswShowMoved.BringToFront();
 
         //
         // _pnlFooter
@@ -250,6 +267,7 @@ public sealed partial class ChartOfAccountsListForm
         ClientSize = new Size(1280, 680);
 
         ((System.ComponentModel.ISupportInitialize)_picHeaderIcon.Properties).EndInit();
+        ((System.ComponentModel.ISupportInitialize)_tswShowMoved.Properties).EndInit();
         ((System.ComponentModel.ISupportInitialize)_tree).EndInit();
         ResumeLayout(false);
     }

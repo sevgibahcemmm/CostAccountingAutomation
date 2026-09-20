@@ -53,7 +53,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static bool IsDarkAccent => IsColorDark(Primary);
 
         /// <summary>Skin koyu temalı ise true (gövde/panel renkleri koyu olmalı).</summary>
-        public static bool IsDarkSkin => !IsColorDark(Text);
+        public static bool IsDarkSkin
+        {
+            get
+            {
+                string skinName =
+                    UserLookAndFeel.Default.ActiveSkinName ?? string.Empty;
+
+                if (ContainsInsensitive(skinName, "dark") ||
+                    ContainsInsensitive(skinName, "black"))
+                {
+                    return true;
+                }
+
+                if (ContainsInsensitive(skinName, "light") ||
+                    skinName.Equals("Basic", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                return !IsColorDark(Text);
+            }
+        }
 
         public static void EnsureSubscribed()
         {
@@ -97,6 +118,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         /// <summary>Bir arka plan rengi üzerinde okunabilir ön plan metin rengi seçer.</summary>
         public static Color GetContrastText(Color background)
             => IsColorDark(background) ? Color.White : Color.FromArgb(17, 24, 39);
+
+        private static bool ContainsInsensitive(string value, string search)
+            => value.IndexOf(search, System.StringComparison.OrdinalIgnoreCase) >= 0;
 
         private static Color Resolve(Color token)
             => DXSkinColorHelper.GetDXSkinColor(

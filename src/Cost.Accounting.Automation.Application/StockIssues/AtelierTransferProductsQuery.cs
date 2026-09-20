@@ -21,6 +21,7 @@ public sealed class AtelierTransferProductDto
     public decimal UnitPrice { get; set; }
     public decimal TransferredQuantity { get; set; }
     public decimal ConsumedQuantity { get; set; }
+    public decimal DraftQuantity { get; set; }
 
     public decimal AvailableQuantity => Math.Max(0m, TransferredQuantity - ConsumedQuantity);
 }
@@ -49,16 +50,33 @@ internal sealed class AtelierTransferProductsQueryHandler(
 
         Dictionary<Guid, decimal> consumedMap = [];
 
-        if (productIds.Count > 0)
-        {
-            List<CostSlip> approvedSlips = await costSlipRepository.GetAll()
+        List<CostSlip> slips = productIds.Count > 0
+            ? await costSlipRepository.GetAll()
                 .Where(s => s.WorkshopId == new IdentityId(request.TargetAccountId)
-                    && s.Status == CostSlipStatus.Approved
                     && !s.IsDeleted)
                 .Include(s => s.CostSlipItems)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken)
+            : [];
+
+        Dictionary<Guid, decimal> draftMap = [];
+        if (slips.Count > 0)
+        {
+            var groupedSlips = slips.GroupBy(s => s.Status);
+            List<CostSlip> approvedSlips = groupedSlips
+                .FirstOrDefault(g => g.Key == CostSlipStatus.Approved)?
+                .ToList() ?? [];
 
             consumedMap = approvedSlips
+                .SelectMany(s => s.CostSlipItems)
+                .Where(i => i.ProductId is not null)
+                .GroupBy(i => i.ProductId!.Value)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+            List<CostSlip> draftSlips = groupedSlips
+                .FirstOrDefault(g => g.Key == CostSlipStatus.Draft)?
+                .ToList() ?? [];
+
+            draftMap = draftSlips
                 .SelectMany(s => s.CostSlipItems)
                 .Where(i => i.ProductId is not null)
                 .GroupBy(i => i.ProductId!.Value)
@@ -82,7 +100,8 @@ internal sealed class AtelierTransferProductsQueryHandler(
                     UnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
                     UnitPrice = latest.UnitCost.Value,
                     TransferredQuantity = g.Sum(l => l.Quantity),
-                    ConsumedQuantity = consumedMap.TryGetValue(product.Id.Value, out decimal consumed) ? consumed : 0m
+                    ConsumedQuantity = consumedMap.TryGetValue(product.Id.Value, out decimal consumed) ? consumed : 0m,
+                    DraftQuantity = draftMap.TryGetValue(product.Id.Value, out decimal drafted) ? drafted : 0m
                 };
             })
             .OrderBy(p => p.ProductCode)

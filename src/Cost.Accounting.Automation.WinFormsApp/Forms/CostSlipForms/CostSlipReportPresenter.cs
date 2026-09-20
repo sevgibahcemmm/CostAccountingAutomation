@@ -9,7 +9,7 @@ using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraReports.UI;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
-using ReportItemDto = Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips.CostSlipItemDto;
+using ReportItemDto = Cost.Accounting.Automation.WinFormsApp.Reports.CostSlipReport.CostSlipItemDto;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 {
@@ -22,6 +22,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 ? new CostSlipServiceReport()
                 : new CostSlipProductReport();
             report.RequestParameters = false;
+
+            if (report is CostSlipProductReport productReport)
+            {
+                productReport.SlipTypeTitle = slip.CostSlipType == CostSlipType.SemiFinishedProduct
+                    ? "YARI MAMÜL MALİYET PUSULASI"
+                    : "MAMÜL MALİYET PUSULASI";
+            }
+            else if (report is CostSlipServiceReport serviceReport)
+            {
+                serviceReport.SlipTypeTitle = "HİZMET MALİYET PUSULASI";
+            }
+            foreach (DevExpress.XtraReports.Parameters.Parameter parameter in report.Parameters)
+            {
+                parameter.Visible = false;
+            }
 
             report.DataSource = slip.CostSlipItems
                 .Where(l => l.Quantity > 0 && l.ProductId is not null)
@@ -50,6 +65,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             SetReportParam(report, "MamulAdi", slip.ProducedProductName);
             SetReportParam(report, "Miktari", slip.Quantity);
             SetReportParam(report, "Tarih", slip.CostDate);
+            SetReportParam(report, "Donem", slip.CostDate.ToString(
+                "MM'. Ay - 'MMMM'-'yyyy",
+                System.Globalization.CultureInfo.GetCultureInfo("tr-TR")));
             SetReportParam(report, "Isyurdu", company.Name);
             SetReportParam(report, "Atolye", slip.WorkshopName);
             SetReportParam(report, "Antet", company.Name);

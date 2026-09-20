@@ -16,7 +16,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private DevExpress.XtraEditors.SimpleButton btnRefresh;
         private DevExpress.XtraEditors.SimpleButton btnSlipPrint;
         private DevExpress.XtraEditors.SimpleButton btnSlipReport;
-        private DevExpress.XtraEditors.SimpleButton btnDistributionReport;
+        protected DevExpress.XtraEditors.SimpleButton btnDistributionReport;
         private DevExpress.XtraEditors.SimpleButton btnApprove;
         private DevExpress.XtraEditors.CheckButton btnDeleted;
         private DevExpress.XtraEditors.SimpleButton btnRestore;

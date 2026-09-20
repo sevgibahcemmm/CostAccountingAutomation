@@ -1,7 +1,10 @@
 using Cost.Accounting.Automation.Application.Suppliers;
+using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
+using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
 
@@ -33,6 +36,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
 
         protected override IRequest<Result<string>> BuildDeleteCommand(SupplierDto item)
             => new SupplierDeleteCommand(item.Id);
+
+        protected override async Task<List<SupplierDto>> GetUndeletableAsync(
+            List<SupplierDto> selected, CancellationToken cancellationToken)
+        {
+            List<SupplierDto> blocked = [];
+            using var scope = Program.Services.CreateScope();
+            ICurrentAccountMovementRepository movements = scope.ServiceProvider.GetRequiredService<ICurrentAccountMovementRepository>();
+            foreach (SupplierDto item in selected)
+            {
+                if (await movements.AnyAsync(m => m.SupplierId == new IdentityId(item.Id), cancellationToken))
+                {
+                    blocked.Add(item);
+                }
+            }
+            return blocked;
+        }
 
         protected override string GetDeleteSummary(SupplierDto item) => item.Name;
 

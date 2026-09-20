@@ -379,6 +379,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("SupplierId");
 
+                    b.HasIndex("CurrentAccountType", "CustomerId");
+
+                    b.HasIndex("CurrentAccountType", "SupplierId");
+
                     b.ToTable("CurrentAccountMovements", (string)null);
                 });
 
@@ -488,6 +492,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasIndex("InvoiceType");
 
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("Date", "Status");
 
                     b.ToTable("Invoices", (string)null);
                 });
@@ -688,6 +694,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("QRCode");
 
+                    b.Property<Guid?>("SemiFinishedProductId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("TaxRateId")
                         .HasColumnType("uniqueidentifier");
 
@@ -710,6 +719,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("ProductUnitTypeId");
+
+                    b.HasIndex("SemiFinishedProductId");
 
                     b.HasIndex("TaxRateId");
 
@@ -775,6 +786,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.HasIndex("StockIssueId");
+
+                    b.HasIndex("Date", "MovementType");
+
+                    b.HasIndex("ProductId", "Date");
 
                     b.ToTable("ProductMovements", (string)null);
                 });
@@ -1865,6 +1880,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "SemiFinishedProduct")
+                        .WithMany()
+                        .HasForeignKey("SemiFinishedProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Cost.Accounting.Automation.Domain.Products.TaxRates.TaxRate", "TaxRate")
                         .WithMany()
                         .HasForeignKey("TaxRateId")
@@ -1925,6 +1945,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("ProductUnitType");
+
+                    b.Navigation("SemiFinishedProduct");
 
                     b.Navigation("TaxRate");
 

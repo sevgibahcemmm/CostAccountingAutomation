@@ -88,7 +88,8 @@ internal sealed class CostSlipCreateCommandHandler(
     ICostSlipRepository costSlipRepository,
     IChartOfAccountRepository chartOfAccountRepository,
     IProductRepository productRepository,
-    IProductMovementRepository productMovementRepository) : IRequestHandler<CostSlipCreateCommand, Result<string>>
+    IProductMovementRepository productMovementRepository,
+    IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<CostSlipCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CostSlipCreateCommand request, CancellationToken cancellationToken)
     {
@@ -150,6 +151,8 @@ internal sealed class CostSlipCreateCommandHandler(
                 slip,
                 request.CostingMethod,
                 productMovementRepository,
+                ledgerPoster,
+                productRepository,
                 cancellationToken);
 
             if (!stockResult.IsSuccessful)

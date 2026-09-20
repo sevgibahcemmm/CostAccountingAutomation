@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 
-namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips;
+namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostSlipReport;
 
 public sealed record WorkshopStockLineDto(
     Guid ProductId,

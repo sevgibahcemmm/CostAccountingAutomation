@@ -35,8 +35,10 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
         private DevExpress.XtraEditors.LabelControl lblWarehouse;
         private DevExpress.XtraEditors.SearchLookUpEdit cmbCategory;
         private DevExpress.XtraEditors.LabelControl lblCategory;
-        private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
+private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
         private DevExpress.XtraEditors.LabelControl lblUnitType;
+        private DevExpress.XtraEditors.CheckEdit chkCreatePair;
+        private DevExpress.XtraEditors.LabelControl lblCreatePair;
         private DevExpress.XtraEditors.MemoEdit memoDescription;
         private DevExpress.XtraEditors.LabelControl lblDescription;
         private DevExpress.XtraEditors.CheckEdit chkActive;
@@ -100,6 +102,8 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             lblWarehouse = new DevExpress.XtraEditors.LabelControl();
             lblCategory = new DevExpress.XtraEditors.LabelControl();
             cmbUnitType = new DevExpress.XtraEditors.SearchLookUpEdit();
+            chkCreatePair = new DevExpress.XtraEditors.CheckEdit();
+            lblCreatePair = new DevExpress.XtraEditors.LabelControl();
             lblMinLevel = new DevExpress.XtraEditors.LabelControl();
             spinMinLevel = new DevExpress.XtraEditors.SpinEdit();
             picQR = new DevExpress.XtraEditors.PictureEdit();
@@ -160,6 +164,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             ((System.ComponentModel.ISupportInitialize)cmbCategory.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbWarehouse.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbUnitType.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)chkCreatePair.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)spinMinLevel.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picQR.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picBarcode.Properties).BeginInit();
@@ -296,6 +301,8 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             // tabBasic
             // 
             tabBasic.Controls.Add(chkActive);
+            tabBasic.Controls.Add(lblCreatePair);
+            tabBasic.Controls.Add(chkCreatePair);
             tabBasic.Controls.Add(lblDescription);
             tabBasic.Controls.Add(memoDescription);
             tabBasic.Controls.Add(lblUnitType);
@@ -418,6 +425,27 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             cmbUnitType.Properties.NullText = "";
             cmbUnitType.Size = new Size(120, 20);
             cmbUnitType.TabIndex = 17;
+            // 
+            // chkCreatePair
+            // 
+            chkCreatePair.Location = new Point(28, 171);
+            chkCreatePair.Name = "chkCreatePair";
+            chkCreatePair.Properties.Caption = "Mamül ve Yarımamül kartını birlikte oluştur";
+            chkCreatePair.Size = new Size(440, 20);
+            chkCreatePair.TabIndex = 18;
+            chkCreatePair.ToolTip = "152 deposunda MAMÜL, 151 deposunda YARIMAMÜL kartı aynı anda oluşturulur";
+            chkCreatePair.Visible = false;
+            // 
+            // lblCreatePair
+            // 
+            lblCreatePair.Appearance.Font = new Font("Segoe UI Semibold", 9F);
+            lblCreatePair.Appearance.Options.UseFont = true;
+            lblCreatePair.Location = new Point(28, 151);
+            lblCreatePair.Name = "lblCreatePair";
+            lblCreatePair.Size = new Size(180, 15);
+            lblCreatePair.TabIndex = 19;
+            lblCreatePair.Text = "Mamül / Yarımamül Çifti";
+            lblCreatePair.Visible = false;
             // 
             // lblMinLevel
             // 
@@ -826,6 +854,7 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
             ((System.ComponentModel.ISupportInitialize)cmbCategory.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbWarehouse.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbUnitType.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)chkCreatePair.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)spinMinLevel.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)picQR.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)picBarcode.Properties).EndInit();

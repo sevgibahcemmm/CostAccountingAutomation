@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 {
     partial class CostSlipEditForm
@@ -123,8 +124,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             // 
             // pnlHeader
             // 
-            pnlHeader.Appearance.BackColor = Color.FromArgb(248, 249, 250);
-            pnlHeader.Appearance.Options.UseBackColor = true;
             pnlHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlHeader.Controls.Add(lblSubtitle);
             pnlHeader.Controls.Add(lblTitle);
@@ -169,8 +168,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             // 
             // pnlHeaderLine
             // 
-            pnlHeaderLine.Appearance.BackColor = Color.FromArgb(229, 231, 235);
-            pnlHeaderLine.Appearance.Options.UseBackColor = true;
             pnlHeaderLine.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlHeaderLine.Dock = DockStyle.Bottom;
             pnlHeaderLine.Location = new Point(0, 58);
@@ -207,8 +204,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             // 
             // pnlAccounts
             // 
-            pnlAccounts.Appearance.BackColor = Color.FromArgb(249, 250, 251);
-            pnlAccounts.Appearance.Options.UseBackColor = true;
             pnlAccounts.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Simple;
             pnlAccounts.Controls.Add(lblAccountsTitle);
             pnlAccounts.Location = new Point(17, 376);
@@ -274,6 +269,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnDeleteLine.Size = new Size(90, 24);
             btnDeleteLine.TabIndex = 0;
             btnDeleteLine.Text = "- Satır Sil";
+            btnDeleteLine.ImageOptions.SvgImage = DxIcon.Delete;
+            btnDeleteLine.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnAddLine
             // 
@@ -282,6 +280,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnAddLine.Size = new Size(90, 24);
             btnAddLine.TabIndex = 1;
             btnAddLine.Text = "+ Satır Ekle";
+            btnAddLine.ImageOptions.SvgImage = DxIcon.Add;
+            btnAddLine.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // lblItemsTitle
             // 
@@ -451,8 +452,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             // 
             // pnlFooter
             // 
-            pnlFooter.Appearance.BackColor = Color.FromArgb(248, 249, 250);
-            pnlFooter.Appearance.Options.UseBackColor = true;
             pnlFooter.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlFooter.Controls.Add(btnPrintSlip);
             pnlFooter.Controls.Add(btnCancel);
@@ -477,6 +476,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnPrintSlip.Size = new Size(171, 29);
             btnPrintSlip.TabIndex = 0;
             btnPrintSlip.Text = "Maliyet Pusulası Yazdır";
+            btnPrintSlip.ImageOptions.SvgImage = DxIcon.Print;
+            btnPrintSlip.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnPrintSlip.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnCancel
             // 
@@ -488,6 +490,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnCancel.Size = new Size(81, 29);
             btnCancel.TabIndex = 1;
             btnCancel.Text = "Vazgeç";
+            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
+            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnSave
             // 
@@ -499,6 +504,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnSave.Size = new Size(120, 29);
             btnSave.TabIndex = 2;
             btnSave.Text = "Kaydet ve Onayla";
+            btnSave.ImageOptions.SvgImage = DxIcon.Check;
+            btnSave.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnSaveDraft
             // 
@@ -510,6 +518,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnSaveDraft.Size = new Size(111, 29);
             btnSaveDraft.TabIndex = 3;
             btnSaveDraft.Text = "Taslak Kaydet";
+            btnSaveDraft.ImageOptions.SvgImage = DxIcon.Save;
+            btnSaveDraft.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnApprove
             // 
@@ -521,12 +532,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             btnApprove.Size = new Size(120, 29);
             btnApprove.TabIndex = 4;
             btnApprove.Text = "Yazdır";
+            btnApprove.ImageOptions.SvgImage = DxIcon.CheckAll;
+            btnApprove.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnApprove.Visible = false;
             // 
             // pnlFooterLine
             // 
-            pnlFooterLine.Appearance.BackColor = Color.FromArgb(229, 231, 235);
-            pnlFooterLine.Appearance.Options.UseBackColor = true;
             pnlFooterLine.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlFooterLine.Dock = DockStyle.Top;
             pnlFooterLine.Location = new Point(0, 0);

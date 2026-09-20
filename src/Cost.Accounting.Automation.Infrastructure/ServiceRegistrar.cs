@@ -16,11 +16,19 @@ public static class ServiceRegistrar
     {
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 
-        services.AddDbContext<ApplicationDbContext>(opt =>
+services.AddDbContext<ApplicationDbContext>(opt =>
         {
             string con = configuration.GetConnectionString("SqlServer")!;
             opt.UseSqlServer(con);
         });
+
+        services.AddDbContextFactory<ApplicationDbContext>(opt =>
+        {
+            string con = configuration.GetConnectionString("SqlServer")!;
+            opt.UseSqlServer(con);
+        });
+
+        services.AddMemoryCache();
 
         services.AddScoped<IUnitOfWork>(srv => srv.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IBarcodeGeneratorService, BarcodeGeneratorService>();
