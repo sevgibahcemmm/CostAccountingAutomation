@@ -17,6 +17,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private DevExpress.XtraEditors.SimpleButton btnSlipPrint;
         private DevExpress.XtraEditors.SimpleButton btnSlipReport;
         protected DevExpress.XtraEditors.SimpleButton btnDistributionReport;
+        protected DevExpress.XtraEditors.SimpleButton btnProductDeclaration;
+        protected DevExpress.XtraEditors.SimpleButton btnStockMovementsList;
+        protected DevExpress.XtraEditors.SimpleButton btnStockCountList;
         private DevExpress.XtraEditors.SimpleButton btnApprove;
         private DevExpress.XtraEditors.CheckButton btnDeleted;
         private DevExpress.XtraEditors.SimpleButton btnRestore;
@@ -26,6 +29,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private DevExpress.XtraEditors.TextEdit txtSearch;
         private DevExpress.XtraGrid.GridControl gridControl;
         private DevExpress.XtraGrid.Views.Grid.GridView gridView;
+        private DevExpress.XtraEditors.PictureEdit picModuleIcon;
+        private System.Windows.Forms.ContextMenuStrip slipMenu;
+        private System.Windows.Forms.ToolStripMenuItem slipMenuItem;
 
         protected override void Dispose(bool disposing)
         {
@@ -49,6 +55,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnSlipPrint = new DevExpress.XtraEditors.SimpleButton();
             btnSlipReport = new DevExpress.XtraEditors.SimpleButton();
             btnDistributionReport = new DevExpress.XtraEditors.SimpleButton();
+            btnProductDeclaration = new DevExpress.XtraEditors.SimpleButton();
+            btnStockMovementsList = new DevExpress.XtraEditors.SimpleButton();
+            btnStockCountList = new DevExpress.XtraEditors.SimpleButton();
             btnDelete = new DevExpress.XtraEditors.SimpleButton();
             btnEdit = new DevExpress.XtraEditors.SimpleButton();
             btnNew = new DevExpress.XtraEditors.SimpleButton();
@@ -61,13 +70,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             txtSearch = new DevExpress.XtraEditors.TextEdit();
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
+            picModuleIcon = new DevExpress.XtraEditors.PictureEdit();
+            slipMenu = new System.Windows.Forms.ContextMenuStrip(components);
+            slipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             pnlHeader.SuspendLayout();
             pnlToolbar.SuspendLayout();
+            slipMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)txtSearch.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbFilter.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbFilterView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridView).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)picModuleIcon.Properties).BeginInit();
             SuspendLayout();
             // 
             // pnlHeader
@@ -76,6 +90,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             pnlHeader.Controls.Add(btnClosePage);
             pnlHeader.Controls.Add(lblSub);
             pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Controls.Add(picModuleIcon);
             pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             pnlHeader.Location = new System.Drawing.Point(0, 0);
             pnlHeader.Name = "pnlHeader";
@@ -86,7 +101,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             lblTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 20F, System.Drawing.FontStyle.Bold);
             lblTitle.Appearance.Options.UseFont = true;
-            lblTitle.Location = new System.Drawing.Point(28, 16);
+            lblTitle.Location = new System.Drawing.Point(82, 16);
             lblTitle.Name = "lblTitle";
             lblTitle.TabIndex = 0;
             lblTitle.Text = "-";
@@ -95,10 +110,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             lblSub.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             lblSub.Appearance.Options.UseFont = true;
-            lblSub.Location = new System.Drawing.Point(30, 68);
+            lblSub.Location = new System.Drawing.Point(84, 66);
             lblSub.Name = "lblSub";
             lblSub.TabIndex = 1;
             lblSub.Text = "Yükleniyor...";
+            // 
+            // picModuleIcon
+            // 
+            picModuleIcon.BackColor = System.Drawing.Color.Transparent;
+            picModuleIcon.Location = new System.Drawing.Point(28, 31);
+            picModuleIcon.Name = "picModuleIcon";
+            picModuleIcon.Properties.Appearance.BackColor = System.Drawing.Color.Transparent;
+            picModuleIcon.Properties.Appearance.Options.UseBackColor = true;
+            picModuleIcon.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
+            picModuleIcon.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.Default;
+            picModuleIcon.Size = new System.Drawing.Size(42, 42);
+            picModuleIcon.TabIndex = 3;
+            picModuleIcon.TabStop = false;
+            // 
+            // slipMenuItem
+            // 
+            slipMenuItem.Name = "slipMenuItem";
+            slipMenuItem.Size = new System.Drawing.Size(210, 44);
+            slipMenuItem.Text = "Taşınır İşlem Fişi Yazdır";
+            // 
+            // slipMenu
+            // 
+            slipMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { slipMenuItem });
+            slipMenu.Name = "slipMenu";
+            slipMenu.Size = new System.Drawing.Size(211, 48);
             // 
             // btnClosePage
             // 
@@ -196,6 +236,39 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnDistributionReport.Text = "Gider Dağıtım Tablosu Yazdır";
             btnDistributionReport.Visible = false;
             // 
+            // btnProductDeclaration
+            // 
+            btnProductDeclaration.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            btnProductDeclaration.Appearance.Options.UseFont = true;
+            btnProductDeclaration.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            btnProductDeclaration.Name = "btnProductDeclaration";
+            btnProductDeclaration.Size = new System.Drawing.Size(200, 36);
+            btnProductDeclaration.TabIndex = 12;
+            btnProductDeclaration.Text = "Mamül Beyan Yazdır";
+            btnProductDeclaration.Visible = false;
+            // 
+            // btnStockMovementsList
+            // 
+            btnStockMovementsList.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            btnStockMovementsList.Appearance.Options.UseFont = true;
+            btnStockMovementsList.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            btnStockMovementsList.Name = "btnStockMovementsList";
+            btnStockMovementsList.Size = new System.Drawing.Size(215, 36);
+            btnStockMovementsList.TabIndex = 13;
+            btnStockMovementsList.Text = "Stok Hareket Listesi Yazdır";
+            btnStockMovementsList.Visible = false;
+            // 
+            // btnStockCountList
+            // 
+            btnStockCountList.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            btnStockCountList.Appearance.Options.UseFont = true;
+            btnStockCountList.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            btnStockCountList.Name = "btnStockCountList";
+            btnStockCountList.Size = new System.Drawing.Size(205, 36);
+            btnStockCountList.TabIndex = 14;
+            btnStockCountList.Text = "Stok Sayım Listesi Yazdır";
+            btnStockCountList.Visible = false;
+            // 
             // btnApprove
             // 
             btnApprove.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
@@ -235,12 +308,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             flpToolbar.Controls.Add(btnSlipPrint);
             flpToolbar.Controls.Add(btnSlipReport);
             flpToolbar.Controls.Add(btnDistributionReport);
+            flpToolbar.Controls.Add(btnProductDeclaration);
+            flpToolbar.Controls.Add(btnStockMovementsList);
+            flpToolbar.Controls.Add(btnStockCountList);
             flpToolbar.Controls.Add(btnApprove);
             flpToolbar.Controls.Add(btnDeleted);
             flpToolbar.Controls.Add(btnRestore);
             flpToolbar.Location = new System.Drawing.Point(16, 10);
             flpToolbar.Name = "flpToolbar";
-            flpToolbar.Size = new System.Drawing.Size(1050, 36);
+            flpToolbar.Size = new System.Drawing.Size(1460, 36);
             flpToolbar.TabIndex = 12;
             flpToolbar.WrapContents = false;
             // 
@@ -297,9 +373,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             // CrudListFormBase
             // 
+
+            gridControl.ContextMenuStrip = slipMenu; 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(1280, 680);
+            ClientSize = new System.Drawing.Size(1500, 680);
             Controls.Add(gridControl);
             Controls.Add(pnlToolbar);
             Controls.Add(pnlHeader);
@@ -313,6 +391,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             ((System.ComponentModel.ISupportInitialize)cmbFilterView).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridControl).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridView).EndInit();
+            ((System.ComponentModel.ISupportInitialize)picModuleIcon.Properties).EndInit();
+            slipMenu.ResumeLayout(false);
+            slipMenu.PerformLayout();
             ResumeLayout(false);
         }
     }

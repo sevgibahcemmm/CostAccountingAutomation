@@ -14,8 +14,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
     public sealed partial class InvoiceApprovalForm : CrudListFormBase<InvoiceGetAllQuery, InvoiceDto, InvoiceEditForm>
     {
         private readonly InvoiceType? _targetType;
-        private readonly LabelControl _lblMethod = new();
-        private readonly ComboBoxEdit _cmbMethod = new();
 
         public InvoiceApprovalForm() : this(null)
         {
@@ -25,28 +23,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             : base("Fatura Onaylama")
         {
             _targetType = targetType;
-            ConfigureCostingMethodSelector();
-        }
 
-        private void ConfigureCostingMethodSelector()
-        {
-            _lblMethod.Text = "Maliyet Yöntemi:";
-            _lblMethod.Appearance.Font = new Font("Segoe UI", 10F);
-            _lblMethod.Appearance.Options.UseFont = true;
-            _lblMethod.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            _lblMethod.Location = new Point(664, 20);
-            _lblMethod.Size = new Size(150, 20);
+            InitializeComponent();
 
-            _cmbMethod.Properties.Items.Add("FIFO (İlk Giren İlk Çıkar)");
-            _cmbMethod.Properties.Items.Add("LIFO (Son Giren İlk Çıkar)");
-            _cmbMethod.SelectedIndex = 0;
-            _cmbMethod.Properties.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
-            _cmbMethod.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            _cmbMethod.Location = new Point(824, 13);
-            _cmbMethod.Size = new Size(250, 30);
-
-            ToolbarPanel.Controls.Add(_lblMethod);
-            ToolbarPanel.Controls.Add(_cmbMethod);
+            cmbMethod.Properties.Items.Add("FIFO (İlk Giren İlk Çıkar)");
+            cmbMethod.Properties.Items.Add("LIFO (Son Giren İlk Çıkar)");
+            cmbMethod.SelectedIndex = 0;
         }
 
         protected override SvgImage ModuleIcon => DxIcon.Invoices;
@@ -79,7 +61,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return null;
             }
 
-            StockCostingMethod method = _cmbMethod.SelectedIndex == 1
+            StockCostingMethod method = cmbMethod.SelectedIndex == 1
                 ? StockCostingMethod.Lifo
                 : StockCostingMethod.Fifo;
 

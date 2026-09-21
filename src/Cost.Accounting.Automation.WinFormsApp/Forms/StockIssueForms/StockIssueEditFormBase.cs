@@ -8,7 +8,7 @@ using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.StockIssues;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
-using Cost.Accounting.Automation.WinFormsApp.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
@@ -25,7 +25,7 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    public abstract class StockIssueEditFormBase : XtraForm
+    public abstract partial class StockIssueEditFormBase : XtraForm
     {
         private readonly StockIssueType _issueType;
         private readonly StockIssueListDto? _editing;
@@ -40,30 +40,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
         private Guid _sourceWarehouseId;
         private string _sourceWarehouseDisplay = string.Empty;
 
-        private Label lblTitle = default!;
-        private Label lblSubtitle = default!;
-        private Label lblDate = default!;
-        private Label lblDocumentNumber = default!;
-        private Label lblCosting = default!;
-        private Label lblWarehouse = default!;
-        private Label lblTarget = default!;
-        private Label lblDescription = default!;
-        private Label lblLines = default!;
-        private Label lblTotalCaption = default!;
-        private Label lblTotalValue = default!;
-        private DateEdit dtDate = default!;
-        private TextEdit txtDocumentNumber = default!;
-        private TextEdit txtWarehouse = default!;
-        private ComboBoxEdit cmbCosting = default!;
-        private SearchLookUpEdit lookUpTarget = default!;
-        private MemoEdit memoDescription = default!;
-        private GridControl gridLinesControl = default!;
-        private GridView gridLinesView = default!;
-        private SimpleButton btnAddLine = default!;
-        private SimpleButton btnDeleteLine = default!;
-        private SimpleButton btnSave = default!;
-        private SimpleButton btnCancel = default!;
-        private SimpleButton btnPrintSlip = default!;
         private RepositoryItemSearchLookUpEdit riProduct = default!;
 
         private bool _saved;
@@ -73,139 +49,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             _issueType = issueType;
             _editing = existing;
 
-            BuildLayout();
-            WireEvents();
-        }
-
-        private bool IsConsumption => _issueType == StockIssueType.Consumption;
-
-        private string ExpectedWarehouseCode => IsConsumption ? "150" : "150.98";
-
-        private string FormTitle => IsConsumption ? "Tüketim" : "Atölye Transferi";
-
-        private void BuildLayout()
-        {
-            SuspendLayout();
+            InitializeComponent();
+            IconOptions.SvgImage = DxIcon.StockIssue;
 
             Text = _editing is null ? $"Yeni {FormTitle}" : $"{FormTitle} İncele";
-            IconOptions.SvgImage = DxIcon.StockIssue;
-            StartPosition = FormStartPosition.CenterParent;
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ClientSize = new Size(960, 660);
-            Font = new Font("Segoe UI", 9F);
-
-            lblTitle = new Label
-            {
-                Text = Text,
-                Location = new Point(24, 16),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold)
-            };
-
-            lblSubtitle = new Label
-            {
-                Text = IsConsumption
-                    ? "150 deposundan 900 (Tüketimler) altındaki bir tüketim birimine kayıt oluşturun"
-                    : "150.98 deposundan 150.55 altındaki atölyeye transfer kaydı oluşturun",
-                Location = new Point(26, 50),
-                AutoSize = true,
-                ForeColor = Color.Gray
-            };
-
-            lblDate = MakeLabel("Tarih:", 24, 92);
-            dtDate = new DateEdit { Location = new Point(96, 89), Size = new Size(140, 24) };
-
-            lblDocumentNumber = MakeLabel("Belge No:", 260, 92);
-            txtDocumentNumber = new TextEdit { Location = new Point(336, 89), Size = new Size(190, 24) };
-
-            lblCosting = MakeLabel("Değerleme:", 550, 92);
-            cmbCosting = new ComboBoxEdit { Location = new Point(640, 89), Size = new Size(140, 24) };
-            cmbCosting.Properties.TextEditStyle = TextEditStyles.DisableTextEditor;
-
-            lblWarehouse = MakeLabel("Kaynak Depo:", 24, 132);
-            txtWarehouse = new TextEdit { Location = new Point(140, 129), Size = new Size(300, 24), ReadOnly = true };
-
-            lblTarget = MakeLabel("Hedef Hesap:", 470, 132);
-            lookUpTarget = new SearchLookUpEdit { Location = new Point(580, 129), Size = new Size(356, 24) };
-
-            lblDescription = MakeLabel("Açıklama:", 24, 172);
-            memoDescription = new MemoEdit { Location = new Point(140, 169), Size = new Size(796, 46) };
-
-            lblLines = MakeLabel("Kalemler:", 24, 228);
-
-            gridLinesControl = new GridControl
-            {
-                Location = new Point(24, 252),
-                Size = new Size(912, 300),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
-            };
-            gridLinesView = new GridView();
-            gridLinesControl.MainView = gridLinesView;
-            gridLinesControl.ViewCollection.Add(gridLinesView);
-
-            btnAddLine = new SimpleButton
-            {
-                Text = "Satır Ekle",
-                Location = new Point(24, 562),
-                Size = new Size(110, 30),
-                Anchor = AnchorStyles.Left | AnchorStyles.Bottom
-            };
-            btnDeleteLine = new SimpleButton
-            {
-                Text = "Satır Sil",
-                Location = new Point(142, 562),
-                Size = new Size(110, 30),
-                Anchor = AnchorStyles.Left | AnchorStyles.Bottom
-            };
-
-            lblTotalCaption = new Label
-            {
-                Text = "Toplam Tutar:",
-                Location = new Point(640, 568),
-                AutoSize = true,
-                Anchor = AnchorStyles.Right | AnchorStyles.Bottom
-            };
-            lblTotalValue = new Label
-            {
-                Text = "0,00",
-                Location = new Point(740, 568),
-                Size = new Size(196, 20),
-                TextAlign = ContentAlignment.MiddleRight,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                Anchor = AnchorStyles.Right | AnchorStyles.Bottom
-            };
-
-            btnSave = new SimpleButton
-            {
-                Text = "Kaydet",
-                Location = new Point(744, 612),
-                Size = new Size(92, 32),
-                Anchor = AnchorStyles.Right | AnchorStyles.Bottom
-            };
-            btnCancel = new SimpleButton
-            {
-                Text = "Kapat",
-                Location = new Point(844, 612),
-                Size = new Size(92, 32),
-                Anchor = AnchorStyles.Right | AnchorStyles.Bottom
-            };
-            btnPrintSlip = new SimpleButton
-            {
-                Text = "Taşınır İşlem Fişi Yazdır",
-                Location = new Point(24, 612),
-                Size = new Size(180, 32),
-                Enabled = false,
-                Anchor = AnchorStyles.Left | AnchorStyles.Bottom
-            };
-
-            Controls.AddRange([
-                lblTitle, lblSubtitle, lblDate, dtDate, lblDocumentNumber, txtDocumentNumber,
-                lblCosting, cmbCosting, lblWarehouse, txtWarehouse, lblTarget, lookUpTarget,
-                lblDescription, memoDescription, lblLines, gridLinesControl,
-                btnAddLine, btnDeleteLine, lblTotalCaption, lblTotalValue, btnSave, btnCancel, btnPrintSlip
-            ]);
+            lblTitle.Text = Text;
+            lblSubtitle.Text = IsConsumption
+                ? "150 deposundan 900 (Tüketimler) altındaki bir tüketim birimine kayıt oluşturun"
+                : "150.98 deposundan 150.55 altındaki atölyeye transfer kaydı oluşturun";
 
             ConfigureGrid();
 
@@ -227,11 +78,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 gridLinesView.OptionsBehavior.Editable = false;
             }
 
-            ResumeLayout(false);
+            WireEvents();
         }
 
-        private static Label MakeLabel(string text, int x, int y)
-            => new() { Text = text, Location = new Point(x, y), AutoSize = true };
+        private bool IsConsumption => _issueType == StockIssueType.Consumption;
+
+        private string ExpectedWarehouseCode => IsConsumption ? "150" : "150.98";
+
+        private string FormTitle => IsConsumption ? "Tüketim" : "Atölye Transferi";
 
         private void ConfigureGrid()
         {

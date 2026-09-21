@@ -227,7 +227,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblTitle.Name = "lblTitle";
             lblTitle.Size = new Size(122, 21);
             lblTitle.TabIndex = 0;
-            lblTitle.Text = "�?irket Bilgileri";
+            lblTitle.Text = "Şirket Bilgileri";
             //
             // lblSubtitle
             //
@@ -240,7 +240,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblSubtitle.Name = "lblSubtitle";
             lblSubtitle.Size = new Size(220, 14);
             lblSubtitle.TabIndex = 3;
-            lblSubtitle.Text = "�?irket bilgilerini eksiksiz doldurun";
+            lblSubtitle.Text = "Şirket bilgilerini eksiksiz doldurun";
             //
             // pnlHeaderLine
             //
@@ -297,7 +297,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblName.Name = "lblName";
             lblName.Size = new Size(50, 14);
             lblName.TabIndex = 0;
-            lblName.Text = "�?irket Adı";
+            lblName.Text = "Şirket Adı";
             //
             // txtName
             //
@@ -307,7 +307,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             txtName.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtName.Properties.Appearance.Options.UseFont = true;
             txtName.Properties.MaxLength = 200;
-            txtName.Properties.NullText = "Örn. Delta İnşaat A.�?.";
+            txtName.Properties.NullText = "Örn. Delta İnşaat A.Ş.";
             txtName.Properties.Padding = new Padding(26, 2, 2, 2);
             txtName.Size = new Size(434, 26);
             txtName.TabIndex = 1;
@@ -374,7 +374,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblPrefix.Name = "lblPrefix";
             lblPrefix.Size = new Size(60, 14);
             lblPrefix.TabIndex = 6;
-            lblPrefix.Text = "�?irket Ön Eki";
+            lblPrefix.Text = "Şirket Ön Eki";
             //
             // txtPrefix
             //
@@ -396,7 +396,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             chkActive.Name = "chkActive";
             chkActive.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             chkActive.Properties.Appearance.Options.UseFont = true;
-            chkActive.Properties.Caption = "Aktif �?irket";
+            chkActive.Properties.Caption = "Aktif Şirket";
             chkActive.Size = new Size(160, 21);
             chkActive.TabIndex = 8;
             //
@@ -519,7 +519,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblCity.Name = "lblCity";
             lblCity.Size = new Size(28, 14);
             lblCity.TabIndex = 0;
-            lblCity.Text = "�?ehir";
+            lblCity.Text = "Şehir";
             //
             // txtCity
             //
@@ -977,7 +977,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             Name = "CompanyEditForm";
             StartPosition = FormStartPosition.CenterParent;
             IconOptions.SvgImage = DxIcon.Company;
-            Text = "�?irket";
+            Text = "Şirket";
             ((System.ComponentModel.ISupportInitialize)pnlHeader).EndInit();
             pnlHeader.ResumeLayout(false);
             pnlHeader.PerformLayout();

@@ -5,7 +5,6 @@ using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
 using DevExpress.XtraEditors;
-using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
 using DevExpress.XtraGrid.Views.Grid;
@@ -14,108 +13,26 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    public sealed class AtelierTransferStockForm : XtraForm
+    public sealed partial class AtelierTransferStockForm : XtraForm
     {
         private readonly BindingList<AtelierTransferStockMasterDto> _masters = [];
         private readonly BindingList<AtelierTransferStockDetailDto> _details = [];
 
         private List<AtelierTransferStockMasterDto> _loaded = [];
-        private Label lblTitle = default!;
-        private Label lblMasterCaption = default!;
-        private Label lblDetailCaption = default!;
-        private Label lblSummary = default!;
-        private GridControl gridMasters = default!;
-        private GridView gridMastersView = default!;
-        private GridControl gridDetails = default!;
-        private GridView gridDetailsView = default!;
-        private SimpleButton btnRefresh = default!;
-        private SimpleButton btnClose = default!;
 
         public AtelierTransferStockForm()
         {
-            BuildLayout();
-            Load += AtelierTransferStockForm_Load;
-        }
-
-        private void BuildLayout()
-        {
-            SuspendLayout();
-
-            Text = "Atölyeye Transfer Edilen Ürünler";
+            InitializeComponent();
             IconOptions.SvgImage = DxIcon.AtelierTransfer;
-            StartPosition = FormStartPosition.CenterParent;
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ClientSize = new Size(1080, 720);
-            Font = new Font("Segoe UI", 9F);
-
-            lblTitle = new Label
-            {
-                Text = "Atölyeye Transfer Edilen Ürünler",
-                Location = new Point(24, 14),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold)
-            };
-
-            lblSummary = new Label
-            {
-                Location = new Point(26, 46),
-                AutoSize = true,
-                ForeColor = Color.Gray
-            };
-
-            lblMasterCaption = MakeCaption("Ürünler (Atölyeye transfer edilen)", 24, 76);
-
-            gridMasters = new GridControl { Location = new Point(24, 100), Size = new Size(1032, 280), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            gridMastersView = new GridView();
-            gridMasters.MainView = gridMastersView;
-            gridMasters.ViewCollection.Add(gridMastersView);
-
-            lblDetailCaption = MakeCaption("Transfer Detayı", 24, 392);
-
-            gridDetails = new GridControl
-            {
-                Location = new Point(24, 416),
-                Size = new Size(1032, 220),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
-            };
-            gridDetailsView = new GridView();
-            gridDetails.MainView = gridDetailsView;
-            gridDetails.ViewCollection.Add(gridDetailsView);
-
-            btnRefresh = new SimpleButton
-            {
-                Text = "Yenile",
-                Location = new Point(24, 652),
-                Size = new Size(110, 30),
-                Anchor = AnchorStyles.Left | AnchorStyles.Bottom
-            };
-            btnClose = new SimpleButton
-            {
-                Text = "Kapat",
-                Location = new Point(946, 652),
-                Size = new Size(110, 30),
-                Anchor = AnchorStyles.Right | AnchorStyles.Bottom
-            };
-
-            Controls.AddRange([
-                lblTitle, lblSummary, lblMasterCaption, gridMasters, lblDetailCaption,
-                gridDetails, btnRefresh, btnClose
-            ]);
 
             ConfigureMasterGrid();
             ConfigureDetailGrid();
 
+            Load += AtelierTransferStockForm_Load;
             btnRefresh.Click += async (_, _) => await LoadDataAsync();
             btnClose.Click += (_, _) => Close();
             gridMastersView.FocusedRowChanged += GridMastersView_FocusedRowChanged;
-
-            ResumeLayout(false);
         }
-
-        private static Label MakeCaption(string text, int x, int y)
-            => new() { Text = text, Location = new Point(x, y), AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
 
         private void ConfigureMasterGrid()
         {

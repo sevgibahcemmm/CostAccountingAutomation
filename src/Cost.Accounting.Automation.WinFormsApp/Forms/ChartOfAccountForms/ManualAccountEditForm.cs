@@ -8,100 +8,20 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
 {
-    public sealed class ManualAccountEditForm : DevExpress.XtraEditors.XtraForm
+    public sealed partial class ManualAccountEditForm : DevExpress.XtraEditors.XtraForm
     {
         private readonly Guid? _preselectedParentId;
         private bool _loading;
-
-        private Label lblTitle = default!;
-        private Label lblSubtitle = default!;
-        private Label lblParent = default!;
-        private Label lblCode = default!;
-        private Label lblName = default!;
-        private LookUpEdit cmbParent = default!;
-        private TextEdit txtCode = default!;
-        private TextEdit txtName = default!;
-        private CheckEdit chkActive = default!;
-        private SimpleButton btnSave = default!;
-        private SimpleButton btnCancel = default!;
 
         public ManualAccountEditForm(Guid? preselectedParentId = null)
         {
             _preselectedParentId = preselectedParentId;
 
-            BuildLayout();
+            InitializeComponent();
+            IconOptions.SvgImage = DxIcon.ChartAccounts;
+
             WireEvents();
         }
-
-        private void BuildLayout()
-        {
-            SuspendLayout();
-
-            Text = "Yeni Hesap Kaydı";
-            IconOptions.SvgImage = DxIcon.ChartAccounts;
-            StartPosition = FormStartPosition.CenterParent;
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ClientSize = new Size(560, 340);
-            Font = new Font("Segoe UI", 9F);
-
-            lblTitle = new Label
-            {
-                Text = "Manüel Hesap / Alt Hesap Ekle",
-                Location = new Point(24, 16),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold)
-            };
-
-            lblSubtitle = new Label
-            {
-                Text = "Üst hesabı seçerek alt kod ekleyin. 900 (Tüketimler) dahil tüm hesap planı kapsanır.",
-                Location = new Point(26, 48),
-                AutoSize = true,
-                ForeColor = Color.Gray
-            };
-
-            lblParent = MakeLabel("Üst Hesap:", 24, 92);
-            cmbParent = new LookUpEdit { Location = new Point(120, 88), Size = new Size(400, 24) };
-
-            lblCode = MakeLabel("Kod:", 24, 128);
-            txtCode = new TextEdit { Location = new Point(120, 124), Size = new Size(400, 24) };
-
-            lblName = MakeLabel("Hesap Adı:", 24, 164);
-            txtName = new TextEdit { Location = new Point(120, 160), Size = new Size(400, 24) };
-
-            chkActive = new CheckEdit
-            {
-                Text = "Aktif",
-                Location = new Point(120, 200),
-                Size = new Size(120, 24),
-                Checked = true
-            };
-
-            btnSave = new SimpleButton
-            {
-                Text = "Kaydet",
-                Location = new Point(336, 272),
-                Size = new Size(84, 34)
-            };
-            btnCancel = new SimpleButton
-            {
-                Text = "Kapat",
-                Location = new Point(428, 272),
-                Size = new Size(84, 34)
-            };
-
-            Controls.AddRange([
-                lblTitle, lblSubtitle, lblParent, cmbParent, lblCode, txtCode,
-                lblName, txtName, chkActive, btnSave, btnCancel
-            ]);
-
-            ResumeLayout(false);
-        }
-
-        private static Label MakeLabel(string text, int x, int y)
-            => new() { Text = text, Location = new Point(x, y), AutoSize = true };
 
         private void WireEvents()
         {

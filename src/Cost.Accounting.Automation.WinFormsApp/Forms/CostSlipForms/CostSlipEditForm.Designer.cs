@@ -35,8 +35,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         private DevExpress.XtraEditors.SimpleButton btnDeleteLine;
         private DevExpress.XtraGrid.GridControl gridLines;
         private DevExpress.XtraGrid.Views.Grid.GridView gridLinesView;
-        private DevExpress.XtraEditors.PanelControl pnlAccounts;
+private DevExpress.XtraEditors.PanelControl pnlAccounts;
         private DevExpress.XtraEditors.LabelControl lblAccountsTitle;
+        private System.Windows.Forms.FlowLayoutPanel flpAccounts;
         private DevExpress.XtraEditors.PanelControl pnlFooter;
         private DevExpress.XtraEditors.PanelControl pnlFooterLine;
         private DevExpress.XtraEditors.SimpleButton btnSaveDraft;
@@ -64,6 +65,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             pnlBody = new Panel();
             pnlAccounts = new DevExpress.XtraEditors.PanelControl();
             lblAccountsTitle = new DevExpress.XtraEditors.LabelControl();
+            flpAccounts = new System.Windows.Forms.FlowLayoutPanel();
             pnlItemsPanel = new DevExpress.XtraEditors.PanelControl();
             gridLines = new DevExpress.XtraGrid.GridControl();
             gridLinesView = new DevExpress.XtraGrid.Views.Grid.GridView();
@@ -205,6 +207,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             // pnlAccounts
             // 
             pnlAccounts.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Simple;
+            pnlAccounts.Controls.Add(flpAccounts);
             pnlAccounts.Controls.Add(lblAccountsTitle);
             pnlAccounts.Location = new Point(17, 376);
             pnlAccounts.Name = "pnlAccounts";
@@ -220,6 +223,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             lblAccountsTitle.Size = new Size(205, 17);
             lblAccountsTitle.TabIndex = 0;
             lblAccountsTitle.Text = "Hesap Bazlı Gider Girişi (710-780)";
+            // 
+            // flpAccounts
+            // 
+            flpAccounts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            flpAccounts.AutoScroll = true;
+            flpAccounts.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            flpAccounts.Location = new Point(10, 40);
+            flpAccounts.Name = "flpAccounts";
+            flpAccounts.Size = new Size(1155, 240);
+            flpAccounts.TabIndex = 1;
+            flpAccounts.WrapContents = true;
             // 
             // pnlItemsPanel
             // 

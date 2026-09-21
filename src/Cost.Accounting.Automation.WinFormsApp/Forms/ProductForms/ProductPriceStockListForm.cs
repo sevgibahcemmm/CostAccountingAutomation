@@ -1,12 +1,23 @@
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Products;
+using Cost.Accounting.Automation.Application.StockCounts;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
+using Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraGrid.Columns;
+using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using TS.MediatR;
 using TS.Result;
 
@@ -21,6 +32,65 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         protected override SvgImage ModuleIcon => DxIcon.PriceStock;
 
         protected override bool AllowDelete => false;
+
+        protected override bool SupportsStockCountListReport => true;
+
+        protected override async Task ShowStockCountListReportAsync(ProductDto? item)
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            var accountsResult = await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None);
+            if (!accountsResult.IsSuccessful || accountsResult.Data is null)
+            {
+                ToastHelper.Show("Atölye / depo bilgileri yüklenemedi.", ToastType.Error);
+                return;
+            }
+
+            using var form = new StockCountPromptForm(accountsResult.Data, accountsResult.Data);
+            if (form.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            List<StockCountReportRowDto> rows = await mediator.Send(
+                new StockCountListReportQuery(form.Mode, form.AllGroups, form.GroupIds, form.AsOfDate),
+                CancellationToken.None);
+
+            if (rows.Count == 0)
+            {
+                ToastHelper.Show("Seçilen kriterlere uygun ürün bulunamadı.", ToastType.Warning);
+                return;
+            }
+
+            CompanyDto company = await LoadCompanyAsync();
+
+            var report = new StockCountListReport();
+            report.SetData(form.Mode, rows, company.Letterhead);
+            report.PrintReport();
+        }
+
+        private static async Task<CompanyDto> LoadCompanyAsync()
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                SessionClaimContext session = Program.Services.GetRequiredService<SessionClaimContext>();
+
+                var result = await mediator.Send(new CompanyGetQuery(session.GetCompanyId()), CancellationToken.None);
+                if (result.IsSuccessful && result.Data is not null)
+                {
+                    return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("StockCountListReport.Company", ex);
+            }
+
+            return new CompanyDto();
+        }
 
         protected override string[] SearchFieldNames =>
         [

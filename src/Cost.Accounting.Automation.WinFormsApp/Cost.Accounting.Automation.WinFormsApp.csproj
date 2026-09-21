@@ -39,6 +39,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Update="Reports\CostAllocationTable\ServiceCostAllocationTable.cs">
+      <SubType>XtraReport</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

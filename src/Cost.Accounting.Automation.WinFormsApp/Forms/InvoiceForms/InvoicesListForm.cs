@@ -5,7 +5,7 @@ using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
-using Cost.Accounting.Automation.WinFormsApp.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Data;

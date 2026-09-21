@@ -5,7 +5,7 @@ using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.StockIssues;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
-using Cost.Accounting.Automation.WinFormsApp.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;

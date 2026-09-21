@@ -11,7 +11,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
     public partial class ResetPasswordForm : DevExpress.XtraEditors.XtraForm
     {
-        private const string SuccessMessage = "�?ifreniz başarıyla sıfırlandı. Yeni şifrenizle giriş yapabilirsiniz";
+        private const string SuccessMessage = "Şifreniz başarıyla sıfırlandı. Yeni şifrenizle giriş yapabilirsiniz";
 
         public bool ResetCompleted { get; private set; }
 
@@ -58,13 +58,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             if (newPassword.Length < 8)
             {
-                ToastHelper.Show("�?ifreniz en az 8 karakter olmalıdır.", ToastType.Error);
+                ToastHelper.Show("Şifreniz en az 8 karakter olmalıdır.", ToastType.Error);
                 return;
             }
 
             if (newPassword != confirmPassword)
             {
-                ToastHelper.Show("�?ifreler birbiriyle uyuşmuyor.", ToastType.Error);
+                ToastHelper.Show("Şifreler birbiriyle uyuşmuyor.", ToastType.Error);
                 return;
             }
 

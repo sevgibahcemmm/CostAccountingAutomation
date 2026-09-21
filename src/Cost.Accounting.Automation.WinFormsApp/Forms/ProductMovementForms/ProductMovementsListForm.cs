@@ -1,9 +1,14 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.ProductMovements;
+using Cost.Accounting.Automation.Application.StockMovements;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
+using Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable;
+using Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListReports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
@@ -98,7 +103,67 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
 
         protected override bool SupportsRestore => true;
 
+        protected override bool SupportsStockMovementsListReport => true;
+
         protected override IRequest<Result<string>> BuildRestoreCommand(ProductMovementListDto item)
             => new ProductMovementRestoreCommand(item.Id);
+
+        protected override async Task ShowStockMovementsListReportAsync(ProductMovementListDto? item)
+        {
+            using var dateForm = new DateRangePromptForm(
+                defaultStart: null,
+                defaultEnd: null,
+                showTypeSelector: false,
+                headerTitle: "Stok Hareket Listesi");
+            if (dateForm.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            List<StockMovementReportRowDto> rows = await mediator.Send(
+                new StockMovementsListReportQuery(
+                    dateForm.StartDate,
+                    dateForm.EndDate,
+                    ProductId: _productId,
+                    WarehouseId: SelectedFilterGuid),
+                CancellationToken.None);
+
+            if (rows.Count == 0)
+            {
+                ToastHelper.Show("Seçilen tarih aralığında stok hareketi kaydı bulunamadı.", ToastType.Warning);
+                return;
+            }
+
+            CompanyDto company = await LoadCompanyAsync();
+
+            var report = new StockMovementsListReport();
+            report.SetData(dateForm.StartDate, dateForm.EndDate, rows, company.Letterhead);
+            report.PrintReport();
+        }
+
+        private static async Task<CompanyDto> LoadCompanyAsync()
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                SessionClaimContext session = Program.Services.GetRequiredService<SessionClaimContext>();
+
+                var result = await mediator.Send(new CompanyGetQuery(session.GetCompanyId()), CancellationToken.None);
+                if (result.IsSuccessful && result.Data is not null)
+                {
+                    return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("StockMovementsListReport.Company", ex);
+            }
+
+            return new CompanyDto();
+        }
     }
 }

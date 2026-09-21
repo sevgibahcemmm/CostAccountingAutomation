@@ -9,7 +9,7 @@ using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
-using Cost.Accounting.Automation.WinFormsApp.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;

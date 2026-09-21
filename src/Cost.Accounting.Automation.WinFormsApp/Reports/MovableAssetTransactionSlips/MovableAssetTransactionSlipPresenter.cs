@@ -5,14 +5,12 @@ using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
-using DevExpress.XtraPrinting;
 using DevExpress.XtraReports.UI;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 
-namespace Cost.Accounting.Automation.WinFormsApp.Reports
+namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips
 {
     internal static class MovableAssetTransactionSlipPresenter
     {

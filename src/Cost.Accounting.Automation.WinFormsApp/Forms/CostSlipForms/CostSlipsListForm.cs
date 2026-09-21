@@ -1,11 +1,14 @@
+using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.CostSlips;
 using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Reports;
 using Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
+using DevExpress.Data;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Columns;
@@ -18,7 +21,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 {
     public sealed partial class CostSlipsListForm : CrudListFormBase<CostSlipGetAllQuery, CostSlipListDto, CostSlipEditForm>
     {
-        public CostSlipsListForm() : base("Maliyet Pusulası")
+public CostSlipsListForm() : base("Maliyet Pusulası")
         {
         }
 
@@ -32,10 +35,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             nameof(CostSlipListDto.Description)
         ];
 
-        protected override void ConfigureColumns()
+protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
+            ConfigureMasterSummary();
             ConfigureItemsDetail();
+        }
+
+        private void ConfigureMasterSummary()
+        {
+            View.OptionsView.ShowFooter = true;
+
+            GridColumn quantityColumn = View.Columns[nameof(CostSlipListDto.Quantity)];
+            quantityColumn.Summary.Add(SummaryItemType.Sum, nameof(CostSlipListDto.Quantity), "Toplam: {0:n0}");
+
+            GridColumn grandTotalColumn = View.Columns[nameof(CostSlipListDto.GrandTotal)];
+            grandTotalColumn.Summary.Add(SummaryItemType.Sum, nameof(CostSlipListDto.GrandTotal), "Toplam: {0:n2}");
         }
 
         private void ConfigureItemsDetail()
@@ -60,6 +75,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             AddDetailColumn(itemsView, nameof(CostSlipItemDto.UnitPrice), "Birim Fiyat", 100, "n2", "Right");
             AddDetailColumn(itemsView, nameof(CostSlipItemDto.TotalAmount), "Tutar", 110, "n2", "Right");
             AddDetailColumn(itemsView, nameof(CostSlipItemDto.Description), "Açıklama", 200);
+
+            itemsView.OptionsView.ShowFooter = true;
+            itemsView.Columns[nameof(CostSlipItemDto.Quantity)].Summary.Add(
+                SummaryItemType.Sum, nameof(CostSlipItemDto.Quantity), "Toplam: {0:n2}");
+            itemsView.Columns[nameof(CostSlipItemDto.TotalAmount)].Summary.Add(
+                SummaryItemType.Sum, nameof(CostSlipItemDto.TotalAmount), "Toplam: {0:n2}");
 
             BaseGrid.LevelTree.Nodes.Add(new GridLevelNode
             {
@@ -119,6 +140,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
         protected override bool SupportsDistributionReport => true;
 
+        protected override bool SupportsProductDeclarationReport => true;
+
         protected override bool AllowsApprove(CostSlipListDto item) => item.Status == CostSlipStatus.Draft;
 
         protected override bool AllowsEdit(CostSlipListDto item) => item.Status != CostSlipStatus.Approved;
@@ -146,7 +169,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
             GiderDagilimReportResult result = await mediator.Send(
-                new GiderDagilimReportQuery(dateForm.StartDate, dateForm.EndDate));
+                new GiderDagilimReportQuery(dateForm.StartDate, dateForm.EndDate, dateForm.CostSlipType));
 
             if (result.Rows.Count == 0)
             {
@@ -154,9 +177,87 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 return;
             }
 
-            var report = new ProductCostAllocationTable();
-            report.SetData(dateForm.StartDate, dateForm.EndDate, result);
+            ICostAllocationTableReport report = dateForm.CostSlipType is CostSlipType.Service or CostSlipType.SemiFinishedService
+                ? new ServiceCostAllocationTable()
+                : new ProductCostAllocationTableReport();
+            CompanyDto company = await LoadCompanyAsync();
+            report.SetData(dateForm.StartDate, dateForm.EndDate, result, company.Letterhead, dateForm.CostSlipType);
             report.PrintReport();
+        }
+
+        protected override async Task ShowProductDeclarationReportAsync(CostSlipListDto? item)
+        {
+            using var dateForm = new DateRangePromptForm(
+                item?.CostDate,
+                item?.CostDate,
+                showTypeSelector: false,
+                headerTitle: "Mamül Üretim Beyanı");
+            if (dateForm.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            List<ProductDeclarationRowDto> rows = await mediator.Send(
+                new ProductDeclarationReportQuery(dateForm.StartDate, dateForm.EndDate),
+                CancellationToken.None);
+
+            if (rows.Count == 0)
+            {
+                ToastHelper.Show("Seçilen tarih aralığında onaylı mamül fişi bulunamadı.", ToastType.Warning);
+                return;
+            }
+
+            List<string> workshops = rows
+                .Select(r => r.WorkshopName)
+                .Where(w => !string.IsNullOrWhiteSpace(w))
+                .Distinct()
+                .OrderBy(w => w, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (workshops.Count > 1)
+            {
+                using var prompt = new WorkshopSelectionPromptForm(workshops);
+                if (prompt.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+
+                List<string> selected = prompt.SelectedWorkshops;
+                rows = selected.Count == workshops.Count
+                    ? rows
+                    : rows.Where(r => selected.Contains(r.WorkshopName)).ToList();
+            }
+
+            CompanyDto company = await LoadCompanyAsync();
+
+            var report = new ProductDeclarationReport();
+            report.SetData(dateForm.StartDate, dateForm.EndDate, rows, company.Letterhead);
+            report.PrintReport();
+        }
+
+        private static async Task<CompanyDto> LoadCompanyAsync()
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                SessionClaimContext session = Program.Services.GetRequiredService<SessionClaimContext>();
+
+                var result = await mediator.Send(new CompanyGetQuery(session.GetCompanyId()), CancellationToken.None);
+                if (result.IsSuccessful && result.Data is not null)
+                {
+                    return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("DistributionReport.Company", ex);
+            }
+
+            return new CompanyDto();
         }
     }
 }

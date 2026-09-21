@@ -39,7 +39,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         private readonly Dictionary<ExpenseAccountType, decimal> _accountAmounts = [];
         private readonly Dictionary<ExpenseAccountType, TextEdit> _accountInputs = [];
         private readonly List<TextEdit> _accountInputList = [];
-        private FlowLayoutPanel _flpAccounts = default!;
         private bool _syncingTotals;
         private decimal _grandTotal;
         private decimal _unitCost;
@@ -102,16 +101,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLinesView.OptionsBehavior.AutoPopulateColumns = false;
             gridLines.DataSource = _lines;
             ConfigureGrid();
-
-            _flpAccounts = new FlowLayoutPanel
-            {
-                Location = new Point(10, 40),
-                Size = new Size(Math.Max(500, pnlAccounts.Width - 28), 240),
-                AutoScroll = true,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = true
-            };
-            pnlAccounts.Controls.Add(_flpAccounts);
 
             RebuildAccountPanel();
 
@@ -266,11 +255,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
         private async void CostSlipEditForm_Load(object? sender, EventArgs e)
         {
-            await LoadLookUpsAsync();
+            Task loadLookUps = LoadLookUpsAsync();
+            Task<AppCostSlip?> fetchSlip = _editing is null
+                ? Task.FromResult<AppCostSlip?>(null)
+                : FetchSlipAsync(_editing.Id);
 
-            if (_editing is not null)
+            await Task.WhenAll(loadLookUps, fetchSlip);
+
+            AppCostSlip? slip = fetchSlip.Result;
+            if (slip is not null)
             {
-                await LoadDetailsAndPopulateAsync();
+                PopulateExisting(slip);
             }
 
             RebuildAccountPanel();
@@ -285,22 +280,40 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
         }
 
-        private async Task LoadLookUpsAsync()
+        private static async Task<AppCostSlip?> FetchSlipAsync(Guid slipId)
         {
             try
             {
                 using var scope = Program.Services.CreateScope();
                 ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-                _products = (await mediator.Send(new ProductGetAllQuery())).ToList();
-                _workshops = ((await mediator.Send(new ChartOfAccountLookUpQuery())).Data ?? [])
+                var result = await mediator.Send(new CostSlipGetByIdQuery(slipId), CancellationToken.None);
+                return result.IsSuccessful ? result.Data : null;
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Pusula detayları yüklenirken hata oluştu: " + ex.Message, ToastType.Error);
+                return null;
+            }
+        }
+
+        private async Task LoadLookUpsAsync()
+        {
+            try
+            {
+                Task<List<ProductDto>> productsTask = LoadProductsAsync();
+                Task<List<ChartOfAccountLookUpDto>> accountsTask = LoadAccountLookUpsAsync();
+
+                _products = await productsTask;
+                List<ChartOfAccountLookUpDto> accountLookUps = await accountsTask;
+
+                _workshops = accountLookUps
                     .Where(w => w.Type == ChartOfAccountType.Workshop)
                     .ToList();
 
-                List<ChartOfAccountDto> allAccounts = (await mediator.Send(new ChartOfAccountGetAllQuery())).ToList();
-                _workshopLinks = allAccounts
-                    .Where(a => a.Type == ChartOfAccountType.Workshop)
-                    .ToDictionary(a => a.Id, a => new WorkshopLink(a.Code, a.SemiFinishedAccountId, a.FinishedAccountId));
+                _workshopLinks = _workshops.ToDictionary(
+                    w => w.Id,
+                    w => new WorkshopLink(w.Code, w.SemiFinishedAccountId, w.FinishedAccountId));
 
                 lookUpWorkshop.Properties.DataSource = _workshops;
                 lookUpWorkshop.Properties.ValueMember = nameof(ChartOfAccountLookUpDto.Id);
@@ -340,23 +353,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
         }
 
-        private async Task LoadDetailsAndPopulateAsync()
+        private static async Task<List<ProductDto>> LoadProductsAsync()
         {
-            try
-            {
-                using var scope = Program.Services.CreateScope();
-                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            return (await mediator.Send(new ProductGetAllQuery(), CancellationToken.None)).ToList();
+        }
 
-                var result = await mediator.Send(new CostSlipGetByIdQuery(_editing!.Id), CancellationToken.None);
-                if (result.IsSuccessful && result.Data is not null)
-                {
-                    PopulateExisting(result.Data);
-                }
-            }
-            catch (Exception ex)
-            {
-                ToastHelper.Show("Pusula detayları yüklenirken hata oluştu: " + ex.Message, ToastType.Error);
-            }
+        private static async Task<List<ChartOfAccountLookUpDto>> LoadAccountLookUpsAsync()
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            return (await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [];
         }
 
         private void PopulateExisting(AppCostSlip slip)
@@ -930,7 +938,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
         private void RebuildAccountPanel()
         {
-            _flpAccounts.Controls.Clear();
+            flpAccounts.Controls.Clear();
             _accountInputs.Clear();
             _accountInputList.Clear();
 
@@ -943,7 +951,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 bool isDerived = account == DerivedAccount;
                 string caption = AccountDisplayName(account) + (isDerived ? "  (Grid Toplamı)" : string.Empty);
 
-                int rowWidth = Math.Max(430, (_flpAccounts.ClientSize.Width - 16) / 2);
+                int rowWidth = Math.Max(430, (flpAccounts.ClientSize.Width - 16) / 2);
                 int labelWidth = (int)(rowWidth * 0.66);
 
                 Panel row = new()
@@ -981,7 +989,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
                 row.Controls.Add(lbl);
                 row.Controls.Add(input);
-                _flpAccounts.Controls.Add(row);
+                flpAccounts.Controls.Add(row);
 
                 _accountInputs[account] = input;
                 _accountInputList.Add(input);

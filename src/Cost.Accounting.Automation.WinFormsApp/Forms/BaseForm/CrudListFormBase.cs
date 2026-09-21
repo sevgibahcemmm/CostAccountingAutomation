@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-using Cost.Accounting.Automation.WinFormsApp.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 {
@@ -28,13 +28,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
         protected CrudListFormBase(string formTitle) : base(formTitle)
         {
-            InitializeComponent();
+InitializeComponent();
             lblTitle.Text = formTitle;
             IconOptions.SvgImage = ModuleIcon;
             WireEvents();
             SetupGrid();
             SetupButtonIcons();
-            AddHeaderIcon();
+            picModuleIcon.SvgImage = ModuleIcon;
         }
 
         protected GridView View => gridView;
@@ -71,6 +71,21 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
         /// </summary>
         protected virtual bool SupportsDistributionReport => false;
 
+        /// <summary>
+        /// Liste ekranında "Mamül Beyan Yazdır" butonunun gösterilip gösterilmeyeceği.
+        /// </summary>
+        protected virtual bool SupportsProductDeclarationReport => false;
+
+        /// <summary>
+        /// Liste ekranında "Stok Hareket Listesi Yazdır" butonunun gösterilip gösterilmeyeceği.
+        /// </summary>
+        protected virtual bool SupportsStockMovementsListReport => false;
+
+        /// <summary>
+        /// Liste ekranında "Stok Sayım Listesi Yazdır" butonunun gösterilip gösterilmeyeceği.
+        /// </summary>
+        protected virtual bool SupportsStockCountListReport => false;
+
         protected virtual IRequest<Result<string>>? BuildApproveCommand(TDto item) => null;
 
         /// <summary>
@@ -98,6 +113,21 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
         /// Seçili kaydın gider dağıtım tablosu raporu açılır. Desteklenmiyorsa hiçbir işlem yapılmaz.
         /// </summary>
         protected virtual Task ShowDistributionReportAsync(TDto item) => Task.CompletedTask;
+
+        /// <summary>
+        /// Mamül üretim beyanı raporu açılır. Desteklenmiyorsa hiçbir işlem yapılmaz.
+        /// </summary>
+        protected virtual Task ShowProductDeclarationReportAsync(TDto? item) => Task.CompletedTask;
+
+        /// <summary>
+        /// Stok hareket listesi raporu açılır. Desteklenmiyorsa hiçbir işlem yapılmaz.
+        /// </summary>
+        protected virtual Task ShowStockMovementsListReportAsync(TDto? item) => Task.CompletedTask;
+
+        /// <summary>
+        /// Stok sayım listesi raporu açılır. Desteklenmiyorsa hiçbir işlem yapılmaz.
+        /// </summary>
+        protected virtual Task ShowStockCountListReportAsync(TDto? item) => Task.CompletedTask;
 
         protected virtual TListQuery BuildListQuery() => new();
 
@@ -134,6 +164,9 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             btnSlipPrint.Visible = SupportsSlipPrint;
             btnSlipReport.Visible = SupportsSlipReport;
             btnDistributionReport.Visible = SupportsDistributionReport;
+            btnProductDeclaration.Visible = SupportsProductDeclarationReport;
+            btnStockMovementsList.Visible = SupportsStockMovementsListReport;
+            btnStockCountList.Visible = SupportsStockCountListReport;
             SetupSlipContextMenu();
             ConfigureColumns();
             _ = ReloadAsync();
@@ -162,6 +195,9 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
 btnSlipPrint.Click += async (_, _) => await ShowSelectedSlipAsync();
             btnSlipReport.Click += async (_, _) => await ShowSelectedSlipReportAsync();
             btnDistributionReport.Click += async (_, _) => await ShowSelectedDistributionReportAsync();
+            btnProductDeclaration.Click += async (_, _) => await ShowSelectedProductDeclarationReportAsync();
+            btnStockMovementsList.Click += async (_, _) => await ShowSelectedStockMovementsListReportAsync();
+            btnStockCountList.Click += async (_, _) => await ShowSelectedStockCountListReportAsync();
             btnApprove.Click += BtnApprove_Click;
             btnDeleted.CheckedChanged += BtnDeleted_CheckedChanged;
             btnRestore.Click += BtnRestore_Click;
@@ -192,6 +228,9 @@ gridView.OptionsBehavior.Editable = false;
             SetButtonIcon(btnSlipPrint, DxIcon.Receipt, 18);
             SetButtonIcon(btnSlipReport, DxIcon.Receipt, 18);
             SetButtonIcon(btnDistributionReport, DxIcon.Receipt, 18);
+            SetButtonIcon(btnProductDeclaration, DxIcon.Receipt, 18);
+            SetButtonIcon(btnStockMovementsList, DxIcon.Receipt, 18);
+            SetButtonIcon(btnStockCountList, DxIcon.StockBox, 18);
             SetButtonIcon(btnDeleted, DxIcon.Delete, 18);
             SetButtonIcon(btnRestore, DxIcon.Restore, 18);
 SetButtonIcon(btnApprove, DxIcon.Check, 18);
@@ -214,7 +253,7 @@ SetButtonIcon(btnApprove, DxIcon.Check, 18);
                 ? 0
                 : System.Windows.Forms.TextRenderer.MeasureText(button.Text, button.Appearance.Font).Width;
             int iconWidth = hasIcon ? button.ImageOptions.SvgImageSize.Width + 6 : 0;
-            int padding = string.IsNullOrEmpty(button.Text) ? 16 : 32;
+            int padding = string.IsNullOrEmpty(button.Text) ? 16 : 56;
             return textWidth + iconWidth + padding;
         }
 
@@ -271,25 +310,7 @@ SetButtonIcon(btnApprove, DxIcon.Check, 18);
         {
             button.ImageOptions.SvgImage = icon;
             button.ImageOptions.SvgImageSize = new Size(size, size);
-            button.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-        }
-
-        private void AddHeaderIcon()
-        {
-            PictureEdit pic = new()
-            {
-                Location = new Point(28, 31),
-                Size = new Size(42, 42),
-                BackColor = Color.Transparent
-            };
-            pic.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
-            pic.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.Default;
-            pic.SvgImage = ModuleIcon;
-            pic.Properties.Appearance.BackColor = Color.Transparent;
-            pic.Properties.Appearance.Options.UseBackColor = true;
-            pnlHeader.Controls.Add(pic);
-            lblTitle.Location = new Point(82, 16);
-            lblSub.Location = new Point(84, 66);
+button.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
         }
 
         protected GridColumn CreateBooleanColumn(string caption, string fieldName)
@@ -356,14 +377,17 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
             btnSlipReport.Visible = SupportsSlipReport;
             btnSlipReport.Enabled = !showDeleted && selected == 1;
             btnDistributionReport.Visible = SupportsDistributionReport;
-            btnDistributionReport.Enabled = !showDeleted && selected == 1;
+            btnDistributionReport.Enabled = !showDeleted;
+            btnProductDeclaration.Visible = SupportsProductDeclarationReport;
+            btnProductDeclaration.Enabled = !showDeleted;
+            btnStockMovementsList.Visible = SupportsStockMovementsListReport;
+            btnStockMovementsList.Enabled = !showDeleted;
+            btnStockCountList.Visible = SupportsStockCountListReport;
+            btnStockCountList.Enabled = !showDeleted;
             btnRestore.Enabled = showDeleted && selected >= 1;
             btnRestore.Visible = showDeleted && SupportsRestore;
             btnDeleted.Checked = showDeleted;
         }
-
-        private ContextMenuStrip? _slipMenu;
-        private ToolStripMenuItem? _slipMenuItem;
 
         private void SetupSlipContextMenu()
         {
@@ -373,23 +397,9 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
                 return;
             }
 
-            if (_slipMenu is not null)
-            {
-                return;
-            }
-
-            _slipMenu = new ContextMenuStrip();
-            _slipMenuItem = new ToolStripMenuItem("Taşınır İşlem Fişi Yazdır");
-            _slipMenuItem.Click += async (_, _) => await ShowFocusedSlipAsync();
-            _slipMenu.Items.Add(_slipMenuItem);
-            _slipMenu.Opening += (_, _) =>
-            {
-                if (_slipMenuItem is not null)
-                {
-                    _slipMenuItem.Enabled = CanPrintSlipItem(gridView.GetFocusedRow() as TDto);
-                }
-            };
-            gridControl.ContextMenuStrip = _slipMenu;
+            slipMenuItem.Click += async (_, _) => await ShowFocusedSlipAsync();
+            slipMenu.Opening += (_, _) =>
+                slipMenuItem.Enabled = CanPrintSlipItem(gridView.GetFocusedRow() as TDto);
         }
 
         private bool CanPrintSlipItem(TDto? item)
@@ -430,19 +440,63 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
         private async Task ShowSelectedDistributionReportAsync()
         {
             int[] rows = gridView.GetSelectedRows();
-            if (rows.Length != 1 || gridView.GetRow(rows[0]) is not TDto dto)
-            {
-                ToastHelper.Show("Rapor için tek bir kayıt seçin.", ToastType.Warning);
-                return;
-            }
+            TDto? dto = rows.Length == 1 ? gridView.GetRow(rows[0]) as TDto : null;
 
             try
             {
-                await ShowDistributionReportAsync(dto);
+                await ShowDistributionReportAsync(dto!);
             }
             catch (Exception ex)
             {
                 CrashLog.WriteException("DistributionReport", ex);
+                ToastHelper.Show("Rapor açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
+        }
+
+        private async Task ShowSelectedProductDeclarationReportAsync()
+        {
+            int[] rows = gridView.GetSelectedRows();
+            TDto? dto = rows.Length == 1 ? gridView.GetRow(rows[0]) as TDto : null;
+
+            try
+            {
+                await ShowProductDeclarationReportAsync(dto);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("ProductDeclarationReport", ex);
+                ToastHelper.Show("Rapor açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
+        }
+
+        private async Task ShowSelectedStockMovementsListReportAsync()
+        {
+            int[] rows = gridView.GetSelectedRows();
+            TDto? dto = rows.Length == 1 ? gridView.GetRow(rows[0]) as TDto : null;
+
+            try
+            {
+                await ShowStockMovementsListReportAsync(dto);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("StockMovementsListReport", ex);
+                ToastHelper.Show("Rapor açılamadı: " + ex.Message, ToastType.Error, 6000);
+            }
+        }
+
+        private async Task ShowSelectedStockCountListReportAsync()
+        {
+            int[] rows = gridView.GetSelectedRows();
+            TDto? dto = rows.Length == 1 ? gridView.GetRow(rows[0]) as TDto : null;
+
+            try
+            {
+                await ShowStockCountListReportAsync(dto);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("StockCountListReport", ex);
                 ToastHelper.Show("Rapor açılamadı: " + ex.Message, ToastType.Error, 6000);
             }
         }

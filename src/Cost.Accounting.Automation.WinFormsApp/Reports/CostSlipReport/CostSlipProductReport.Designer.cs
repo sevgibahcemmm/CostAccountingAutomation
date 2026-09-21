@@ -31,6 +31,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CostSlipProductReport));
             this.TopMargin = new DevExpress.XtraReports.UI.TopMarginBand();
+            this.xrLabel29 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel25 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel26 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel27 = new DevExpress.XtraReports.UI.XRLabel();
@@ -54,6 +55,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel6 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel2 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel1 = new DevExpress.XtraReports.UI.XRLabel();
+            this.PageFooter = new DevExpress.XtraReports.UI.PageFooterBand();
+            this.xrLine1 = new DevExpress.XtraReports.UI.XRLine();
+            this.xrPageInfo1 = new DevExpress.XtraReports.UI.XRPageInfo();
+            this.xrPageInfo2 = new DevExpress.XtraReports.UI.XRPageInfo();
+            this.xrLabelFooter = new DevExpress.XtraReports.UI.XRLabel();
             this.BottomMargin = new DevExpress.XtraReports.UI.BottomMarginBand();
             this.Detail = new DevExpress.XtraReports.UI.DetailBand();
             this.xrTable1 = new DevExpress.XtraReports.UI.XRTable();
@@ -142,7 +148,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.Toplam = new DevExpress.XtraReports.Parameters.Parameter();
             this.Atolye = new DevExpress.XtraReports.Parameters.Parameter();
             this.M730 = new DevExpress.XtraReports.Parameters.Parameter();
-            this.xrLabel29 = new DevExpress.XtraReports.UI.XRLabel();
             this.Donem = new DevExpress.XtraReports.Parameters.Parameter();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable1)).BeginInit();
@@ -170,8 +175,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel6,
             this.xrLabel2,
             this.xrLabel1});
-            this.TopMargin.HeightF = 269.4792F;
+            this.TopMargin.HeightF = 259.0626F;
             this.TopMargin.Name = "TopMargin";
+            // 
+            // xrLabel29
+            // 
+            this.xrLabel29.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?Donem")});
+            this.xrLabel29.Font = new DevExpress.Drawing.DXFont("Arial", 9F);
+            this.xrLabel29.LocationFloat = new DevExpress.Utils.PointFloat(530.7507F, 185.0209F);
+            this.xrLabel29.Multiline = true;
+            this.xrLabel29.Name = "xrLabel29";
+            this.xrLabel29.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrLabel29.SizeF = new System.Drawing.SizeF(206.2493F, 14.66667F);
+            this.xrLabel29.StylePriority.UseFont = false;
+            this.xrLabel29.StylePriority.UseTextAlignment = false;
+            this.xrLabel29.Text = "SipariÅŸ FiÅŸi No :";
+            this.xrLabel29.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             // 
             // xrLabel25
             // 
@@ -183,7 +203,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel25.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel25.SizeF = new System.Drawing.SizeF(556.1667F, 12.58333F);
             this.xrLabel25.StylePriority.UseTextAlignment = false;
-            this.xrLabel25.Text = "Müþterinin Adý:";
+            this.xrLabel25.Text = "MÃ¼ÅŸterinin AdÄ±:";
             this.xrLabel25.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel26
@@ -196,7 +216,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel26.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel26.SizeF = new System.Drawing.SizeF(556.1667F, 12.58333F);
             this.xrLabel26.StylePriority.UseTextAlignment = false;
-            this.xrLabel26.Text = "Üretilen Mamül  Adý:";
+            this.xrLabel26.Text = "Ãœretilen MamÃ¼l  AdÄ±:";
             this.xrLabel26.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel27
@@ -209,7 +229,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel27.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel27.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel27.StylePriority.UseTextAlignment = false;
-            this.xrLabel27.Text = "Üretilen Mamül Miktarý :";
+            this.xrLabel27.Text = "Ãœretilen MamÃ¼l MiktarÄ± :";
             this.xrLabel27.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel22
@@ -224,7 +244,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel22.SizeF = new System.Drawing.SizeF(111.458F, 14.66667F);
             this.xrLabel22.StylePriority.UseFont = false;
             this.xrLabel22.StylePriority.UseTextAlignment = false;
-            this.xrLabel22.Text = "Sipariþ Fiþi No :";
+            this.xrLabel22.Text = "SipariÅŸ FiÅŸi No :";
             this.xrLabel22.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel23
@@ -278,7 +298,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel20.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel20.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel20.StylePriority.UseTextAlignment = false;
-            this.xrLabel20.Text = "Üretilen Mamül Miktarý :";
+            this.xrLabel20.Text = "Ãœretilen MamÃ¼l MiktarÄ± :";
             this.xrLabel20.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel19
@@ -289,7 +309,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel19.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel19.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel19.StylePriority.UseTextAlignment = false;
-            this.xrLabel19.Text = "Üretilen Mamül Adý      :";
+            this.xrLabel19.Text = "Ãœretilen MamÃ¼l AdÄ±      :";
             this.xrLabel19.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel3
@@ -328,7 +348,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel5.SizeF = new System.Drawing.SizeF(105.2083F, 14.66667F);
             this.xrLabel5.StylePriority.UseFont = false;
             this.xrLabel5.StylePriority.UseTextAlignment = false;
-            this.xrLabel5.Text = "Sipariþ Fiþi No :";
+            this.xrLabel5.Text = "SipariÅŸ FiÅŸi No :";
             this.xrLabel5.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             // 
             // xrTable2
@@ -369,7 +389,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell7.Name = "xrTableCell7";
             this.xrTableCell7.StylePriority.UseBackColor = false;
             this.xrTableCell7.StylePriority.UseTextAlignment = false;
-            this.xrTableCell7.Text = "Kullanýlan Hammadde ve Yapýlan Masraflar";
+            this.xrTableCell7.Text = "KullanÄ±lan Hammadde ve YapÄ±lan Masraflar";
             this.xrTableCell7.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell7.Weight = 2.9854171752929686D;
             // 
@@ -397,7 +417,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell10.Multiline = true;
             this.xrTableCell10.Name = "xrTableCell10";
             this.xrTableCell10.StylePriority.UseBackColor = false;
-            this.xrTableCell10.Text = "Birim Fiyatý (TL)";
+            this.xrTableCell10.Text = "Birim FiyatÄ± (TL)";
             this.xrTableCell10.Weight = 0.98822470578567034D;
             // 
             // xrTableCell11
@@ -426,7 +446,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel6.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel6.SizeF = new System.Drawing.SizeF(157.2916F, 12.58333F);
             this.xrLabel6.StylePriority.UseTextAlignment = false;
-            this.xrLabel6.Text = "Müþterinin Adý              :";
+            this.xrLabel6.Text = "MÃ¼ÅŸterinin AdÄ±              :";
             this.xrLabel6.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // xrLabel2
@@ -452,30 +472,85 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel1.StylePriority.UseFont = false;
             this.xrLabel1.StylePriority.UseForeColor = false;
             this.xrLabel1.StylePriority.UseTextAlignment = false;
-            this.xrLabel1.Text = "MAMÜL MAL MALÝYET PUSULASI";
+            this.xrLabel1.Text = "MAMÃœL MAL MALÄ°YET PUSULASI";
             this.xrLabel1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // PageFooter
+            // 
+            this.PageFooter.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+            this.xrLine1,
+            this.xrPageInfo1,
+            this.xrPageInfo2,
+            this.xrLabelFooter});
+            this.PageFooter.HeightF = 40F;
+            this.PageFooter.Name = "PageFooter";
+            // 
+            // xrLine1
+            // 
+            this.xrLine1.LocationFloat = new DevExpress.Utils.PointFloat(0F, 0F);
+            this.xrLine1.Name = "xrLine1";
+            this.xrLine1.SizeF = new System.Drawing.SizeF(736.9999F, 2F);
+            // 
+            // xrPageInfo1
+            // 
+            this.xrPageInfo1.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
+            this.xrPageInfo1.LocationFloat = new DevExpress.Utils.PointFloat(0F, 8F);
+            this.xrPageInfo1.Name = "xrPageInfo1";
+            this.xrPageInfo1.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrPageInfo1.SizeF = new System.Drawing.SizeF(220F, 23F);
+            this.xrPageInfo1.StylePriority.UseFont = false;
+            this.xrPageInfo1.StylePriority.UseTextAlignment = false;
+            this.xrPageInfo1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.xrPageInfo1.TextFormatString = "Sayfa {0} / {1}";
+            // 
+            // xrPageInfo2
+            // 
+            this.xrPageInfo2.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
+            this.xrPageInfo2.LocationFloat = new DevExpress.Utils.PointFloat(584.1666F, 8F);
+            this.xrPageInfo2.Name = "xrPageInfo2";
+            this.xrPageInfo2.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrPageInfo2.PageInfo = DevExpress.XtraPrinting.PageInfo.DateTime;
+            this.xrPageInfo2.SizeF = new System.Drawing.SizeF(152.8336F, 23F);
+            this.xrPageInfo2.StylePriority.UseFont = false;
+            this.xrPageInfo2.StylePriority.UseTextAlignment = false;
+            this.xrPageInfo2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
+            this.xrPageInfo2.TextFormatString = "{0:dd.MM.yyyy HH:mm}";
+            // 
+            // xrLabelFooter
+            // 
+            this.xrLabelFooter.Font = new DevExpress.Drawing.DXFont("Arial", 8F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.xrLabelFooter.LocationFloat = new DevExpress.Utils.PointFloat(220F, 8F);
+            this.xrLabelFooter.Multiline = true;
+            this.xrLabelFooter.Name = "xrLabelFooter";
+            this.xrLabelFooter.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrLabelFooter.SizeF = new System.Drawing.SizeF(364.1666F, 30.00001F);
+            this.xrLabelFooter.StylePriority.UseFont = false;
+            this.xrLabelFooter.StylePriority.UseTextAlignment = false;
+            this.xrLabelFooter.Text = "Â© YazÄ±lÄ±mcÄ± Emrullah AKPINAR\nMuhasebe Yetkilisi";
+            this.xrLabelFooter.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             // 
             // BottomMargin
             // 
-            this.BottomMargin.HeightF = 43.12503F;
+            this.BottomMargin.HeightF = 19.89587F;
             this.BottomMargin.Name = "BottomMargin";
             // 
             // Detail
             // 
             this.Detail.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
             this.xrTable1});
+            this.Detail.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
             this.Detail.HeightF = 21.875F;
             this.Detail.Name = "Detail";
+            this.Detail.StylePriority.UseFont = false;
             // 
             // xrTable1
             // 
-            this.xrTable1.BackColor = System.Drawing.Color.Bisque;
+            this.xrTable1.BackColor = System.Drawing.Color.Linen;
             this.xrTable1.BorderDashStyle = DevExpress.XtraPrinting.BorderDashStyle.Solid;
-            this.xrTable1.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
-            | DevExpress.XtraPrinting.BorderSide.Right) 
+            this.xrTable1.Borders = ((DevExpress.XtraPrinting.BorderSide)(((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.xrTable1.BorderWidth = 0.5F;
-            this.xrTable1.Font = new DevExpress.Drawing.DXFont("Arial", 9.75F);
+            this.xrTable1.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
             this.xrTable1.LocationFloat = new DevExpress.Utils.PointFloat(0F, 0F);
             this.xrTable1.Name = "xrTable1";
             this.xrTable1.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
@@ -509,7 +584,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell1.Multiline = true;
             this.xrTableCell1.Name = "xrTableCell1";
             this.xrTableCell1.StylePriority.UseTextAlignment = false;
-            this.xrTableCell1.Text = "Kullanýlan Hammadde ve Yapýlan Masraflar";
+            this.xrTableCell1.Text = "KullanÄ±lan Hammadde ve YapÄ±lan Masraflar";
             this.xrTableCell1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell1.Weight = 2.9854171752929686D;
             // 
@@ -543,7 +618,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell5.Multiline = true;
             this.xrTableCell5.Name = "xrTableCell5";
             this.xrTableCell5.StylePriority.UseTextAlignment = false;
-            this.xrTableCell5.Text = "Birim Fiyatý (TL)";
+            this.xrTableCell5.Text = "Birim FiyatÄ± (TL)";
             this.xrTableCell5.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.xrTableCell5.TextFormatString = "{0:N2}";
             this.xrTableCell5.Weight = 0.98822470578567034D;
@@ -569,8 +644,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // xrTable3
             // 
             this.xrTable3.BorderDashStyle = DevExpress.XtraPrinting.BorderDashStyle.Solid;
-            this.xrTable3.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
-            | DevExpress.XtraPrinting.BorderSide.Right) 
+            this.xrTable3.Borders = ((DevExpress.XtraPrinting.BorderSide)(((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.xrTable3.Font = new DevExpress.Drawing.DXFont("Arial", 9.75F);
             this.xrTable3.LocationFloat = new DevExpress.Utils.PointFloat(6.357829E-05F, 0F);
@@ -609,18 +683,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell13.Multiline = true;
             this.xrTableCell13.Name = "xrTableCell13";
             this.xrTableCell13.StylePriority.UseTextAlignment = false;
-            this.xrTableCell13.Text = "710- Direkt Ýlk Madde ve Malzeme Giderleri ";
+            this.xrTableCell13.Text = "710- Direkt Ä°lk Madde ve Malzeme Giderleri";
             this.xrTableCell13.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell13.Weight = 5.9200854860550658D;
             // 
             // xrTableCell17
             // 
             this.xrTableCell17.BackColor = System.Drawing.Color.Silver;
-            this.xrTableCell17.Borders = ((DevExpress.XtraPrinting.BorderSide)(((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
-            | DevExpress.XtraPrinting.BorderSide.Right)));
             this.xrTableCell17.Name = "xrTableCell17";
             this.xrTableCell17.StylePriority.UseBackColor = false;
-            this.xrTableCell17.StylePriority.UseBorders = false;
             this.xrTableCell17.StylePriority.UseTextAlignment = false;
             this.xrTableCell17.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell17.Weight = 1.522375948930466D;
@@ -651,17 +722,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell14.Multiline = true;
             this.xrTableCell14.Name = "xrTableCell14";
             this.xrTableCell14.StylePriority.UseTextAlignment = false;
-            this.xrTableCell14.Text = "720- Direkt Ýþçilik Giderleri ";
+            this.xrTableCell14.Text = "720- Direkt Ä°ÅŸÃ§ilik Giderleri";
             this.xrTableCell14.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell14.Weight = 5.9200854860550658D;
             // 
             // xrTableCell15
             // 
             this.xrTableCell15.BackColor = System.Drawing.Color.Silver;
-            this.xrTableCell15.Borders = ((DevExpress.XtraPrinting.BorderSide)((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right)));
             this.xrTableCell15.Name = "xrTableCell15";
             this.xrTableCell15.StylePriority.UseBackColor = false;
-            this.xrTableCell15.StylePriority.UseBorders = false;
             this.xrTableCell15.StylePriority.UseTextAlignment = false;
             this.xrTableCell15.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell15.Weight = 1.522375948930466D;
@@ -692,18 +761,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell22.Multiline = true;
             this.xrTableCell22.Name = "xrTableCell22";
             this.xrTableCell22.StylePriority.UseTextAlignment = false;
-            this.xrTableCell22.Text = "730 - Genel Üretim Giderleri";
+            this.xrTableCell22.Text = "730 - Genel Ãœretim Giderleri";
             this.xrTableCell22.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell22.Weight = 5.9200854860550658D;
             // 
             // xrTableCell23
             // 
             this.xrTableCell23.BackColor = System.Drawing.Color.Silver;
-            this.xrTableCell23.Borders = ((DevExpress.XtraPrinting.BorderSide)(((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right) 
-            | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.xrTableCell23.Name = "xrTableCell23";
             this.xrTableCell23.StylePriority.UseBackColor = false;
-            this.xrTableCell23.StylePriority.UseBorders = false;
             this.xrTableCell23.StylePriority.UseTextAlignment = false;
             this.xrTableCell23.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell23.Weight = 1.522375948930466D;
@@ -736,7 +802,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell25.Name = "xrTableCell25";
             this.xrTableCell25.StylePriority.UseFont = false;
             this.xrTableCell25.StylePriority.UseTextAlignment = false;
-            this.xrTableCell25.Text = "Direkt Üretim Giderleri Toplamý (710+720+730)";
+            this.xrTableCell25.Text = "Direkt Ãœretim Giderleri ToplamÄ± (710+720+730)";
             this.xrTableCell25.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.xrTableCell25.Weight = 5.9200854860550658D;
             // 
@@ -782,18 +848,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell28.Name = "xrTableCell28";
             this.xrTableCell28.StylePriority.UseFont = false;
             this.xrTableCell28.StylePriority.UseTextAlignment = false;
-            this.xrTableCell28.Text = "750- Araþtýrma ve Geliþtirme Giderleri";
+            this.xrTableCell28.Text = "750- AraÅŸtÄ±rma ve GeliÅŸtirme Giderleri";
             this.xrTableCell28.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell28.Weight = 5.9200854860550658D;
             // 
             // xrTableCell29
             // 
             this.xrTableCell29.BackColor = System.Drawing.Color.Silver;
-            this.xrTableCell29.Borders = ((DevExpress.XtraPrinting.BorderSide)((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right)));
             this.xrTableCell29.Multiline = true;
             this.xrTableCell29.Name = "xrTableCell29";
             this.xrTableCell29.StylePriority.UseBackColor = false;
-            this.xrTableCell29.StylePriority.UseBorders = false;
             this.xrTableCell29.StylePriority.UseTextAlignment = false;
             this.xrTableCell29.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell29.Weight = 1.522375948930466D;
@@ -826,18 +890,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell31.Name = "xrTableCell31";
             this.xrTableCell31.StylePriority.UseFont = false;
             this.xrTableCell31.StylePriority.UseTextAlignment = false;
-            this.xrTableCell31.Text = "760- Pazarlama, Satýþ ve Daðýtým Giderleri ";
+            this.xrTableCell31.Text = "760- Pazarlama, SatÄ±ÅŸ ve DaÄŸÄ±tÄ±m Giderleri";
             this.xrTableCell31.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell31.Weight = 5.9200854860550658D;
             // 
             // xrTableCell32
             // 
             this.xrTableCell32.BackColor = System.Drawing.Color.Silver;
-            this.xrTableCell32.Borders = ((DevExpress.XtraPrinting.BorderSide)((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right)));
             this.xrTableCell32.Multiline = true;
             this.xrTableCell32.Name = "xrTableCell32";
             this.xrTableCell32.StylePriority.UseBackColor = false;
-            this.xrTableCell32.StylePriority.UseBorders = false;
             this.xrTableCell32.StylePriority.UseTextAlignment = false;
             this.xrTableCell32.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell32.Weight = 1.522375948930466D;
@@ -870,18 +932,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell34.Name = "xrTableCell34";
             this.xrTableCell34.StylePriority.UseFont = false;
             this.xrTableCell34.StylePriority.UseTextAlignment = false;
-            this.xrTableCell34.Text = "770- Genel Yönetim Giderleri";
+            this.xrTableCell34.Text = "770- Genel YÃ¶netim Giderleri";
             this.xrTableCell34.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell34.Weight = 5.9200854860550658D;
             // 
             // xrTableCell35
             // 
             this.xrTableCell35.BackColor = System.Drawing.Color.Silver;
-            this.xrTableCell35.Borders = ((DevExpress.XtraPrinting.BorderSide)((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right)));
             this.xrTableCell35.Multiline = true;
             this.xrTableCell35.Name = "xrTableCell35";
             this.xrTableCell35.StylePriority.UseBackColor = false;
-            this.xrTableCell35.StylePriority.UseBorders = false;
             this.xrTableCell35.StylePriority.UseTextAlignment = false;
             this.xrTableCell35.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell35.Weight = 1.522375948930466D;
@@ -921,12 +981,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // xrTableCell38
             // 
             this.xrTableCell38.BackColor = System.Drawing.Color.Silver;
-            this.xrTableCell38.Borders = ((DevExpress.XtraPrinting.BorderSide)(((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right) 
-            | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.xrTableCell38.Multiline = true;
             this.xrTableCell38.Name = "xrTableCell38";
             this.xrTableCell38.StylePriority.UseBackColor = false;
-            this.xrTableCell38.StylePriority.UseBorders = false;
             this.xrTableCell38.StylePriority.UseTextAlignment = false;
             this.xrTableCell38.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell38.Weight = 1.522375948930466D;
@@ -959,7 +1016,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell40.Name = "xrTableCell40";
             this.xrTableCell40.StylePriority.UseFont = false;
             this.xrTableCell40.StylePriority.UseTextAlignment = false;
-            this.xrTableCell40.Text = "Diðer Giderler Toplamý (750+760+770+780)";
+            this.xrTableCell40.Text = "DiÄŸer Giderler ToplamÄ± (750+760+770+780)";
             this.xrTableCell40.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.xrTableCell40.Weight = 5.9200854860550658D;
             // 
@@ -1005,7 +1062,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell43.Name = "xrTableCell43";
             this.xrTableCell43.StylePriority.UseFont = false;
             this.xrTableCell43.StylePriority.UseTextAlignment = false;
-            this.xrTableCell43.Text = "Giderler Yekünü………………………………………………";
+            this.xrTableCell43.Text = "Giderler YekÃ»nu...................";
             this.xrTableCell43.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell43.Weight = 5.9200854860550658D;
             // 
@@ -1016,7 +1073,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell44.Name = "xrTableCell44";
             this.xrTableCell44.StylePriority.UseBackColor = false;
             this.xrTableCell44.StylePriority.UseTextAlignment = false;
-            this.xrTableCell44.Text = "›";
+            this.xrTableCell44.Text = "â‚º";
             this.xrTableCell44.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell44.Weight = 1.522375948930466D;
             // 
@@ -1063,7 +1120,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell47.Name = "xrTableCell47";
             this.xrTableCell47.StylePriority.UseBackColor = false;
             this.xrTableCell47.StylePriority.UseTextAlignment = false;
-            this.xrTableCell47.Text = "›";
+            this.xrTableCell47.Text = "â‚º";
             this.xrTableCell47.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell47.Weight = 1.522375948930466D;
             // 
@@ -1093,7 +1150,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel7.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel7.StylePriority.UseFont = false;
             this.xrLabel7.StylePriority.UseTextAlignment = false;
-            this.xrLabel7.Text = "Ýþyurdu Müdürü ";
+            this.xrLabel7.Text = "Ä°ÅŸyurdu MÃ¼dÃ¼rÃ¼ ";
             this.xrLabel7.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel8
@@ -1106,7 +1163,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel8.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel8.StylePriority.UseFont = false;
             this.xrLabel8.StylePriority.UseTextAlignment = false;
-            this.xrLabel8.Text = "Adý Soyadý";
+            this.xrLabel8.Text = "AdÄ± SoyadÄ±";
             this.xrLabel8.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel9
@@ -1119,7 +1176,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel9.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel9.StylePriority.UseFont = false;
             this.xrLabel9.StylePriority.UseTextAlignment = false;
-            this.xrLabel9.Text = "Ýmza";
+            this.xrLabel9.Text = "Ä°mza";
             this.xrLabel9.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel10
@@ -1132,7 +1189,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel10.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel10.StylePriority.UseFont = false;
             this.xrLabel10.StylePriority.UseTextAlignment = false;
-            this.xrLabel10.Text = "Atölye Þefi";
+            this.xrLabel10.Text = "AtÃ¶lye Åžefi";
             this.xrLabel10.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel11
@@ -1145,7 +1202,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel11.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel11.StylePriority.UseFont = false;
             this.xrLabel11.StylePriority.UseTextAlignment = false;
-            this.xrLabel11.Text = "Adý Soyadý";
+            this.xrLabel11.Text = "AdÄ± SoyadÄ±";
             this.xrLabel11.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel12
@@ -1158,7 +1215,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel12.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel12.StylePriority.UseFont = false;
             this.xrLabel12.StylePriority.UseTextAlignment = false;
-            this.xrLabel12.Text = "Ýmza";
+            this.xrLabel12.Text = "Ä°mza";
             this.xrLabel12.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel13
@@ -1186,7 +1243,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel14.SizeF = new System.Drawing.SizeF(393.2361F, 19.87497F);
             this.xrLabel14.StylePriority.UseFont = false;
             this.xrLabel14.StylePriority.UseTextAlignment = false;
-            this.xrLabel14.Text = "         Yukarýda yazýlý mamul eþyalar teslim alýnmýþtýr.";
+            this.xrLabel14.Text = "         YukarÄ±da yazÄ±lÄ± mamul eÅŸyalar teslim alÄ±nmÄ±ÅŸtÄ±r.";
             this.xrLabel14.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel15
@@ -1214,7 +1271,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel16.SizeF = new System.Drawing.SizeF(239.751F, 19.875F);
             this.xrLabel16.StylePriority.UseFont = false;
             this.xrLabel16.StylePriority.UseTextAlignment = false;
-            this.xrLabel16.Text = "Taþýnýr Kayýt Yetkilisi";
+            this.xrLabel16.Text = "TaÅŸÄ±nÄ±r KayÄ±t Yetkilisi";
             this.xrLabel16.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel17
@@ -1227,7 +1284,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel17.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel17.StylePriority.UseFont = false;
             this.xrLabel17.StylePriority.UseTextAlignment = false;
-            this.xrLabel17.Text = "Ýmza";
+            this.xrLabel17.Text = "Ä°mza";
             this.xrLabel17.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // xrLabel18
@@ -1240,7 +1297,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel18.SizeF = new System.Drawing.SizeF(112.5F, 19.875F);
             this.xrLabel18.StylePriority.UseFont = false;
             this.xrLabel18.StylePriority.UseTextAlignment = false;
-            this.xrLabel18.Text = "Adý Soyadý";
+            this.xrLabel18.Text = "AdÄ± SoyadÄ±";
             this.xrLabel18.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             // 
             // ReportFooter
@@ -1273,7 +1330,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel28.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrLabel28.SizeF = new System.Drawing.SizeF(737.0001F, 50.08334F);
             this.xrLabel28.StylePriority.UseTextAlignment = false;
-            this.xrLabel28.Text = "Ýþyurdu Müdürü ";
+            this.xrLabel28.Text = "Ä°ÅŸyurdu MÃ¼dÃ¼rÃ¼ ";
             this.xrLabel28.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopJustify;
             // 
             // M710
@@ -1326,19 +1383,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // 
             // MamulAdi
             // 
-            this.MamulAdi.Description = "Mamül Adý";
+            this.MamulAdi.Description = "MamÃ¼l AdÄ±";
             this.MamulAdi.Name = "MamulAdi";
             // 
             // Miktari
             // 
-            this.Miktari.Description = "Mamül Miktarý";
+            this.Miktari.Description = "MamÃ¼l MiktarÄ±";
             this.Miktari.Name = "Miktari";
             this.Miktari.Type = typeof(int);
             this.Miktari.ValueInfo = "1";
             // 
             // Musteri
             // 
-            this.Musteri.Description = "Müþteri";
+            this.Musteri.Description = "MÃ¼ÅŸteri";
             this.Musteri.Name = "Musteri";
             this.Musteri.Visible = false;
             // 
@@ -1364,13 +1421,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // 
             // SiparisNo
             // 
-            this.SiparisNo.Description = "Sipariþ No";
+            this.SiparisNo.Description = "SipariÅŸ No";
             this.SiparisNo.Name = "SiparisNo";
             this.SiparisNo.Visible = false;
             // 
             // Isyurdu
             // 
-            this.Isyurdu.Description = "Iþyurdu";
+            this.Isyurdu.Description = "Ä°ÅŸyurdu";
             this.Isyurdu.Name = "Isyurdu";
             // 
             // Antet
@@ -1393,7 +1450,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // 
             // Atolye
             // 
-            this.Atolye.Description = "Atölye";
+            this.Atolye.Description = "AtÃ¶lye";
             this.Atolye.Name = "Atolye";
             this.Atolye.Visible = false;
             // 
@@ -1405,24 +1462,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.M730.ValueInfo = "0";
             this.M730.Visible = false;
             // 
-            // xrLabel29
-            // 
-            this.xrLabel29.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?Donem")});
-            this.xrLabel29.Font = new DevExpress.Drawing.DXFont("Arial", 9F);
-            this.xrLabel29.LocationFloat = new DevExpress.Utils.PointFloat(530.7507F, 185.0209F);
-            this.xrLabel29.Multiline = true;
-            this.xrLabel29.Name = "xrLabel29";
-            this.xrLabel29.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrLabel29.SizeF = new System.Drawing.SizeF(206.2493F, 14.66667F);
-            this.xrLabel29.StylePriority.UseFont = false;
-            this.xrLabel29.StylePriority.UseTextAlignment = false;
-            this.xrLabel29.Text = "Sipariþ Fiþi No :";
-            this.xrLabel29.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
-            // 
             // Donem
             // 
-            this.Donem.Description = "Dönem";
+            this.Donem.Description = "DÃ¶nem";
             this.Donem.Name = "Donem";
             this.Donem.Visible = false;
             // 
@@ -1432,12 +1474,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.TopMargin,
             this.BottomMargin,
             this.Detail,
-            this.ReportFooter});
+            this.ReportFooter,
+            this.PageFooter});
             this.ComponentStorage.AddRange(new System.ComponentModel.IComponent[] {
             this.objectDataSource1});
             this.DataSource = this.objectDataSource1;
             this.Font = new DevExpress.Drawing.DXFont("Arial", 9.75F);
-            this.Margins = new DevExpress.Drawing.DXMargins(77F, 36F, 269.4792F, 43.12503F);
+            this.Margins = new DevExpress.Drawing.DXMargins(77F, 36F, 259.0626F, 19.89587F);
             this.ParameterPanelLayoutItems.AddRange(new DevExpress.XtraReports.Parameters.ParameterPanelLayoutItem[] {
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M710, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M720, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
@@ -1571,6 +1614,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
         private DevExpress.XtraReports.UI.XRLabel xrLabel17;
         private DevExpress.XtraReports.UI.XRLabel xrLabel18;
         private DevExpress.XtraReports.UI.ReportFooterBand ReportFooter;
+        private DevExpress.XtraReports.UI.PageFooterBand PageFooter;
+        private DevExpress.XtraReports.UI.XRLine xrLine1;
+        private DevExpress.XtraReports.UI.XRPageInfo xrPageInfo1;
+        private DevExpress.XtraReports.UI.XRPageInfo xrPageInfo2;
+        private DevExpress.XtraReports.UI.XRLabel xrLabelFooter;
         private DevExpress.XtraReports.Parameters.Parameter M710;
         private DevExpress.XtraReports.Parameters.Parameter M720;
         private DevExpress.XtraReports.Parameters.Parameter M750;

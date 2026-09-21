@@ -13,6 +13,8 @@ public sealed class ChartOfAccountLookUpDto
     public string Name { get; set; } = default!;
     public ChartOfAccountType Type { get; set; }
     public Guid? ParentId { get; set; }
+    public Guid? SemiFinishedAccountId { get; set; }
+    public Guid? FinishedAccountId { get; set; }
 
     public string Display => $"{Code} - {Name}";
 }
@@ -35,7 +37,9 @@ internal sealed class ChartOfAccountLookUpQueryHandler(
                 Code = a.Code.Value,
                 Name = a.Name.Value,
                 Type = a.Type,
-                ParentId = a.ParentId == null ? null : a.ParentId.Value
+                ParentId = a.ParentId == null ? null : a.ParentId.Value,
+                SemiFinishedAccountId = a.SemiFinishedAccountId == null ? null : a.SemiFinishedAccountId.Value,
+                FinishedAccountId = a.FinishedAccountId == null ? null : a.FinishedAccountId.Value
             })
             .ToList();
 

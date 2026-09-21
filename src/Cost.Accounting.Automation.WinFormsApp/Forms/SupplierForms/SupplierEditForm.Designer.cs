@@ -243,7 +243,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             txtName.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtName.Properties.Appearance.Options.UseFont = true;
             txtName.Properties.MaxLength = 200;
-            txtName.Properties.NullText = "Örn. Anadolu Tedarik A.�?.";
+            txtName.Properties.NullText = "Örn. Anadolu Tedarik A.Ş.";
             txtName.Properties.Padding = new Padding(26, 2, 2, 2);
             txtName.Size = new Size(434, 26);
             txtName.TabIndex = 1;
@@ -367,7 +367,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             lblCity.Name = "lblCity";
             lblCity.Size = new Size(28, 14);
             lblCity.TabIndex = 0;
-            lblCity.Text = "�?ehir";
+            lblCity.Text = "Şehir";
             //
             // txtCity
             //

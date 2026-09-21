@@ -389,7 +389,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblCompany.Name = "lblCompany";
             lblCompany.Size = new Size(28, 14);
             lblCompany.TabIndex = 2;
-            lblCompany.Text = "�?irket";
+            lblCompany.Text = "Şirket";
             //
             // cmbCompany
             //
@@ -399,7 +399,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             cmbCompany.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             cmbCompany.Properties.Appearance.Options.UseFont = true;
             cmbCompany.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
-            cmbCompany.Properties.NullText = "�?irket ara / seç (boş = kendi şirketiniz)";
+            cmbCompany.Properties.NullText = "Şirket ara / seç (boş = kendi şirketiniz)";
             cmbCompany.Properties.PopupFilterMode = DevExpress.XtraEditors.PopupFilterMode.Contains;
             cmbCompany.Properties.Padding = new Padding(26, 2, 2, 2);
             cmbCompany.Size = new Size(434, 26);

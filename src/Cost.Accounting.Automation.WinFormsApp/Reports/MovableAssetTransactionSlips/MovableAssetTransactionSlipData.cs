@@ -1,4 +1,4 @@
-namespace Cost.Accounting.Automation.WinFormsApp.Reports
+namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips
 {
     public sealed class MovableAssetTransactionSlipRow
     {
@@ -128,7 +128,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports
             GrandTutar = ordered.Sum(r => r.Tutari);
         }
 
-        private string ResolveGroupCode(string code)
+        private static string ResolveGroupCode(string code)
         {
             return GetLevelCode(code, GetTargetLevel(code));
         }

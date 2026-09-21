@@ -11,5 +11,8 @@ public enum CostSlipType : byte
     Product = 2,
 
     [Display(Name = "Yarı Mamul Maliyet Pusulası", Description = "Yarı Mamul/Ürün bazlı maliyetler için")]
-    SemiFinishedProduct = 3
+    SemiFinishedProduct = 3,
+
+    [Display(Name = "Yarı Mamul Hizmet Maliyet Pusulası", Description = "Yarı Mamul/Hizmet bazlı maliyetler için")]
+    SemiFinishedService = 4
 }
