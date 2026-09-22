@@ -1,11 +1,20 @@
+using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.StockIssues;
+using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.StockIssues;
 using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 
 namespace Cost.Accounting.Automation.Application.StockMovements;
 
+[Permission("stockmovement:view")]
 internal sealed class StockMovementsListReportQueryHandler(
-    IProductMovementRepository productMovementRepository)
+    IProductMovementRepository productMovementRepository,
+    IStockIssueRepository stockIssueRepository,
+    ICostSlipRepository costSlipRepository)
     : IRequestHandler<StockMovementsListReportQuery, List<StockMovementReportRowDto>>
 {
     public async Task<List<StockMovementReportRowDto>> Handle(
@@ -23,43 +32,145 @@ internal sealed class StockMovementsListReportQueryHandler(
 
         var movements = await query
             .Include(m => m.Product)
-                .ThenInclude(p => p!.ProductUnitType)
+                .ThenInclude(p => p!.Warehouse!)
+            .Include(m => m.Product)
+                .ThenInclude(p => p!.ProductUnitType!)
             .ToListAsync(cancellationToken);
 
+        // StockIssue'ları lokasyon bilgisi için önceden yükleyelim
+        Dictionary<IdentityId, StockIssue> stockIssues = (await stockIssueRepository.GetAll()
+            .AsNoTracking()
+            .Where(i => !i.IsDeleted)
+            .Include(i => i!.SourceWarehouse!)
+            .Include(i => i!.TargetAccount!)
+            .ToListAsync(cancellationToken))
+            .ToDictionary(i => i.Id);
+
+        // CostSlips'in workshop bilgisi
+        List<CostSlip> costSlips = await costSlipRepository.GetAll()
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted && s.CostDate >= request.StartDate && s.CostDate <= request.EndDate)
+            .Include(s => s.Workshop!)
+            .ToListAsync(cancellationToken);
+        Dictionary<string, CostSlip> costSlipByNumber = costSlips.ToDictionary(s => s.SlipNumber);
+
         var grouped = movements
-            .GroupBy(m => new
+     .GroupBy(m =>
+     {
+         var loc = ResolveLocation(m, stockIssues, costSlipByNumber);
+
+         string locationCode = loc.code;
+         string locationName = loc.name;
+         ChartOfAccountType accountType = loc.accountType;
+
+         // Null gelme ihtimaline karşı güvenli okuma
+         string subGroupCode = m.Product?.Warehouse?.Code?.Value ?? "";
+         string subGroupName = m.Product?.Warehouse?.Name?.Value ?? "";
+
+         // Ürün adında YARIMAMÜL geçiyorsa VEYA kod 151 ise acımadan hepsini aynı gruba zorluyoruz
+         if ((m.Product != null && m.Product.Name.Value.Contains("YARIMAMÜL")) || locationCode.StartsWith("151"))
+         {
+             locationCode = "151";
+             locationName = "Yarı Mamüller-Üretim Hesabı";
+             accountType = ChartOfAccountType.Warehouse;
+         }
+
+         return new
+         {
+             LocationCode = locationCode,
+             LocationName = locationName,
+             AccountType = accountType,
+             SubGroupCode = subGroupCode,
+             SubGroupName = subGroupName,
+             ProductId = m.ProductId
+         };
+     })
+                    .Select(g =>
             {
-                m.ProductId,
-                ProductName = m.Product!.Name.Value,
-                ProductCode = m.Product.ProductCode.Value,
-                UnitTypeName = m.Product.ProductUnitType!.Name.Value
-            })
-            .Select(g => new StockMovementReportRowDto
-            {
-                ProductName = g.Key.ProductName,
-                ProductCode = g.Key.ProductCode,
-                UnitTypeName = g.Key.UnitTypeName,
-                TotalInQuantity = g.Where(m => m.MovementType == ProductMovementType.Input).Sum(m => m.Quantity),
-                TotalOutQuantity = g.Where(m => m.MovementType == ProductMovementType.Output).Sum(m => m.Quantity),
-                BalanceQuantity = g.Where(m => m.MovementType == ProductMovementType.Input).Sum(m => m.Quantity)
-                                - g.Where(m => m.MovementType == ProductMovementType.Output).Sum(m => m.Quantity),
-                UnitCost = g.Where(m => m.MovementType == ProductMovementType.Input && m.UnitPrice != null)
+                Product p = g.First().Product!;
+
+                decimal totalInQty = g.Where(m => m.MovementType == ProductMovementType.Input).Sum(m => m.Quantity);
+                decimal totalOutQty = g.Where(m => m.MovementType == ProductMovementType.Output).Sum(m => m.Quantity);
+
+                decimal totalInAmt = g.Where(m => m.MovementType == ProductMovementType.Input && m.UnitPrice != null)
+                                      .Sum(m => m.Quantity * m.UnitPrice!.Value);
+                decimal totalOutAmt = g.Where(m => m.MovementType == ProductMovementType.Output && m.UnitPrice != null)
+                                       .Sum(m => m.Quantity * m.UnitPrice!.Value);
+
+                return new StockMovementReportRowDto
+                {
+                    AccountType = g.Key.AccountType,
+                    LocationCode = g.Key.LocationCode,
+                    LocationName = g.Key.LocationName,
+                    SubGroupCode = g.Key.SubGroupCode,
+                    SubGroupName = g.Key.SubGroupName,
+                    ProductName = p.Name.Value,
+                    ProductCode = p.ProductCode.Value,
+                    UnitTypeName = p.ProductUnitType!.Name.Value,
+                    TotalInQuantity = totalInQty,
+                    TotalOutQuantity = totalOutQty,
+                    BalanceQuantity = totalInQty - totalOutQty,
+                    UnitCost = g.Where(m => m.MovementType == ProductMovementType.Input && m.UnitPrice != null)
                                 .Select(m => (decimal?)m.UnitPrice!.Value)
                                 .Average() ?? 0m,
-                TotalInAmount = g.Where(m => m.MovementType == ProductMovementType.Input && m.UnitPrice != null)
-                                .Sum(m => m.Quantity * m.UnitPrice!.Value),
-                TotalOutAmount = g.Where(m => m.MovementType == ProductMovementType.Output && m.UnitPrice != null)
-                                .Sum(m => m.Quantity * m.UnitPrice!.Value),
-                BalanceAmount = (g.Where(m => m.MovementType == ProductMovementType.Input && m.UnitPrice != null)
-                                .Sum(m => m.Quantity * m.UnitPrice!.Value))
-                                - (g.Where(m => m.MovementType == ProductMovementType.Output && m.UnitPrice != null)
-                                .Sum(m => m.Quantity * m.UnitPrice!.Value)),
-                SalesQuantity = 0m, // Would need invoice/sale data
-                SalesAmount = 0m    // Would need invoice/sale data
+                    TotalInAmount = totalInAmt,
+                    TotalOutAmount = totalOutAmt,
+                    BalanceAmount = totalInAmt - totalOutAmt,
+                    SalesQuantity = 0m,
+                    SalesAmount = 0m
+                };
             })
-            .OrderBy(r => r.ProductName)
+            .OrderBy(r => r.LocationCode)
+            .ThenBy(r => r.SubGroupCode)
+            .ThenBy(r => r.ProductName)
             .ToList();
 
         return grouped;
+    }
+
+    private static (ChartOfAccountType accountType, string code, string name) ResolveLocation(
+        ProductMovement m,
+        Dictionary<IdentityId, StockIssue> stockIssues,
+        Dictionary<string, CostSlip> costSlipByNumber)
+    {
+        // StockIssue bağlı hareketler
+        if (m.StockIssueId is { } issueId && stockIssues.TryGetValue(issueId, out StockIssue? issue))
+        {
+            if (issue.TargetAccount != null && issue.TargetAccount.Code.Value.StartsWith("151"))
+            {
+                return (issue.TargetAccount.Type, issue.TargetAccount.Code.Value, issue.TargetAccount.Name.Value);
+            }
+
+            ChartOfAccount account = m.MovementType == ProductMovementType.Input
+                ? issue.TargetAccount!
+                : issue.SourceWarehouse!;
+            return (account.Type, account.Code.Value, account.Name.Value);
+        }
+
+        // Maliyet Pusulası hareketleri → CostSlip.Workshop
+        string d = m.Description.Value ?? "";
+        if (d.StartsWith(ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix))
+        {
+            string after = d[ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix.Length..].Trim();
+            if (TryFindCostSlip(after, costSlipByNumber, out CostSlip? slip) && slip is not null && slip.Workshop is { })
+            {
+                return (slip.Workshop.Type, slip.Workshop.Code.Value, slip.Workshop.Name.Value);
+            }
+            return (ChartOfAccountType.Workshop, "?", "Bilinmeyen Atölye");
+        }
+
+        if (d.StartsWith(ProductStockBalanceHelper.ProductionInputDescriptionPrefix))
+        {
+            return (m.Product!.Warehouse!.Type, m.Product!.Warehouse!.Code.Value, m.Product!.Warehouse!.Name.Value);
+        }
+
+        // Fatura / manuel hareketler → Product.Warehouse
+        return (m.Product!.Warehouse!.Type, m.Product!.Warehouse!.Code.Value, m.Product!.Warehouse!.Name.Value);
+    }
+
+    private static bool TryFindCostSlip(string after, Dictionary<string, CostSlip> costSlipByNumber, out CostSlip? slip)
+    {
+        string slipNo = after.Split(' ')[0];
+        return costSlipByNumber.TryGetValue(slipNo, out slip);
     }
 }

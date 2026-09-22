@@ -240,7 +240,7 @@ internal sealed class StockIssueCreateCommandHandler(
                     unitPrice: new Price(unitCost),
                     date: issue.Date,
                     referenceNo: issue.DocumentNumber,
-                    description: new Description($"Atölye Transferi Girişi - {target.Name.Value}"),
+                    description: new Description($"{ProductStockBalanceHelper.AtelierTransferInputDescriptionPrefix}{target.Name.Value}"),
                     stockIssueId: issue.Id);
 
                 await productMovementRepository.AddAsync(atelierInput, cancellationToken);

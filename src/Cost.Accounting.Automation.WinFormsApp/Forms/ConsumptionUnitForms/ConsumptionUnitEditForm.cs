@@ -23,7 +23,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
 
             InitializeComponent();
 
-            IconOptions.SvgImage = DxIcon.StockIssue;
             Text = _editing is null ? "Yeni Tüketim Birimi" : "Tüketim Birimi Düzenle";
             lblTitle.Text = Text;
             chkActive.Checked = _editing?.IsActive ?? true;

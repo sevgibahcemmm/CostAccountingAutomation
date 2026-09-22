@@ -46,7 +46,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             InitializeComponent();
 
             btnRefresh.Click += BtnRefresh_Click;
-            btnRefresh.ImageOptions.SvgImage = DxIcon.Refresh;
 
             _kpiValues[1] = lblKpi1Value;
             _kpiValues[2] = lblKpi2Value;

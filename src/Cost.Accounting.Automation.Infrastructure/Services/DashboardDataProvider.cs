@@ -1,6 +1,7 @@
 using System.Globalization;
 using Cost.Accounting.Automation.Application.Dashboards;
 using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Customers;
@@ -406,42 +407,28 @@ internal sealed class DashboardDataProvider(
             })
             .ToListAsync(ct);
 
-        var movements = await db.Set<ProductMovement>()
+        var grouped = await db.Set<ProductMovement>()
             .AsNoTracking()
-            .Select(m => new
+            .WhereCountsAsProductStock()
+            .GroupBy(m => m.ProductId)
+            .Select(g => new
             {
-                m.ProductId,
-                m.MovementType,
-                m.Quantity,
-                UnitPrice = m.UnitPrice != null ? m.UnitPrice.Value : 0m
+                ProductId = g.Key,
+                InputQty = g.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : 0m),
+                OutputQty = g.Sum(m => m.MovementType == ProductMovementType.Output ? m.Quantity : 0m),
+                InputCost = g.Sum(m => m.MovementType == ProductMovementType.Input
+                    ? m.Quantity * (m.UnitPrice != null ? m.UnitPrice.Value : 0m)
+                    : 0m),
+                OutputCost = g.Sum(m => m.MovementType == ProductMovementType.Output
+                    ? m.Quantity * (m.UnitPrice != null ? m.UnitPrice.Value : 0m)
+                    : 0m)
             })
             .ToListAsync(ct);
 
         Dictionary<IdentityId, (decimal InputQty, decimal OutputQty, decimal InputCost, decimal OutputCost)>
-            totals = movements
-                .GroupBy(m => m.ProductId)
-                .ToDictionary(
-                    g => g.Key,
-                    g =>
-                    {
-                        decimal inputQty =
-                            g.Where(m => m.MovementType == ProductMovementType.Input)
-                                .Sum(m => m.Quantity);
-
-                        decimal outputQty =
-                            g.Where(m => m.MovementType == ProductMovementType.Output)
-                                .Sum(m => m.Quantity);
-
-                        decimal inputCost =
-                            g.Where(m => m.MovementType == ProductMovementType.Input)
-                                .Sum(m => m.Quantity * m.UnitPrice);
-
-                        decimal outputCost =
-                            g.Where(m => m.MovementType == ProductMovementType.Output)
-                                .Sum(m => m.Quantity * m.UnitPrice);
-
-                        return (inputQty, outputQty, inputCost, outputCost);
-                    });
+            totals = grouped.ToDictionary(
+                g => g.ProductId,
+                g => (g.InputQty, g.OutputQty, g.InputCost, g.OutputCost));
 
         return productInfo
             .Select(p =>

@@ -34,7 +34,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
             }
 
             CopyIconToPage(form, e.Page);
-            form.Load += (_, _) => CopyIconToPage(form, e.Page);
+            void copyHandler(object? _, EventArgs __) => CopyIconToPage(form, e.Page);
+            form.Load += copyHandler;
+            form.FormClosed += (_, _) => form.Load -= copyHandler;
         }
 
         private static void CopyIconToPage(XtraForm form, XtraMdiTabPage page)

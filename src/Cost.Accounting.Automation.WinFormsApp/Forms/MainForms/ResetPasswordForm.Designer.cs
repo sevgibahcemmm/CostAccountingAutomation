@@ -1,7 +1,9 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
-    partial class ResetPasswordForm
-    {
+partial class ResetPasswordForm
+{
         private System.ComponentModel.IContainer components = null;
 
         protected override void Dispose(bool disposing)
@@ -202,6 +204,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnReset.Size = new Size(400, 48);
             btnReset.TabIndex = 7;
             btnReset.Text = "Şifreyi Sıfırla";
+            btnReset.ImageOptions.SvgImage = DxIcon.Refresh;
+            btnReset.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnReset.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnReset.Click += BtnReset_Click;
             //
             // lnkBack

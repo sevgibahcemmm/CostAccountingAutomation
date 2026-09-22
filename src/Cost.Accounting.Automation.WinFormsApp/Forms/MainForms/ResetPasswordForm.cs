@@ -27,10 +27,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlConfirmBox.Paint += AuthFormStyles.RoundedField_Paint;
             txtConfirmPassword.Enter += AuthFormStyles.Field_Enter;
             txtConfirmPassword.Leave += AuthFormStyles.Field_Leave;
-            btnReset.Paint += AuthFormStyles.Button_Paint;
-            btnReset.ImageOptions.SvgImage = DxIcon.Refresh;
-            btnReset.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnReset.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
+btnReset.Paint += AuthFormStyles.Button_Paint;
         }
 
         public void SetResetCode(Guid resetCode)

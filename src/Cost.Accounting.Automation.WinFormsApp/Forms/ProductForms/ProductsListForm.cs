@@ -33,7 +33,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private readonly Dictionary<string, Image?> _qrImageCache = [];
         private readonly Dictionary<string, Image?> _slidePreviewCache = [];
         private readonly Dictionary<Guid, int> _slideIndexes = [];
-        private IBarcodeGeneratorService? _barcodeService;
+        private IServiceScope? _barcodeScope;
 
         private sealed class ProductSlideContext(Guid productId)
         {
@@ -48,25 +48,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         {
             base.OnLoad(e);
             _ = LoadWarehouseFilterAsync();
-        }
-
-        private async Task LoadWarehouseFilterAsync()
-        {
-            try
-            {
-                using var scope = Program.Services.CreateScope();
-                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-
-                List<ChartOfAccountLookUpDto> warehouses = ((await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [])
-                    .Where(w => w.Type == ChartOfAccountType.Warehouse)
-                    .ToList();
-
-                ConfigureFilter(warehouses, nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Depo");
-            }
-            catch (Exception ex)
-            {
-                ToastHelper.Show("Depo filtresi yüklenemedi: " + ex.Message, ToastType.Warning);
-            }
         }
 
         protected override SvgImage ModuleIcon => DxIcon.Products;
@@ -448,7 +429,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             Image? img = null;
             try
             {
-                IBarcodeGeneratorService svc = _barcodeService ??= Program.Services.CreateScope().ServiceProvider.GetRequiredService<IBarcodeGeneratorService>();
+                _barcodeScope ??= Program.Services.CreateScope();
+                IBarcodeGeneratorService svc = _barcodeScope.ServiceProvider.GetRequiredService<IBarcodeGeneratorService>();
                 byte[] bytes = svc.GenerateEan13Barcode(gtin);
                 using var ms = new MemoryStream(bytes);
                 img = new Bitmap(ms);
@@ -469,7 +451,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             Image? img = null;
             try
             {
-                IBarcodeGeneratorService svc = _barcodeService ??= Program.Services.CreateScope().ServiceProvider.GetRequiredService<IBarcodeGeneratorService>();
+                _barcodeScope ??= Program.Services.CreateScope();
+                IBarcodeGeneratorService svc = _barcodeScope.ServiceProvider.GetRequiredService<IBarcodeGeneratorService>();
                 byte[] bytes = svc.GenerateQrCode(qrContent);
                 using var ms = new MemoryStream(bytes);
                 img = new Bitmap(ms);

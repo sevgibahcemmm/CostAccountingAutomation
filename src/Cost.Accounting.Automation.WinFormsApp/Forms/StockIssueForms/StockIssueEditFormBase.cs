@@ -50,7 +50,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             _editing = existing;
 
             InitializeComponent();
-            IconOptions.SvgImage = DxIcon.StockIssue;
 
             Text = _editing is null ? $"Yeni {FormTitle}" : $"{FormTitle} İncele";
             lblTitle.Text = Text;

@@ -31,6 +31,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private readonly SessionClaimContext _session;
         private readonly Dictionary<int, string> _groupNames = new();
         private readonly SvgImage[] _moduleIcons;
+        private readonly Dictionary<string, Action> _menuActions = new(StringComparer.OrdinalIgnoreCase);
         private System.Windows.Forms.Timer? _clockTimer;
         private DateTime _tokenExpiry;
 
@@ -83,6 +84,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ];
 
             InitializeAccordion();
+            BuildMenuActions();
             IconOptions.SvgImage = _moduleIcons[7];
             accordionControl.OptionsMinimizing.State = AccordionControlState.Minimized;
             accordionControl.OptionsMinimizing.NormalWidth = 260;
@@ -91,16 +93,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Load += RibbonMainForm_Load;
             FormClosing += RibbonMainForm_FormClosing;
             FormClosed += RibbonMainForm_FormClosed;
-        }
-
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000;
-                return cp;
-            }
         }
 
         private void RibbonMainForm_Load(object? sender, EventArgs e)
@@ -167,6 +159,34 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             element.Click += (s, e) => HandleMenuClick((AccordionControlElement)s!);
         }
 
+        private void BuildMenuActions()
+        {
+            _menuActions["elmKullanicilar"] = () => MdiFormManager.Instance.OpenForm<UsersListForm>(this, "Kullanıcılar");
+            _menuActions["elmRoller"] = () => MdiFormManager.Instance.OpenForm<RolesListForm>(this, "Roller ve Yetkiler");
+            _menuActions["elmSirketAyarlari"] = () => MdiFormManager.Instance.OpenForm<CompaniesListForm>(this, "Şirketler");
+            _menuActions["elmMusteriler"] = () => MdiFormManager.Instance.OpenForm<CustomersListForm>(this, "Müşteriler");
+            _menuActions["elmTedarikciler"] = () => MdiFormManager.Instance.OpenForm<SuppliersListForm>(this, "Tedarikçiler");
+            _menuActions["elmCariHareketler"] = () => MdiFormManager.Instance.OpenForm<CurrentAccountMovementsListForm>(this, "Cari Hareketler");
+            _menuActions["elmCariBorcAlacakOzeti"] = () => MdiFormManager.Instance.OpenForm<CurrentAccountBalanceForm>(this, "Cari Borç/Alacak Özeti");
+            _menuActions["elmOdemeTahsilat"] = () => MdiFormManager.Instance.OpenForm<PaymentCollectionListForm>(this, "Ödeme / Tahsilat");
+            _menuActions["elmSatinAlmaFaturalari"] = () => OpenInvoices(InvoiceType.Purchase);
+            _menuActions["elmFaturaOnaylama"] = () => MdiFormManager.Instance.OpenForm<InvoiceApprovalForm>(this, "Fatura Onaylama");
+            _menuActions["elmSatisFaturalari"] = () => OpenInvoices(InvoiceType.Sales);
+            _menuActions["elmStokGirisi"] = () => OpenProductMovements(ProductMovementType.Input);
+            _menuActions["elmStokCikisi"] = () => OpenProductMovements(ProductMovementType.Output);
+            _menuActions["elmStokHareketleri"] = () => OpenProductMovements(null);
+            _menuActions["elmFiyatStokListesi"] = () => MdiFormManager.Instance.OpenForm<ProductPriceStockListForm>(this, "Fiyat & Stok Listesi");
+            _menuActions["elmTuketim"] = () => MdiFormManager.Instance.OpenForm<ConsumptionsListForm>(this, "Tüketim");
+            _menuActions["elmAtolyeTransferi"] = () => MdiFormManager.Instance.OpenForm<AtelierTransfersListForm>(this, "Atölye Transferi");
+            _menuActions["elmAtolyeStokRaporu"] = () => MdiFormManager.Instance.OpenForm<AtelierTransferStockForm>(this, "Atölye Stok Raporu");
+            _menuActions["elmTuketimBirimleri"] = () => MdiFormManager.Instance.OpenForm<ConsumptionUnitsListForm>(this, "Tüketim Birimleri");
+            _menuActions["elmHesapPlani"] = () => MdiFormManager.Instance.OpenForm<ChartOfAccountsListForm>(this, "Hesap Planı");
+            _menuActions["elmMaliyetPusulasi"] = () => MdiFormManager.Instance.OpenForm<CostSlipsListForm>(this, "Maliyet Pusulası");
+            _menuActions["elmUrunler"] = () => MdiFormManager.Instance.OpenForm<ProductsListForm>(this, "Ürünler");
+            _menuActions["elmBirimCinsleri"] = () => MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
+            _menuActions["elmKdvOranlari"] = () => MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
+        }
+
         private void HandleMenuClick(AccordionControlElement element)
         {
             if (element.Tag is not int index)
@@ -174,263 +194,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 return;
             }
 
-            if (index == 99)
+            switch (index)
             {
-                Close();
-                return;
+                case 99:
+                    Close();
+                    return;
+                case 0:
+                    OpenDashboard();
+                    return;
             }
 
-            if (index == 0)
+            if (!string.IsNullOrEmpty(element.Name) && _menuActions.TryGetValue(element.Name, out Action? open))
             {
-                OpenDashboard();
+                open();
                 return;
             }
 
             if (index >= 1 && index <= 8)
             {
                 string groupName = _groupNames.TryGetValue(index, out string? name) ? name : "Modül";
-
-                if (element.Text == "Kullanıcılar")
-                {
-                    OpenUsers();
-                    return;
-                }
-
-                if (element.Text == "Roller ve Yetkiler")
-                {
-                    OpenRoles();
-                    return;
-                }
-
-                if (element.Text == "Şirket Ayarları")
-                {
-                    OpenCompanies();
-                    return;
-                }
-
-                if (element.Text == "Müşteriler")
-                {
-                    OpenCustomers();
-                    return;
-                }
-
-                if (element.Text == "Tedarikçiler")
-                {
-                    OpenSuppliers();
-                    return;
-                }
-
-                if (element.Text == "Cari Hareketler")
-                {
-                    OpenCurrentAccountMovements();
-                    return;
-                }
-
-                if (element.Text == "Cari Borç/Alacak Özeti")
-                {
-                    OpenCurrentAccountBalance();
-                    return;
-                }
-
-                if (element.Text == "Ödeme / Tahsilat")
-                {
-                    OpenPaymentCollection();
-                    return;
-                }
-
-                if (element.Text == "Satın Alma Faturaları")
-                {
-                    OpenInvoices(InvoiceType.Purchase);
-                    return;
-                }
-
-                if (element.Text == "Fatura Onaylama")
-                {
-                    OpenInvoiceApproval();
-                    return;
-                }
-
-                if (element.Text == "Satış Faturaları")
-                {
-                    OpenInvoices(InvoiceType.Sales);
-                    return;
-                }
-
-                if (element.Text == "Stok Girişi")
-                {
-                    OpenProductMovements(ProductMovementType.Input);
-                    return;
-                }
-
-                if (element.Text == "Stok Çıkışı")
-                {
-                    OpenProductMovements(ProductMovementType.Output);
-                    return;
-                }
-
-                if (element.Text == "Stok Hareketleri")
-                {
-                    OpenProductMovements(null);
-                    return;
-                }
-
-                if (element.Text == "Fiyat & Stok Listesi")
-                {
-                    OpenProductPriceStockList();
-                    return;
-                }
-
-                if (element.Text == "Tüketim")
-                {
-                    OpenConsumptions();
-                    return;
-                }
-
-                if (element.Text == "Atölye Transferi")
-                {
-                    OpenAtelierTransfers();
-                    return;
-                }
-
-                if (element.Text == "Atölye Stok Raporu")
-                {
-                    OpenAtelierTransferStock();
-                    return;
-                }
-
-                if (element.Text == "Tüketim Birimleri")
-                {
-                    OpenConsumptionUnits();
-                    return;
-                }
-
-                if (element.Text == "Hesap Planı")
-                {
-                    OpenChartOfAccounts();
-                    return;
-                }
-
-                if (element.Text == "Maliyet Pusulası")
-                {
-                    OpenCostSlips();
-                    return;
-                }
-
-                if (element.Text == "Ürünler")
-                {
-                    OpenProducts();
-                    return;
-                }
-
-                if (element.Text == "Birim Cinsleri")
-                {
-                    OpenUnitTypes();
-                    return;
-                }
-
-                if (element.Text == "KDV Oranları")
-                {
-                    OpenKdvRates();
-                    return;
-                }
-
                 OpenModule(element.Text, groupName, index);
             }
-        }
-
-        private void OpenUsers()
-        {
-            MdiFormManager.Instance.OpenForm<UsersListForm>(this, "Kullanıcılar");
-        }
-
-        private void OpenRoles()
-        {
-            MdiFormManager.Instance.OpenForm<RolesListForm>(this, "Roller ve Yetkiler");
-        }
-
-        private void OpenCompanies()
-        {
-            MdiFormManager.Instance.OpenForm<CompaniesListForm>(this, "Şirketler");
-        }
-
-        private void OpenCustomers()
-        {
-            MdiFormManager.Instance.OpenForm<CustomersListForm>(this, "Müşteriler");
-        }
-
-        private void OpenSuppliers()
-        {
-            MdiFormManager.Instance.OpenForm<SuppliersListForm>(this, "Tedarikçiler");
-        }
-
-        private void OpenChartOfAccounts()
-        {
-            MdiFormManager.Instance.OpenForm<ChartOfAccountsListForm>(this, "Hesap Planı");
-        }
-
-        private void OpenCostSlips()
-        {
-            MdiFormManager.Instance.OpenForm<CostSlipsListForm>(this, "Maliyet Pusulası");
-        }
-
-        private void OpenProducts()
-        {
-            MdiFormManager.Instance.OpenForm<ProductsListForm>(this, "Ürünler");
-        }
-
-        private void OpenUnitTypes()
-        {
-            MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
-        }
-
-        private void OpenKdvRates()
-        {
-            MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
-        }
-
-        private void OpenCurrentAccountMovements()
-        {
-            MdiFormManager.Instance.OpenForm<CurrentAccountMovementsListForm>(this, "Cari Hareketler");
-        }
-
-        private void OpenCurrentAccountBalance()
-        {
-            MdiFormManager.Instance.OpenForm<CurrentAccountBalanceForm>(this, "Cari Borç/Alacak Özeti");
-        }
-
-        private void OpenPaymentCollection()
-        {
-            MdiFormManager.Instance.OpenForm<PaymentCollectionListForm>(this, "Ödeme / Tahsilat");
-        }
-
-        private void OpenInvoiceApproval()
-        {
-            MdiFormManager.Instance.OpenForm<InvoiceApprovalForm>(this, "Fatura Onaylama");
-        }
-
-        private void OpenProductPriceStockList()
-        {
-            MdiFormManager.Instance.OpenForm<ProductPriceStockListForm>(this, "Fiyat & Stok Listesi");
-        }
-
-        private void OpenConsumptions()
-        {
-            MdiFormManager.Instance.OpenForm<ConsumptionsListForm>(this, "Tüketim");
-        }
-
-        private void OpenAtelierTransfers()
-        {
-            MdiFormManager.Instance.OpenForm<AtelierTransfersListForm>(this, "Atölye Transferi");
-        }
-
-        private void OpenAtelierTransferStock()
-        {
-            MdiFormManager.Instance.OpenForm<AtelierTransferStockForm>(this, "Atölye Stok Raporu");
-        }
-
-        private void OpenConsumptionUnits()
-        {
-            MdiFormManager.Instance.OpenForm<ConsumptionUnitsListForm>(this, "Tüketim Birimleri");
         }
 
         private void OpenInvoices(InvoiceType type)

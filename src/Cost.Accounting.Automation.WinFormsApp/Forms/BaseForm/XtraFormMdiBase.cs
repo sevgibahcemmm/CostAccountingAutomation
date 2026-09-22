@@ -9,9 +9,5 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             Text = formTitle;
             StartPosition = FormStartPosition.CenterScreen;
         }
-
-        protected XtraFormMdiBase() : this(string.Empty)
-        {
-        }
     }
 }

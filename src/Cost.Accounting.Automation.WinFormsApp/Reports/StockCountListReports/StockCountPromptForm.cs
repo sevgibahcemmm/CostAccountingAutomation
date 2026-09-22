@@ -42,12 +42,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
         {
             InitializeComponent();
 
-            picHeader.SvgImage = DxIcon.StockMovements;
-            btnSelectAll.ImageOptions.SvgImage = DxIcon.CheckAll;
-            btnClear.ImageOptions.SvgImage = DxIcon.Uncheck;
-            btnOk.ImageOptions.SvgImage = DxIcon.Print;
-            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
-
             _workshops = workshops
                 .Where(w => w.Type == ChartOfAccountType.Workshop)
                 .OrderBy(w => w.Display)
@@ -100,7 +94,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
                     UseMaskAsDisplayFormat = true,
                     CalendarTimeEditing = DevExpress.Utils.DefaultBoolean.False
                 },
-                EditValue = DateTime.Today.AddDays(-DateTime.Today.Day) // önceki ay sonu
+                EditValue = DateTime.Today
             };
 
             Controls.Add(lblDate);

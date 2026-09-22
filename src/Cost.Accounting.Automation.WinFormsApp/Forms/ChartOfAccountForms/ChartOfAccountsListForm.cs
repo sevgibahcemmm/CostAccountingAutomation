@@ -107,18 +107,25 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
 
     private async Task ReloadAsync()
     {
+        int version = ++_reloadVersion;
         try
         {
             _lblSub.Text = "Yevmiye kayıtları güncelleniyor...";
 
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            List<ChartOfAccountDto> items = await Task.Run(async () =>
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                await mediator.Send(new ChartOfAccountLedgerSyncCommand(), CancellationToken.None);
+                return (await mediator.Send(new ChartOfAccountGetAllQuery(), CancellationToken.None)).ToList();
+            });
 
-            await mediator.Send(new ChartOfAccountLedgerSyncCommand(), CancellationToken.None);
+            if (version != _reloadVersion)
+            {
+                return;
+            }
 
             _lblSub.Text = "Yenileniyor...";
-
-            List<ChartOfAccountDto> items = (await mediator.Send(new ChartOfAccountGetAllQuery(), CancellationToken.None)).ToList();
 
             Dictionary<Guid, ChartOfAccountDto> byId = items.ToDictionary(x => x.Id, x => x);
 
@@ -152,6 +159,8 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
 
     private List<ChartOfAccountDto> _items = [];
 
+    private int _reloadVersion;
+
     private bool _filterMoved;
 
     private void TswShowMoved_IsOnChanged(object? sender, EventArgs e)
@@ -174,12 +183,19 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         _totalDebitBalance = display.Where(i => i.ParentId is null).Sum(i => i.DebitBalance);
         _totalCreditBalance = display.Where(i => i.ParentId is null).Sum(i => i.CreditBalance);
 
-        _tree.DataSource = null;
-        _tree.DataSource = display;
-        _tree.ForceInitialize();
-        _tree.ExpandAll();
-        _tree.Refresh();
-        System.Windows.Forms.Application.DoEvents();
+        _tree.BeginUpdate();
+        try
+        {
+            _tree.DataSource = null;
+            _tree.DataSource = display;
+            _tree.ForceInitialize();
+            _tree.ExpandAll();
+            _tree.Refresh();
+        }
+        finally
+        {
+            _tree.EndUpdate();
+        }
 
         UpdateManualAddButtonState();
 
@@ -242,7 +258,7 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
             case nameof(ChartOfAccountDto.Name):
                 e.Info.DisplayText = "Genel toplam";
                 e.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
-                e.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+                e.Appearance.Font = Level0Font;
                 break;
             case nameof(ChartOfAccountDto.DebitAmount):
                 e.Info.DisplayText = _totalDebit.ToString("N2");

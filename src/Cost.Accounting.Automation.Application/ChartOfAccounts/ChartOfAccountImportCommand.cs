@@ -48,7 +48,7 @@ internal sealed class ChartOfAccountImportCommandHandler(
     {
         List<ChartOfAccountImportRow> rows = request.Rows
             .Where(r => !string.IsNullOrWhiteSpace(r.Code))
-            .GroupBy(r => NormalizeCode(r.Code), StringComparer.OrdinalIgnoreCase)
+            .GroupBy(r => ChartOfAccountCodeHelper.NormalizeCode(r.Code), StringComparer.OrdinalIgnoreCase)
             .Select(g => g.Last())
             .ToList();
 
@@ -59,7 +59,7 @@ internal sealed class ChartOfAccountImportCommandHandler(
 
         List<ChartOfAccount> existing = await chartOfAccountRepository.GetAllIncludingDeletedAsync(cancellationToken);
         Dictionary<string, ChartOfAccount> existingByCode = existing.ToDictionary(
-            e => NormalizeCode(e.Code.Value),
+            e => ChartOfAccountCodeHelper.NormalizeCode(e.Code.Value),
             StringComparer.OrdinalIgnoreCase);
 
         HashSet<string> importedCodes = new(StringComparer.OrdinalIgnoreCase);
@@ -67,7 +67,7 @@ internal sealed class ChartOfAccountImportCommandHandler(
 
         foreach (ChartOfAccountImportRow row in rows)
         {
-            string fullCode = NormalizeCode(row.Code);
+            string fullCode = ChartOfAccountCodeHelper.NormalizeCode(row.Code);
             importedCodes.Add(fullCode);
             string name = row.Name?.Trim() ?? string.Empty;
 
@@ -362,27 +362,6 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         }
 
         return true;
-    }
-
-    private static string NormalizeCode(string code)
-    {
-        string[] segments = (code ?? string.Empty)
-            .Replace('-', '.')
-            .Replace(',', '.')
-            .Split('.', StringSplitOptions.RemoveEmptyEntries);
-
-        return string.Join(".", segments.Select(s => NormalizeSegment(s)).Where(s => s.Length > 0));
-    }
-
-    private static string NormalizeSegment(string segment)
-    {
-        segment = segment.Trim();
-        if (segment.Length > 0 && segment.All(char.IsDigit) && segment.Length < 2)
-        {
-            return segment.PadLeft(2, '0');
-        }
-
-        return segment;
     }
 
     private void AssignLevels(Dictionary<string, ChartOfAccount> nodes)

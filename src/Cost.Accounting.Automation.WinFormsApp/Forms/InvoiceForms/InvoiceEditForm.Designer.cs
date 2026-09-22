@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 {
     partial class InvoiceEditForm
@@ -170,6 +172,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.lblHeaderIcon.Location = new System.Drawing.Point(20, 18);
             this.lblHeaderIcon.Name = "lblHeaderIcon";
             this.lblHeaderIcon.Size = new System.Drawing.Size(32, 32);
+            this.lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Invoices;
 
             // 
             // lblTitle
@@ -681,6 +684,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.IconOptions.SvgImage = DxIcon.Invoices;
             this.Name = "InvoiceEditForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Fatura";

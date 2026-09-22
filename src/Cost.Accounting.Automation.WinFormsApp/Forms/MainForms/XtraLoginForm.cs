@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.Application.Auth;
-using Cost.Accounting.Automation.Infrastructure;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -29,7 +28,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         public XtraLoginForm()
         {
             InitializeComponent();
-            ConfigureIcons();
 
             btnLogin.Appearance.Options.UseBackColor = false;
             btnLogin.Appearance.BackColor = Color.Transparent;
@@ -53,14 +51,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             System.Windows.Forms.Application.Exit();
         }
 
-        private async Task InitAsync()
+private async Task InitAsync()
         {
             btnLogin.Enabled = false;
             try
             {
-                var captchaTask = RecreateCaptchaAsync();
-                var dbInitTask = DatabaseInitializer.InitializeAsync(Program.Services);
-                await Task.WhenAll(captchaTask, dbInitTask);
+                await RecreateCaptchaAsync();
             }
             catch
             {
@@ -70,33 +66,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 btnLogin.Enabled = true;
             }
-        }
-
-        private void ConfigureIcons()
-        {
-            pnlLeftLockGlyph.Text = string.Empty;
-            pnlLeftLockGlyph.ImageOptions.SvgImage = DxIcon.Lock;
-            pnlLeftLockGlyph.ImageOptions.SvgImageSize = new Size(48, 48);
-
-            _lblLogoIcon.Text = string.Empty;
-            _lblLogoIcon.ImageOptions.SvgImage = DxIcon.Shield;
-            _lblLogoIcon.ImageOptions.SvgImageSize = new Size(54, 54);
-
-            lblUserIcon.Text = string.Empty;
-            lblUserIcon.ImageOptions.SvgImage = DxIcon.User;
-            lblUserIcon.ImageOptions.SvgImageSize = new Size(22, 22);
-
-            lblPassIcon.Text = string.Empty;
-            lblPassIcon.ImageOptions.SvgImage = DxIcon.Key;
-            lblPassIcon.ImageOptions.SvgImageSize = new Size(22, 22);
-
-            lblTogglePassword.Text = string.Empty;
-            lblTogglePassword.ImageOptions.SvgImage = DxIcon.Eye;
-            lblTogglePassword.ImageOptions.SvgImageSize = new Size(22, 22);
-
-            btnLogin.ImageOptions.SvgImage = DxIcon.Next;
-            btnLogin.ImageOptions.SvgImageSize = new Size(22, 22);
-            btnLogin.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
         }
 
         private async Task RecreateCaptchaAsync()

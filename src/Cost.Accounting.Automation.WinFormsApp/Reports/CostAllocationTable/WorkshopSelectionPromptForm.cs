@@ -16,12 +16,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
         {
             InitializeComponent();
 
-            picHeader.SvgImage = DxIcon.AtelierTransfer;
-            btnSelectAll.ImageOptions.SvgImage = DxIcon.CheckAll;
-            btnClear.ImageOptions.SvgImage = DxIcon.Uncheck;
-            btnOk.ImageOptions.SvgImage = DxIcon.Print;
-            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
-
             checkedList.Items.AddRange(workshops.ToArray());
             for (int i = 0; i < checkedList.Items.Count; i++)
             {

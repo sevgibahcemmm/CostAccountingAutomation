@@ -408,6 +408,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProductUnitTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ChartOfAccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    SemiFinishedProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
@@ -443,6 +444,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         name: "FK_Products_ProductUnitTypes_ProductUnitTypeId",
                         column: x => x.ProductUnitTypeId,
                         principalTable: "ProductUnitTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Products_Products_SemiFinishedProductId",
+                        column: x => x.SemiFinishedProductId,
+                        principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -851,6 +858,16 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                 column: "CurrentAccountType");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CurrentAccountMovements_CurrentAccountType_CustomerId",
+                table: "CurrentAccountMovements",
+                columns: new[] { "CurrentAccountType", "CustomerId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CurrentAccountMovements_CurrentAccountType_SupplierId",
+                table: "CurrentAccountMovements",
+                columns: new[] { "CurrentAccountType", "SupplierId" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CurrentAccountMovements_CustomerId",
                 table: "CurrentAccountMovements",
                 column: "CustomerId");
@@ -896,6 +913,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                 column: "Date");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Invoices_Date_Status",
+                table: "Invoices",
+                columns: new[] { "Date", "Status" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Invoices_InvoiceNumber",
                 table: "Invoices",
                 column: "InvoiceNumber");
@@ -921,6 +943,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProductMovements_Date_MovementType",
+                table: "ProductMovements",
+                columns: new[] { "Date", "MovementType" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductMovements_InvoiceId",
                 table: "ProductMovements",
                 column: "InvoiceId");
@@ -929,6 +956,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                 name: "IX_ProductMovements_ProductId",
                 table: "ProductMovements",
                 column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductMovements_ProductId_Date",
+                table: "ProductMovements",
+                columns: new[] { "ProductId", "Date" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductMovements_StockIssueId",
@@ -960,6 +992,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                 name: "IX_Products_ProductUnitTypeId",
                 table: "Products",
                 column: "ProductUnitTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_SemiFinishedProductId",
+                table: "Products",
+                column: "SemiFinishedProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_TaxRateId",

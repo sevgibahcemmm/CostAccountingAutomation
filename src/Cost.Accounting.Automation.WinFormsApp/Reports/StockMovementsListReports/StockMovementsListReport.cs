@@ -1,10 +1,5 @@
 ﻿using Cost.Accounting.Automation.Application.StockMovements;
 using DevExpress.XtraReports.UI;
-using System;
-using System.Collections;
-using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListReports
 {
@@ -13,6 +8,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListRepor
         public StockMovementsListReport()
         {
             InitializeComponent();
+
+           
+        }
+
+        private void GroupHeader2_BeforePrint(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            string? subGroupCode = GetCurrentColumnValue("SubGroupCode") as string;
         }
 
         public void SetData(
@@ -21,7 +23,34 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListRepor
             List<StockMovementReportRowDto> rows,
             string companyName = "")
         {
-            DataSource = rows;
+            
+            List<StockMovementReportRowDto> sortedRows = rows
+                .Select(r => new StockMovementReportRowDto
+                {
+                    AccountType = r.AccountType,
+                    LocationCode = r.LocationCode?.Trim() ?? string.Empty,
+                    LocationName = r.LocationName?.Trim() ?? string.Empty,
+                    SubGroupCode = r.SubGroupCode?.Trim() ?? string.Empty,
+                    SubGroupName = r.SubGroupName?.Trim() ?? string.Empty,
+                    ProductName = r.ProductName,
+                    ProductCode = r.ProductCode,
+                    UnitTypeName = r.UnitTypeName,
+                    TotalInQuantity = r.TotalInQuantity,
+                    TotalOutQuantity = r.TotalOutQuantity,
+                    BalanceQuantity = r.BalanceQuantity,
+                    UnitCost = r.UnitCost,
+                    TotalInAmount = r.TotalInAmount,
+                    TotalOutAmount = r.TotalOutAmount,
+                    BalanceAmount = r.BalanceAmount,
+                    SalesQuantity = r.SalesQuantity,
+                    SalesAmount = r.SalesAmount,
+                })
+                .OrderBy(r => r.LocationCode, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(r => r.SubGroupCode, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(r => r.ProductName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            DataSource = sortedRows;
 
             Parameters["parameterTitleText"].Value = BuildTitle(startDate, endDate);
             Parameters["parameterCompanyName"].Value = companyName;

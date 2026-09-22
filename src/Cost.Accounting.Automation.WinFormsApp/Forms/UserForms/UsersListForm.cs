@@ -220,8 +220,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         {
             lock (_imageCacheLock)
             {
+                foreach (Image image in _imageCache.Values)
+                {
+                    image.Dispose();
+                }
+
                 _imageCache.Clear();
             }
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            ClearImageCache();
+            base.OnFormClosed(e);
         }
     }
 }

@@ -6,9 +6,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                _barcodeScope?.Dispose();
+
+                foreach (Image image in _imageCache.Values
+                             .Concat(_barcodeImageCache.Values)
+                             .Concat(_qrImageCache.Values)
+                             .Concat(_slidePreviewCache.Values)
+                             .OfType<Image>())
+                {
+                    image.Dispose();
+                }
+
+                _imageCache.Clear();
+                _barcodeImageCache.Clear();
+                _qrImageCache.Clear();
+                _slidePreviewCache.Clear();
+
+                if (components != null)
+                {
+                    components.Dispose();
+                }
             }
             base.Dispose(disposing);
         }

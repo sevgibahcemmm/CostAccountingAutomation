@@ -19,15 +19,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         {
             InitializeComponent();
 
-            IconOptions.SvgImage = DxIcon.Balance;
-            picHeader.SvgImage = DxIcon.Balance;
-            lblSub.Appearance.ForeColor = SkinTheme.SecondaryText;
-
             GridColumnFactory.ConfigureFromAttributes(gridView, typeof(CurrentAccountBalanceDto));
 
-            btnClose.ImageOptions.SvgImage = DxIcon.Close;
-            btnClose.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnClose.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
             btnClose.Click += (_, _) => Close();
 
             btnRefresh.Click += async (_, _) => await LoadDataAsync();

@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.StockIssues;
@@ -79,29 +80,33 @@ internal sealed class StockCountListReportQueryHandler(
             .ThenByDescending(i => i.DocumentNumber)
             .ToListAsync(cancellationToken);
 
-        Dictionary<IdentityId, IdentityId> latestTargetByProduct = [];
+        Dictionary<(IdentityId ProductId, IdentityId TargetId), decimal> balances = [];
         foreach (StockIssue issue in transfers)
         {
+            IdentityId targetId = issue.TargetAccountId;
             foreach (StockIssueLine line in issue.Lines)
             {
-                latestTargetByProduct.TryAdd(line.ProductId, issue.TargetAccountId);
+                balances.TryGetValue((line.ProductId, targetId), out decimal quantity);
+                balances[(line.ProductId, targetId)] = quantity + line.Quantity;
             }
         }
 
         if (!request.AllGroups && request.GroupIds is { Count: > 0 })
         {
             HashSet<Guid> selected = request.GroupIds.ToHashSet();
-            latestTargetByProduct = latestTargetByProduct
-                .Where(kv => selected.Contains(kv.Value))
+            balances = balances
+                .Where(kv => selected.Contains(kv.Key.TargetId.Value))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        if (latestTargetByProduct.Count == 0)
+        if (balances.Count == 0)
         {
             return [];
         }
 
-        HashSet<IdentityId> productIds = latestTargetByProduct.Keys.ToHashSet();
+        HashSet<IdentityId> productIds = balances.Keys
+            .Select(k => k.ProductId)
+            .ToHashSet();
 
         List<Product> products = await productRepository.GetAll()
             .AsNoTracking()
@@ -111,30 +116,25 @@ internal sealed class StockCountListReportQueryHandler(
 
         Dictionary<IdentityId, Product> productMap = products.ToDictionary(p => p.Id);
 
-        Dictionary<IdentityId, decimal> balanceMap = await LoadBalancesAsync(
-            productIds,
-            request.AsOfDate,
-            cancellationToken);
-
         Dictionary<IdentityId, string> targetNameMap = transfers
             .Where(t => t.TargetAccount is not null)
             .GroupBy(t => t.TargetAccountId)
             .ToDictionary(g => g.Key, g => g.First().TargetAccount!.Name.Value);
 
-        List<StockCountReportRowDto> rows = latestTargetByProduct
-            .Where(kv => productMap.ContainsKey(kv.Key))
+        List<StockCountReportRowDto> rows = balances
+            .Where(kv => productMap.ContainsKey(kv.Key.ProductId))
             .Select(kv =>
             {
-                Product product = productMap[kv.Key];
+                Product product = productMap[kv.Key.ProductId];
                 return new StockCountReportRowDto
                 {
                     ProductId = product.Id,
                     ProductCode = product.ProductCode.Value,
                     ProductName = product.Name.Value,
                     UnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
-                    SystemQuantity = balanceMap.GetValueOrDefault(product.Id),
-                    GroupId = kv.Value,
-                    GroupName = targetNameMap.GetValueOrDefault(kv.Value, "Belirtilmemiş Atölye")
+                    SystemQuantity = kv.Value,
+                    GroupId = kv.Key.TargetId.Value,
+                    GroupName = targetNameMap.GetValueOrDefault(kv.Key.TargetId, "Belirtilmemiş Atölye")
                 };
             })
             .Where(r => r.SystemQuantity > 0)
@@ -157,8 +157,13 @@ internal sealed class StockCountListReportQueryHandler(
             return [];
         }
 
+        // Atölye transferi, depodan çıkışın yanı sıra "Atölye Transferi Girişi"
+        // adında bir giriş hareketi de üretir. Bu giriş hareketi atölye stokunu
+        // temsil eder ve depo bakiyesine girmemelidir; aksi halde transfer edilen
+        // miktar depodan hiç düşmemiş gibi görünür.
         List<ProductMovement> movements = await productMovementRepository.GetAll()
             .AsNoTracking()
+            .WhereCountsAsProductStock()
             .Where(m => productIds.Contains(m.ProductId) && !m.IsDeleted && m.Date <= asOfDate)
             .ToListAsync(cancellationToken);
 

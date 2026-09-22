@@ -1,5 +1,7 @@
 using System.Drawing;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using DomainEntityDto = Cost.Accounting.Automation.Domain.Abstractions.EntityDto;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -21,10 +23,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         where TDto : DomainEntityDto
         where TEditForm : XtraForm
     {
-        protected List<TDto> _allItems = [];
+protected List<TDto> _allItems = [];
 
         private bool _showDeleted;
         private bool _isFilterSetting;
+        private int _reloadVersion;
+        private bool _columnsFitted;
 
         protected CrudListFormBase(string formTitle) : base(formTitle)
         {
@@ -306,6 +310,25 @@ SetButtonIcon(btnApprove, DxIcon.Check, 18);
 
         protected Guid? SelectedFilterGuid => cmbFilter.EditValue is Guid filterId ? filterId : null;
 
+        protected async Task LoadWarehouseFilterAsync()
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                List<ChartOfAccountLookUpDto> warehouses = ((await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [])
+                    .Where(w => w.Type == ChartOfAccountType.Warehouse)
+                    .ToList();
+
+                ConfigureFilter(warehouses, nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Depo");
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Depo filtresi yüklenemedi: " + ex.Message, ToastType.Warning);
+            }
+        }
+
         private static void SetButtonIcon(CheckButton button, SvgImage icon, int size)
         {
             button.ImageOptions.SvgImage = icon;
@@ -313,15 +336,7 @@ SetButtonIcon(btnApprove, DxIcon.Check, 18);
 button.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
         }
 
-        protected GridColumn CreateBooleanColumn(string caption, string fieldName)
-            => new()
-            {
-                Caption = caption,
-                FieldName = fieldName,
-                Visible = true
-            };
-
-        protected void AddColumnsFromAttributes()
+protected void AddColumnsFromAttributes()
             => GridColumnFactory.ConfigureFromAttributes(View, typeof(TDto));
 
         private void GridView_SelectionChanged(object? sender, EventArgs e)
@@ -536,23 +551,31 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
             }
         }
 
-        protected virtual async Task ReloadAsync()
+protected virtual async Task ReloadAsync()
         {
+            int version = ++_reloadVersion;
             try
             {
                 lblSub.Text = "Yenileniyor...";
-                using var scope = Program.Services.CreateScope();
-                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
                 TListQuery query = BuildListQuery();
-CrashLog.Write("Reload", $"{typeof(TListQuery).Name} query built");
-                gridControl.DataSource = null;
-                List<TDto> items = (await mediator.Send(query, CancellationToken.None))
-                    .OrderByDescending(x => x.CreatedAt)
-                    .ThenByDescending(x => x.Id)
-                    .ToList();
-                CrashLog.Write("Reload", $"{typeof(TListQuery).Name} returned {items.Count} items");
+                List<TDto> items = await Task.Run(async () =>
+                {
+                    using var scope = Program.Services.CreateScope();
+                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                    IQueryable<TDto> result = await mediator.Send(query, CancellationToken.None);
+                    return result.OrderByDescending(x => x.CreatedAt)
+                        .ThenByDescending(x => x.Id)
+                        .ToList();
+                });
+
+                if (version != _reloadVersion)
+                {
+                    return;
+                }
+
                 _allItems = items;
-gridControl.DataSource = items;
+                gridControl.DataSource = null;
+                gridControl.DataSource = items;
                 FitColumnsToContent();
                 lblSub.Text = GetSubtitle(items.Count);
             }
@@ -580,6 +603,11 @@ gridControl.DataSource = items;
         /// </summary>
         private void FitColumnsToContent()
         {
+            if (_columnsFitted)
+            {
+                return;
+            }
+
             gridView.BeginUpdate();
             try
             {
@@ -592,6 +620,7 @@ gridControl.DataSource = items;
                 }
 
                 gridView.BestFitColumns();
+                _columnsFitted = true;
             }
             finally
             {

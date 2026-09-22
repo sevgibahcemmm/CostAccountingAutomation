@@ -167,6 +167,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(0, 13);
             lblHeaderIcon.TabIndex = 2;
+            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Percent;
             // 
             // pnlHeaderLine
             // 
@@ -572,6 +573,10 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
+            IconOptions.SvgImage = DxIcon.Percent;
+            lblTitle.Appearance.ForeColor = SkinTheme.Text;
+            lblSubtitle.Appearance.ForeColor = SkinTheme.SecondaryText;
+            lblStatusValue.Appearance.ForeColor = SkinTheme.Primary;
             Name = "CostSlipEditForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Maliyet Pusulası";

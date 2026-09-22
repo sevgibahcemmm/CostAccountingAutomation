@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
 {
     sealed partial class ManualAccountEditForm
@@ -157,6 +159,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
             this.Controls.Add(this.lblName);
             this.Controls.Add(this.lblCode);
             this.Controls.Add(this.lblParent);
+            this.IconOptions.SvgImage = DxIcon.ChartAccounts;
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;

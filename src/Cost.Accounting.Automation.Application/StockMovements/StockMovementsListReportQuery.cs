@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
 using TS.MediatR;
 
@@ -14,6 +15,11 @@ public sealed record StockMovementsListReportQuery(
 
 public sealed class StockMovementReportRowDto
 {
+    public ChartOfAccountType AccountType { get; init; }
+    public string LocationCode { get; init; } = string.Empty;
+    public string LocationName { get; init; } = string.Empty;
+    public string SubGroupCode { get; init; } = string.Empty;
+    public string SubGroupName { get; init; } = string.Empty;
     public string ProductName { get; init; } = string.Empty;
     public string ProductCode { get; init; } = string.Empty;
     public string UnitTypeName { get; init; } = string.Empty;

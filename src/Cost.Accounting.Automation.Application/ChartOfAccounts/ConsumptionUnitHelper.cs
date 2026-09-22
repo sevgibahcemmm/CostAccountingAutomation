@@ -13,25 +13,7 @@ internal static class ConsumptionUnitHelper
             string.Equals(a.Code.Value, RootCode, StringComparison.OrdinalIgnoreCase));
 
     public static string NormalizeCode(string code)
-    {
-        string[] segments = (code ?? string.Empty)
-            .Replace('-', '.')
-            .Replace(',', '.')
-            .Split('.', StringSplitOptions.RemoveEmptyEntries);
-
-        return string.Join(".", segments.Select(NormalizeSegment).Where(s => s.Length > 0));
-    }
-
-    private static string NormalizeSegment(string segment)
-    {
-        segment = segment.Trim();
-        if (segment.Length > 0 && segment.All(char.IsDigit) && segment.Length < 2)
-        {
-            return segment.PadLeft(2, '0');
-        }
-
-        return segment;
-    }
+        => ChartOfAccountCodeHelper.NormalizeCode(code);
 
     public static string BuildNextCode(IEnumerable<ChartOfAccount> accounts)
     {

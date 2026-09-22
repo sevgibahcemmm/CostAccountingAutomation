@@ -1,7 +1,9 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    abstract partial class StockIssueEditFormBase
-    {
+abstract partial class StockIssueEditFormBase
+{
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -332,6 +334,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.IconOptions.SvgImage = DxIcon.StockIssue;
             this.Name = "StockIssueEditFormBase";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Tüketim";

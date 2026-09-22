@@ -1,7 +1,9 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 {
-    partial class WorkshopSelectionPromptForm
-    {
+public sealed partial class WorkshopSelectionPromptForm
+{
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -136,6 +138,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             picHeader.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
             picHeader.Size = new Size(34, 34);
             picHeader.TabIndex = 0;
+            picHeader.SvgImage = DxIcon.AtelierTransfer;
             // 
             // headerDivider
             // 
@@ -184,6 +187,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             btnSelectAll.Size = new Size(130, 30);
             btnSelectAll.TabIndex = 5;
             btnSelectAll.Text = "Tümünü Seç";
+            btnSelectAll.ImageOptions.SvgImage = DxIcon.CheckAll;
             // 
             // btnClear
             // 
@@ -200,6 +204,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             btnClear.Size = new Size(110, 30);
             btnClear.TabIndex = 6;
             btnClear.Text = "Temizle";
+            btnClear.ImageOptions.SvgImage = DxIcon.Uncheck;
             // 
             // badge
             // 
@@ -282,6 +287,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             btnOk.Size = new Size(160, 34);
             btnOk.TabIndex = 11;
             btnOk.Text = "Beyanı Yazdır";
+            btnOk.ImageOptions.SvgImage = DxIcon.Print;
             // 
             // btnCancel
             // 
@@ -298,6 +304,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             btnCancel.Size = new Size(96, 34);
             btnCancel.TabIndex = 10;
             btnCancel.Text = "İptal";
+            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             // 
             // WorkshopSelectionPromptForm
             // 

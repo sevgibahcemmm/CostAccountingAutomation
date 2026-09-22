@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
 {
     sealed partial class ConsumptionUnitEditForm
@@ -137,6 +139,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.IconOptions.SvgImage = DxIcon.StockIssue;
             this.Name = "ConsumptionUnitEditForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Tüketim Birimi";

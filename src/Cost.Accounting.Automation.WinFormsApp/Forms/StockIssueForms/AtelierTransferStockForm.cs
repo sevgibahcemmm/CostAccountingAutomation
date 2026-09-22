@@ -23,7 +23,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
         public AtelierTransferStockForm()
         {
             InitializeComponent();
-            IconOptions.SvgImage = DxIcon.AtelierTransfer;
 
             ConfigureMasterGrid();
             ConfigureDetailGrid();

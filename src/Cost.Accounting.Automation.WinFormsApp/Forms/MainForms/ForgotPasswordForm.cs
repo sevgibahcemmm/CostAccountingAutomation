@@ -18,14 +18,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             txtEmail.Enter += AuthFormStyles.Field_Enter;
             txtEmail.Leave += AuthFormStyles.Field_Leave;
             pnlCodeBox.Paint += AuthFormStyles.RoundedField_Paint;
-            btnGenerate.Paint += AuthFormStyles.Button_Paint;
+btnGenerate.Paint += AuthFormStyles.Button_Paint;
             btnContinue.Paint += AuthFormStyles.Button_Paint;
-            btnGenerate.ImageOptions.SvgImage = DxIcon.Key;
-            btnGenerate.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnGenerate.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            btnContinue.ImageOptions.SvgImage = DxIcon.Next;
-            btnContinue.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnContinue.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
         }
 
         private async void BtnGenerate_Click(object? sender, EventArgs e)

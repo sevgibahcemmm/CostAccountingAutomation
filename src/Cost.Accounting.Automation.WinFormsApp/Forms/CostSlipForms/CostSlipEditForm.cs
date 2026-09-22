@@ -68,13 +68,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             InitializeComponent();
             _editing = existing;
 
-            IconOptions.SvgImage = DxIcon.Percent;
-            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Percent;
-
-            lblTitle.Appearance.ForeColor = SkinTheme.Text;
-            lblSubtitle.Appearance.ForeColor = SkinTheme.SecondaryText;
-            lblStatusValue.Appearance.ForeColor = SkinTheme.Primary;
-
             Text = _editing is null ? "Yeni Maliyet Pusulası" : "Maliyet Pusulası İncele";
             lblTitle.Text = Text;
             lblSubtitle.Text = _editing is null
@@ -262,7 +255,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             await Task.WhenAll(loadLookUps, fetchSlip);
 
-            AppCostSlip? slip = fetchSlip.Result;
+            AppCostSlip? slip = await fetchSlip;
             if (slip is not null)
             {
                 PopulateExisting(slip);
@@ -357,7 +350,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         {
             using var scope = Program.Services.CreateScope();
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-            return (await mediator.Send(new ProductGetAllQuery(), CancellationToken.None)).ToList();
+            IQueryable<ProductDto> query = await mediator.Send(new ProductGetAllQuery(), CancellationToken.None);
+            return await Task.Run(() => query.ToList());
         }
 
         private static async Task<List<ChartOfAccountLookUpDto>> LoadAccountLookUpsAsync()

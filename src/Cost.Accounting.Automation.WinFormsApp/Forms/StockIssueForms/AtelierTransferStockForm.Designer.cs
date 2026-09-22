@@ -1,7 +1,9 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    sealed partial class AtelierTransferStockForm
-    {
+sealed partial class AtelierTransferStockForm
+{
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -154,6 +156,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.IconOptions.SvgImage = DxIcon.AtelierTransfer;
             this.Name = "AtelierTransferStockForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Atölyeye Transfer Edilen Ürünler";

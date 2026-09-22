@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 {
     partial class CurrentAccountMovementEditForm
@@ -113,6 +115,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.lblHeaderIcon.Location = new System.Drawing.Point(20, 18);
             this.lblHeaderIcon.Name = "lblHeaderIcon";
             this.lblHeaderIcon.Size = new System.Drawing.Size(32, 32);
+            this.lblHeaderIcon.ImageOptions.SvgImage = DxIcon.CurrentAccounts;
 
             // 
             // lblTitle
@@ -379,6 +382,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.IconOptions.SvgImage = DxIcon.CurrentAccounts;
             this.Name = "CurrentAccountMovementEditForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Cari Hareket";

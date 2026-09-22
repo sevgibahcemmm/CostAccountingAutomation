@@ -1,7 +1,9 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
-    partial class ForgotPasswordForm
-    {
+partial class ForgotPasswordForm
+{
         private System.ComponentModel.IContainer components = null;
 
         protected override void Dispose(bool disposing)
@@ -114,6 +116,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnGenerate.Size = new Size(400, 48);
             btnGenerate.TabIndex = 3;
             btnGenerate.Text = "Sıfırlama Kodu Oluştur";
+            btnGenerate.ImageOptions.SvgImage = DxIcon.Key;
+            btnGenerate.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnGenerate.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnGenerate.Click += BtnGenerate_Click;
             //
             // lblCodeCaption
@@ -195,6 +200,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnContinue.TabIndex = 7;
             btnContinue.Text = "Şifreyi Sıfırlamaya Devam Et →";
             btnContinue.Visible = false;
+            btnContinue.ImageOptions.SvgImage = DxIcon.Next;
+            btnContinue.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnContinue.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnContinue.Click += BtnContinue_Click;
             //
             // lnkBack

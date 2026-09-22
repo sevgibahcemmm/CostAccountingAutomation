@@ -84,7 +84,7 @@ internal static class CostSlipStockHelper
                 unitPrice: new Price(unitCost),
                 date: slip.CostDate,
                 referenceNo: slip.SlipNumber,
-                description: new Description($"Maliyet Pusulası Tüketimi - {slip.SlipNumber}"));
+                description: new Description($"{ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix}{slip.SlipNumber}"));
 
             await productMovementRepository.AddAsync(output, cancellationToken);
 
@@ -120,7 +120,7 @@ internal static class CostSlipStockHelper
                 unitPrice: new Price(unitCost),
                 date: slip.CostDate,
                 referenceNo: slip.SlipNumber,
-                description: new Description($"Maliyet Pusulası Girişi - {slip.SlipNumber} ({slip.SlipNumber})"));
+                description: new Description($"{ProductStockBalanceHelper.ProductionInputDescriptionPrefix}{slip.SlipNumber} ({slip.SlipNumber})"));
 
             await productMovementRepository.AddAsync(input, cancellationToken);
         }

@@ -45,25 +45,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             _ = LoadWarehouseFilterAsync();
         }
 
-        private async Task LoadWarehouseFilterAsync()
-        {
-            try
-            {
-                using var scope = Program.Services.CreateScope();
-                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-
-                List<ChartOfAccountLookUpDto> warehouses = ((await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [])
-                    .Where(w => w.Type == ChartOfAccountType.Warehouse)
-                    .ToList();
-
-                ConfigureFilter(warehouses, nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Depo");
-            }
-            catch (Exception ex)
-            {
-                ToastHelper.Show("Depo filtresi yüklenemedi: " + ex.Message, ToastType.Warning);
-            }
-        }
-
         protected override SvgImage ModuleIcon => _targetType switch
         {
             ProductMovementType.Input => DxIcon.StockInput,

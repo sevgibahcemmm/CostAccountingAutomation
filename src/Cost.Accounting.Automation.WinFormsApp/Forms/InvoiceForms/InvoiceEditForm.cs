@@ -49,9 +49,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             InitializeComponent();
             _editing = existing;
 
-            IconOptions.SvgImage = DxIcon.Invoices;
-            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Invoices;
-
             Text = _editing is null ? "Yeni Fatura" : "Fatura İncele";
             lblTitle.Text = Text;
             lblSubtitle.Text = _editing is null

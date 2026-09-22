@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 
@@ -169,7 +170,16 @@ public static class ProductExtensions
                 SemiFinishedProductName = s.Entity.SemiFinishedProduct == null ? null : s.Entity.SemiFinishedProduct.Name.Value,
                 Description = s.Entity.Description.Value,
 
-                StockQuantity = s.Entity.Movements.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity),
+                StockQuantity = s.Entity.Movements.Sum(m =>
+                    m.Description.Value != null
+                    && m.Description.Value.StartsWith(ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix)
+                        ? 0m
+                        : m.MovementType == ProductMovementType.Input
+                            ? (m.Description.Value != null
+                                  && m.Description.Value.StartsWith(ProductStockBalanceHelper.AtelierTransferInputDescriptionPrefix)
+                                  ? 0m
+                                  : m.Quantity)
+                            : -m.Quantity),
 
 Images = s.Entity.Images.Select(i => new ProductImageDto
                     {

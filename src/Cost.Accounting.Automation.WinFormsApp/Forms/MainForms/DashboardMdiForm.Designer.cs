@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
     partial class DashboardMdiForm
@@ -627,6 +629,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             btnRefresh.Text =
                 "Yenile";
+
+            btnRefresh.ImageOptions.SvgImage = DxIcon.Refresh;
 
             pnlBody.Controls.Add(tblLayout);
 

@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 {
     sealed partial class CurrentAccountBalanceForm
@@ -86,6 +88,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.picHeader.Size = new System.Drawing.Size(42, 42);
             this.picHeader.TabIndex = 2;
             this.picHeader.TabStop = false;
+            this.picHeader.SvgImage = DxIcon.Balance;
             // 
             // lblTitle
             // 
@@ -101,7 +104,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             // lblSub
             // 
             this.lblSub.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
-            this.lblSub.Appearance.ForeColor = System.Drawing.Color.FromArgb(130, 136, 146);
+            this.lblSub.Appearance.ForeColor = SkinTheme.SecondaryText;
             this.lblSub.Appearance.Options.UseFont = true;
             this.lblSub.Appearance.Options.UseForeColor = true;
             this.lblSub.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
@@ -121,6 +124,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.btnClose.Size = new System.Drawing.Size(94, 36);
             this.btnClose.TabIndex = 3;
             this.btnClose.Text = "Kapat";
+            this.btnClose.ImageOptions.SvgImage = DxIcon.Close;
+            this.btnClose.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnClose.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // pnlToolbar
             // 
@@ -185,6 +191,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.Controls.Add(this.gridControl);
             this.Controls.Add(this.pnlToolbar);
             this.Controls.Add(this.pnlHeader);
+            this.IconOptions.SvgImage = DxIcon.Balance;
             this.Name = "CurrentAccountBalanceForm";
             this.Text = "Cari Borç / Alacak Özeti";
             ((System.ComponentModel.ISupportInitialize)this.pnlHeader).EndInit();

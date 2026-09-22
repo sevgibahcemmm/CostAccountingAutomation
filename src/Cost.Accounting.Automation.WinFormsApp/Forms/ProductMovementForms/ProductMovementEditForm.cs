@@ -32,9 +32,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             _editing = existing;
             _preselectedType = movementType ?? existing?.MovementType;
 
-            IconOptions.SvgImage = DxIcon.StockBox;
-            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.StockBox;
-
             Text = _editing is null ? "Yeni Stok Hareketi" : "Stok Hareketi İncele";
             lblTitle.Text = Text;
             lblSubtitle.Text = _editing is null

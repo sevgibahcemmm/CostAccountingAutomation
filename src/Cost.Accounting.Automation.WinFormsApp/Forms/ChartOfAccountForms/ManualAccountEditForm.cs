@@ -18,8 +18,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
             _preselectedParentId = preselectedParentId;
 
             InitializeComponent();
-            IconOptions.SvgImage = DxIcon.ChartAccounts;
-
             WireEvents();
         }
 

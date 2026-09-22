@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -109,6 +110,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlLeftLockGlyph.Size = new Size(46, 46);
             pnlLeftLockGlyph.TabIndex = 0;
             pnlLeftLockGlyph.Text = "";
+            pnlLeftLockGlyph.ImageOptions.SvgImage = DxIcon.Lock;
+            pnlLeftLockGlyph.ImageOptions.SvgImageSize = new Size(48, 48);
             // 
             // lblLeftTitle
             // 
@@ -256,6 +259,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnLogin.Size = new Size(343, 46);
             btnLogin.TabIndex = 7;
             btnLogin.Text = "Giriş Yap";
+            btnLogin.ImageOptions.SvgImage = DxIcon.Next;
+            btnLogin.ImageOptions.SvgImageSize = new Size(22, 22);
+            btnLogin.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
             btnLogin.Click += btnLogin_Click;
             // 
             // pnlCaptchaResult
@@ -331,6 +337,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblPassIcon.Name = "lblPassIcon";
             lblPassIcon.Size = new Size(42, 48);
             lblPassIcon.TabIndex = 0;
+            lblPassIcon.Text = "";
+            lblPassIcon.ImageOptions.SvgImage = DxIcon.Key;
+            lblPassIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             // 
             // txtPassword
             // 
@@ -366,6 +375,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblTogglePassword.Size = new Size(34, 28);
             lblTogglePassword.TabIndex = 1;
             lblTogglePassword.Text = "";
+            lblTogglePassword.ImageOptions.SvgImage = DxIcon.Eye;
+            lblTogglePassword.ImageOptions.SvgImageSize = new Size(22, 22);
             lblTogglePassword.Click += lblTogglePassword_Click;
             // 
             // pnlUserNameBox
@@ -394,6 +405,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblUserIcon.Name = "lblUserIcon";
             lblUserIcon.Size = new Size(42, 48);
             lblUserIcon.TabIndex = 0;
+            lblUserIcon.Text = "";
+            lblUserIcon.ImageOptions.SvgImage = DxIcon.User;
+            lblUserIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             // 
             // txtUserName
             // 
@@ -467,6 +481,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _lblLogoIcon.Name = "_lblLogoIcon";
             _lblLogoIcon.Size = new Size(92, 92);
             _lblLogoIcon.TabIndex = 0;
+            _lblLogoIcon.Text = "";
+            _lblLogoIcon.ImageOptions.SvgImage = DxIcon.Shield;
+            _lblLogoIcon.ImageOptions.SvgImageSize = new Size(54, 54);
             // 
             // lblFooter
             // 
