@@ -33,7 +33,14 @@ public sealed class CostSlip : Entity, IHardDeletable
         SetCustomer(customerId);
         SetQuantity(quantity);
         SetDescription(description);
+        ResolveDuplicateKey();
     }
+
+    public static string? BuildDuplicateKey(string slipNumber, CostSlipType costSlipType)
+        => DuplicateKeyRule.From(slipNumber, ((int)costSlipType).ToString());
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(SlipNumber, CostSlipType));
 
     public string SlipNumber { get; private set; } = default!;
     public CostSlipType CostSlipType { get; private set; }
@@ -69,6 +76,7 @@ public sealed class CostSlip : Entity, IHardDeletable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(slipNumber);
         SlipNumber = slipNumber;
+        ResolveDuplicateKey();
     }
 
     public void SetCostSlipType(CostSlipType costSlipType)

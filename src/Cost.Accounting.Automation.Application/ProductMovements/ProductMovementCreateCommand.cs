@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
@@ -41,7 +42,8 @@ public sealed class ProductMovementCreateCommandValidator : AbstractValidator<Pr
 internal sealed class ProductMovementCreateCommandHandler(
     IProductMovementRepository productMovementRepository,
     IProductRepository productRepository,
-    IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<ProductMovementCreateCommand, Result<string>>
+    IChartOfAccountLedgerPoster ledgerPoster,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ProductMovementCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductMovementCreateCommand request, CancellationToken cancellationToken)
     {
@@ -51,6 +53,26 @@ internal sealed class ProductMovementCreateCommandHandler(
         if (product is null)
         {
             return Result<string>.Failure("Seçilen ürün bulunamadı.");
+        }
+
+        string referenceNo = request.ReferenceNo?.Trim() ?? string.Empty;
+
+        string? duplicateKey = ProductMovement.BuildDuplicateKey(
+            productId,
+            request.MovementType,
+            request.Quantity,
+            request.UnitPrice,
+            request.Date,
+            referenceNo);
+
+        ProductMovement? duplicate = await duplicateCheckService.FindDuplicateAsync<ProductMovement>(
+            duplicateKey,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (duplicate is not null)
+        {
+            return Result<string>.Failure("Aynı ürün, miktar, birim fiyat, tarih ve referans numarası ile bir stok hareketi zaten mevcut.");
         }
 
         if (request.MovementType == ProductMovementType.Output)

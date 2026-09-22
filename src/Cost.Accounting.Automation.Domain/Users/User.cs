@@ -29,6 +29,7 @@ public sealed class User : Entity
         SetRoleId(roleId);
         SetStatus(isActive);
         SetTRIdentityNumber(tRIdentityNumber);
+        ResolveDuplicateKey();
     }
 
     private User() { }
@@ -45,6 +46,12 @@ public sealed class User : Entity
     public IdentityId RoleId { get; private set; } = default!;
     public TRIdentityNumber? TRIdentityNumber { get; private set; }
     public ICollection<Photo> Photos { get; private set; } = new List<Photo>();
+
+    public static string? BuildDuplicateKey(string userName)
+        => DuplicateKeyRule.From(userName);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(UserName.Value));
 
     #region Behaviors
     public bool VerifyPasswordHash(string password)
@@ -79,6 +86,7 @@ public sealed class User : Entity
     public void SetUserName(UserName userName)
     {
         UserName = userName;
+        ResolveDuplicateKey();
     }
 
     public void SetFullName()

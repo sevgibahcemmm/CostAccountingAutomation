@@ -22,6 +22,19 @@ internal sealed class CurrentAccountMovementRestoreCommandHandler(
             return Result<string>.Failure("Cari hareket bulunamadı.");
         }
 
+        if (string.IsNullOrEmpty(movement.DocumentNo) && CurrentAccountMovement.IsManualPaymentType(movement.MovementType))
+        {
+            string documentNo = await CurrentAccountMovementHelper.GenerateNextAsync(currentAccountMovementRepository, movement.MovementType, cancellationToken);
+
+            movement.Update(
+                date: movement.Date,
+                movementType: movement.MovementType,
+                documentNo: documentNo,
+                debit: movement.Debit,
+                credit: movement.Credit,
+                description: movement.Description);
+        }
+
         currentAccountMovementRepository.Restore(movement);
         return Result<string>.Succeed("Cari hareket başarıyla geri yüklendi.");
     }

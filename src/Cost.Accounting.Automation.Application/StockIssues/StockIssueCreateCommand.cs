@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
@@ -60,7 +61,8 @@ internal sealed class StockIssueCreateCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository,
     IProductRepository productRepository,
     IProductMovementRepository productMovementRepository,
-    IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<StockIssueCreateCommand, Result<string>>
+    IChartOfAccountLedgerPoster ledgerPoster,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<StockIssueCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(StockIssueCreateCommand request, CancellationToken cancellationToken)
     {
@@ -106,13 +108,19 @@ internal sealed class StockIssueCreateCommandHandler(
 
         string documentNumber = request.DocumentNumber.Trim();
 
-        bool exists = await stockIssueRepository.GetAllWithAuditIncludingDeleted()
-            .AnyAsync(i => i.Entity.IssueType == request.IssueType && i.Entity.DocumentNumber == documentNumber, cancellationToken);
+        string? duplicateKey = StockIssue.BuildDuplicateKey(documentNumber, request.IssueType);
 
-        if (exists)
+        StockIssue? duplicate = await duplicateCheckService.FindDuplicateAsync<StockIssue>(
+            duplicateKey,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (duplicate is not null && !duplicate.IsDeleted)
         {
             return Result<string>.Failure($"'{documentNumber}' belge numarası zaten kullanılıyor.");
         }
+
+        bool isRestored = duplicate is not null;
 
         List<IdentityId> requestedProductIds = request.Lines
             .Select(l => new IdentityId(l.ProductId))
@@ -177,14 +185,24 @@ internal sealed class StockIssueCreateCommandHandler(
             request.CostingMethod,
             request.Date);
 
-        StockIssue issue = new(
-            issueType: request.IssueType,
-            documentNumber: documentNumber,
-            date: request.Date,
-            sourceWarehouseId: new IdentityId(request.SourceWarehouseId),
-            targetAccountId: new IdentityId(request.TargetAccountId),
-            costingMethod: request.CostingMethod,
-            description: new Description(request.Description?.Trim() ?? string.Empty));
+        StockIssue issue;
+        if (duplicate is not null)
+        {
+            duplicate.Restore();
+            duplicate.SetDescription(new Description(request.Description?.Trim() ?? string.Empty));
+            issue = duplicate;
+        }
+        else
+        {
+            issue = new StockIssue(
+                issueType: request.IssueType,
+                documentNumber: documentNumber,
+                date: request.Date,
+                sourceWarehouseId: new IdentityId(request.SourceWarehouseId),
+                targetAccountId: new IdentityId(request.TargetAccountId),
+                costingMethod: request.CostingMethod,
+                description: new Description(request.Description?.Trim() ?? string.Empty));
+        }
 
         List<StockIssueLine> lines = [];
 
@@ -210,7 +228,10 @@ internal sealed class StockIssueCreateCommandHandler(
 
         issue.ReplaceLines(lines);
 
-        await stockIssueRepository.AddAsync(issue, cancellationToken);
+        if (!isRestored)
+        {
+            await stockIssueRepository.AddAsync(issue, cancellationToken);
+        }
 
         string sourceType = isConsumption ? "StokTuketimi" : "AtolyeTransferi";
         string movementPrefix = isConsumption ? "Tüketim" : "Atölye Transferi";

@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Invoices;
@@ -80,15 +81,19 @@ internal sealed class InvoiceCreateCommandHandler(
     IProductMovementRepository productMovementRepository,
     ICurrentAccountMovementRepository currentAccountMovementRepository,
     IProductRepository productRepository,
-    IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<InvoiceCreateCommand, Result<string>>
+    IChartOfAccountLedgerPoster ledgerPoster,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<InvoiceCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(InvoiceCreateCommand request, CancellationToken cancellationToken)
     {
-        bool invoiceExists = await invoiceRepository.AnyAsync(
-            i => i.InvoiceNumber == request.InvoiceNumber && i.InvoiceType == request.InvoiceType,
-            cancellationToken);
+        string? duplicateKey = Invoice.BuildDuplicateKey(request.InvoiceNumber, request.InvoiceType);
 
-        if (invoiceExists)
+        Invoice? duplicate = await duplicateCheckService.FindDuplicateAsync<Invoice>(
+            duplicateKey,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (duplicate is not null && !duplicate.IsDeleted)
         {
             return Result<string>.Failure("Bu fatura numarası ile kaydedilmiş bir fatura zaten mevcut.");
         }
@@ -96,13 +101,28 @@ internal sealed class InvoiceCreateCommandHandler(
         IdentityId? customerId = request.CustomerId.HasValue ? new IdentityId(request.CustomerId.Value) : null;
         IdentityId? supplierId = request.SupplierId.HasValue ? new IdentityId(request.SupplierId.Value) : null;
 
-        Invoice invoice = new(
-            request.InvoiceNumber.Trim(),
-            request.InvoiceType,
-            request.Date,
-            customerId,
-            supplierId,
-            new Description(request.Description ?? string.Empty));
+        bool isRestored = duplicate is not null;
+
+        Invoice invoice;
+        if (duplicate is not null)
+        {
+            duplicate.Restore();
+            duplicate.SetDate(request.Date);
+            duplicate.SetCustomer(customerId);
+            duplicate.SetSupplier(supplierId);
+            duplicate.SetDescription(new Description(request.Description ?? string.Empty));
+            invoice = duplicate;
+        }
+        else
+        {
+            invoice = new Invoice(
+                request.InvoiceNumber.Trim(),
+                request.InvoiceType,
+                request.Date,
+                customerId,
+                supplierId,
+                new Description(request.Description ?? string.Empty));
+        }
 
         foreach (var lineItem in request.Lines)
         {
@@ -125,7 +145,10 @@ internal sealed class InvoiceCreateCommandHandler(
             invoice.AddLine(line);
         }
 
-        await invoiceRepository.AddAsync(invoice, cancellationToken);
+        if (!isRestored)
+        {
+            await invoiceRepository.AddAsync(invoice, cancellationToken);
+        }
 
         if (request.IsApproved)
         {

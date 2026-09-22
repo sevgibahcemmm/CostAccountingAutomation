@@ -24,6 +24,21 @@ public sealed class ApplicationDbContext(DbContextOptions options, IClaimContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         modelBuilder.ApplyGlobalFilters();
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var duplicateKeyProperty = entityType.FindProperty(nameof(Entity.DuplicateKey));
+
+            if (duplicateKeyProperty is null)
+            {
+                continue;
+            }
+
+            duplicateKeyProperty.SetMaxLength(512);
+            duplicateKeyProperty.SetColumnType("nvarchar(512)");
+            entityType.AddIndex(duplicateKeyProperty);
+        }
+
         base.OnModelCreating(modelBuilder);
     }
 

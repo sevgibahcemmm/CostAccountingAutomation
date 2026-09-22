@@ -45,7 +45,8 @@ internal sealed class UserUpdateCommandHandler(
     IUserRepository userRepository,
     IPhotoRepository photoRepository,
     IFileStorageService fileStorage,
-    IClaimContext claimContext) : IRequestHandler<UserUpdateCommand, Result<string>>
+    IClaimContext claimContext,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<UserUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UserUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -66,8 +67,13 @@ internal sealed class UserUpdateCommandHandler(
 
         if (user.UserName.Value != request.UserName)
         {
-            var userNameExists = await userRepository.AnyAsync(p => p.UserName.Value == request.UserName, cancellationToken);
-            if (userNameExists)
+            string? duplicateKey = User.BuildDuplicateKey(request.UserName);
+
+            User? userNameDuplicate = await duplicateCheckService.FindDuplicateAsync<User>(
+                duplicateKey,
+                cancellationToken: cancellationToken);
+
+            if (userNameDuplicate is not null)
             {
                 return Result<string>.Failure("Bu kullanıcı adı daha önce kullanılmış");
             }

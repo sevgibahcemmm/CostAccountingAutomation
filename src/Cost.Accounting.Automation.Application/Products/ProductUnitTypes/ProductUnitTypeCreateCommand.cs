@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -24,15 +25,18 @@ public sealed class ProductUnitTypeCreateCommandValidator : AbstractValidator<Pr
 }
 
 internal sealed class ProductUnitTypeCreateCommandHandler(
-    IProductUnitTypeRepository unitTypeRepository) : IRequestHandler<ProductUnitTypeCreateCommand, Result<string>>
+    IProductUnitTypeRepository unitTypeRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ProductUnitTypeCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductUnitTypeCreateCommand request, CancellationToken cancellationToken)
     {
-        var nameExists = await unitTypeRepository.AnyAsync(
-            p => p.Name.Value == request.Name,
-            cancellationToken);
+        string? duplicateKey = ProductUnitType.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        ProductUnitType? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<ProductUnitType>(
+            duplicateKey,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu birim cinsi daha önce kullanılmış");
         }

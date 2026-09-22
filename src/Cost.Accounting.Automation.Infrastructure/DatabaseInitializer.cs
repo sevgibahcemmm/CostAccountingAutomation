@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
 using Cost.Accounting.Automation.Domain.Products.TaxRates;
+using System.Reflection;
 
 namespace Cost.Accounting.Automation.Infrastructure;
 
@@ -37,6 +38,9 @@ public static class DatabaseInitializer
 
         // 1. Veritabanı yoksa otomatik oluştur; varsa bekleyen migration'ları uygula
         await dbContext.Database.MigrateAsync();
+
+        // 1b. Legacy kayıtlara kopyalama anahtarı yaz (migration sonrası boş olanlar)
+        await BackfillDuplicateKeysAsync(dbContext);
 
         // 2. Eski seed'lerin CreatedBy alanında, hiçbir kullanıcıya işaret etmeyen
  
@@ -404,6 +408,62 @@ public static class DatabaseInitializer
         finally
         {
             dbContext.ClearSeedAdminUserId();
+        }
+    }
+
+    private static readonly MethodInfo GetAllIncludingDeletedMethod =
+        typeof(DatabaseInitializer).GetMethod(
+            nameof(GetAllIncludingDeleted),
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static IQueryable GetAllIncludingDeleted<TEntity>(ApplicationDbContext dbContext)
+        where TEntity : Entity
+        => dbContext.Set<TEntity>().IgnoreQueryFilters();
+
+    private static async Task BackfillDuplicateKeysAsync(ApplicationDbContext dbContext)
+    {
+        bool changed = false;
+
+        foreach (IEntityType entityType in dbContext.Model.GetEntityTypes())
+        {
+            if (entityType.BaseType is not null || entityType.IsOwned())
+            {
+                continue;
+            }
+
+            Type clrType = entityType.ClrType;
+            if (!typeof(Entity).IsAssignableFrom(clrType))
+            {
+                continue;
+            }
+
+            MethodInfo? resolve = clrType.GetMethod("ResolveDuplicateKey", BindingFlags.Instance | BindingFlags.Public);
+
+            if (resolve is null)
+            {
+                continue;
+            }
+
+            IQueryable query = GetAllIncludingDeletedMethod
+                .MakeGenericMethod(clrType)
+                .Invoke(null, new object[] { dbContext }) as IQueryable
+                ?? throw new InvalidOperationException("Sorgu oluşturulamadı.");
+
+            foreach (object entityObject in query)
+            {
+                if (entityObject is not Entity entity || entity.DuplicateKey is not null)
+                {
+                    continue;
+                }
+
+                resolve.Invoke(entityObject, null);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            await dbContext.SaveChangesAsync();
         }
     }
 

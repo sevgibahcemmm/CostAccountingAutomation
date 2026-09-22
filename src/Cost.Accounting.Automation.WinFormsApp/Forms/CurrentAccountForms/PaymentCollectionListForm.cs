@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
+using DevExpress.XtraEditors;
 using TS.MediatR;
 using TS.Result;
 
@@ -29,6 +30,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
         protected override SvgImage ModuleIcon => DxIcon.Payments;
 
+        protected override XtraForm CreateNewEditor()
+            => new PaymentCollectionEditForm(_targetType);
+
         protected override string[] SearchFieldNames =>
         [
             nameof(CurrentAccountMovementDto.CurrentAccountName),
@@ -39,7 +43,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
-
+            View.OptionsView.ColumnAutoWidth = true;
             View.Columns[nameof(CurrentAccountMovementDto.MovementTypeName)]!.Visible = !_targetType.HasValue;
             View.Columns[nameof(CurrentAccountMovementDto.DocumentNo)]!.Caption = "Belge / Fatura No";
         }

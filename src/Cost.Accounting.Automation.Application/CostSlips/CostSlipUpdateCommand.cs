@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems;
@@ -70,7 +71,8 @@ public sealed class CostSlipUpdateCommandValidator : AbstractValidator<CostSlipU
 }
 
 internal sealed class CostSlipUpdateCommandHandler(
-    ICostSlipRepository costSlipRepository) : IRequestHandler<CostSlipUpdateCommand, Result<string>>
+    ICostSlipRepository costSlipRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CostSlipUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CostSlipUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -91,13 +93,15 @@ internal sealed class CostSlipUpdateCommandHandler(
             return Result<string>.Failure("Onaylanmış maliyet pusulaları düzenlenemez.");
         }
 
-        bool numberExists = await costSlipRepository.GetAllWithAuditIncludingDeleted()
-            .AnyAsync(i => i.Entity.CostSlipType == request.CostSlipType
-                && i.Entity.SlipNumber == request.SlipNumber.Trim()
-                && i.Entity.Id != id,
-                cancellationToken);
+        string? duplicateKey = CostSlip.BuildDuplicateKey(request.SlipNumber, request.CostSlipType);
 
-        if (numberExists)
+        CostSlip? numberDuplicate = await duplicateCheckService.FindDuplicateAsync<CostSlip>(
+            duplicateKey,
+            excludeId: request.Id,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (numberDuplicate is not null)
         {
             return Result<string>.Failure("Bu pusula numarası başka bir maliyet pusulası tarafından kullanılıyor.");
         }

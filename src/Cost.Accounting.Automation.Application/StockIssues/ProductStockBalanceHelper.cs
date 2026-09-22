@@ -24,7 +24,13 @@ public static class ProductStockBalanceHelper
 
     public static IQueryable<ProductMovement> WhereCountsAsProductStock(this IQueryable<ProductMovement> movements)
     {
-        return movements.Where(m => CountsAsProductStock(m));
+        return movements.Where(m =>
+            !(m.MovementType == ProductMovementType.Input
+              && m.Description.Value != null
+              && m.Description.Value.StartsWith(AtelierTransferInputDescriptionPrefix))
+            && !(m.MovementType == ProductMovementType.Output
+              && m.Description.Value != null
+              && m.Description.Value.StartsWith(CostSlipConsumptionOutputDescriptionPrefix)));
     }
 
     public static bool CountsAsProductStock(ProductMovement movement)

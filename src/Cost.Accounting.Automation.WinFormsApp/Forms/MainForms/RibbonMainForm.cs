@@ -20,6 +20,7 @@ using DevExpress.XtraBars.Navigation;
 using DevExpress.XtraTab;
 using Microsoft.Extensions.DependencyInjection;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -104,6 +105,37 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             OpenDashboard();
         }
 
+        private static Image NormalizeIcon(SvgImage svg, int canvasSize, int innerSize)
+        {
+            Bitmap result = new Bitmap(canvasSize, canvasSize);
+            using (Graphics g = Graphics.FromImage(result))
+            {
+                g.Clear(Color.Transparent);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+
+                SvgBitmap svgBitmap = SvgBitmap.Create(svg);
+                RectangleF bounds = svgBitmap.GetBounds(false);
+
+                if (bounds.Width <= 0 || bounds.Height <= 0)
+                {
+                    using Image fallback = svgBitmap.Render(new Size(canvasSize, canvasSize), null, DevExpress.Utils.DefaultBoolean.False, DevExpress.Utils.DefaultBoolean.False);
+                    g.DrawImage(fallback, 0, 0, canvasSize, canvasSize);
+                    return result;
+                }
+
+                double scale = Math.Min((double)innerSize / bounds.Width, (double)innerSize / bounds.Height);
+                int renderWidth = Math.Max(1, (int)Math.Round(svgBitmap.Width * scale));
+                int renderHeight = Math.Max(1, (int)Math.Round(svgBitmap.Height * scale));
+
+                using Image rendered = svgBitmap.Render(new Size(renderWidth, renderHeight), null, DevExpress.Utils.DefaultBoolean.False, DevExpress.Utils.DefaultBoolean.False);
+                g.DrawImage(rendered, (canvasSize - renderWidth) / 2, (canvasSize - renderHeight) / 2, renderWidth, renderHeight);
+            }
+
+            return result;
+        }
+
         private void InitializeAccordion()
         {
             foreach (AccordionControlElement element in accordionControl.Elements)
@@ -115,20 +147,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 if (tag >= 1 && tag <= 8)
                 {
-                    element.ImageOptions.SvgImage = _moduleIcons[Math.Min(tag, _moduleIcons.Length - 1)];
-                    element.ImageOptions.SvgImageSize = new Size(30, 30);
+                    element.ImageOptions.SvgImage = null;
+                    element.ImageOptions.Image = NormalizeIcon(_moduleIcons[Math.Min(tag, _moduleIcons.Length - 1)], 34, 30);
                     element.Appearance.Normal.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
                     _groupNames[tag] = element.Text;
                 }
                 else if (tag == 0)
                 {
-                    element.ImageOptions.SvgImage = _moduleIcons[0];
-                    element.ImageOptions.SvgImageSize = new Size(26, 26);
+                    element.ImageOptions.SvgImage = null;
+                    element.ImageOptions.Image = NormalizeIcon(_moduleIcons[0], 30, 26);
                 }
                 else if (tag == 99)
                 {
-                    element.ImageOptions.SvgImage = _moduleIcons[9];
-                    element.ImageOptions.SvgImageSize = new Size(26, 26);
+                    element.ImageOptions.SvgImage = null;
+                    element.ImageOptions.Image = NormalizeIcon(_moduleIcons[9], 30, 26);
                 }
 
                 element.ImageOptions.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.False;

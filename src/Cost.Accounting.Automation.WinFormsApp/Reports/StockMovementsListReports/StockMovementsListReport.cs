@@ -50,6 +50,32 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListRepor
                 .ThenBy(r => r.ProductName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
+            foreach (IGrouping<string, StockMovementReportRowDto> group in sortedRows
+                .GroupBy(r => r.LocationCode))
+            {
+                decimal totalInQuantity = group.Sum(r => r.TotalInQuantity);
+                decimal totalOutQuantity = group.Sum(r => r.TotalOutQuantity);
+                decimal balanceQuantity = group.Sum(r => r.BalanceQuantity);
+                decimal totalInAmount = group.Sum(r => r.TotalInAmount);
+                decimal totalOutAmount = group.Sum(r => r.TotalOutAmount);
+                decimal balanceAmount = group.Sum(r => r.BalanceAmount);
+                decimal salesQuantity = group.Sum(r => r.SalesQuantity);
+                decimal salesAmount = group.Sum(r => r.SalesAmount);
+
+                foreach (StockMovementReportRowDto row in group)
+                {
+                    row.GroupTotalInQuantity = totalInQuantity;
+                    row.GroupTotalOutQuantity = totalOutQuantity;
+                    row.GroupBalanceQuantity = balanceQuantity;
+                    row.GroupAvgUnitCost = group.Average(r => r.UnitCost);
+                    row.GroupTotalInAmount = totalInAmount;
+                    row.GroupTotalOutAmount = totalOutAmount;
+                    row.GroupBalanceAmount = balanceAmount;
+                    row.GroupSalesQuantity = salesQuantity;
+                    row.GroupSalesAmount = salesAmount;
+                }
+            }
+
             DataSource = sortedRows;
 
             Parameters["parameterTitleText"].Value = BuildTitle(startDate, endDate);

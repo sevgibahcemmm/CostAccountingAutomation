@@ -1,5 +1,7 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
@@ -28,7 +30,8 @@ public sealed class ProductUnitTypeUpdateCommandValidator : AbstractValidator<Pr
 }
 
 internal sealed class ProductUnitTypeUpdateCommandHandler(
-    IProductUnitTypeRepository unitTypeRepository) : IRequestHandler<ProductUnitTypeUpdateCommand, Result<string>>
+    IProductUnitTypeRepository unitTypeRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ProductUnitTypeUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductUnitTypeUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -43,11 +46,14 @@ internal sealed class ProductUnitTypeUpdateCommandHandler(
             return Result<string>.Failure("Birim cinsi bulunamadı");
         }
 
-        var nameExists = await unitTypeRepository.AnyAsync(
-            p => p.Name.Value == request.Name && p.Id != unitTypeId,
-            cancellationToken);
+        string? duplicateKey = ProductUnitType.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        ProductUnitType? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<ProductUnitType>(
+            duplicateKey,
+            excludeId: request.Id,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu birim cinsi başka bir kayıt tarafından kullanılıyor");
         }

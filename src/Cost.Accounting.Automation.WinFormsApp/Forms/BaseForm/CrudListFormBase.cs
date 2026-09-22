@@ -628,15 +628,19 @@ protected virtual async Task ReloadAsync()
             }
         }
 
+        protected virtual TEditForm CreateEditEditor(TDto item)
+            => (TEditForm)Activator.CreateInstance(typeof(TEditForm), item)!;
+
+        protected virtual XtraForm CreateNewEditor()
+            => Activator.CreateInstance<TEditForm>();
+
         private async Task RunEditorAsync(TDto? item)
         {
-            TEditForm form;
+            XtraForm form;
             try
             {
                 CrashLog.Write("Editor", $"Creating edit form for {typeof(TDto).Name}. New:{(item is null)}");
-                form = item is null
-                    ? Activator.CreateInstance<TEditForm>()
-                    : (TEditForm)Activator.CreateInstance(typeof(TEditForm), item)!;
+                form = item is null ? CreateNewEditor() : CreateEditEditor(item);
                 CrashLog.Write("Editor", "Edit form created");
             }
             catch (Exception ex)

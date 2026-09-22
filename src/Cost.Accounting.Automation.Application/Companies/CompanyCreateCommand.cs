@@ -1,4 +1,5 @@
 ﻿using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -69,16 +70,19 @@ public sealed class CompanyCreateCommandValidator : AbstractValidator<CompanyCre
 }
 
 internal sealed class CompanyCreateCommandHandler(
-    ICompanyRepository companyRepository) : IRequestHandler<CompanyCreateCommand, Result<string>>
+    ICompanyRepository companyRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CompanyCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CompanyCreateCommand request, CancellationToken cancellationToken)
     {
         // Şirket adı kontrolü
-        var nameExists = await companyRepository.AnyAsync(
-            p => p.Name.Value == request.Name,
-            cancellationToken);
+        string? duplicateKey = Company.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        Company? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Company>(
+            duplicateKey,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu şirket adı daha önce kullanılmış");
         }

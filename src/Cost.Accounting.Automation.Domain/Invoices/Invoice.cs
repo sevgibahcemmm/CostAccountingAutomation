@@ -29,7 +29,14 @@ public sealed class Invoice : Entity, IHardDeletable
         SupplierId = supplierId;
         Description = description;
         SetStatus(isActive);
+        ResolveDuplicateKey();
     }
+
+    public static string? BuildDuplicateKey(string invoiceNumber, InvoiceType invoiceType)
+        => DuplicateKeyRule.From(invoiceNumber, ((int)invoiceType).ToString());
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(InvoiceNumber, InvoiceType));
 
     public string InvoiceNumber { get; private set; } = default!;
     public InvoiceType InvoiceType { get; private set; }
@@ -52,7 +59,11 @@ public sealed class Invoice : Entity, IHardDeletable
 
     public IReadOnlyCollection<InvoiceLine> Lines => _lines;
 
-    public void SetInvoiceNumber(string invoiceNumber) => InvoiceNumber = invoiceNumber;
+    public void SetInvoiceNumber(string invoiceNumber)
+    {
+        InvoiceNumber = invoiceNumber;
+        ResolveDuplicateKey();
+    }
     public void SetDate(DateOnly date) => Date = date;
     public void SetCustomer(IdentityId? customerId) => CustomerId = customerId;
     public void SetSupplier(IdentityId? supplierId) => SupplierId = supplierId;

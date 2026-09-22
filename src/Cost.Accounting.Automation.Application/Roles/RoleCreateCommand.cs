@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using GenericRepository;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Roles;
 using Cost.Accounting.Automation.Domain.Shared;
 using TS.MediatR;
@@ -26,7 +27,8 @@ public sealed class RoleCreateCommandValidator : AbstractValidator<RoleCreateCom
 }
 
 internal sealed class RoleCreateCommandHandler(
-    IRoleRepository roleRepository) : IRequestHandler<RoleCreateCommand, Result<string>>
+    IRoleRepository roleRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<RoleCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(RoleCreateCommand request, CancellationToken cancellationToken)
     {
@@ -35,9 +37,13 @@ internal sealed class RoleCreateCommandHandler(
             return Result<string>.Failure("'sys_admin' adı sistem tarafından ayrılmıştır");
         }
 
-        var nameExists = await roleRepository.AnyAsync(p => p.Name.Value == request.Name, cancellationToken);
+        string? duplicateKey = Role.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        Role? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Role>(
+            duplicateKey,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Rol adı daha önce tanımlanmış");
         }

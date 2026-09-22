@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Customers;
@@ -51,7 +52,8 @@ public sealed class CurrentAccountMovementCreateCommandValidator : AbstractValid
 internal sealed class CurrentAccountMovementCreateCommandHandler(
     ICurrentAccountMovementRepository currentAccountMovementRepository,
     ICustomerRepository customerRepository,
-    ISupplierRepository supplierRepository) : IRequestHandler<CurrentAccountMovementCreateCommand, Result<string>>
+    ISupplierRepository supplierRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CurrentAccountMovementCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CurrentAccountMovementCreateCommand request, CancellationToken cancellationToken)
     {
@@ -75,13 +77,70 @@ internal sealed class CurrentAccountMovementCreateCommandHandler(
             }
         }
 
+        string? documentNo = string.IsNullOrWhiteSpace(request.DocumentNo) ? null : request.DocumentNo.Trim();
+
+        IdentityId? accountId = request.CurrentAccountType == CurrentAccountType.Customer ? customerId : supplierId;
+
+        string? duplicateKey = CurrentAccountMovement.BuildDuplicateKey(
+            request.CurrentAccountType,
+            accountId,
+            request.MovementType,
+            request.Date,
+            request.Debit,
+            request.Credit,
+            documentNo);
+
+        CurrentAccountMovement? duplicate = await duplicateCheckService.FindDuplicateAsync<CurrentAccountMovement>(
+            duplicateKey,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (duplicate is not null)
+        {
+            string typeName = request.MovementType == CurrentAccountMovementType.Collection
+                ? "Tahsilat"
+                : "Ödeme";
+
+            decimal amount = request.Debit > 0 ? request.Debit : request.Credit;
+
+            if (!duplicate.IsDeleted)
+            {
+                return Result<string>.Failure(
+                    $"Aynı {typeName} kaydı zaten mevcut ({request.Date:dd.MM.yyyy} - {amount:n2} TL). Kopya kayıt oluşturulmadı.");
+            }
+
+            if (documentNo is null)
+            {
+                documentNo = string.IsNullOrEmpty(duplicate.DocumentNo)
+                    ? await CurrentAccountMovementHelper.GenerateNextAsync(currentAccountMovementRepository, request.MovementType, cancellationToken)
+                    : duplicate.DocumentNo;
+            }
+
+            duplicate.Restore();
+            duplicate.SetStatus(true);
+            duplicate.Update(
+                date: request.Date,
+                movementType: request.MovementType,
+                documentNo: documentNo,
+                debit: request.Debit,
+                credit: request.Credit,
+                description: new Description(request.Description ?? string.Empty));
+
+            return Result<string>.Succeed($"Silinmiş olan aynı {typeName} kaydı geri getirilip güncellendi.");
+        }
+
+        if (documentNo is null && CurrentAccountMovement.IsManualPaymentType(request.MovementType))
+        {
+            documentNo = await CurrentAccountMovementHelper.GenerateNextAsync(currentAccountMovementRepository, request.MovementType, cancellationToken);
+        }
+
         CurrentAccountMovement movement = new(
             currentAccountType: request.CurrentAccountType,
             customerId: customerId,
             supplierId: supplierId,
             date: request.Date,
             movementType: request.MovementType,
-            documentNo: request.DocumentNo?.Trim(),
+            documentNo: documentNo,
             debit: request.Debit,
             credit: request.Credit,
             description: new Description(request.Description ?? string.Empty));

@@ -32,4 +32,13 @@ public sealed class StockMovementReportRowDto
     public decimal BalanceAmount { get; init; }
     public decimal SalesQuantity { get; init; }
     public decimal SalesAmount { get; init; }
+    public decimal GroupTotalInQuantity { get; set; }
+    public decimal GroupTotalOutQuantity { get; set; }
+    public decimal GroupBalanceQuantity { get; set; }
+    public decimal GroupAvgUnitCost { get; set; }
+    public decimal GroupTotalInAmount { get; set; }
+    public decimal GroupTotalOutAmount { get; set; }
+    public decimal GroupBalanceAmount { get; set; }
+    public decimal GroupSalesQuantity { get; set; }
+    public decimal GroupSalesAmount { get; set; }
 }

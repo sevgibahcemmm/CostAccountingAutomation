@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -68,7 +69,8 @@ public sealed class InvoiceUpdateCommandValidator : AbstractValidator<InvoiceUpd
 }
 
 internal sealed class InvoiceUpdateCommandHandler(
-    IInvoiceRepository invoiceRepository) : IRequestHandler<InvoiceUpdateCommand, Result<string>>
+    IInvoiceRepository invoiceRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<InvoiceUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(InvoiceUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -89,13 +91,14 @@ internal sealed class InvoiceUpdateCommandHandler(
             return Result<string>.Failure("Onaylanmış faturalar düzenlenemez.");
         }
 
-        bool numberExists = await invoiceRepository.AnyAsync(
-            i => i.InvoiceNumber == request.InvoiceNumber.Trim()
-                && i.InvoiceType == request.InvoiceType
-                && i.Id != id,
-            cancellationToken);
+        string? duplicateKey = Invoice.BuildDuplicateKey(request.InvoiceNumber, request.InvoiceType);
 
-        if (numberExists)
+        Invoice? numberDuplicate = await duplicateCheckService.FindDuplicateAsync<Invoice>(
+            duplicateKey,
+            excludeId: request.Id,
+            cancellationToken: cancellationToken);
+
+        if (numberDuplicate is not null)
         {
             return Result<string>.Failure("Bu fatura numarası başka bir fatura tarafından kullanılıyor.");
         }

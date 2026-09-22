@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
 using Cost.Accounting.Automation.Domain.Customers;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -41,15 +42,18 @@ public sealed class CustomerCreateCommandValidator : AbstractValidator<CustomerC
 }
 
 internal sealed class CustomerCreateCommandHandler(
-    ICustomerRepository customerRepository) : IRequestHandler<CustomerCreateCommand, Result<string>>
+    ICustomerRepository customerRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CustomerCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CustomerCreateCommand request, CancellationToken cancellationToken)
     {
-        var nameExists = await customerRepository.AnyAsync(
-            p => p.Name.Value == request.Name,
-            cancellationToken);
+        string? duplicateKey = Customer.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        Customer? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Customer>(
+            duplicateKey,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu müşteri adı daha önce kullanılmış");
         }

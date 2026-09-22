@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using GenericRepository;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Roles;
 using Cost.Accounting.Automation.Domain.Shared;
 using TS.MediatR;
@@ -26,7 +27,8 @@ public sealed class RoleUpdateCommandValidator : AbstractValidator<RoleUpdateCom
 }
 
 internal sealed class RoleUpdateCommandHandler(
-    IRoleRepository roleRepository) : IRequestHandler<RoleUpdateCommand, Result<string>>
+    IRoleRepository roleRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<RoleUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(RoleUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -40,6 +42,18 @@ internal sealed class RoleUpdateCommandHandler(
             && string.Equals(request.Name.Trim(), "sys_admin", StringComparison.OrdinalIgnoreCase))
         {
             return Result<string>.Failure("'sys_admin' adı sistem tarafından ayrılmıştır");
+        }
+
+        string? duplicateKey = Role.BuildDuplicateKey(request.Name);
+
+        Role? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Role>(
+            duplicateKey,
+            excludeId: request.Id,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
+        {
+            return Result<string>.Failure("Rol adı başka bir rol tarafından kullanılıyor");
         }
 
         Name name = new(request.Name);

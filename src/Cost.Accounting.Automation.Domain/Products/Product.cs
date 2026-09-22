@@ -43,6 +43,7 @@ public sealed class Product : Entity, IHardDeletable
         SetChartOfAccountId(chartOfAccountId);
         SetDescription(description);
         SetStatus(isActive);
+        ResolveDuplicateKey();
     }
 
     public Name Name { get; private set; } = default!;
@@ -72,7 +73,20 @@ public sealed class Product : Entity, IHardDeletable
     public IReadOnlyCollection<ProductMovement> Movements => _movements;
     public ICollection<Photo> Images => _images;
 
-    public void SetName(Name name) => Name = name;
+    public static string? BuildDuplicateKey(
+        string name,
+        IdentityId warehouseId,
+        IdentityId categoryId)
+        => DuplicateKeyRule.From(name, warehouseId, categoryId);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Name.Value, WarehouseId, CategoryId));
+
+    public void SetName(Name name)
+    {
+        Name = name;
+        ResolveDuplicateKey();
+    }
 
     public void SetProductCode(ProductCode productCode) => ProductCode = productCode;
 
@@ -84,9 +98,17 @@ public sealed class Product : Entity, IHardDeletable
 
     public void SetTaxRate(IdentityId taxRateId) => TaxRateId = taxRateId;
 
-    public void SetWarehouse(IdentityId warehouseId) => WarehouseId = warehouseId;
+    public void SetWarehouse(IdentityId warehouseId)
+    {
+        WarehouseId = warehouseId;
+        ResolveDuplicateKey();
+    }
 
-    public void SetCategory(IdentityId categoryId) => CategoryId = categoryId;
+    public void SetCategory(IdentityId categoryId)
+    {
+        CategoryId = categoryId;
+        ResolveDuplicateKey();
+    }
 
     public void SetProductUnitType(IdentityId productUnitTypeId) => ProductUnitTypeId = productUnitTypeId;
 

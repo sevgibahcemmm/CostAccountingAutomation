@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
 using Cost.Accounting.Automation.Domain.Suppliers;
@@ -41,15 +42,18 @@ public sealed class SupplierCreateCommandValidator : AbstractValidator<SupplierC
 }
 
 internal sealed class SupplierCreateCommandHandler(
-    ISupplierRepository supplierRepository) : IRequestHandler<SupplierCreateCommand, Result<string>>
+    ISupplierRepository supplierRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<SupplierCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(SupplierCreateCommand request, CancellationToken cancellationToken)
     {
-        var nameExists = await supplierRepository.AnyAsync(
-            p => p.Name.Value == request.Name,
-            cancellationToken);
+        string? duplicateKey = Supplier.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        Supplier? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Supplier>(
+            duplicateKey,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu tedarikçi adı daha önce kullanılmış");
         }

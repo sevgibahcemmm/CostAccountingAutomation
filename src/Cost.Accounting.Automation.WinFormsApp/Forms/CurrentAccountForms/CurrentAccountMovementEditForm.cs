@@ -10,6 +10,7 @@ using DevExpress.XtraEditors;
 using DevExpress.XtraGrid.Columns;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
+using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 {
@@ -28,17 +29,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         {
         }
 
+        public CurrentAccountMovementEditForm(CurrentAccountMovementDto existing) : this(existing, null)
+        {
+        }
+
         public CurrentAccountMovementEditForm(CurrentAccountMovementDto? existing, CurrentAccountType? accountType = null)
         {
             InitializeComponent();
             _editing = existing;
             _preselectedType = accountType ?? existing?.CurrentAccountType;
 
-            Text = _editing is null ? "Yeni Cari Hareket" : "Cari Hareket İncele";
+            Text = _editing is null ? "Yeni Cari Hareket" : "Cari Hareket Güncelle";
             lblTitle.Text = Text;
             lblSubtitle.Text = _editing is null
                 ? "Yeni tahsilat, ödeme veya dekont işlemi kaydedin"
-                : "Cari hareket detayları";
+                : "Yanlış işlenen kaydı düzelterek güncelleyin";
 
             InitControls();
             WireEvents();
@@ -63,15 +68,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
             if (_editing is not null)
             {
-                btnSave.Visible = false;
-                cmbAccountType.ReadOnly = true;
-                lookUpAccount.ReadOnly = true;
-                cmbMovementType.ReadOnly = true;
-                dtDate.ReadOnly = true;
-                txtDocNo.ReadOnly = true;
-                spinDebit.ReadOnly = true;
-                spinCredit.ReadOnly = true;
-                txtDescription.ReadOnly = true;
+                btnSave.Text = "Güncelle";
             }
         }
 
@@ -183,16 +180,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
             DateOnly date = DateOnly.FromDateTime(dtDate.DateTime);
 
-            CurrentAccountMovementCreateCommand command = new(
-                CurrentAccountType: accountType,
-                CustomerId: accountType == CurrentAccountType.Customer ? accountId : null,
-                SupplierId: accountType == CurrentAccountType.Supplier ? accountId : null,
-                Date: date,
-                MovementType: movementType,
-                DocumentNo: txtDocNo.Text.Trim(),
-                Debit: spinDebit.Value,
-                Credit: spinCredit.Value,
-                Description: txtDescription.Text.Trim());
+            IRequest<Result<string>> command = _editing is null
+                ? new CurrentAccountMovementCreateCommand(
+                    CurrentAccountType: accountType,
+                    CustomerId: accountType == CurrentAccountType.Customer ? accountId : null,
+                    SupplierId: accountType == CurrentAccountType.Supplier ? accountId : null,
+                    Date: date,
+                    MovementType: movementType,
+                    DocumentNo: txtDocNo.Text.Trim(),
+                    Debit: spinDebit.Value,
+                    Credit: spinCredit.Value,
+                    Description: txtDescription.Text.Trim())
+                : new CurrentAccountMovementUpdateCommand(
+                    Id: _editing.Id,
+                    CurrentAccountType: accountType,
+                    CustomerId: accountType == CurrentAccountType.Customer ? accountId : null,
+                    SupplierId: accountType == CurrentAccountType.Supplier ? accountId : null,
+                    Date: date,
+                    MovementType: movementType,
+                    DocumentNo: txtDocNo.Text.Trim(),
+                    Debit: spinDebit.Value,
+                    Credit: spinCredit.Value,
+                    Description: txtDescription.Text.Trim());
 
             btnSave.Enabled = false;
             try

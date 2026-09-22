@@ -43,7 +43,8 @@ internal sealed class UserCreateCommandHandler(
     IUserRepository userRepository,
     IPhotoRepository photoRepository,
     IFileStorageService fileStorage,
-    IClaimContext claimContext) : IRequestHandler<UserCreateCommand, Result<string>>
+    IClaimContext claimContext,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<UserCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UserCreateCommand request, CancellationToken cancellationToken)
     {
@@ -53,8 +54,13 @@ internal sealed class UserCreateCommandHandler(
             return Result<string>.Failure("Bu mail adresi daha önce kullanılmış");
         }
 
-        var userNameExists = await userRepository.AnyAsync(p => p.UserName.Value == request.UserName, cancellationToken);
-        if (userNameExists)
+        string? duplicateKey = User.BuildDuplicateKey(request.UserName);
+
+        User? userNameDuplicate = await duplicateCheckService.FindDuplicateAsync<User>(
+            duplicateKey,
+            cancellationToken: cancellationToken);
+
+        if (userNameDuplicate is not null)
         {
             return Result<string>.Failure("Bu kullanıcı adı daha önce kullanılmış");
         }

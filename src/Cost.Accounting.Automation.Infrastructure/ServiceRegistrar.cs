@@ -33,6 +33,7 @@ services.AddDbContext<ApplicationDbContext>(opt =>
         services.AddScoped<IUnitOfWork>(srv => srv.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IBarcodeGeneratorService, BarcodeGeneratorService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<IDuplicateCheckService, DuplicateCheckService>();
 
         services.Scan(action => action
             .FromAssemblies(typeof(ServiceRegistrar).Assembly)

@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
 using Cost.Accounting.Automation.Domain.Customers;
@@ -46,7 +47,8 @@ public sealed class CustomerUpdateCommandValidator : AbstractValidator<CustomerU
 }
 
 internal sealed class CustomerUpdateCommandHandler(
-    ICustomerRepository customerRepository) : IRequestHandler<CustomerUpdateCommand, Result<string>>
+    ICustomerRepository customerRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CustomerUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CustomerUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -61,11 +63,14 @@ internal sealed class CustomerUpdateCommandHandler(
             return Result<string>.Failure("Müşteri bulunamadı");
         }
 
-        var nameExists = await customerRepository.AnyAsync(
-            p => p.Name.Value == request.Name && p.Id != customerId,
-            cancellationToken);
+        string? duplicateKey = Customer.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        Customer? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Customer>(
+            duplicateKey,
+            excludeId: request.Id,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu müşteri adı başka bir müşteri tarafından kullanılıyor");
         }

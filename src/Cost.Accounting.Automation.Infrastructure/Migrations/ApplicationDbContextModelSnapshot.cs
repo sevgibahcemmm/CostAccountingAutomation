@@ -45,6 +45,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<Guid?>("FinishedAccountId")
                         .HasColumnType("uniqueidentifier");
 
@@ -76,6 +80,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("Code")
                         .IsUnique();
+
+                    b.HasIndex("DuplicateKey");
 
                     b.HasIndex("FinishedAccountId");
 
@@ -112,6 +118,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -136,6 +146,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("ChartOfAccountId");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.ToTable("ChartOfAccountLedger", (string)null);
                 });
 
@@ -156,6 +168,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -169,6 +185,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.ToTable("Companies", (string)null);
                 });
@@ -198,6 +216,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<decimal>("GrandTotal")
                         .HasColumnType("money");
@@ -239,6 +261,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.HasIndex("ProducedProductId");
 
                     b.HasIndex("SlipNumber");
@@ -270,6 +294,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<byte>("ExpenseAccountType")
                         .HasColumnType("tinyint");
 
@@ -300,6 +328,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CostSlipId");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.HasIndex("ProductId");
 
@@ -344,6 +374,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(MAX)");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<Guid?>("InvoiceId")
                         .HasColumnType("uniqueidentifier");
 
@@ -372,6 +406,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("Date");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.HasIndex("InvoiceId");
 
@@ -403,6 +439,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -416,6 +456,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.ToTable("Customers", (string)null);
                 });
@@ -445,6 +487,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Property<decimal>("DiscountTotal")
                         .HasColumnType("money");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<decimal>("GrandTotal")
                         .HasColumnType("money");
@@ -487,6 +533,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("Date");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.HasIndex("InvoiceNumber");
 
                     b.HasIndex("InvoiceType");
@@ -517,6 +565,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Property<decimal>("DiscountRate")
                         .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<Guid>("InvoiceId")
                         .HasColumnType("uniqueidentifier");
@@ -552,6 +604,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.HasIndex("InvoiceId");
 
@@ -595,6 +649,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -634,6 +692,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.HasIndex("ProductId");
 
                     b.HasIndex("UserId");
@@ -669,6 +729,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -715,6 +779,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("ChartOfAccountId");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.HasIndex("ProductCode")
                         .IsUnique();
 
@@ -749,6 +815,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<Guid?>("InvoiceId")
                         .HasColumnType("uniqueidentifier");
 
@@ -781,6 +851,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.HasIndex("InvoiceId");
 
                     b.HasIndex("ProductId");
@@ -811,6 +883,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<DateOnly?>("EndDate")
                         .HasColumnType("date");
 
@@ -837,6 +913,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductPrices", (string)null);
@@ -859,6 +937,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -872,6 +954,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.ToTable("ProductUnitTypes", (string)null);
                 });
@@ -893,6 +977,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -910,6 +998,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.ToTable("TaxRates", (string)null);
                 });
@@ -931,6 +1021,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -944,6 +1038,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.ToTable("Roles", (string)null);
                 });
@@ -976,6 +1072,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1003,6 +1103,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
 
                     b.HasIndex("DocumentNumber");
 
+                    b.HasIndex("DuplicateKey");
+
                     b.HasIndex("IssueType");
 
                     b.HasIndex("SourceWarehouseId");
@@ -1029,6 +1131,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1051,6 +1157,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.HasIndex("ProductId");
 
@@ -1076,6 +1184,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1089,6 +1201,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.ToTable("Suppliers", (string)null);
                 });
@@ -1113,6 +1227,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1131,6 +1249,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("DuplicateKey");
 
                     b.ToTable("Users", (string)null);
                 });

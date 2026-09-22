@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -46,7 +47,8 @@ public sealed class SupplierUpdateCommandValidator : AbstractValidator<SupplierU
 }
 
 internal sealed class SupplierUpdateCommandHandler(
-    ISupplierRepository supplierRepository) : IRequestHandler<SupplierUpdateCommand, Result<string>>
+    ISupplierRepository supplierRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<SupplierUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(SupplierUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -61,11 +63,14 @@ internal sealed class SupplierUpdateCommandHandler(
             return Result<string>.Failure("Tedarikçi bulunamadı");
         }
 
-        var nameExists = await supplierRepository.AnyAsync(
-            p => p.Name.Value == request.Name && p.Id != supplierId,
-            cancellationToken);
+        string? duplicateKey = Supplier.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        Supplier? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Supplier>(
+            duplicateKey,
+            excludeId: request.Id,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu tedarikçi adı başka bir tedarikçi tarafından kullanılıyor");
         }

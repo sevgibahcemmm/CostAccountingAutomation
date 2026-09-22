@@ -1,4 +1,5 @@
 ﻿using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
@@ -73,7 +74,8 @@ public sealed class CompanyUpdateCommandValidator : AbstractValidator<CompanyUpd
 }
 
 internal sealed class CompanyUpdateCommandHandler(
-    ICompanyRepository companyRepository) : IRequestHandler<CompanyUpdateCommand, Result<string>>
+    ICompanyRepository companyRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CompanyUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CompanyUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -91,11 +93,14 @@ internal sealed class CompanyUpdateCommandHandler(
         }
 
         // Aynı isimde başka bir şirket var mı kontrol et (kendisi hariç)
-        var nameExists = await companyRepository.AnyAsync(
-            p => p.Name.Value == request.Name && p.Id != companyId,
-            cancellationToken);
+        string? duplicateKey = Company.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        Company? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Company>(
+            duplicateKey,
+            excludeId: request.Id,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu şirket adı başka bir şirket tarafından kullanılıyor");
         }

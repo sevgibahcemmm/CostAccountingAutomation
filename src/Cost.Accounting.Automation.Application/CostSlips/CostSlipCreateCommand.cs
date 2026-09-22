@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
@@ -89,16 +90,19 @@ internal sealed class CostSlipCreateCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository,
     IProductRepository productRepository,
     IProductMovementRepository productMovementRepository,
-    IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<CostSlipCreateCommand, Result<string>>
+    IChartOfAccountLedgerPoster ledgerPoster,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CostSlipCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CostSlipCreateCommand request, CancellationToken cancellationToken)
     {
-        bool numberExists = await costSlipRepository.GetAllWithAuditIncludingDeleted()
-            .AnyAsync(i => i.Entity.CostSlipType == request.CostSlipType
-                && i.Entity.SlipNumber == request.SlipNumber.Trim(),
-                cancellationToken);
+        string? duplicateKey = CostSlip.BuildDuplicateKey(request.SlipNumber, request.CostSlipType);
 
-        if (numberExists)
+        CostSlip? duplicate = await duplicateCheckService.FindDuplicateAsync<CostSlip>(
+            duplicateKey,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (duplicate is not null && !duplicate.IsDeleted)
         {
             return Result<string>.Failure("Bu pusula numarası ile kaydedilmiş bir maliyet pusulası zaten mevcut.");
         }
@@ -123,15 +127,33 @@ internal sealed class CostSlipCreateCommandHandler(
             }
         }
 
-        CostSlip slip = new(
-            request.SlipNumber.Trim(),
-            request.CostSlipType,
-            request.CostDate,
-            new IdentityId(request.WorkshopId),
-            request.ProducedProductId.HasValue ? new IdentityId(request.ProducedProductId.Value) : null,
-            request.CustomerId.HasValue ? new IdentityId(request.CustomerId.Value) : null,
-            request.Quantity,
-            new Description(request.Description?.Trim() ?? string.Empty));
+        bool isRestored = duplicate is not null;
+
+        CostSlip slip;
+        if (duplicate is not null)
+        {
+            duplicate.Restore();
+            duplicate.ClearItems();
+            duplicate.SetCostDate(request.CostDate);
+            duplicate.SetWorkshop(new IdentityId(request.WorkshopId));
+            duplicate.SetProducedProduct(request.ProducedProductId.HasValue ? new IdentityId(request.ProducedProductId.Value) : null);
+            duplicate.SetCustomer(request.CustomerId.HasValue ? new IdentityId(request.CustomerId.Value) : null);
+            duplicate.SetQuantity(request.Quantity);
+            duplicate.SetDescription(new Description(request.Description?.Trim() ?? string.Empty));
+            slip = duplicate;
+        }
+        else
+        {
+            slip = new CostSlip(
+                request.SlipNumber.Trim(),
+                request.CostSlipType,
+                request.CostDate,
+                new IdentityId(request.WorkshopId),
+                request.ProducedProductId.HasValue ? new IdentityId(request.ProducedProductId.Value) : null,
+                request.CustomerId.HasValue ? new IdentityId(request.CustomerId.Value) : null,
+                request.Quantity,
+                new Description(request.Description?.Trim() ?? string.Empty));
+        }
 
         foreach (CostSlipItemModel item in request.Items)
         {
@@ -161,12 +183,18 @@ internal sealed class CostSlipCreateCommandHandler(
             }
 
             slip.Approve();
-            await costSlipRepository.AddAsync(slip, cancellationToken);
+            if (!isRestored)
+            {
+                await costSlipRepository.AddAsync(slip, cancellationToken);
+            }
 
             return Result<string>.Succeed("Maliyet pusulası onaylı olarak kaydedildi; stok hareketleri oluşturuldu.");
         }
 
-        await costSlipRepository.AddAsync(slip, cancellationToken);
+        if (!isRestored)
+        {
+            await costSlipRepository.AddAsync(slip, cancellationToken);
+        }
 
         return Result<string>.Succeed("Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.");
     }

@@ -15,10 +15,17 @@ public sealed class Role : Entity, IAggregate
     public Name Name { get; private set; } = default!;
     public IReadOnlyCollection<Permission> Permissions => _permissions;
 
+    public static string? BuildDuplicateKey(string name)
+        => DuplicateKeyRule.From(name);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Name.Value));
+
     #region Behaviors
     public void SetName(Name name)
     {
         Name = name;
+        ResolveDuplicateKey();
     }
 
     public void SetPermissions(IEnumerable<Permission> permissions)

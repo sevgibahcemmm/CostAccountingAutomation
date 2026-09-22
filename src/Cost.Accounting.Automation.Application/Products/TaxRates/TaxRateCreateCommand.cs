@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
@@ -27,15 +28,18 @@ public sealed class TaxRateCreateCommandValidator : AbstractValidator<TaxRateCre
 }
 
 internal sealed class TaxRateCreateCommandHandler(
-    ITaxRateRepository taxRateRepository) : IRequestHandler<TaxRateCreateCommand, Result<string>>
+    ITaxRateRepository taxRateRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<TaxRateCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(TaxRateCreateCommand request, CancellationToken cancellationToken)
     {
-        var nameExists = await taxRateRepository.AnyAsync(
-            p => p.Name.Value == request.Name,
-            cancellationToken);
+        string? duplicateKey = TaxRate.BuildDuplicateKey(request.Name);
 
-        if (nameExists)
+        TaxRate? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<TaxRate>(
+            duplicateKey,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
         {
             return Result<string>.Failure("Bu KDV oranı daha önce kullanılmış");
         }

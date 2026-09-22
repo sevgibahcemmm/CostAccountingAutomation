@@ -19,7 +19,17 @@ public sealed class TaxRate : Entity
     public Name Name { get; private set; } = default!;
     public decimal Rate { get; private set; }
 
-    public void SetName(Name name) => Name = name;
+    public static string? BuildDuplicateKey(string name)
+        => DuplicateKeyRule.From(name);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Name.Value));
+
+    public void SetName(Name name)
+    {
+        Name = name;
+        ResolveDuplicateKey();
+    }
 
     public void SetRate(decimal rate) => Rate = rate;
 }

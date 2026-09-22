@@ -61,7 +61,8 @@ internal sealed class ProductUpdateCommandHandler(
     IProductUnitTypeRepository unitTypeRepository,
     ITaxRateRepository taxRateRepository,
     ICompanyRepository companyRepository,
-    IBarcodeGeneratorService barcodeGeneratorService) : IRequestHandler<ProductUpdateCommand, Result<string>>
+    IBarcodeGeneratorService barcodeGeneratorService,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ProductUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -85,6 +86,18 @@ internal sealed class ProductUpdateCommandHandler(
         if (warehouse is null)
         {
             return Result<string>.Failure("Seçilen depo hesap planında bulunamadı");
+        }
+
+        string? duplicateKey = Product.BuildDuplicateKey(request.Name, warehouse.Id, category.Id);
+
+        Product? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Product>(
+            duplicateKey,
+            excludeId: request.Id,
+            cancellationToken: cancellationToken);
+
+        if (nameDuplicate is not null)
+        {
+            return Result<string>.Failure("Bu depo ve kategori altında aynı adla başka bir ürün zaten mevcut");
         }
 
         ProductUnitType? unitType = await unitTypeRepository.FirstOrDefaultAsync(

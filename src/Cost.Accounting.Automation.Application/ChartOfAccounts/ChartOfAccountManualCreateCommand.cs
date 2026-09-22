@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
@@ -28,7 +29,8 @@ public sealed class ChartOfAccountManualCreateCommandValidator : AbstractValidat
 }
 
 internal sealed class ChartOfAccountManualCreateCommandHandler(
-    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ChartOfAccountManualCreateCommand, Result<string>>
+    IChartOfAccountRepository chartOfAccountRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ChartOfAccountManualCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ChartOfAccountManualCreateCommand request, CancellationToken cancellationToken)
     {
@@ -67,10 +69,14 @@ internal sealed class ChartOfAccountManualCreateCommandHandler(
             return Result<string>.Failure($"Alt kod, üst hesabın ({parentCode}) altı olmalıdır. Örnek: {parentCode}.01");
         }
 
-        ChartOfAccount? duplicate = all.FirstOrDefault(a =>
-            string.Equals(a.Code.Value, code, StringComparison.OrdinalIgnoreCase));
+        string? codeKey = ChartOfAccount.BuildDuplicateKey(code);
 
-        if (duplicate is not null)
+        ChartOfAccount? codeDuplicate = await duplicateCheckService.FindDuplicateAsync<ChartOfAccount>(
+            codeKey,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (codeDuplicate is not null)
         {
             return Result<string>.Failure($"'{code}' kodu zaten kullanılıyor.");
         }

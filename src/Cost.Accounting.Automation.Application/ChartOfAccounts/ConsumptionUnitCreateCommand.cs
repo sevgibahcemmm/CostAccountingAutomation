@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
@@ -27,7 +28,8 @@ public sealed class ConsumptionUnitCreateCommandValidator : AbstractValidator<Co
 }
 
 internal sealed class ConsumptionUnitCreateCommandHandler(
-    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ConsumptionUnitCreateCommand, Result<string>>
+    IChartOfAccountRepository chartOfAccountRepository,
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ConsumptionUnitCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ConsumptionUnitCreateCommand request, CancellationToken cancellationToken)
     {
@@ -59,10 +61,14 @@ internal sealed class ConsumptionUnitCreateCommandHandler(
             return Result<string>.Failure("Geçerli bir kod üretilemedi.");
         }
 
-        ChartOfAccount? duplicate = all.FirstOrDefault(a =>
-            string.Equals(a.Code.Value, code, StringComparison.OrdinalIgnoreCase));
+        string? codeKey = ChartOfAccount.BuildDuplicateKey(code);
 
-        if (duplicate is not null)
+        ChartOfAccount? codeDuplicate = await duplicateCheckService.FindDuplicateAsync<ChartOfAccount>(
+            codeKey,
+            includeDeleted: true,
+            cancellationToken: cancellationToken);
+
+        if (codeDuplicate is not null)
         {
             return Result<string>.Failure($"'{code}' kodu zaten kullanılıyor.");
         }

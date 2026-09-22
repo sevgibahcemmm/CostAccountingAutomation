@@ -36,6 +36,7 @@ public sealed class Company : Entity
         SetExpenditureUnit(expenditureUnit);
         SetAccountingUnit(accountingUnit);
         SetStatus(isActive);
+        ResolveDuplicateKey();
     }
 
     public Name Name { get; private set; } = default!;
@@ -52,8 +53,18 @@ public sealed class Company : Entity
 
     public ICollection<User> Users { get; private set; } = new List<User>();
 
+    public static string? BuildDuplicateKey(string name)
+        => DuplicateKeyRule.From(name);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Name.Value));
+
     #region Behaviors
-    public void SetName(Name name) => Name = name;
+    public void SetName(Name name)
+    {
+        Name = name;
+        ResolveDuplicateKey();
+    }
     public void SetTaxOffice(TaxOffice taxOffice) => TaxOffice = taxOffice;
     public void SetTaxNumber(TaxNumber taxNumber) => TaxNumber = taxNumber;
     public void SetDescription(Description description) => Description = description;

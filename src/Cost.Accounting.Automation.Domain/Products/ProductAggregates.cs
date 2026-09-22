@@ -35,7 +35,17 @@ public sealed class ProductUnitType : Entity
 
     public Name Name { get; private set; } = default!;
 
-    public void SetName(Name name) => Name = name;
+    public static string? BuildDuplicateKey(string name)
+        => DuplicateKeyRule.From(name);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Name.Value));
+
+    public void SetName(Name name)
+    {
+        Name = name;
+        ResolveDuplicateKey();
+    }
 }
 
 public sealed class ProductPrice : Entity, IHardDeletable
@@ -95,7 +105,33 @@ public sealed class ProductMovement : Entity, IHardDeletable
         ProductId = productId;
         InvoiceId = invoiceId;
         StockIssueId = stockIssueId;
+        ResolveDuplicateKey();
     }
+
+    public static string? BuildDuplicateKey(
+        IdentityId? productId,
+        ProductMovementType movementType,
+        decimal quantity,
+        decimal? unitPrice,
+        DateOnly date,
+        string? referenceNo)
+    {
+        if (productId is null || string.IsNullOrWhiteSpace(referenceNo))
+        {
+            return null;
+        }
+
+        return DuplicateKeyRule.From(
+            productId.Value,
+            (int)movementType,
+            quantity,
+            unitPrice,
+            date.ToString("yyyy-MM-dd"),
+            referenceNo);
+    }
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(ProductId, MovementType, Quantity, UnitPrice?.Value, Date, ReferenceNo));
 
     public IdentityId ProductId { get; private set; } = default!;
     public Product? Product { get; private set; }
@@ -108,7 +144,11 @@ public sealed class ProductMovement : Entity, IHardDeletable
     public string? ReferenceNo { get; private set; }
     public Description Description { get; private set; } = default!;
 
-    public void SetProduct(IdentityId productId) => ProductId = productId;
+    public void SetProduct(IdentityId productId)
+    {
+        ProductId = productId;
+        ResolveDuplicateKey();
+    }
     public void SetInvoiceId(IdentityId? invoiceId) => InvoiceId = invoiceId;
     public void SetStockIssueId(IdentityId? stockIssueId) => StockIssueId = stockIssueId;
 }

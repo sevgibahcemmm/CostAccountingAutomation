@@ -10,6 +10,7 @@ public abstract class Entity
 
     public IdentityId Id { get; private set; }
     public bool IsActive { get; private set; }
+    public string? DuplicateKey { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public IdentityId CreatedBy { get; private set; } = default!;
     public DateTimeOffset? UpdatedAt { get; private set; }
@@ -17,6 +18,11 @@ public abstract class Entity
     public bool IsDeleted { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
     public IdentityId? DeletedBy { get; private set; }
+
+    public void SetDuplicateKey(string? duplicateKey)
+    {
+        DuplicateKey = duplicateKey;
+    }
 
     public void SetStatus(bool isActive)
     {

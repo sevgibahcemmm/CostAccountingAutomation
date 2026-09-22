@@ -35,7 +35,14 @@ public sealed class StockIssue : Entity, IHardDeletable
         TargetAccountId = targetAccountId;
         CostingMethod = costingMethod;
         Description = description;
+        ResolveDuplicateKey();
     }
+
+    public static string? BuildDuplicateKey(string documentNumber, StockIssueType issueType)
+        => DuplicateKeyRule.From(documentNumber, ((int)issueType).ToString());
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(DocumentNumber, IssueType));
 
     public StockIssueType IssueType { get; private set; }
     public string DocumentNumber { get; private set; } = default!;

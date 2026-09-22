@@ -24,6 +24,7 @@ public sealed class Supplier : Entity
         SetAddress(address);
         SetDescription(description);
         SetStatus(isActive);
+        ResolveDuplicateKey();
     }
 
     public Name Name { get; private set; } = default!;
@@ -33,7 +34,17 @@ public sealed class Supplier : Entity
     public Address Address { get; private set; } = default!;
     public Description Description { get; private set; } = default!;
 
-    public void SetName(Name name) => Name = name;
+    public static string? BuildDuplicateKey(string name)
+        => DuplicateKeyRule.From(name);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Name.Value));
+
+    public void SetName(Name name)
+    {
+        Name = name;
+        ResolveDuplicateKey();
+    }
     public void SetTaxOffice(TaxOffice taxOffice) => TaxOffice = taxOffice;
     public void SetTaxNumber(TaxNumber taxNumber) => TaxNumber = taxNumber;
     public void SetContact(Contact contact) => Contact = contact;

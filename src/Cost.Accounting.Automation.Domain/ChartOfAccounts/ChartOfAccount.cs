@@ -29,6 +29,7 @@ public sealed class ChartOfAccount : Entity, IHardDeletable
         Name = name;
         Level = level;
         Type = type;
+        ResolveDuplicateKey();
     }
 
     public AccountCode Code { get; private set; } = default!;
@@ -40,9 +41,19 @@ public sealed class ChartOfAccount : Entity, IHardDeletable
     public IdentityId? SemiFinishedAccountId { get; private set; }
     public IdentityId? FinishedAccountId { get; private set; }
 
+    public static string? BuildDuplicateKey(string code)
+        => DuplicateKeyRule.From(code);
+
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Code.Value));
+
     public void SetName(Name name) => Name = name;
 
-    public void SetCode(AccountCode code) => Code = code;
+    public void SetCode(AccountCode code)
+    {
+        Code = code;
+        ResolveDuplicateKey();
+    }
 
     public void SetLevel(int level) => Level = level;
 
