@@ -266,9 +266,15 @@ internal sealed class DashboardDataProvider(
                 ProductCode = p.ProductCode.Value,
                 ProductName = p.Name.Value,
                 CategoryName = p.Category!.Name.Value,
+                WarehouseCode = p.Warehouse != null ? p.Warehouse.Code.Value : string.Empty,
                 MinimumLevel = p.MinimumProductLevel
             })
             .ToListAsync(ct);
+
+        products = products
+            .Where(p => !p.WarehouseCode.StartsWith("151", StringComparison.Ordinal)
+                && !p.WarehouseCode.StartsWith("151.", StringComparison.Ordinal))
+            .ToList();
 
         return products
             .Select(p => new DashboardCriticalStockRow(

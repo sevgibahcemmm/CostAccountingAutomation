@@ -119,19 +119,6 @@ internal sealed class RecipeCompareQueryHandler(
             actual.Remove(productId);
         }
 
-        foreach ((Guid productId, decimal used) in actual)
-        {
-            string name = request.Materials.FirstOrDefault(m => m.ProductId == productId)?.ProductName ?? "Ürün";
-            result.Mismatches.Add(new RecipeCompareMismatchDto
-            {
-                ProductId = productId,
-                ProductName = name,
-                Expected = 0m,
-                Actual = used,
-                Reason = "Reçetede tanımlı değil"
-            });
-        }
-
         return result;
     }
 }

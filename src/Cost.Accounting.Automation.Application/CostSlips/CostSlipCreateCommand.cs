@@ -22,6 +22,10 @@ public sealed record CostSlipItemModel(
     decimal UnitPrice,
     string? Description);
 
+public sealed record CostSlipCreateResult(
+    Guid SlipId,
+    string Message) : IResultMessage;
+
 [Permission("costslip:create")]
 public sealed record CostSlipCreateCommand(
     string SlipNumber,
@@ -34,7 +38,7 @@ public sealed record CostSlipCreateCommand(
     string? Description,
     List<CostSlipItemModel> Items,
     bool IsApproved = false,
-    StockCostingMethod CostingMethod = StockCostingMethod.Fifo) : IRequest<Result<string>>;
+    StockCostingMethod CostingMethod = StockCostingMethod.Fifo) : IRequest<Result<CostSlipCreateResult>>;
 
 public sealed class CostSlipCreateCommandValidator : AbstractValidator<CostSlipCreateCommand>
 {
@@ -91,9 +95,9 @@ internal sealed class CostSlipCreateCommandHandler(
     IProductRepository productRepository,
     IProductMovementRepository productMovementRepository,
     IChartOfAccountLedgerPoster ledgerPoster,
-    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CostSlipCreateCommand, Result<string>>
+    IDuplicateCheckService duplicateCheckService) : IRequestHandler<CostSlipCreateCommand, Result<CostSlipCreateResult>>
 {
-    public async Task<Result<string>> Handle(CostSlipCreateCommand request, CancellationToken cancellationToken)
+    public async Task<Result<CostSlipCreateResult>> Handle(CostSlipCreateCommand request, CancellationToken cancellationToken)
     {
         string? duplicateKey = CostSlip.BuildDuplicateKey(request.SlipNumber, request.CostSlipType);
 
@@ -104,7 +108,7 @@ internal sealed class CostSlipCreateCommandHandler(
 
         if (duplicate is not null && !duplicate.IsDeleted)
         {
-            return Result<string>.Failure("Bu pusula numarası ile kaydedilmiş bir maliyet pusulası zaten mevcut.");
+            return Result<CostSlipCreateResult>.Failure("Bu pusula numarası ile kaydedilmiş bir maliyet pusulası zaten mevcut.");
         }
 
         ChartOfAccount? workshop = await chartOfAccountRepository.GetAll()
@@ -112,7 +116,7 @@ internal sealed class CostSlipCreateCommandHandler(
 
         if (workshop is null || workshop.IsDeleted || !workshop.IsActive || workshop.Type != ChartOfAccountType.Workshop)
         {
-            return Result<string>.Failure("Seçilen atölye bulunamadı veya geçerli bir atölye değil.");
+            return Result<CostSlipCreateResult>.Failure("Seçilen atölye bulunamadı veya geçerli bir atölye değil.");
         }
 
         Product? producedProduct = null;
@@ -123,7 +127,7 @@ internal sealed class CostSlipCreateCommandHandler(
 
             if (producedProduct is null || !producedProduct.IsActive)
             {
-                return Result<string>.Failure("Üretilen ürün bulunamadı veya aktif değil.");
+                return Result<CostSlipCreateResult>.Failure("Üretilen ürün bulunamadı veya aktif değil.");
             }
         }
 
@@ -179,7 +183,8 @@ internal sealed class CostSlipCreateCommandHandler(
 
             if (!stockResult.IsSuccessful)
             {
-                return stockResult;
+                return Result<CostSlipCreateResult>.Failure(
+                    stockResult.ErrorMessages?.FirstOrDefault() ?? "Stok hareketleri uygulanamadı.");
             }
 
             slip.Approve();
@@ -188,7 +193,9 @@ internal sealed class CostSlipCreateCommandHandler(
                 await costSlipRepository.AddAsync(slip, cancellationToken);
             }
 
-            return Result<string>.Succeed("Maliyet pusulası onaylı olarak kaydedildi; stok hareketleri oluşturuldu.");
+            return Result<CostSlipCreateResult>.Succeed(new CostSlipCreateResult(
+                slip.Id,
+                "Maliyet pusulası onaylı olarak kaydedildi; stok hareketleri oluşturuldu."));
         }
 
         if (!isRestored)
@@ -196,6 +203,8 @@ internal sealed class CostSlipCreateCommandHandler(
             await costSlipRepository.AddAsync(slip, cancellationToken);
         }
 
-        return Result<string>.Succeed("Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.");
+        return Result<CostSlipCreateResult>.Succeed(new CostSlipCreateResult(
+            slip.Id,
+            "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak."));
     }
 }

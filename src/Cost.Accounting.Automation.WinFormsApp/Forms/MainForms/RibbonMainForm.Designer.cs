@@ -308,6 +308,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // grpMuhasebe
             // 
             grpMuhasebe.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHesapPlani, elmOdemeTahsilat, elmMaliyetPusulasi, elmRecete });
+            grpMuhasebe.Expanded = true;
             grpMuhasebe.Name = "grpMuhasebe";
             grpMuhasebe.Tag = 6;
             grpMuhasebe.Text = "Muhasebe Yönetimi";

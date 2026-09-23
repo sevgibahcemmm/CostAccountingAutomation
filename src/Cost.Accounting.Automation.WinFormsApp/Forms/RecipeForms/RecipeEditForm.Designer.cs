@@ -38,7 +38,7 @@ public sealed partial class RecipeEditForm
 
     #region Windows Form Designer generated code
 
-    private void InitializeComponent()
+private void InitializeComponent()
     {
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RecipeEditForm));
         pnlHeader = new DevExpress.XtraEditors.PanelControl();
@@ -47,31 +47,32 @@ public sealed partial class RecipeEditForm
         lblHeaderIcon = new DevExpress.XtraEditors.LabelControl();
         pnlHeaderLine = new DevExpress.XtraEditors.PanelControl();
         pnlBody = new Panel();
-        gridLinesControl = new DevExpress.XtraGrid.GridControl();
-        gridLinesView = new DevExpress.XtraGrid.Views.Grid.GridView();
-        lookUpProduct = new DevExpress.XtraEditors.SearchLookUpEdit();
-        lookUpProductView = new DevExpress.XtraGrid.Views.Grid.GridView();
-        lblWorkshopLabel = new DevExpress.XtraEditors.LabelControl();
-        lookUpWorkshop = new DevExpress.XtraEditors.SearchLookUpEdit();
-        lookUpWorkshopView = new DevExpress.XtraGrid.Views.Grid.GridView();
         pnlLinesActions = new Panel();
         btnAddLine = new DevExpress.XtraEditors.SimpleButton();
         btnDeleteLine = new DevExpress.XtraEditors.SimpleButton();
+        gridLinesControl = new DevExpress.XtraGrid.GridControl();
+        gridLinesView = new DevExpress.XtraGrid.Views.Grid.GridView();
+        lblWorkshopLabel = new DevExpress.XtraEditors.LabelControl();
+        lookUpWorkshop = new DevExpress.XtraEditors.SearchLookUpEdit();
+        lookUpWorkshopView = new DevExpress.XtraGrid.Views.Grid.GridView();
+        labelControl1 = new DevExpress.XtraEditors.LabelControl();
+        lookUpProduct = new DevExpress.XtraEditors.SearchLookUpEdit();
+        lookUpProductView = new DevExpress.XtraGrid.Views.Grid.GridView();
         pnlFooter = new DevExpress.XtraEditors.PanelControl();
         pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
         btnSave = new DevExpress.XtraEditors.SimpleButton();
         btnCancel = new DevExpress.XtraEditors.SimpleButton();
-        labelControl1 = new DevExpress.XtraEditors.LabelControl();
         ((System.ComponentModel.ISupportInitialize)pnlHeader).BeginInit();
         pnlHeader.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)pnlHeaderLine).BeginInit();
         pnlBody.SuspendLayout();
+        pnlLinesActions.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)gridLinesControl).BeginInit();
         ((System.ComponentModel.ISupportInitialize)gridLinesView).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)lookUpProduct.Properties).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)lookUpProductView).BeginInit();
         ((System.ComponentModel.ISupportInitialize)lookUpWorkshop.Properties).BeginInit();
         ((System.ComponentModel.ISupportInitialize)lookUpWorkshopView).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)lookUpProduct.Properties).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)lookUpProductView).BeginInit();
         ((System.ComponentModel.ISupportInitialize)pnlFooter).BeginInit();
         pnlFooter.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)pnlFooterLine).BeginInit();
@@ -90,7 +91,7 @@ public sealed partial class RecipeEditForm
         pnlHeader.Location = new Point(0, 0);
         pnlHeader.Margin = new Padding(3, 2, 3, 2);
         pnlHeader.Name = "pnlHeader";
-        pnlHeader.Size = new Size(549, 55);
+        pnlHeader.Size = new Size(760, 55);
         pnlHeader.TabIndex = 0;
         // 
         // lblSubtitle
@@ -138,33 +139,32 @@ public sealed partial class RecipeEditForm
         pnlHeaderLine.Location = new Point(0, 54);
         pnlHeaderLine.Margin = new Padding(3, 2, 3, 2);
         pnlHeaderLine.Name = "pnlHeaderLine";
-        pnlHeaderLine.Size = new Size(549, 1);
+        pnlHeaderLine.Size = new Size(760, 1);
         pnlHeaderLine.TabIndex = 2;
         // 
         // pnlBody
         // 
-        pnlBody.BackColor = Color.White;
+        pnlBody.Controls.Add(pnlLinesActions);
         pnlBody.Controls.Add(gridLinesControl);
         pnlBody.Controls.Add(lblWorkshopLabel);
         pnlBody.Controls.Add(lookUpWorkshop);
         pnlBody.Controls.Add(labelControl1);
         pnlBody.Controls.Add(lookUpProduct);
-        pnlBody.Controls.Add(pnlLinesActions);
         pnlBody.Dock = DockStyle.Fill;
         pnlBody.Location = new Point(0, 55);
         pnlBody.Margin = new Padding(3, 2, 3, 2);
         pnlBody.Name = "pnlBody";
-        pnlBody.Size = new Size(549, 333);
+        pnlBody.Size = new Size(760, 402);
         pnlBody.TabIndex = 1;
         // 
         // gridLinesControl
         // 
         gridLinesControl.EmbeddedNavigator.Margin = new Padding(3, 2, 3, 2);
-        gridLinesControl.Location = new Point(21, 62);
+        gridLinesControl.Location = new Point(21, 86);
         gridLinesControl.MainView = gridLinesView;
         gridLinesControl.Margin = new Padding(3, 2, 3, 2);
         gridLinesControl.Name = "gridLinesControl";
-        gridLinesControl.Size = new Size(507, 206);
+        gridLinesControl.Size = new Size(718, 276);
         gridLinesControl.TabIndex = 3;
         gridLinesControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridLinesView });
         // 
@@ -185,7 +185,7 @@ public sealed partial class RecipeEditForm
         lblWorkshopLabel.Appearance.ForeColor = SystemColors.ActiveCaptionText;
         lblWorkshopLabel.Appearance.Options.UseFont = true;
         lblWorkshopLabel.Appearance.Options.UseForeColor = true;
-        lblWorkshopLabel.Location = new Point(50, 10);
+        lblWorkshopLabel.Location = new Point(26, 22);
         lblWorkshopLabel.Margin = new Padding(3, 2, 3, 2);
         lblWorkshopLabel.Name = "lblWorkshopLabel";
         lblWorkshopLabel.Size = new Size(39, 17);
@@ -194,13 +194,13 @@ public sealed partial class RecipeEditForm
         // 
         // lookUpWorkshop
         // 
-        lookUpWorkshop.Location = new Point(103, 10);
+        lookUpWorkshop.Location = new Point(103, 19);
         lookUpWorkshop.Margin = new Padding(3, 2, 3, 2);
         lookUpWorkshop.Name = "lookUpWorkshop";
         lookUpWorkshop.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
         lookUpWorkshop.Properties.NullText = "Atölye seçiniz...";
         lookUpWorkshop.Properties.PopupView = lookUpWorkshopView;
-        lookUpWorkshop.Size = new Size(419, 20);
+        lookUpWorkshop.Size = new Size(636, 20);
         lookUpWorkshop.TabIndex = 1;
         // 
         // lookUpWorkshopView
@@ -208,7 +208,6 @@ public sealed partial class RecipeEditForm
         lookUpWorkshopView.DetailHeight = 284;
         lookUpWorkshopView.FocusRectStyle = DevExpress.XtraGrid.Views.Grid.DrawFocusRectStyle.RowFocus;
         lookUpWorkshopView.Name = "lookUpWorkshopView";
-        lookUpWorkshopView.OptionsBehavior.AutoPopulateColumns = false;
         lookUpWorkshopView.OptionsEditForm.PopupEditFormWidth = 588;
         lookUpWorkshopView.OptionsSelection.EnableAppearanceFocusedCell = false;
         lookUpWorkshopView.OptionsView.ShowGroupPanel = false;
@@ -219,7 +218,7 @@ public sealed partial class RecipeEditForm
         labelControl1.Appearance.ForeColor = SystemColors.ActiveCaptionText;
         labelControl1.Appearance.Options.UseFont = true;
         labelControl1.Appearance.Options.UseForeColor = true;
-        labelControl1.Location = new Point(16, 32);
+        labelControl1.Location = new Point(26, 55);
         labelControl1.Margin = new Padding(3, 2, 3, 2);
         labelControl1.Name = "labelControl1";
         labelControl1.Size = new Size(79, 17);
@@ -228,36 +227,44 @@ public sealed partial class RecipeEditForm
         // 
         // lookUpProduct
         // 
-        lookUpProduct.Location = new Point(103, 32);
+        lookUpProduct.Location = new Point(103, 52);
         lookUpProduct.Margin = new Padding(3, 2, 3, 2);
         lookUpProduct.Name = "lookUpProduct";
         lookUpProduct.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
         lookUpProduct.Properties.NullText = "Mamül ürün seçiniz...";
         lookUpProduct.Properties.PopupView = lookUpProductView;
-        lookUpProduct.Size = new Size(419, 20);
+        lookUpProduct.Size = new Size(636, 20);
         lookUpProduct.TabIndex = 2;
+        // 
+        // lookUpProductView
+        // 
+        lookUpProductView.FocusRectStyle = DevExpress.XtraGrid.Views.Grid.DrawFocusRectStyle.RowFocus;
+        lookUpProductView.Name = "lookUpProductView";
+        lookUpProductView.OptionsSelection.EnableAppearanceFocusedCell = false;
+        lookUpProductView.OptionsView.ShowGroupPanel = false;
         // 
         // pnlLinesActions
         // 
-        pnlLinesActions.Location = new Point(21, 275);
+        pnlLinesActions.Controls.Add(btnDeleteLine);
+        pnlLinesActions.Controls.Add(btnAddLine);
+        pnlLinesActions.Location = new Point(21, 368);
         pnlLinesActions.Margin = new Padding(3, 2, 3, 2);
         pnlLinesActions.Name = "pnlLinesActions";
-        pnlLinesActions.Size = new Size(507, 24);
-        pnlLinesActions.TabIndex = 4;
-        // 
+        pnlLinesActions.Size = new Size(718, 30);
+        pnlLinesActions.TabIndex = 4; 
         // btnAddLine
         // 
-        btnAddLine.Location = new Point(0, 0);
+        btnAddLine.Location = new Point(0, 1);
         btnAddLine.Name = "btnAddLine";
-        btnAddLine.Size = new Size(130, 30);
+        btnAddLine.Size = new Size(140, 28);
         btnAddLine.TabIndex = 0;
         btnAddLine.Text = "Malzeme Ekle";
         // 
         // btnDeleteLine
         // 
-        btnDeleteLine.Location = new Point(140, 0);
+        btnDeleteLine.Location = new Point(150, 1);
         btnDeleteLine.Name = "btnDeleteLine";
-        btnDeleteLine.Size = new Size(130, 30);
+        btnDeleteLine.Size = new Size(140, 28);
         btnDeleteLine.TabIndex = 1;
         btnDeleteLine.Text = "Satır Sil";
         // 
@@ -270,10 +277,10 @@ public sealed partial class RecipeEditForm
         pnlFooter.Controls.Add(btnSave);
         pnlFooter.Controls.Add(btnCancel);
         pnlFooter.Dock = DockStyle.Bottom;
-        pnlFooter.Location = new Point(0, 388);
+        pnlFooter.Location = new Point(0, 457);
         pnlFooter.Margin = new Padding(3, 2, 3, 2);
         pnlFooter.Name = "pnlFooter";
-        pnlFooter.Size = new Size(549, 49);
+        pnlFooter.Size = new Size(760, 49);
         pnlFooter.TabIndex = 2;
         // 
         // pnlFooterLine
@@ -285,7 +292,7 @@ public sealed partial class RecipeEditForm
         pnlFooterLine.Location = new Point(0, 0);
         pnlFooterLine.Margin = new Padding(3, 2, 3, 2);
         pnlFooterLine.Name = "pnlFooterLine";
-        pnlFooterLine.Size = new Size(549, 1);
+        pnlFooterLine.Size = new Size(760, 1);
         pnlFooterLine.TabIndex = 2;
         // 
         // btnSave
@@ -297,7 +304,7 @@ public sealed partial class RecipeEditForm
         btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
         btnSave.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSave.ImageOptions.SvgImage");
         btnSave.ImageOptions.SvgImageSize = new Size(18, 18);
-        btnSave.Location = new Point(324, 11);
+        btnSave.Location = new Point(370, 10);
         btnSave.Margin = new Padding(3, 2, 3, 2);
         btnSave.Name = "btnSave";
         btnSave.Size = new Size(77, 28);
@@ -316,31 +323,18 @@ public sealed partial class RecipeEditForm
         btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
         btnCancel.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnCancel.ImageOptions.SvgImage");
         btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-        btnCancel.Location = new Point(405, 11);
+        btnCancel.Location = new Point(451, 10);
         btnCancel.Margin = new Padding(3, 2, 3, 2);
         btnCancel.Name = "btnCancel";
         btnCancel.Size = new Size(77, 28);
         btnCancel.TabIndex = 1;
         btnCancel.Text = "Vazgeç";
         // 
-        // labelControl1
-        // 
-        labelControl1.Appearance.Font = new Font("Segoe UI", 9.5F);
-        labelControl1.Appearance.ForeColor = SystemColors.ActiveCaptionText;
-        labelControl1.Appearance.Options.UseFont = true;
-        labelControl1.Appearance.Options.UseForeColor = true;
-        labelControl1.Location = new Point(16, 10);
-        labelControl1.Margin = new Padding(3, 2, 3, 2);
-        labelControl1.Name = "labelControl1";
-        labelControl1.Size = new Size(79, 17);
-        labelControl1.TabIndex = 16;
-        labelControl1.Text = "Mamül Ürün :";
-        // 
         // RecipeEditForm
         // 
         AutoScaleDimensions = new SizeF(6F, 13F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(549, 437);
+        ClientSize = new Size(760, 506);
         Controls.Add(pnlBody);
         Controls.Add(pnlFooter);
         Controls.Add(pnlHeader);
@@ -361,10 +355,10 @@ public sealed partial class RecipeEditForm
         pnlBody.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)gridLinesControl).EndInit();
         ((System.ComponentModel.ISupportInitialize)gridLinesView).EndInit();
-        ((System.ComponentModel.ISupportInitialize)lookUpProduct.Properties).EndInit();
-        ((System.ComponentModel.ISupportInitialize)lookUpProductView).EndInit();
         ((System.ComponentModel.ISupportInitialize)lookUpWorkshop.Properties).EndInit();
         ((System.ComponentModel.ISupportInitialize)lookUpWorkshopView).EndInit();
+        ((System.ComponentModel.ISupportInitialize)lookUpProduct.Properties).EndInit();
+        ((System.ComponentModel.ISupportInitialize)lookUpProductView).EndInit();
         ((System.ComponentModel.ISupportInitialize)pnlFooter).EndInit();
         pnlFooter.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)pnlFooterLine).EndInit();

@@ -28,6 +28,9 @@ public sealed class ProductLookUpDto
     [Column("Kategori", Order = 45, Width = 120)]
     public string CategoryName { get; set; } = string.Empty;
 
+    [Column("Kategori Id", IsVisible = false)]
+    public Guid? CategoryId { get; set; }
+
     public string Display => $"{Name} ({ProductCode}) [{ProductUnitTypeName}]";
 }
 
@@ -52,7 +55,8 @@ internal sealed class ProductLookUpQueryHandler(
                 ProductUnitTypeName = p.ProductUnitType?.Name.Value ?? string.Empty,
                 WarehouseName = p.Warehouse?.Name.Value ?? string.Empty,
                 WarehouseCode = p.Warehouse?.Code.Value ?? string.Empty,
-                CategoryName = p.Category?.Name.Value ?? string.Empty
+                CategoryName = p.Category?.Name.Value ?? string.Empty,
+                CategoryId = p.CategoryId.Value
             })
             .OrderBy(p => p.Name)
             .ToList();

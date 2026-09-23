@@ -58,7 +58,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         };
 
         private ProductPriceType PriceTypeFor(InvoiceType type)
-            => type.IsPurchaseSide() ? ProductPriceType.Purchase : ProductPriceType.Sale;
+        => type.IsPurchaseSide() ? ProductPriceType.Purchase : ProductPriceType.Sale;
+
+        private bool IsNewSalesInvoice => _editing is null
+            && SelectedInvoiceType == InvoiceType.Sales;
+
+        private decimal? SuggestedSalesPriceFor(ProductDto product, decimal saleUnitPrice)
+        {
+            if (!IsNewSalesInvoice || saleUnitPrice > 0)
+            {
+                return null;
+            }
+
+            decimal costPrice = product.Prices
+                .Where(p => p.PriceType == ProductPriceType.Purchase)
+                .OrderByDescending(p => p.StartDate)
+                .FirstOrDefault()?.UnitPrice ?? 0m;
+
+            if (costPrice <= 0m)
+            {
+                return null;
+            }
+
+            decimal kdvRate = product.TaxRateRate > 0 && product.TaxRateRate <= 1
+                ? product.TaxRateRate
+                : product.TaxRateRate / 100m;
+
+            decimal withKdv = costPrice * (1m + kdvRate);
+            decimal withProfit = withKdv * 1.10m;
+            decimal suggested = withProfit * (1m + kdvRate);
+
+            return Math.Ceiling(suggested);
+        }
 
         private bool IsOutputInvoice => SelectedInvoiceType == InvoiceType.Sales
             || SelectedInvoiceType == InvoiceType.PurchaseReturn;
@@ -639,11 +670,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 .OrderByDescending(p => p.StartDate)
                 .FirstOrDefault();
 
+            decimal unitPrice = price?.UnitPrice ?? 0;
+            if (unitPrice <= 0
+                && SuggestedSalesPriceFor(product, unitPrice) is decimal suggested
+                && MsgBox.Confirm(
+                    this,
+                    $"'{product.Name}' için satış fiyatı tanımlı değil.{Environment.NewLine}"
+                    + $"Önerilen satış fiyatı: {suggested:N0} TL{Environment.NewLine}"
+                    + "(maliyet + KDV, %10 kâr, KDV; yukarı yuvarlanmış).{Environment.NewLine}"
+                    + "Bu fiyatı birim fiyat olarak kullanmak ister misiniz?",
+                    "Satış Fiyatı Önerisi") == DialogResult.Yes)
+            {
+                unitPrice = suggested;
+            }
+
             _lines.Add(new InvoiceLineDto
             {
                 ProductId = product.Id,
                 Quantity = 1,
-                UnitPrice = price?.UnitPrice ?? 0,
+                UnitPrice = unitPrice,
                 TaxRateRate = product.TaxRateRate > 0 && product.TaxRateRate <= 1 ? product.TaxRateRate * 100 : product.TaxRateRate,
                 Description = product.ProductCode
             });
@@ -681,7 +726,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                             .OrderByDescending(p => p.StartDate)
                             .FirstOrDefault();
 
-                        line.UnitPrice = priceObj?.UnitPrice ?? 0;
+                        decimal inGridUnitPrice = priceObj?.UnitPrice ?? 0;
+                        if (inGridUnitPrice <= 0
+                            && SuggestedSalesPriceFor(prod, inGridUnitPrice) is decimal suggestedInGrid
+                            && MsgBox.Confirm(
+                                this,
+                                $"'{prod.Name}' için satış fiyatı tanımlı değil.{Environment.NewLine}"
+                                + $"Önerilen satış fiyatı: {suggestedInGrid:N0} TL{Environment.NewLine}"
+                                + "(maliyet + KDV, %10 kâr, KDV; yukarı yuvarlanmış).{Environment.NewLine}"
+                                + "Bu fiyatı birim fiyat olarak kullanmak ister misiniz?",
+                                "Satış Fiyatı Önerisi") == DialogResult.Yes)
+                        {
+                            inGridUnitPrice = suggestedInGrid;
+                        }
+
+                        line.UnitPrice = inGridUnitPrice;
 
                         gridLinesView.RefreshRow(rowHandle);
                         RecalculateTotals();

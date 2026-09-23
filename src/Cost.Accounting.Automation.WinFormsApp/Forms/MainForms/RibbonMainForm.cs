@@ -59,6 +59,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmHesapPlani"] = DxIcon.ChartAccounts,
             ["elmOdemeTahsilat"] = DxIcon.Payments,
             ["elmMaliyetPusulasi"] = DxIcon.Balance,
+            ["elmRecete"] = DxIcon.Recipe,
             ["elmSirketAyarlari"] = DxIcon.Company,
             ["elmKullanicilar"] = DxIcon.Users,
             ["elmRoller"] = DxIcon.Roles

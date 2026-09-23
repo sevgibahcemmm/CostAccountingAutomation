@@ -90,5 +90,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage AppIcon => Icon("svgimages/icon%20builder/business_diagram.svg");
         public static SvgImage Exit => Icon("devav/actions/exit.svg");
         public static SvgImage Module => Icon("svgimages/business%20objects/bo_list.svg");
+        public static SvgImage Recipe => Icon("svgimages/business%20objects/bo_document.svg");
+        public static SvgImage RecipeMaterials => Icon("svgimages/icon%20builder/actions_edit.svg");
     }
 }

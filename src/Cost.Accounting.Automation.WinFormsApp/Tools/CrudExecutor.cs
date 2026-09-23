@@ -12,6 +12,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
     {
         public static async Task<bool> ExecuteAsync<T>(IRequest<Result<T>> request)
         {
+            Result<T>? result = await TryExecuteAsync(request);
+            return result is not null;
+        }
+
+        public static async Task<Result<T>?> TryExecuteAsync<T>(IRequest<Result<T>> request)
+        {
             try
             {
                 using var scope = Program.Services.CreateScope();
@@ -21,10 +27,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                 if (!result.IsSuccessful)
                 {
                     ToastHelper.Show(AuthFormStyles.GetErrorText(result.ErrorMessages), ToastType.Error, 4000);
-                    return false;
+                    return null;
                 }
 
-                string message = result.Data is string s ? s : "İşlem başarılı";
+                string message = GetResultMessage(result.Data);
                 if (message.StartsWith(DeleteWarnings.Prefix, StringComparison.Ordinal))
                 {
                     ToastHelper.Show(message[DeleteWarnings.Prefix.Length..], ToastType.Warning, 5000);
@@ -33,19 +39,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                 {
                     ToastHelper.Show(message, ToastType.Success);
                 }
-                return true;
+                return result;
             }
             catch (ValidationException ex)
             {
                 ToastHelper.Show(AuthFormStyles.GetValidationText(ex), ToastType.Error, 4000);
-                return false;
+                return null;
             }
             catch (Exception ex)
             {
                 CrashLog.WriteException("CrudExecutorCatch-" + request.GetType().Name, ex);
                 ToastHelper.Show("İşlem sırasında bir hata oluştu: " + ex.Message, ToastType.Error, 4000);
-                return false;
+                return null;
             }
         }
+
+        private static string GetResultMessage(object? data) => data switch
+        {
+            string s => s,
+            IResultMessage m => m.Message,
+            _ => "İşlem başarılı"
+        };
     }
 }

@@ -10,6 +10,7 @@ using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
+using Cost.Accounting.Automation.WinFormsApp.Forms.RecipeForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
@@ -24,6 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Data;
 using TS.MediatR;
+using TS.Result;
 using ReportItemDto = Cost.Accounting.Automation.WinFormsApp.Reports.CostSlipReport.CostSlipItemDto;
 using AppCostSlip = Cost.Accounting.Automation.Application.CostSlips.CostSlipDto;
 using Cost.Accounting.Automation.WinFormsApp.Reports.CostSlipReport;
@@ -794,9 +796,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             if (workshopId is Guid wid
                 && _transferredByWorkshop.TryGetValue(wid, out List<AtelierTransferProductDto>? transferred))
             {
-                filtered = _products
-                    .Where(p => transferred.Any(t => t.ProductId == p.Id && t.AvailableQuantity > 0m))
+                List<ProductDto> transferredProducts = _products
+                    .Where(p => transferred.Any(t => t.ProductId == p.Id))
                     .ToList();
+
+                List<ProductDto> materialProducts = transferredProducts.Count > 0
+                    ? transferredProducts
+                    : GetWorkshopMaterialProducts(wid);
+
+                filtered = materialProducts;
 
                 lookupItems = filtered.Select(p => new ProductLookUpItem(
                     p.Id,
@@ -830,11 +838,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             _riProductLookUp.DataSource = lookupItems;
             _riProductLookUp.NullText = workshopId is null
                 ? "Önce atölye seçin"
-                : _transferredByWorkshop.ContainsKey(workshopId.Value)
-                    ? filtered.Count == 0
-                        ? "Bu atölyeye transfer edilen ürün bulunamadı"
-                        : "Ürün / Masraf Seçiniz..."
-                    : "Atölyeye transfer edilen ürünler yükleniyor...";
+                : !_transferredByWorkshop.ContainsKey(workshopId.Value)
+                    ? "Atölyeye transfer edilen ürünler yükleniyor..."
+                    : filtered.Count == 0
+                        ? "Bu atölye için malzeme ürünü bulunamadı"
+                        : "Ürün / Masraf Seçiniz...";
 
             foreach (var line in _lines)
             {
@@ -854,6 +862,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             RefreshAvailableQuantities();
             gridLinesView.RefreshData();
+        }
+
+        private List<ProductDto> GetWorkshopMaterialProducts(Guid workshopId)
+        {
+            List<ProductDto> materialPool = _products
+                .Where(p => MatchesWarehouse(p, "150"))
+                .ToList();
+
+            Guid? semiAccountId = GetWorkshopProducedAccountId(workshopId, CostSlipType.SemiFinishedProduct);
+            Guid? finishedAccountId = GetWorkshopProducedAccountId(workshopId, CostSlipType.Product);
+            string? workshopName = GetSelectedWorkshopName();
+
+            List<ProductDto> matched = materialPool
+                .Where(p =>
+                    (semiAccountId is Guid semi && p.CategoryId == semi)
+                    || (finishedAccountId is Guid fin && p.CategoryId == fin)
+                    || (workshopName is not null
+                        && string.Equals(p.CategoryName.Trim(), workshopName, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            return matched.Count > 0 ? matched : materialPool;
         }
 
         private void RefreshAvailableQuantities()
@@ -1488,7 +1517,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             Guid? producedProductId = lookUpProducedProduct.EditValue is Guid pid && pid != Guid.Empty ? pid : null;
 
+            if (producedProductId is Guid producedId
+                && !await ConfirmRecipeCompatibilityAsync(producedId, materialLines, _grandTotal, quantity))
+            {
+                return;
+            }
+
             bool ok = false;
+            Guid? createdSlipId = null;
             btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
             try
@@ -1509,7 +1545,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 }
                 else
                 {
-                    ok = await CrudExecutor.ExecuteAsync(new CostSlipCreateCommand(
+                    Result<CostSlipCreateResult>? createResult = await CrudExecutor.TryExecuteAsync(new CostSlipCreateCommand(
                         SlipNumber: number,
                         CostSlipType: CurrentType,
                         CostDate: date,
@@ -1520,6 +1556,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         Description: txtDescription.Text.Trim(),
                         Items: itemModels,
                         IsApproved: approve));
+                    ok = createResult is not null;
+                    createdSlipId = createResult?.Data?.SlipId;
                 }
             }
             finally
@@ -1536,9 +1574,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             bool isEditingDraft = _editing is { Status: CostSlipStatus.Draft };
             bool becomesApproved = approve && !isEditingDraft;
 
-            if (!becomesApproved && _editing is null)
+            if (!becomesApproved && _editing is null && createdSlipId is Guid createdId)
             {
-                _editing = await FindCreatedDraftAsync(number, workshopId, CurrentType, date);
+                _editing = new CostSlipListDto
+                {
+                    Id = createdId,
+                    SlipNumber = number,
+                    CostSlipType = CurrentType,
+                    Status = CostSlipStatus.Draft,
+                    CostDate = date,
+                    WorkshopId = workshopId
+                };
             }
 
 string message = isEditingDraft
@@ -1557,7 +1603,7 @@ string message = isEditingDraft
              LockAfterSave(becomesApproved);
         }
 
-        private async Task CheckRecipeAndSalePriceAsync(Guid producedProductId, List<CostSlipItemEditDto> materialLines, decimal grandTotal, int quantity)
+        private async Task<bool> ConfirmRecipeCompatibilityAsync(Guid producedProductId, List<CostSlipItemEditDto> materialLines, decimal grandTotal, int quantity)
     {
         try
         {
@@ -1573,38 +1619,117 @@ string message = isEditingDraft
 
             if (!compare.HasRecipe)
             {
-                DialogResult dr = MsgBox.Confirm(
-                    "Bu üretim için reçete henüz tanımlı değil.\nMaliyeti reçete olarak kaydetmek istermisiniz?",
-                    "Reçete Kaydı");
-                if (dr == DialogResult.Yes)
-                {
-                    var items = materialLines
-                        .Where(l => l.ProductId != null)
-                        .Select(l => new RecipeItemRow(l.ProductId!.Value, Math.Round(l.Quantity / quantity, 4)))
-                        .ToList();
-                    await CrudExecutor.ExecuteAsync(new RecipeSaveCommand(producedProductId, true, items, SelectedWorkshopId ?? Guid.Empty));
-                    ToastHelper.Show("Reçete olarak kaydedildi.", ToastType.Success);
-                }
+                return await TryCreateRecipeFromSlipAsync(producedProductId, materialLines, quantity, compare.ProducedProductName);
             }
-            else
+
+            if (compare.Mismatches.Count == 0)
             {
-                if (compare.Mismatches.Count > 0)
+                return true;
+            }
+
+            System.Text.StringBuilder sb = new();
+            sb.AppendLine("Reçete ile malzeme kullanımı uyumsuz (kaydedilmesi onaylandığında düzeltme gerekir):");
+            sb.AppendLine();
+            foreach (RecipeCompareMismatchDto m in compare.Mismatches)
+            {
+                sb.AppendLine($"  • {m.ProductName}: reçete {m.Expected:n2}, gerçek {m.Actual:n2} ({m.Reason})");
+            }
+            sb.AppendLine();
+            sb.AppendLine("Yine de kaydetmek istiyor musunuz?");
+
+            return MsgBox.Confirm(sb.ToString(), "Reçete Uyumsuzluk Uyarısı") == DialogResult.Yes;
+        }
+        catch (Exception ex)
+        {
+            CrashLog.WriteException("CostSlip.RecipeCompatibilityConfirm", ex);
+            return true;
+        }
+    }
+
+    private async Task<bool> TryCreateRecipeFromSlipAsync(
+        Guid producedProductId,
+        List<CostSlipItemEditDto> materialLines,
+        int quantity,
+        string producedProductName)
+    {
+        try
+        {
+            DialogResult dr = MsgBox.Confirm(
+                $"'{producedProductName}' için reçete henüz tanımlı değil.\nMaliyeti reçete olarak kaydetmek istermisiniz?",
+                "Reçete Kaydı");
+            if (dr != DialogResult.Yes)
+            {
+                return true;
+            }
+
+            RecipeMaterialCandidate[] candidates = materialLines
+                .Where(l => l.ProductId != null)
+                .Select(l => new RecipeMaterialCandidate(
+                    l.ProductId!.Value,
+                    l.ProductName ?? string.Empty,
+                    l.ProductUnitTypeName ?? string.Empty,
+                    l.Quantity))
+                .ToArray();
+
+            if (candidates.Length == 0)
+            {
+                return true;
+            }
+
+            using (var dialog = new RecipeMaterialSelectionForm(producedProductName, quantity, candidates))
+            {
+                if (dialog.ShowDialog(this) != DialogResult.OK)
                 {
-                    System.Text.StringBuilder sb = new();
-                    sb.AppendLine("Reçete ile malzeme kullanımı uyumsuz:");
-                    foreach (RecipeCompareMismatchDto m in compare.Mismatches)
-                    {
-                        sb.AppendLine($"  {m.ProductName}: reçete {m.Expected:n4}, gerçek {m.Actual:n4} ({m.Reason})");
-                    }
-                    ToastHelper.Show(sb.ToString(), ToastType.Warning, 10000);
+                    return true;
                 }
-                if (compare.SalePriceExceeded)
+
+                await CrudExecutor.ExecuteAsync(new RecipeSaveCommand(
+                    producedProductId,
+                    true,
+                    dialog.SelectedItems,
+                    SelectedWorkshopId ?? Guid.Empty));
+            }
+
+            ToastHelper.Show("Reçete olarak kaydedildi.", ToastType.Success);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            CrashLog.WriteException("CostSlip.RecipeCreateFromSlip", ex);
+            return true;
+        }
+    }
+
+    private async Task CheckRecipeAndSalePriceAsync(Guid producedProductId, List<CostSlipItemEditDto> materialLines, decimal grandTotal, int quantity)
+    {
+        try
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            RecipeCompareResult compare = await mediator.Send(new RecipeCompareQuery(
+                producedProductId,
+                quantity,
+                grandTotal,
+                materialLines.Select(l => new RecipeCompareMaterialRow(l.ProductId!.Value, l.ProductName!, l.Quantity)).ToList()),
+                CancellationToken.None);
+
+            if (compare.Mismatches.Count > 0)
+            {
+                System.Text.StringBuilder sb = new();
+                sb.AppendLine("Reçete ile malzeme kullanımı uyumsuz:");
+                foreach (RecipeCompareMismatchDto m in compare.Mismatches)
+                {
+                    sb.AppendLine($"  {m.ProductName}: reçete {m.Expected:n2}, gerçek {m.Actual:n2} ({m.Reason})");
+                }
+                ToastHelper.Show(sb.ToString(), ToastType.Warning, 10000);
+            }
+            if (compare.SalePriceExceeded)
                 {
                     ToastHelper.Show(
                         $"{compare.ProducedProductName} birim maliyeti ({compare.UnitCost:n2} ₺) satış fiyatını ({compare.SalePrice:n2} ₺) aşmaktadır.",
                         ToastType.Warning);
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -1612,29 +1737,7 @@ string message = isEditingDraft
         }
     }
 
-    private async Task<CostSlipListDto?> FindCreatedDraftAsync(string number, Guid workshopId, CostSlipType type, DateOnly date)
-        {
-            try
-            {
-                using var scope = Program.Services.CreateScope();
-                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-                IQueryable<CostSlipListDto> query = await mediator.Send(
-                    new CostSlipGetAllQuery(CostSlipType: type, OnlyDeleted: false, Status: CostSlipStatus.Draft),
-                    CancellationToken.None);
-                List<CostSlipListDto> drafts = await Task.Run(() => query.ToList());
-                return drafts.FirstOrDefault(d =>
-                    d.SlipNumber.Equals(number.Trim(), StringComparison.OrdinalIgnoreCase)
-                    && d.WorkshopId == workshopId
-                    && d.CostDate == date);
-            }
-            catch (Exception ex)
-            {
-                CrashLog.WriteException("CostSlip.FindCreatedDraft", ex);
-                return null;
-            }
-        }
-
-        private async void BtnApprove_Click(object? sender, EventArgs e)
+    private async void BtnApprove_Click(object? sender, EventArgs e)
         {
             if (_editing is null)
             {
@@ -1646,6 +1749,18 @@ string message = isEditingDraft
             try
             {
                 if (!await ConfirmSemiFinishedBalanceAsync())
+                {
+                    return;
+                }
+
+                if (lookUpProducedProduct.EditValue is Guid approveProductId
+                    && int.TryParse(txtQuantity.Text.Trim(), out int approveQuantity)
+                    && CurrentType is CostSlipType.Product or CostSlipType.SemiFinishedProduct
+                    && !await ConfirmRecipeCompatibilityAsync(
+                        approveProductId,
+                        _lines.Where(l => l.Quantity > 0).ToList(),
+                        _grandTotal,
+                        approveQuantity))
                 {
                     return;
                 }

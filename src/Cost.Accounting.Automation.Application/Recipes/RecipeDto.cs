@@ -17,7 +17,7 @@ public sealed class RecipeItemDto
     [Column("Birim", Order = 20, Width = 80, Alignment = "Center")]
     public string ProductUnitTypeName { get; set; } = string.Empty;
 
-    [Column("1 Birim İçin Miktar", Order = 30, Width = 140, Format = "n4", Alignment = "Right")]
+    [Column("1 Birim İçin Miktar", Order = 30, Width = 140, Format = "n2", Alignment = "Right")]
     public decimal Quantity { get; set; }
 }
 
@@ -34,6 +34,8 @@ public sealed class RecipeListDto : EntityDto
 
     [Column("Ürün Id", IsVisible = false)]
     public Guid ProductId { get; set; }
+
+    public List<RecipeItemDto> Items { get; set; } = [];
 }
 
 public sealed class RecipeDto : EntityDto
@@ -58,6 +60,16 @@ public static class RecipeExtensions
                     ? string.Empty
                     : s.Entity.Product.ProductUnitType.Name.Value,
                 ItemsCount = s.Entity.Items.Count,
+                Items = s.Entity.Items.Select(i => new RecipeItemDto
+                {
+                    Id = i.Id,
+                    ProductId = i.ProductId,
+                    ProductName = i.Product == null ? string.Empty : i.Product.Name.Value,
+                    ProductUnitTypeName = i.Product == null || i.Product.ProductUnitType == null
+                        ? string.Empty
+                        : i.Product.ProductUnitType.Name.Value,
+                    Quantity = i.Quantity
+                }).ToList(),
                 IsActive = s.Entity.IsActive,
                 CreatedAt = s.Entity.CreatedAt,
                 CreatedBy = s.Entity.CreatedBy,
