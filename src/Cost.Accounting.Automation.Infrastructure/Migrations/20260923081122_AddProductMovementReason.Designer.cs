@@ -4,6 +4,7 @@ using Cost.Accounting.Automation.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cost.Accounting.Automation.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260923081122_AddProductMovementReason")]
+    partial class AddProductMovementReason
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1007,104 +1010,6 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.HasIndex("DuplicateKey");
 
                     b.ToTable("TaxRates", (string)null);
-                });
-
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Recipes.Recipe", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DuplicateKey")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DuplicateKey");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("Recipes", (string)null);
-                });
-
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Recipes.RecipeItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DuplicateKey")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<Guid>("RecipeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DuplicateKey");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("RecipeId");
-
-                    b.ToTable("RecipeItems", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Roles.Role", b =>
@@ -2305,36 +2210,6 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Recipes.Recipe", b =>
-                {
-                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Recipes.RecipeItem", b =>
-                {
-                    b.HasOne("Cost.Accounting.Automation.Domain.Products.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Cost.Accounting.Automation.Domain.Recipes.Recipe", "Recipe")
-                        .WithMany("Items")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Recipe");
-                });
-
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Roles.Role", b =>
                 {
                     b.OwnsMany("Cost.Accounting.Automation.Domain.Roles.Permission", "Permissions", b1 =>
@@ -2851,11 +2726,6 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations
                     b.Navigation("Movements");
 
                     b.Navigation("Prices");
-                });
-
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Recipes.Recipe", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.StockIssues.StockIssue", b =>

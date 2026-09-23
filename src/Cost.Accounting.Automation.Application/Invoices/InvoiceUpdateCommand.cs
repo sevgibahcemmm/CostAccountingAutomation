@@ -39,16 +39,16 @@ public sealed class InvoiceUpdateCommandValidator : AbstractValidator<InvoiceUpd
             .Must(lines => lines.GroupBy(l => l.ProductId).All(g => g.Count() == 1))
             .WithMessage("Aynı ürün faturada yalnızca bir kez yer alabilir.");
 
-        When(x => x.InvoiceType == InvoiceType.Sales, () =>
+        When(x => x.InvoiceType.IsSalesSide(), () =>
         {
             RuleFor(x => x.CustomerId)
-                .NotEmpty().WithMessage("Satış faturası için müşteri seçilmelidir.");
+                .NotEmpty().WithMessage("Satış / iade faturası için müşteri seçilmelidir.");
         });
 
-        When(x => x.InvoiceType == InvoiceType.Purchase, () =>
+        When(x => x.InvoiceType.IsPurchaseSide(), () =>
         {
             RuleFor(x => x.SupplierId)
-                .NotEmpty().WithMessage("Satın alma faturası için tedarikçi seçilmelidir.");
+                .NotEmpty().WithMessage("Alış / alış iade faturası için tedarikçi seçilmelidir.");
         });
 
         RuleForEach(x => x.Lines).ChildRules(line =>

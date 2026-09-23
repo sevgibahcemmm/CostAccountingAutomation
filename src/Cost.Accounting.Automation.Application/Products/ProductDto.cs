@@ -171,15 +171,9 @@ public static class ProductExtensions
                 Description = s.Entity.Description.Value,
 
                 StockQuantity = s.Entity.Movements.Sum(m =>
-                    m.Description.Value != null
-                    && m.Description.Value.StartsWith(ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix)
-                        ? 0m
-                        : m.MovementType == ProductMovementType.Input
-                            ? (m.Description.Value != null
-                                  && m.Description.Value.StartsWith(ProductStockBalanceHelper.AtelierTransferInputDescriptionPrefix)
-                                  ? 0m
-                                  : m.Quantity)
-                            : -m.Quantity),
+                    m.MovementType == ProductMovementType.Input
+                        ? m.Quantity
+                        : -m.Quantity),
 
 Images = s.Entity.Images.Select(i => new ProductImageDto
                     {

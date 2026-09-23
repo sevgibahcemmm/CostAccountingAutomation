@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.RecipeForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms;
@@ -49,9 +50,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmAtolyeTransferi"] = DxIcon.AtelierTransfer,
             ["elmAtolyeStokRaporu"] = DxIcon.PriceStock,
             ["elmTuketimBirimleri"] = DxIcon.Tag,
-            ["elmSatinAlmaFaturalari"] = DxIcon.Invoices,
+            ["elmFaturalar"] = DxIcon.Invoices,
             ["elmFaturaOnaylama"] = DxIcon.Check,
-            ["elmSatisFaturalari"] = DxIcon.Sales,
             ["elmMusteriler"] = DxIcon.Customers,
             ["elmTedarikciler"] = DxIcon.Suppliers,
             ["elmCariHareketler"] = DxIcon.CurrentAccounts,
@@ -201,9 +201,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmCariHareketler"] = () => MdiFormManager.Instance.OpenForm<CurrentAccountMovementsListForm>(this, "Cari Hareketler");
             _menuActions["elmCariBorcAlacakOzeti"] = () => MdiFormManager.Instance.OpenForm<CurrentAccountBalanceForm>(this, "Cari Borç/Alacak Özeti");
             _menuActions["elmOdemeTahsilat"] = () => MdiFormManager.Instance.OpenForm<PaymentCollectionListForm>(this, "Ödeme / Tahsilat");
-            _menuActions["elmSatinAlmaFaturalari"] = () => OpenInvoices(InvoiceType.Purchase);
+            _menuActions["elmFaturalar"] = () => OpenInvoices(null);
             _menuActions["elmFaturaOnaylama"] = () => MdiFormManager.Instance.OpenForm<InvoiceApprovalForm>(this, "Fatura Onaylama");
-            _menuActions["elmSatisFaturalari"] = () => OpenInvoices(InvoiceType.Sales);
             _menuActions["elmStokGirisi"] = () => OpenProductMovements(ProductMovementType.Input);
             _menuActions["elmStokCikisi"] = () => OpenProductMovements(ProductMovementType.Output);
             _menuActions["elmStokHareketleri"] = () => OpenProductMovements(null);
@@ -214,6 +213,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmTuketimBirimleri"] = () => MdiFormManager.Instance.OpenForm<ConsumptionUnitsListForm>(this, "Tüketim Birimleri");
             _menuActions["elmHesapPlani"] = () => MdiFormManager.Instance.OpenForm<ChartOfAccountsListForm>(this, "Hesap Planı");
             _menuActions["elmMaliyetPusulasi"] = () => MdiFormManager.Instance.OpenForm<CostSlipsListForm>(this, "Maliyet Pusulası");
+            _menuActions["elmRecete"] = () => MdiFormManager.Instance.OpenForm<RecipeListForm>(this, "Reçeteler");
             _menuActions["elmUrunler"] = () => MdiFormManager.Instance.OpenForm<ProductsListForm>(this, "Ürünler");
             _menuActions["elmBirimCinsleri"] = () => MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
             _menuActions["elmKdvOranlari"] = () => MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
@@ -249,10 +249,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
         }
 
-        private void OpenInvoices(InvoiceType type)
+        private void OpenInvoices(InvoiceType? type)
         {
-            string title = type == InvoiceType.Purchase ? "Satın Alma Faturaları" : "Satış Faturaları";
-            MdiFormManager.Instance.OpenForm<InvoicesListForm>(this, title, () => new InvoicesListForm(type));
+            string title = type switch
+            {
+                InvoiceType.Purchase => "Alış Faturaları",
+                InvoiceType.PurchaseReturn => "Alış İade Faturaları",
+                InvoiceType.Sales => "Satış Faturaları",
+                InvoiceType.SalesReturn => "Satış İade Faturaları",
+                _ => "Faturalar"
+            };
+            InvoiceType? target = type;
+            MdiFormManager.Instance.OpenForm<InvoicesListForm>(this, title, () => new InvoicesListForm(target));
         }
 
         private void OpenProductMovements(ProductMovementType? type)

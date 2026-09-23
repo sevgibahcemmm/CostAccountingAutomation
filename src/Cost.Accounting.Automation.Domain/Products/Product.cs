@@ -126,6 +126,9 @@ public sealed class Product : Entity, IHardDeletable
         _prices.AddRange(prices);
     }
 
+    public void AddPrice(Price unitPrice, ProductPriceType priceType, DateOnly startDate)
+        => _prices.Add(new ProductPrice(unitPrice, priceType, startDate, null));
+
     public void ReplaceImages(IEnumerable<Photo> images)
     {
         _images.Clear();

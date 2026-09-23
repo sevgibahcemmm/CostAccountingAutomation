@@ -1,5 +1,7 @@
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.StockIssues;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +12,8 @@ namespace Cost.Accounting.Automation.Application.StockCounts;
 internal sealed class StockCountListReportQueryHandler(
     IProductRepository productRepository,
     IProductMovementRepository productMovementRepository,
-    IStockIssueRepository stockIssueRepository)
+    IStockIssueRepository stockIssueRepository,
+    ICostSlipRepository costSlipRepository)
     : IRequestHandler<StockCountListReportQuery, List<StockCountReportRowDto>>
 {
     public async Task<List<StockCountReportRowDto>> Handle(
@@ -91,6 +94,9 @@ internal sealed class StockCountListReportQueryHandler(
             }
         }
 
+        await AddAtelierProductionsAsync(balances, request.AsOfDate, cancellationToken);
+        await SubtractAtelierConsumptionsAsync(balances, request.AsOfDate, cancellationToken);
+
         if (!request.AllGroups && request.GroupIds is { Count: > 0 })
         {
             HashSet<Guid> selected = request.GroupIds.ToHashSet();
@@ -157,10 +163,10 @@ internal sealed class StockCountListReportQueryHandler(
             return [];
         }
 
-        // Atölye transferi, depodan çıkışın yanı sıra "Atölye Transferi Girişi"
-        // adında bir giriş hareketi de üretir. Bu giriş hareketi atölye stokunu
-        // temsil eder ve depo bakiyesine girmemelidir; aksi halde transfer edilen
-        // miktar depodan hiç düşmemiş gibi görünür.
+        // Ürün bazlı bakiye tüm hareketlerin netiyle hesaplanır:
+        // bakiye = tüm girişler (+) - tüm çıkışlar (-). Atölye transferi
+        // giriş/çıkış ikilisi net sıfır etki yapar, MKP tüketimi ise gerçek
+        // çıkıştır; böylece üretilip tüketilen yarımamülün bakiyesi sıfır olur.
         List<ProductMovement> movements = await productMovementRepository.GetAll()
             .AsNoTracking()
             .WhereCountsAsProductStock()
@@ -172,6 +178,71 @@ internal sealed class StockCountListReportQueryHandler(
             .ToDictionary(
                 g => g.Key,
                 g => g.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity));
+    }
+
+    private async Task AddAtelierProductionsAsync(
+        Dictionary<(IdentityId ProductId, IdentityId TargetId), decimal> balances,
+        DateOnly asOfDate,
+        CancellationToken cancellationToken)
+    {
+        // Maliyet pusulası onayı üretilen mamul/yarı mamül için
+        // "Maliyet Pusulası Girişi" (+) hareketi üretir. Üretilen ürün fiziksel
+        // olarak atölyede bulunduğundan atölye bakiyesine eklenmelidir; aksi
+        // halde üretilen yarımamülün bakiyesi tüketim kadar negatif görünür.
+        List<CostSlip> approvedSlips = await costSlipRepository.GetAll()
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted && s.Status == CostSlipStatus.Approved && s.CostDate <= asOfDate)
+            .Where(s => s.ProducedProductId != null)
+            .ToListAsync(cancellationToken);
+
+        foreach (CostSlip slip in approvedSlips)
+        {
+            if (slip.ProducedProductId is not { } producedProductId)
+            {
+                continue;
+            }
+
+            IdentityId workshopId = slip.WorkshopId;
+
+            balances.TryGetValue((new IdentityId(producedProductId.Value), workshopId), out decimal quantity);
+            balances[(new IdentityId(producedProductId.Value), workshopId)] = quantity + slip.Quantity;
+        }
+    }
+
+    private async Task SubtractAtelierConsumptionsAsync(
+        Dictionary<(IdentityId ProductId, IdentityId TargetId), decimal> balances,
+        DateOnly asOfDate,
+        CancellationToken cancellationToken)
+    {
+        if (balances.Count == 0)
+        {
+            return;
+        }
+
+        // Maliyet pusulası onayı atölyedeki stoktan MKP tüketimi (-) çıkışı
+        // üretir. Atölye bakiyesi = transfer girişleri + üretim girişleri -
+        // atölye tüketimleri olmalıdır. Tüketim burada düşülür.
+        List<CostSlip> approvedSlips = await costSlipRepository.GetAll()
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted && s.Status == CostSlipStatus.Approved && s.CostDate <= asOfDate)
+            .Include(s => s.CostSlipItems)
+            .ToListAsync(cancellationToken);
+
+        foreach (CostSlip slip in approvedSlips)
+        {
+            IdentityId workshopId = slip.WorkshopId;
+
+            foreach (CostSlipItem item in slip.CostSlipItems)
+            {
+                if (item.ProductId is null)
+                {
+                    continue;
+                }
+
+                balances.TryGetValue((new IdentityId(item.ProductId.Value), workshopId), out decimal quantity);
+                balances[(new IdentityId(item.ProductId.Value), workshopId)] = quantity - item.Quantity;
+            }
+        }
     }
 
     private static List<StockCountReportRowDto> AssignRowNumbers(List<StockCountReportRowDto> rows)

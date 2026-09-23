@@ -49,6 +49,30 @@ internal sealed class InvoiceApproveCommandHandler(
             return Result<string>.Failure("Bu fatura için stok/cari hareketleri zaten kayıtlı.");
         }
 
+        DateOnly? lastApprovedDate = await invoiceRepository
+            .GetAllWithAudit()
+            .Where(i => i.Entity.Status == InvoiceStatus.Approved && i.Entity.Id != invoice.Id)
+            .Select(i => i.Entity.Date)
+            .OrderByDescending(d => d)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (lastApprovedDate.HasValue && invoice.Date < lastApprovedDate.Value)
+        {
+            return Result<string>.Failure(
+                $"En son onaylanan fatura {lastApprovedDate.Value:dd.MM.yyyy} tarihli olduğundan önceki bir tarihe fatura onaylanamaz.");
+        }
+
+        string? stockError = await InvoiceLedgerHelper.ValidateOutputStockAsync(
+            invoice,
+            productMovementRepository,
+            productRepository,
+            cancellationToken);
+
+        if (stockError is not null)
+        {
+            return Result<string>.Failure(stockError);
+        }
+
         invoice.Approve();
 
         await InvoiceLedgerHelper.CreateLedgerMovementsAsync(

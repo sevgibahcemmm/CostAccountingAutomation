@@ -30,6 +30,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private DevExpress.XtraGrid.Views.Grid.GridView cmbCatalogWarehouseView;
         private DevExpress.XtraGrid.GridControl gridCatalog;
         private DevExpress.XtraGrid.Views.Grid.GridView gridCatalogView;
+        private DevExpress.XtraEditors.TextEdit txtCatalogProductSearch;
         private DevExpress.XtraEditors.SimpleButton btnAddProduct;
         private DevExpress.XtraEditors.PanelControl pnlItemsPanel;
         private DevExpress.XtraEditors.PanelControl pnlItemsHeader;
@@ -93,6 +94,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.cmbCatalogWarehouseView = new DevExpress.XtraGrid.Views.Grid.GridView();
             this.gridCatalog = new DevExpress.XtraGrid.GridControl();
             this.gridCatalogView = new DevExpress.XtraGrid.Views.Grid.GridView();
+            this.txtCatalogProductSearch = new DevExpress.XtraEditors.TextEdit();
             this.btnAddProduct = new DevExpress.XtraEditors.SimpleButton();
             this.pnlItemsPanel = new DevExpress.XtraEditors.PanelControl();
             this.pnlItemsHeader = new DevExpress.XtraEditors.PanelControl();
@@ -137,6 +139,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             ((System.ComponentModel.ISupportInitialize)(this.cmbCatalogWarehouseView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridCatalog)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridCatalogView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.txtCatalogProductSearch.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pnlItemsPanel)).BeginInit();
             this.pnlItemsPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pnlItemsHeader)).BeginInit();
@@ -249,7 +252,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.cmbInvoiceType.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
             this.cmbInvoiceType.Properties.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
-            this.cmbInvoiceType.Size = new System.Drawing.Size(150, 26);
+            this.cmbInvoiceType.Size = new System.Drawing.Size(220, 26);
 
             // 
             // lblNumberLabel
@@ -340,6 +343,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.pnlCatalog.Appearance.Options.UseBackColor = true;
             this.pnlCatalog.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Simple;
             this.pnlCatalog.Controls.Add(this.btnAddProduct);
+            this.pnlCatalog.Controls.Add(this.txtCatalogProductSearch);
             this.pnlCatalog.Controls.Add(this.gridCatalog);
             this.pnlCatalog.Controls.Add(this.cmbCatalogWarehouse);
             this.pnlCatalog.Controls.Add(this.lblCatalogTitle);
@@ -369,12 +373,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.cmbCatalogWarehouse.Size = new System.Drawing.Size(490, 26);
 
             // 
+            // txtCatalogProductSearch
+            // 
+            this.txtCatalogProductSearch.Properties.NullText = "Ürün ara (ad, kod veya barkod)";
+            this.txtCatalogProductSearch.Location = new System.Drawing.Point(5, 58);
+            this.txtCatalogProductSearch.Name = "txtCatalogProductSearch";
+            this.txtCatalogProductSearch.Size = new System.Drawing.Size(490, 30);
+
+            // 
             // gridCatalog
             // 
-            this.gridCatalog.Location = new System.Drawing.Point(5, 62);
+            this.gridCatalog.Location = new System.Drawing.Point(5, 92);
             this.gridCatalog.MainView = this.gridCatalogView;
             this.gridCatalog.Name = "gridCatalog";
-            this.gridCatalog.Size = new System.Drawing.Size(490, 275);
+            this.gridCatalog.Size = new System.Drawing.Size(490, 250);
             this.gridCatalog.TabIndex = 6;
             this.gridCatalog.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
             this.gridCatalogView});
@@ -709,6 +721,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             ((System.ComponentModel.ISupportInitialize)(this.cmbCatalogWarehouseView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridCatalog)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridCatalogView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.txtCatalogProductSearch.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pnlItemsPanel)).EndInit();
             this.pnlItemsPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pnlItemsHeader)).EndInit();

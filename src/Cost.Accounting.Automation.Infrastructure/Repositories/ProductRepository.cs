@@ -13,7 +13,11 @@ internal sealed class ProductRepository : AuditableRepository<Product, Applicati
     }
 
     public Task<List<Product>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default)
-        => Context.Set<Product>().IgnoreQueryFilters().ToListAsync(cancellationToken);
+        => Context.Set<Product>()
+            .Include(p => p.Warehouse)
+            .Include(p => p.Category)
+            .IgnoreQueryFilters()
+            .ToListAsync(cancellationToken);
 
     public Task<Product?> GetByIdWithDetailsAsync(IdentityId id, CancellationToken cancellationToken = default)
         => Context.Set<Product>()

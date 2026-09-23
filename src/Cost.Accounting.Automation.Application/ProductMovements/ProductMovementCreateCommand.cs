@@ -6,6 +6,7 @@ using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 using TS.Result;
 
@@ -19,7 +20,8 @@ public sealed record ProductMovementCreateCommand(
     decimal? UnitPrice,
     DateOnly Date,
     string? ReferenceNo,
-    string Description) : IRequest<Result<string>>;
+    string Description,
+    ProductMovementReason Reason = ProductMovementReason.General) : IRequest<Result<string>>;
 
 public sealed class ProductMovementCreateCommandValidator : AbstractValidator<ProductMovementCreateCommand>
 {
@@ -53,6 +55,18 @@ internal sealed class ProductMovementCreateCommandHandler(
         if (product is null)
         {
             return Result<string>.Failure("Seçilen ürün bulunamadı.");
+        }
+
+        DateOnly? lastMovementDate = await productMovementRepository
+            .GetAllWithAudit()
+            .Select(m => m.Entity.Date)
+            .OrderByDescending(d => d)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (lastMovementDate.HasValue && request.Date < lastMovementDate.Value)
+        {
+            return Result<string>.Failure(
+                $"En son stok hareketi {lastMovementDate.Value:dd.MM.yyyy} tarihli olduğundan önceki bir tarihe stok hareketi kaydedilemez.");
         }
 
         string referenceNo = request.ReferenceNo?.Trim() ?? string.Empty;
@@ -101,7 +115,8 @@ internal sealed class ProductMovementCreateCommandHandler(
             unitPrice: request.UnitPrice.HasValue ? new Price(request.UnitPrice.Value) : null,
             date: request.Date,
             referenceNo: request.ReferenceNo?.Trim(),
-            description: new Description(request.Description ?? string.Empty));
+            description: new Description(request.Description ?? string.Empty),
+            reason: request.Reason);
 
         await productMovementRepository.AddAsync(movement, cancellationToken);
 

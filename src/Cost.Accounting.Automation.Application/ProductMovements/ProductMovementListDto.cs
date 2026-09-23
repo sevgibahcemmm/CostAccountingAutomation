@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 
@@ -28,6 +29,12 @@ public sealed class ProductMovementListDto : EntityDto
 
     [Column("Hareket Türü", Order = 15, Width = 80, Alignment = "Center")]
     public string MovementTypeName => MovementType == ProductMovementType.Input ? "Giriş" : "Çıkış";
+
+    [Column("Neden", IsVisible = false)]
+    public ProductMovementReason Reason { get; set; }
+
+    [Column("Neden", Order = 18, Width = 110)]
+    public string ReasonName => EnumDisplay.GetDisplayName(Reason);
 
     [Column("Miktar", Order = 50, Width = 90, Format = "n2", Alignment = "Right")]
     public decimal Quantity { get; set; }
@@ -67,6 +74,7 @@ public static class ProductMovementExtensions
                 UnitTypeName = s.Entity.Product == null || s.Entity.Product.ProductUnitType == null ? string.Empty : s.Entity.Product.ProductUnitType.Name.Value,
 
                 MovementType = s.Entity.MovementType,
+                Reason = s.Entity.Reason,
                 Quantity = s.Entity.Quantity,
                 UnitPrice = s.Entity.UnitPrice == null ? null : s.Entity.UnitPrice.Value,
                 Date = s.Entity.Date,

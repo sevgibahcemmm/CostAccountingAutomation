@@ -70,6 +70,8 @@ internal sealed class InvoiceRestoreCommandHandler(
         {
             ledgerEntries.AddRange(await ledgerRepository.GetBySourceAsync("SatisFaturasi", movement.Id.Value, cancellationToken));
             ledgerEntries.AddRange(await ledgerRepository.GetBySourceAsync("SatinalmaFaturasi", movement.Id.Value, cancellationToken));
+            ledgerEntries.AddRange(await ledgerRepository.GetBySourceAsync("SatisIadeFaturasi", movement.Id.Value, cancellationToken));
+            ledgerEntries.AddRange(await ledgerRepository.GetBySourceAsync("AlisIadeFaturasi", movement.Id.Value, cancellationToken));
         }
 
         if (ledgerEntries.Count > 0)

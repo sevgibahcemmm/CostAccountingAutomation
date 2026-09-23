@@ -7,6 +7,7 @@ using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 using TS.Result;
 
@@ -47,16 +48,16 @@ public sealed class InvoiceCreateCommandValidator : AbstractValidator<InvoiceCre
             .Must(lines => lines.GroupBy(l => l.ProductId).All(g => g.Count() == 1))
             .WithMessage("Aynı ürün faturada yalnızca bir kez yer alabilir.");
 
-        When(x => x.InvoiceType == InvoiceType.Sales, () =>
+        When(x => x.InvoiceType.IsSalesSide(), () =>
         {
             RuleFor(x => x.CustomerId)
-                .NotEmpty().WithMessage("Satış faturası için müşteri seçilmelidir.");
+                .NotEmpty().WithMessage("Satış / iade faturası için müşteri seçilmelidir.");
         });
 
-        When(x => x.InvoiceType == InvoiceType.Purchase, () =>
+        When(x => x.InvoiceType.IsPurchaseSide(), () =>
         {
             RuleFor(x => x.SupplierId)
-                .NotEmpty().WithMessage("Satın alma faturası için tedarikçi seçilmelidir.");
+                .NotEmpty().WithMessage("Alış / alış iade faturası için tedarikçi seçilmelidir.");
         });
 
         RuleForEach(x => x.Lines).ChildRules(line =>
@@ -152,6 +153,30 @@ internal sealed class InvoiceCreateCommandHandler(
 
         if (request.IsApproved)
         {
+            DateOnly? lastApprovedDate = await invoiceRepository
+                .GetAllWithAudit()
+                .Where(i => i.Entity.Status == InvoiceStatus.Approved && i.Entity.Id != invoice.Id)
+                .Select(i => i.Entity.Date)
+                .OrderByDescending(d => d)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (lastApprovedDate.HasValue && request.Date < lastApprovedDate.Value)
+            {
+                return Result<string>.Failure(
+                    $"En son onaylanan fatura {lastApprovedDate.Value:dd.MM.yyyy} tarihli olduğundan önceki bir tarihe fatura kesilemez.");
+            }
+
+            string? stockError = await InvoiceLedgerHelper.ValidateOutputStockAsync(
+                invoice,
+                productMovementRepository,
+                productRepository,
+                cancellationToken);
+
+            if (stockError is not null)
+            {
+                return Result<string>.Failure(stockError);
+            }
+
             invoice.Approve();
             await InvoiceLedgerHelper.CreateLedgerMovementsAsync(
                 invoice,

@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.CostSlips;
+using Cost.Accounting.Automation.Application.Recipes;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
@@ -1075,14 +1076,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     if (rowHandle >= 0 && rowHandle < _lines.Count)
                     {
                         CostSlipItemEditDto line = _lines[rowHandle];
+
+                        AtelierTransferProductDto? transferInfo = GetTransferInfo(productId);
+                        decimal newPrice = transferInfo?.UnitPrice ?? 0m;
+
+                        CostSlipItemEditDto? duplicate = _lines.FirstOrDefault(l =>
+                            !ReferenceEquals(l, line)
+                            && l.ProductId == productId
+                            && l.UnitPrice == newPrice);
+
+                        if (duplicate is not null)
+                        {
+                            ToastHelper.Show($"'{prod.Name}' bu pusulada {newPrice:n2} birim fiyatıyla zaten mevcut.", ToastType.Warning);
+                            edit.EditValue = line.ProductId ?? (Guid?)null;
+                            return;
+                        }
+
                         line.ProductId = prod.Id;
                         line.ProductName = prod.Name;
                         line.ProductUnitTypeId = prod.ProductUnitTypeId;
                         line.ProductUnitTypeName = prod.ProductUnitTypeName;
 
-                        AtelierTransferProductDto? transferInfo = GetTransferInfo(prod.Id);
                         line.TransferredQuantity = transferInfo?.TransferredQuantity ?? 0m;
-                        line.UnitPrice = transferInfo?.UnitPrice ?? 0m;
+                        line.UnitPrice = newPrice;
 
                         RefreshAvailableQuantities();
                         gridLinesView.RefreshRow(rowHandle);
@@ -1101,6 +1117,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 e.Valid = false;
                 e.ErrorText = "Birim fiyat negatif olamaz.";
                 return;
+            }
+
+            if (columnName == nameof(CostSlipItemEditDto.UnitPrice) && e.Value is decimal newUnitPrice)
+            {
+                int rowHandle = gridLinesView.FocusedRowHandle;
+                if (rowHandle >= 0 && rowHandle < _lines.Count)
+                {
+                    CostSlipItemEditDto line = _lines[rowHandle];
+                    if (line.ProductId is Guid pid)
+                    {
+                        bool priceConflict = _lines.Any(l =>
+                            !ReferenceEquals(l, line)
+                            && l.ProductId == pid
+                            && l.UnitPrice == newUnitPrice);
+
+                        if (priceConflict)
+                        {
+                            e.Valid = false;
+                            e.ErrorText = "Bu ürün aynı birim fiyatıyla zaten listede mevcut. Farklı fiyatla giriş yapabilirsiniz.";
+                            return;
+                        }
+                    }
+                }
             }
 
             if (columnName == nameof(CostSlipItemEditDto.Quantity) && e.Value is decimal qty)
@@ -1175,9 +1214,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             if (qty > 0 && total > 0)
             {
-                unitCost = Math.Round(total / qty, 2);
+                // Birim maliyet virgülden sonra iki rakam olacak şekilde hep YUKARI yuvarlanır
+                // (en yakına yuvarlama aşağı değer üretip amortisman alanına eksi giriş ekleyebiliyor).
+                unitCost = Math.Ceiling(total / qty * 100m) / 100m;
                 reconciled = Math.Round(unitCost * qty, 2);
                 diff = Math.Round(reconciled - total, 2);
+                if (diff < 0m)
+                {
+                    diff = 0m;
+                }
+
                 target = CurrentType == CostSlipType.Service
                     ? ExpenseAccountType.Account740_7
                     : ExpenseAccountType.Account730_07;
@@ -1495,18 +1541,78 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 _editing = await FindCreatedDraftAsync(number, workshopId, CurrentType, date);
             }
 
-            string message = isEditingDraft
-                ? "Maliyet pusulası taslağı güncellendi."
-                : approve
-                    ? "Maliyet pusulası onaylandı; stok hareketleri oluşturuldu."
-                    : "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.";
-            ToastHelper.Show(message, ToastType.Success);
+string message = isEditingDraft
+                 ? "Maliyet pusulası taslağı güncellendi."
+                 : approve
+                     ? "Maliyet pusulası onaylandı; stok hareketleri oluşturuldu."
+                     : "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.";
+             ToastHelper.Show(message, ToastType.Success);
 
-            _saved = true;
-            LockAfterSave(becomesApproved);
+             if (becomesApproved && (CurrentType is CostSlipType.Product or CostSlipType.SemiFinishedProduct) && producedProductId.HasValue)
+             {
+                 await CheckRecipeAndSalePriceAsync(producedProductId.Value, materialLines, _grandTotal, quantity);
+             }
+
+             _saved = true;
+             LockAfterSave(becomesApproved);
         }
 
-        private async Task<CostSlipListDto?> FindCreatedDraftAsync(string number, Guid workshopId, CostSlipType type, DateOnly date)
+        private async Task CheckRecipeAndSalePriceAsync(Guid producedProductId, List<CostSlipItemEditDto> materialLines, decimal grandTotal, int quantity)
+    {
+        try
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            RecipeCompareResult compare = await mediator.Send(new RecipeCompareQuery(
+                producedProductId,
+                quantity,
+                grandTotal,
+                materialLines.Select(l => new RecipeCompareMaterialRow(l.ProductId!.Value, l.ProductName!, l.Quantity)).ToList()),
+                CancellationToken.None);
+
+            if (!compare.HasRecipe)
+            {
+                DialogResult dr = MsgBox.Confirm(
+                    "Bu üretim için reçete henüz tanımlı değil.\nMaliyeti reçete olarak kaydetmek istermisiniz?",
+                    "Reçete Kaydı");
+                if (dr == DialogResult.Yes)
+                {
+                    var items = materialLines
+                        .Where(l => l.ProductId != null)
+                        .Select(l => new RecipeItemRow(l.ProductId!.Value, Math.Round(l.Quantity / quantity, 4)))
+                        .ToList();
+                    await CrudExecutor.ExecuteAsync(new RecipeSaveCommand(producedProductId, true, items, SelectedWorkshopId ?? Guid.Empty));
+                    ToastHelper.Show("Reçete olarak kaydedildi.", ToastType.Success);
+                }
+            }
+            else
+            {
+                if (compare.Mismatches.Count > 0)
+                {
+                    System.Text.StringBuilder sb = new();
+                    sb.AppendLine("Reçete ile malzeme kullanımı uyumsuz:");
+                    foreach (RecipeCompareMismatchDto m in compare.Mismatches)
+                    {
+                        sb.AppendLine($"  {m.ProductName}: reçete {m.Expected:n4}, gerçek {m.Actual:n4} ({m.Reason})");
+                    }
+                    ToastHelper.Show(sb.ToString(), ToastType.Warning, 10000);
+                }
+                if (compare.SalePriceExceeded)
+                {
+                    ToastHelper.Show(
+                        $"{compare.ProducedProductName} birim maliyeti ({compare.UnitCost:n2} ₺) satış fiyatını ({compare.SalePrice:n2} ₺) aşmaktadır.",
+                        ToastType.Warning);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            CrashLog.WriteException("CostSlip.RecipeCheck", ex);
+        }
+    }
+
+    private async Task<CostSlipListDto?> FindCreatedDraftAsync(string number, Guid workshopId, CostSlipType type, DateOnly date)
         {
             try
             {

@@ -25,6 +25,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
 
             Text = _editing is null ? "Yeni Tüketim Birimi" : "Tüketim Birimi Düzenle";
             lblTitle.Text = Text;
+            lblSubtitle.Text = _editing is null
+                ? "900 (Tüketimler) altında yeni bir tüketim birimi tanımlayın."
+                : "Mevcut tüketim birimi bilgilerini güncelleyin.";
             chkActive.Checked = _editing?.IsActive ?? true;
 
             WireEvents();

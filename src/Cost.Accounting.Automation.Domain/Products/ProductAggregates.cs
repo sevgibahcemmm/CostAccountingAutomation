@@ -21,6 +21,22 @@ public enum StockCostingMethod
     Lifo = 2
 }
 
+public enum ProductMovementReason
+{
+    [System.ComponentModel.DataAnnotations.Display(Name = "Genel")]
+    General = 1,          // Genel / Normal işlem
+    [System.ComponentModel.DataAnnotations.Display(Name = "Sayım Fazlası")]
+    CountingSurplus = 2,  // Sayım Fazlası (Giriş)
+    [System.ComponentModel.DataAnnotations.Display(Name = "Sayım Noksanı")]
+    CountingDeficit = 3,  // Sayım Noksanı (Çıkış)
+    [System.ComponentModel.DataAnnotations.Display(Name = "Fire / Zayi")]
+    Fire = 4,             // Fire / Zayi (Çıkış)
+    [System.ComponentModel.DataAnnotations.Display(Name = "Numune / Hediye")]
+    Sample = 5,           // Numune / Hediye
+    [System.ComponentModel.DataAnnotations.Display(Name = "Devir / Transfer")]
+    Transfer = 6          // Devir / Transfer
+}
+
 public sealed class ProductUnitType : Entity
 {
     private ProductUnitType()
@@ -80,7 +96,8 @@ public sealed class ProductMovement : Entity, IHardDeletable
         Price? unitPrice,
         DateOnly date,
         string? referenceNo,
-        Description description)
+        Description description,
+        ProductMovementReason reason = ProductMovementReason.General)
     {
         MovementType = movementType;
         Quantity = quantity;
@@ -88,6 +105,7 @@ public sealed class ProductMovement : Entity, IHardDeletable
         Date = date;
         ReferenceNo = referenceNo;
         Description = description;
+        Reason = reason;
     }
 
     public ProductMovement(
@@ -98,9 +116,10 @@ public sealed class ProductMovement : Entity, IHardDeletable
         DateOnly date,
         string? referenceNo,
         Description description,
+        ProductMovementReason reason = ProductMovementReason.General,
         IdentityId? invoiceId = null,
         IdentityId? stockIssueId = null)
-        : this(movementType, quantity, unitPrice, date, referenceNo, description)
+        : this(movementType, quantity, unitPrice, date, referenceNo, description, reason)
     {
         ProductId = productId;
         InvoiceId = invoiceId;
@@ -138,6 +157,7 @@ public sealed class ProductMovement : Entity, IHardDeletable
     public IdentityId? InvoiceId { get; private set; }
     public IdentityId? StockIssueId { get; private set; }
     public ProductMovementType MovementType { get; private set; }
+    public ProductMovementReason Reason { get; private set; }
     public decimal Quantity { get; private set; }
     public Price? UnitPrice { get; private set; }
     public DateOnly Date { get; private set; }

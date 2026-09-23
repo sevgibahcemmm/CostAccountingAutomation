@@ -1,15 +1,75 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
+using TS.Result;
 
 namespace Cost.Accounting.Automation.Application.Invoices;
 
 internal static class InvoiceLedgerHelper
 {
+    /// <summary>
+    /// Stok ÇIKIŞI üreten faturalar (Satış, Alış İade) için onaylanmadan önce
+    /// "girişi olmayanın çıkışı olamaz" kuralını doğrular.
+    /// Başarılıysa null, aksi halde hata mesajı döndürür.
+    /// </summary>
+    internal static async Task<string?> ValidateOutputStockAsync(
+        Invoice invoice,
+        IProductMovementRepository productMovementRepository,
+        IProductRepository productRepository,
+        CancellationToken cancellationToken)
+    {
+        if (invoice.InvoiceType != InvoiceType.Sales && invoice.InvoiceType != InvoiceType.PurchaseReturn)
+        {
+            return null;
+        }
+
+        if (invoice.Lines.Count == 0)
+        {
+            return null;
+        }
+
+        Dictionary<IdentityId, decimal> requestedQuantities = invoice.Lines
+            .GroupBy(l => l.ProductId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+        List<IdentityId> productIds = requestedQuantities.Keys.ToList();
+
+        List<ProductMovement> movements = await StockIssueCostingHelper.LoadMovementsAsync(
+            productIds,
+            productMovementRepository,
+            cancellationToken);
+
+        Dictionary<IdentityId, string> productNames;
+        var products = await productRepository.GetAll()
+            .Where(p => productIds.Contains(p.Id))
+            .ToListAsync(cancellationToken);
+        productNames = products.ToDictionary(p => p.Id, p => p.Name.Value);
+
+        foreach (KeyValuePair<IdentityId, decimal> requested in requestedQuantities)
+        {
+            decimal available = StockIssueCostingHelper.ComputeAvailableQuantity(
+                movements,
+                requested.Key,
+                invoice.Date);
+
+            if (requested.Value > available)
+            {
+                string productName = productNames.TryGetValue(requested.Key, out string? name)
+                    ? name
+                    : requested.Key.Value.ToString();
+
+                return $"'{productName}' için bu tarihe kadar yeterli giriş (stok) yok. Mevcut: {available:n2}, istenen: {requested.Value:n2}.";
+            }
+        }
+
+        return null;
+    }
+
     public static async Task CreateLedgerMovementsAsync(
         Invoice invoice,
         IProductMovementRepository productMovementRepository,
@@ -19,79 +79,140 @@ internal static class InvoiceLedgerHelper
         StockCostingMethod costingMethod,
         CancellationToken cancellationToken)
     {
-        bool isSales = invoice.InvoiceType == InvoiceType.Sales;
-        ProductMovementType movementType = isSales ? ProductMovementType.Output : ProductMovementType.Input;
+        InvoiceType type = invoice.InvoiceType;
+        bool isPurchaseSide = type == InvoiceType.Purchase || type == InvoiceType.PurchaseReturn;
+        bool isSalesSide = type == InvoiceType.Sales || type == InvoiceType.SalesReturn;
+        bool isCustomerSide = isSalesSide;
+        bool isReturn = type == InvoiceType.PurchaseReturn || type == InvoiceType.SalesReturn;
 
-        string movementPrefix = isSales ? "Satış Faturası" : "Satın Alma Faturası";
+        ProductMovementType? stockMovementType = type switch
+        {
+            InvoiceType.Purchase => ProductMovementType.Input,
+            InvoiceType.PurchaseReturn => ProductMovementType.Output,
+            InvoiceType.Sales => ProductMovementType.Output,
+            InvoiceType.SalesReturn => ProductMovementType.Input,
+            _ => null
+        };
+
+        string movementPrefix = type switch
+        {
+            InvoiceType.Purchase => "Satın Alma Faturası",
+            InvoiceType.PurchaseReturn => "Alış İade Faturası",
+            InvoiceType.Sales => "Satış Faturası",
+            InvoiceType.SalesReturn => "Satış İade Faturası",
+            _ => "Fatura"
+        };
 
         Dictionary<IdentityId, decimal> costMap = [];
-        if (isSales)
+        if (isSalesSide)
         {
             costMap = await BuildFifoLifoCostMapAsync(invoice, productMovementRepository, costingMethod, cancellationToken);
         }
 
-        HashSet<IdentityId> productIds = invoice.Lines.Select(l => l.ProductId).ToHashSet();
-        Dictionary<Guid, IdentityId?> productAccountMap = (await productRepository
-                .GetAll()
-                .Where(p => productIds.Contains(p.Id))
-                .ToListAsync(cancellationToken))
-            .ToDictionary(p => p.Id.Value, p => p.ChartOfAccountId);
+        decimal customerBalance = 0;
 
-        decimal salesCariDebit = 0;
-
-        foreach (var line in invoice.Lines)
+        if (stockMovementType is { } stockType)
         {
-            decimal unitCost = isSales && costMap.TryGetValue(line.ProductId, out decimal cost) ? cost : line.UnitPrice;
+            HashSet<IdentityId> productIds = invoice.Lines.Select(l => l.ProductId).ToHashSet();
+            Dictionary<Guid, IdentityId?> productAccountMap = (await productRepository
+                    .GetAll()
+                    .Where(p => productIds.Contains(p.Id))
+                    .ToListAsync(cancellationToken))
+                .ToDictionary(p => p.Id.Value, p => p.ChartOfAccountId);
 
-            ProductMovement movement = new(
-                productId: line.ProductId,
-                movementType: movementType,
-                quantity: line.Quantity,
-                unitPrice: new Price(unitCost),
-                date: invoice.Date,
-                referenceNo: invoice.InvoiceNumber,
-                description: new Description($"{movementPrefix} - {invoice.InvoiceNumber}"),
-                invoiceId: invoice.Id);
-
-            await productMovementRepository.AddAsync(movement, cancellationToken);
-
-            if (productAccountMap.TryGetValue(line.ProductId.Value, out IdentityId? accountId) && accountId is not null)
+            foreach (var line in invoice.Lines)
             {
-                decimal amount = Math.Round(line.Quantity * unitCost, 2);
+                decimal unitCost = isSalesSide && costMap.TryGetValue(line.ProductId, out decimal cost)
+                    ? cost
+                    : line.UnitPrice;
 
-                if (isSales)
+                ProductMovement movement = new(
+                    productId: line.ProductId,
+                    movementType: stockType,
+                    quantity: line.Quantity,
+                    unitPrice: new Price(unitCost),
+                    date: invoice.Date,
+                    referenceNo: invoice.InvoiceNumber,
+                    description: new Description($"{movementPrefix} - {invoice.InvoiceNumber}"),
+                    invoiceId: invoice.Id);
+
+                await productMovementRepository.AddAsync(movement, cancellationToken);
+
+                if (productAccountMap.TryGetValue(line.ProductId.Value, out IdentityId? accountId) && accountId is not null)
                 {
-                    await ledgerPoster.PostAsync(accountId, 0, amount, "SatisFaturasi", movement.Id, cancellationToken);
+                    decimal amount = Math.Round(line.Quantity * unitCost, 2);
+
+                    if (stockType == ProductMovementType.Input)
+                    {
+                        string tag = type == InvoiceType.SalesReturn ? "SatisIadeFaturasi" : "SatinalmaFaturasi";
+                        await ledgerPoster.PostAsync(accountId, amount, 0, tag, movement.Id, cancellationToken);
+                    }
+                    else
+                    {
+                        string tag = type == InvoiceType.PurchaseReturn ? "AlisIadeFaturasi" : "SatisFaturasi";
+                        await ledgerPoster.PostAsync(accountId, 0, amount, tag, movement.Id, cancellationToken);
+                    }
                 }
-                else
+
+                if (!isPurchaseSide && !isReturn)
                 {
-                    await ledgerPoster.PostAsync(accountId, amount, 0, "SatinalmaFaturasi", movement.Id, cancellationToken);
+                    decimal rate = line.TaxRateRate / 100m;
+                    decimal discountRate = line.DiscountRate / 100m;
+                    decimal lineCostedNet = line.Quantity * unitCost * (1m - discountRate);
+                    decimal lineTax = Math.Round(lineCostedNet * rate, 2);
+                    customerBalance += lineCostedNet + lineTax;
                 }
             }
+        }
 
-            if (isSales)
+        if (isPurchaseSide && !isReturn)
+        {
+            // Satın alma faturası onaylandığında birim fiyat Fiyat Tablosu'na (Alış) işlenir.
+            foreach (var line in invoice.Lines)
             {
-                decimal rate = line.TaxRateRate / 100m;
-                decimal discountRate = line.DiscountRate / 100m;
-                decimal lineCostedNet = line.Quantity * unitCost * (1m - discountRate);
-                decimal lineTax = Math.Round(lineCostedNet * rate, 2);
-                salesCariDebit += lineCostedNet + lineTax;
+                await RecordPurchasePriceAsync(
+                    productRepository, line.ProductId, line.UnitPrice, invoice.Date, cancellationToken);
             }
         }
 
         CurrentAccountMovement currentAccountMovement;
-        if (isSales)
+        if (isCustomerSide)
         {
+            decimal debit = type switch
+            {
+                InvoiceType.SalesReturn => 0,
+                _ => Math.Round(customerBalance, 2)
+            };
+            decimal credit = type == InvoiceType.SalesReturn ? invoice.GrandTotal : 0;
+
             currentAccountMovement = new CurrentAccountMovement(
                 currentAccountType: CurrentAccountType.Customer,
                 customerId: invoice.CustomerId,
                 supplierId: null,
                 date: invoice.Date,
-                movementType: CurrentAccountMovementType.SalesInvoice,
+                movementType: type switch
+                {
+                    InvoiceType.SalesReturn => CurrentAccountMovementType.SalesReturnInvoice,
+                    _ => CurrentAccountMovementType.SalesInvoice
+                },
                 documentNo: invoice.InvoiceNumber,
-                debit: Math.Round(salesCariDebit, 2),
+                debit: debit,
+                credit: credit,
+                description: new Description($"{movementPrefix} - {invoice.InvoiceNumber}"),
+                invoiceId: invoice.Id);
+        }
+        else if (type == InvoiceType.PurchaseReturn)
+        {
+            currentAccountMovement = new CurrentAccountMovement(
+                currentAccountType: CurrentAccountType.Supplier,
+                customerId: null,
+                supplierId: invoice.SupplierId,
+                date: invoice.Date,
+                movementType: CurrentAccountMovementType.PurchaseReturnInvoice,
+                documentNo: invoice.InvoiceNumber,
+                debit: invoice.GrandTotal,
                 credit: 0,
-                description: new Description($"Satış Faturası - {invoice.InvoiceNumber}"),
+                description: new Description($"Alış İade Faturası - {invoice.InvoiceNumber}"),
                 invoiceId: invoice.Id);
         }
         else
@@ -110,6 +231,34 @@ internal static class InvoiceLedgerHelper
         }
 
         await currentAccountMovementRepository.AddAsync(currentAccountMovement, cancellationToken);
+    }
+
+    private static async Task RecordPurchasePriceAsync(
+        IProductRepository productRepository,
+        IdentityId productId,
+        decimal unitPrice,
+        DateOnly date,
+        CancellationToken cancellationToken)
+    {
+        Product? product = await productRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
+        if (product is null)
+        {
+            return;
+        }
+
+        // Aynı gün ve aynı tutarla tekrar kayıt eklenmesin (yeniden onay/geri yükleme senaryoları).
+        bool alreadyRecorded = product.Prices.Any(p =>
+            p.PriceType == ProductPriceType.Purchase
+            && p.StartDate == date
+            && p.UnitPrice.Value == unitPrice);
+
+        if (alreadyRecorded)
+        {
+            return;
+        }
+
+        product.AddPrice(new Price(unitPrice), ProductPriceType.Purchase, date);
+        productRepository.Update(product);
     }
 
     private static async Task<Dictionary<IdentityId, decimal>> BuildFifoLifoCostMapAsync(

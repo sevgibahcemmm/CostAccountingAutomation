@@ -276,8 +276,8 @@ internal sealed class ProductUpdateCommandHandler(
                 companion.SetQRCode(new QRCode(companionQr));
             }
 
-            companion.ReplacePrices(request.Prices.Select(p => new ProductPrice(
-                new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
+            // Fiyatlar eş ürüne kopyalanmaz: mamül satış fiyatı vb. yarımamüle bulaşmamalı,
+            // yarımamül maliyeti de mamüle bulaşmamalı; fiyatlar bağımsız yönetilir.
 
             companion.ReplaceImages(request.Images.Select(i => new Photo(
                 PhotoOwnerType.Product,

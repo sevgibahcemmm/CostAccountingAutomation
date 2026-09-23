@@ -68,6 +68,8 @@ public sealed class StockIssueListDto : EntityDto
 
     [Column("Hesap Id", IsVisible = false)]
     public Guid TargetAccountId { get; set; }
+
+    public List<StockIssueLineDto> Lines { get; set; } = [];
 }
 
 public sealed class StockIssueDto : EntityDto
@@ -104,6 +106,20 @@ public static class StockIssueExtensions
                 LineCount = s.Entity.Lines.Count(),
                 TotalAmount = s.Entity.Lines.Sum(l => l.Quantity * l.UnitCost.Value),
                 Description = s.Entity.Description.Value,
+                Lines = s.Entity.Lines
+                    .Select(l => new StockIssueLineDto
+                    {
+                        Id = l.Id,
+                        ProductId = l.ProductId.Value,
+                        ProductCode = l.Product == null ? string.Empty : l.Product.ProductCode.Value,
+                        ProductName = l.Product == null ? string.Empty : l.Product.Name.Value,
+                        UnitTypeName = l.Product == null || l.Product.ProductUnitType == null ? string.Empty : l.Product.ProductUnitType.Name.Value,
+                        Quantity = l.Quantity,
+                        UnitCost = l.UnitCost.Value,
+                        TotalAmount = l.Quantity * l.UnitCost.Value,
+                        Description = l.Description.Value
+                    })
+                    .ToList(),
 
                 CreatedAt = s.Entity.CreatedAt,
                 CreatedBy = s.Entity.CreatedBy,

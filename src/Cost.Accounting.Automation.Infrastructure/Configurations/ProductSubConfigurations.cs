@@ -64,6 +64,11 @@ internal sealed class ProductMovementConfiguration : IEntityTypeConfiguration<Pr
         builder.OwnsOne(x => x.Description, description =>
             description.Property(x => x.Value).HasColumnName("Description"));
 
+        builder.Property(x => x.Reason)
+            .HasConversion<int>()
+            .IsRequired()
+            .HasDefaultValueSql("1");
+
         builder.HasIndex(x => x.ProductId);
         builder.HasIndex(x => x.InvoiceId);
         builder.HasIndex(x => x.StockIssueId);

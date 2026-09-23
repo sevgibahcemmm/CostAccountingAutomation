@@ -40,6 +40,43 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private string? _lastAutoDescription;
         private bool _saved;
 
+        private InvoiceType SelectedInvoiceType => cmbInvoiceType.SelectedIndex switch
+        {
+            1 => InvoiceType.PurchaseReturn,
+            2 => InvoiceType.Sales,
+            3 => InvoiceType.SalesReturn,
+            _ => InvoiceType.Purchase
+        };
+
+        private static int IndexOf(InvoiceType type) => type switch
+        {
+            InvoiceType.Purchase => 0,
+            InvoiceType.PurchaseReturn => 1,
+            InvoiceType.Sales => 2,
+            InvoiceType.SalesReturn => 3,
+            _ => 0
+        };
+
+        private ProductPriceType PriceTypeFor(InvoiceType type)
+            => type.IsPurchaseSide() ? ProductPriceType.Purchase : ProductPriceType.Sale;
+
+        private bool IsOutputInvoice => SelectedInvoiceType == InvoiceType.Sales
+            || SelectedInvoiceType == InvoiceType.PurchaseReturn;
+
+        private decimal AvailableQuantity(ProductDto product, DateOnly asOfDate)
+        {
+            decimal balance = 0;
+
+            foreach (ProductMovementDto movement in product.Movements.Where(m => m.Date <= asOfDate))
+            {
+                balance += movement.MovementType == ProductMovementType.Input
+                    ? movement.Quantity
+                    : -movement.Quantity;
+            }
+
+            return balance;
+        }
+
         public InvoiceEditForm() : this(null)
         {
         }
@@ -65,12 +102,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private void InitControls()
         {
             cmbInvoiceType.Properties.Items.Clear();
-            cmbInvoiceType.Properties.Items.Add("Satış Faturası");
-            cmbInvoiceType.Properties.Items.Add("Satın Alma Faturası");
-            cmbInvoiceType.SelectedIndex = 1;
+            cmbInvoiceType.Properties.Items.AddRange([ "Alış Faturası", "Alışlardan İade Faturası", "Satış Faturası", "Satışlardan İade Faturası" ]);
+            cmbInvoiceType.SelectedIndex = 0;
 
             dtDate.DateTime = DateTime.Today;
-            txtInvoiceNumber.Text = $"FAT-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+            txtInvoiceNumber.Text = "";
 
             gridLinesView.OptionsBehavior.AutoPopulateColumns = false;
             gridLines.DataSource = _lines;
@@ -78,7 +114,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             ConfigureCatalogGrid();
 
             btnApprove.Visible = false;
-            btnPrintSlip.Visible = cmbInvoiceType.SelectedIndex == 1;
+            btnPrintSlip.Visible = SelectedInvoiceType == InvoiceType.Purchase;
             lblStatusValue.Text = "";
 
             if (_editing is not null)
@@ -263,6 +299,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             gridLinesView.ValidatingEditor += GridLinesView_ValidatingEditor;
             gridCatalogView.DoubleClick += GridCatalogView_DoubleClick;
             cmbCatalogWarehouse.EditValueChanged += CmbCatalogWarehouse_EditValueChanged;
+            txtCatalogProductSearch.EditValueChanged += TxtCatalogProductSearch_EditValueChanged;
 
             // Açıklama alanını otomatik oluşturmak için ilgili alanlardaki değişiklikleri izle.
             cmbInvoiceType.SelectedIndexChanged += (_, _) => UpdateAutoDescription();
@@ -292,7 +329,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return;
             }
 
-            bool isSales = cmbInvoiceType.SelectedIndex == 0;
+            InvoiceType type = SelectedInvoiceType;
             string accountName = GetSelectedAccountName();
             string invoiceNumber = txtInvoiceNumber.Text.Trim();
             string dateText = dtDate.DateTime == DateTime.MinValue
@@ -306,14 +343,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             }
 
             string accountPart = string.IsNullOrEmpty(accountName)
-                ? (isSales ? "müşteri" : "tedarikçi")
+                ? (type.IsSalesSide() ? "müşteri" : "tedarikçi")
                 : accountName;
             string numberPart = string.IsNullOrEmpty(invoiceNumber) ? "..." : invoiceNumber;
             string materialPart = string.IsNullOrEmpty(materialText) ? "malzeme" : materialText;
 
-            string description = isSales
-                ? $"{dateText} tarihinde {accountPart} firmasına {numberPart} fatura numarası ile {materialPart} satılmıştır."
-                : $"{dateText} tarihinde {accountPart} firmasından {numberPart} fatura numarası ile {materialPart} alınmıştır.";
+            string description = type switch
+            {
+                InvoiceType.PurchaseReturn =>
+                    $"{dateText} tarihinde {accountPart} firmasından {numberPart} fatura numarası ile {materialPart} iade edilmiştir.",
+                InvoiceType.SalesReturn =>
+                    $"{dateText} tarihinde {accountPart} firmasına {numberPart} fatura numarası ile {materialPart} iadesi alınmıştır.",
+                _ when type.IsSalesSide() =>
+                    $"{dateText} tarihinde {accountPart} firmasına {numberPart} fatura numarası ile {materialPart} satılmıştır.",
+                _ =>
+                    $"{dateText} tarihinde {accountPart} firmasından {numberPart} fatura numarası ile {materialPart} alınmıştır."
+            };
 
             txtDescription.Text = description;
             _lastAutoDescription = description;
@@ -326,8 +371,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return string.Empty;
             }
 
-            bool isSales = cmbInvoiceType.SelectedIndex == 0;
-            return isSales
+            return SelectedInvoiceType.IsSalesSide()
                 ? _customers.FirstOrDefault(c => c.Id == accountId)?.Name ?? string.Empty
                 : _suppliers.FirstOrDefault(s => s.Id == accountId)?.Name ?? string.Empty;
         }
@@ -409,11 +453,37 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private void CmbInvoiceType_SelectedIndexChanged(object? sender, EventArgs e)
         {
             UpdateAccountDataSource();
+
+            if (_editing is null
+                && SelectedInvoiceType is InvoiceType.Sales or InvoiceType.SalesReturn
+                && string.IsNullOrWhiteSpace(txtInvoiceNumber.Text))
+            {
+                _ = TrySetNextSalesNumberAsync(SelectedInvoiceType);
+            }
+        }
+
+        private async Task TrySetNextSalesNumberAsync(InvoiceType type)
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                var result = await mediator.Send(new InvoiceGetNextNumberQuery(type), CancellationToken.None);
+
+                if (result.IsSuccessful && !string.IsNullOrWhiteSpace(result.Data))
+                {
+                    txtInvoiceNumber.Text = result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Fatura numarası alınamadı: " + ex.Message, ToastType.Warning);
+            }
         }
 
         private void UpdateAccountDataSource()
         {
-            bool isSales = cmbInvoiceType.SelectedIndex == 0;
+            bool isSales = SelectedInvoiceType.IsSalesSide();
             lblAccountLabel.Text = isSales ? "Müşteri:" : "Tedarikçi:";
 
             lookUpAccount.Properties.DataSource = null;
@@ -451,11 +521,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         private void PopulateExisting(InvoiceDto invoice)
         {
-            cmbInvoiceType.SelectedIndex = invoice.InvoiceType == InvoiceType.Sales ? 0 : 1;
+            cmbInvoiceType.SelectedIndex = IndexOf(invoice.InvoiceType);
             txtInvoiceNumber.Text = invoice.InvoiceNumber;
             dtDate.DateTime = invoice.Date.ToDateTime(TimeOnly.MinValue);
-            lookUpAccount.EditValue = invoice.InvoiceType == InvoiceType.Sales ? invoice.CustomerId : invoice.SupplierId;
+            lookUpAccount.EditValue = invoice.InvoiceType.IsSalesSide() ? invoice.CustomerId : invoice.SupplierId;
             txtDescription.Text = invoice.Description;
+
+            if (invoice.Status != InvoiceStatus.Draft && invoice.InvoiceType == InvoiceType.Purchase)
+            {
+                btnPrintSlip.Visible = true;
+            }
 
             lblStatusValue.Text = "Durum: " + invoice.StatusName;
             lblStatusValue.Appearance.ForeColor = invoice.Status == InvoiceStatus.Approved
@@ -504,23 +579,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         private void CmbCatalogWarehouse_EditValueChanged(object? sender, EventArgs e)
         {
+            ApplyCatalogFilter();
+        }
+
+        private void TxtCatalogProductSearch_EditValueChanged(object? sender, EventArgs e)
+        {
+            ApplyCatalogFilter();
+        }
+
+        private void ApplyCatalogFilter()
+        {
             if (gridCatalogView.GridControl == null)
             {
                 return;
             }
 
-            GridColumn warehouseIdColumn = gridCatalogView.Columns[nameof(ProductDto.WarehouseId)];
+            IEnumerable<ProductDto> filtered = _products;
 
             if (cmbCatalogWarehouse.EditValue is Guid warehouseId)
             {
-                // Filtre panelinde ham GUID yerine seçilen deponun adı gösterilsin.
-                string warehouseName = _warehouses.FirstOrDefault(w => w.Id == warehouseId)?.Display ?? string.Empty;
-                warehouseIdColumn.FilterInfo = new ColumnFilterInfo(warehouseIdColumn, warehouseId, $"Depo = {warehouseName}");
+                filtered = filtered.Where(p => p.WarehouseId == warehouseId);
             }
-            else
+
+            string term = txtCatalogProductSearch.Text?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(term))
             {
-                warehouseIdColumn.FilterInfo = new ColumnFilterInfo();
+                filtered = filtered.Where(p =>
+                    (p.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || (p.ProductCode?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || (p.Barcode?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
             }
+
+            gridCatalog.DataSource = filtered.ToList();
         }
 
         private void GridCatalogView_DoubleClick(object? sender, EventArgs e)
@@ -544,9 +634,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return;
             }
 
-            bool isSales = cmbInvoiceType.SelectedIndex == 0;
             ProductPriceDto? price = product.Prices
-                .Where(p => p.PriceType == (isSales ? ProductPriceType.Sale : ProductPriceType.Purchase))
+                .Where(p => p.PriceType == PriceTypeFor(SelectedInvoiceType))
                 .OrderByDescending(p => p.StartDate)
                 .FirstOrDefault();
 
@@ -587,9 +676,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                         line.ProductId = prod.Id;
                         line.TaxRateRate = prod.TaxRateRate > 0 && prod.TaxRateRate <= 1 ? prod.TaxRateRate * 100 : prod.TaxRateRate;
 
-                        bool isSales = cmbInvoiceType.SelectedIndex == 0;
                         var priceObj = prod.Prices
-                            .Where(p => p.PriceType == (isSales ? ProductPriceType.Sale : ProductPriceType.Purchase))
+                            .Where(p => p.PriceType == PriceTypeFor(SelectedInvoiceType))
                             .OrderByDescending(p => p.StartDate)
                             .FirstOrDefault();
 
@@ -619,6 +707,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 e.Valid = false;
                 e.ErrorText = "Miktar sıfırdan büyük olmalıdır.";
                 return;
+            }
+
+            if (columnName == nameof(InvoiceLineDto.Quantity)
+                && IsOutputInvoice
+                && e.Value is decimal quantity)
+            {
+                int dataRowForQty = gridLinesView.GetDataSourceRowIndex(gridLinesView.FocusedRowHandle);
+                if (dataRowForQty >= 0
+                    && gridLinesView.GetRow(gridLinesView.FocusedRowHandle) is InvoiceLineDto currentForQty
+                    && currentForQty.ProductId != Guid.Empty
+                    && _productsById.TryGetValue(currentForQty.ProductId, out ProductDto? productForQty))
+                {
+                    DateOnly asOf = DateOnly.FromDateTime(dtDate.DateTime);
+                    decimal available = AvailableQuantity(productForQty, asOf);
+
+                    if (quantity > available)
+                    {
+                        e.Valid = false;
+                        e.ErrorText = $"'{productForQty.Name}' için yeterli stok yok. Mevcut: {available:n2}, istenen: {quantity:n2}.";
+                        return;
+                    }
+                }
             }
 
             if (columnName == nameof(InvoiceLineDto.DiscountRate) && e.Value is decimal discount && (discount < 0 || discount > 100))
@@ -750,8 +860,32 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 }
             }
 
-            InvoiceType invoiceType = cmbInvoiceType.SelectedIndex == 0 ? InvoiceType.Sales : InvoiceType.Purchase;
+            InvoiceType invoiceType = SelectedInvoiceType;
             DateOnly date = DateOnly.FromDateTime(dtDate.DateTime);
+
+            if (approve && (invoiceType == InvoiceType.Sales || invoiceType == InvoiceType.PurchaseReturn))
+            {
+                foreach (var line in validLines)
+                {
+                    if (!_productsById.TryGetValue(line.ProductId, out ProductDto? productCheck))
+                    {
+                        continue;
+                    }
+
+                    decimal available = AvailableQuantity(productCheck, date);
+
+                    if (line.Quantity > available)
+                    {
+                        string invoiceKind = invoiceType == InvoiceType.Sales
+                            ? "Satış faturası"
+                            : "Alış iade faturası";
+                        ToastHelper.Show(
+                            $"'{productCheck.Name}' için yeterli stok yok. Mevcut: {available:n2}, istenen: {line.Quantity:n2}. {invoiceKind} onaylanamaz.",
+                            ToastType.Warning);
+                        return;
+                    }
+                }
+            }
 
             List<InvoiceCreateLineModel> lineModels = validLines.Select(l => new InvoiceCreateLineModel(
                 l.ProductId,
@@ -773,8 +907,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                         InvoiceNumber: number,
                         InvoiceType: invoiceType,
                         Date: date,
-                        CustomerId: invoiceType == InvoiceType.Sales ? accountId : null,
-                        SupplierId: invoiceType == InvoiceType.Purchase ? accountId : null,
+                        CustomerId: invoiceType.IsSalesSide() ? accountId : null,
+                        SupplierId: invoiceType.IsPurchaseSide() ? accountId : null,
                         Description: txtDescription.Text.Trim(),
                         Lines: lineModels));
                 }
@@ -784,8 +918,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                         InvoiceNumber: number,
                         InvoiceType: invoiceType,
                         Date: date,
-                        CustomerId: invoiceType == InvoiceType.Sales ? accountId : null,
-                        SupplierId: invoiceType == InvoiceType.Purchase ? accountId : null,
+                        CustomerId: invoiceType.IsSalesSide() ? accountId : null,
+                        SupplierId: invoiceType.IsPurchaseSide() ? accountId : null,
                         Description: txtDescription.Text.Trim(),
                         Lines: lineModels,
                         IsApproved: approve);

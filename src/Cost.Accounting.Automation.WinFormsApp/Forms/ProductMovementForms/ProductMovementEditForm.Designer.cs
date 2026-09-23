@@ -17,6 +17,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
         private DevExpress.XtraGrid.Views.Grid.GridView lookUpProductView;
         private DevExpress.XtraEditors.LabelControl lblTypeLabel;
         private DevExpress.XtraEditors.ComboBoxEdit cmbMovementType;
+        private DevExpress.XtraEditors.LabelControl lblReasonLabel;
+        private DevExpress.XtraEditors.ComboBoxEdit cmbReason;
         private DevExpress.XtraEditors.LabelControl lblQuantityLabel;
         private DevExpress.XtraEditors.SpinEdit spinQuantity;
         private DevExpress.XtraEditors.LabelControl lblPriceLabel;
@@ -55,6 +57,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             this.lookUpProductView = new DevExpress.XtraGrid.Views.Grid.GridView();
             this.lblTypeLabel = new DevExpress.XtraEditors.LabelControl();
             this.cmbMovementType = new DevExpress.XtraEditors.ComboBoxEdit();
+            this.lblReasonLabel = new DevExpress.XtraEditors.LabelControl();
+            this.cmbReason = new DevExpress.XtraEditors.ComboBoxEdit();
             this.lblQuantityLabel = new DevExpress.XtraEditors.LabelControl();
             this.spinQuantity = new DevExpress.XtraEditors.SpinEdit();
             this.lblPriceLabel = new DevExpress.XtraEditors.LabelControl();
@@ -77,6 +81,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             ((System.ComponentModel.ISupportInitialize)(this.lookUpProduct.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.lookUpProductView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbMovementType.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbReason.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.spinQuantity.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.spinPrice.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dtDate.Properties.CalendarTimeProperties)).BeginInit();
@@ -152,6 +157,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             // 
             this.pnlBody.Controls.Add(this.txtDescription);
             this.pnlBody.Controls.Add(this.lblDescLabel);
+            this.pnlBody.Controls.Add(this.cmbReason);
+            this.pnlBody.Controls.Add(this.lblReasonLabel);
             this.pnlBody.Controls.Add(this.txtReferenceNo);
             this.pnlBody.Controls.Add(this.lblRefLabel);
             this.pnlBody.Controls.Add(this.dtDate);
@@ -168,7 +175,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             this.pnlBody.Location = new System.Drawing.Point(0, 68);
             this.pnlBody.Name = "pnlBody";
             this.pnlBody.Padding = new System.Windows.Forms.Padding(20);
-            this.pnlBody.Size = new System.Drawing.Size(520, 312);
+            this.pnlBody.Size = new System.Drawing.Size(520, 332);
             this.pnlBody.TabIndex = 1;
 
             // 
@@ -284,10 +291,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             this.txtReferenceNo.Size = new System.Drawing.Size(315, 26);
 
             // 
+            // lblReasonLabel
+            // 
+            this.lblReasonLabel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblReasonLabel.Location = new System.Drawing.Point(20, 195);
+            this.lblReasonLabel.Name = "lblReasonLabel";
+            this.lblReasonLabel.Size = new System.Drawing.Size(40, 15);
+            this.lblReasonLabel.Text = "Neden:";
+
+            // 
+            // cmbReason
+            // 
+            this.cmbReason.Location = new System.Drawing.Point(20, 215);
+            this.cmbReason.Name = "cmbReason";
+            this.cmbReason.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
+            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
+            this.cmbReason.Properties.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
+            this.cmbReason.Size = new System.Drawing.Size(480, 26);
+
+            // 
             // lblDescLabel
             // 
             this.lblDescLabel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblDescLabel.Location = new System.Drawing.Point(20, 195);
+            this.lblDescLabel.Location = new System.Drawing.Point(20, 255);
             this.lblDescLabel.Name = "lblDescLabel";
             this.lblDescLabel.Size = new System.Drawing.Size(53, 15);
             this.lblDescLabel.Text = "Açıklama:";
@@ -295,7 +321,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             // 
             // txtDescription
             // 
-            this.txtDescription.Location = new System.Drawing.Point(20, 215);
+            this.txtDescription.Location = new System.Drawing.Point(20, 275);
             this.txtDescription.Name = "txtDescription";
             this.txtDescription.Size = new System.Drawing.Size(480, 26);
 
@@ -309,7 +335,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             this.pnlFooter.Controls.Add(this.btnSave);
             this.pnlFooter.Controls.Add(this.pnlFooterLine);
             this.pnlFooter.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlFooter.Location = new System.Drawing.Point(0, 380);
+            this.pnlFooter.Location = new System.Drawing.Point(0, 400);
             this.pnlFooter.Name = "pnlFooter";
             this.pnlFooter.Size = new System.Drawing.Size(520, 60);
             this.pnlFooter.TabIndex = 2;
@@ -350,7 +376,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(520, 440);
+            this.ClientSize = new System.Drawing.Size(520, 460);
             this.Controls.Add(this.pnlBody);
             this.Controls.Add(this.pnlFooter);
             this.Controls.Add(this.pnlHeader);
@@ -371,6 +397,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             ((System.ComponentModel.ISupportInitialize)(this.lookUpProduct.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.lookUpProductView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbMovementType.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbReason.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.spinQuantity.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.spinPrice.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dtDate.Properties.CalendarTimeProperties)).EndInit();

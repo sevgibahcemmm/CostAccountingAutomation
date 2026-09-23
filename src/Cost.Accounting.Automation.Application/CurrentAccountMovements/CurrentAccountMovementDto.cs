@@ -44,6 +44,9 @@ public sealed class CurrentAccountMovementDto : EntityDto
         CurrentAccountMovementType.OpeningBalance => "Devir / Açılış",
         CurrentAccountMovementType.DebitVoucher => "Borç Dekontu",
         CurrentAccountMovementType.CreditVoucher => "Alacak Dekontu",
+        CurrentAccountMovementType.SalesReturnInvoice => "Satış İade Faturası",
+        CurrentAccountMovementType.PurchaseReturnInvoice => "Alış İade Faturası",
+        CurrentAccountMovementType.ServiceInvoice => "Hizmet Faturası",
         _ => MovementType.ToString()
     };
 

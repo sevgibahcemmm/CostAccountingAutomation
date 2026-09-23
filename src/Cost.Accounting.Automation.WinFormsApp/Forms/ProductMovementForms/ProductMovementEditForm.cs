@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Application.ProductMovements;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Domain.Products;
@@ -42,6 +43,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             WireEvents();
         }
 
+        private ProductMovementReason SelectedReason => cmbReason.SelectedIndex switch
+        {
+            1 => ProductMovementReason.CountingSurplus,
+            2 => ProductMovementReason.CountingDeficit,
+            3 => ProductMovementReason.Fire,
+            4 => ProductMovementReason.Sample,
+            5 => ProductMovementReason.Transfer,
+            _ => ProductMovementReason.General
+        };
+
         private void InitControls()
         {
             cmbMovementType.Properties.Items.Clear();
@@ -57,6 +68,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
                 cmbMovementType.SelectedIndex = 0;
             }
 
+            cmbReason.Properties.Items.Clear();
+            foreach (ProductMovementReason reason in Enum.GetValues<ProductMovementReason>())
+            {
+                cmbReason.Properties.Items.Add(EnumDisplay.GetDisplayName(reason));
+            }
+            cmbReason.SelectedIndex = 0;
+
             dtDate.DateTime = DateTime.Today;
 
             if (_editing is not null)
@@ -64,6 +82,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
                 btnSave.Visible = false;
                 lookUpProduct.ReadOnly = true;
                 cmbMovementType.ReadOnly = true;
+                cmbReason.ReadOnly = true;
                 spinQuantity.ReadOnly = true;
                 spinPrice.ReadOnly = true;
                 dtDate.ReadOnly = true;
@@ -77,6 +96,30 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             Load += ProductMovementEditForm_Load;
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
+            cmbReason.SelectedIndexChanged += CmbReason_SelectedIndexChanged;
+        }
+
+        // Neden seçilince hareket yönü otomatik ayarlansın
+        // (Sayım Fazlası/Numune/Devir -> Giriş, Sayım Noksanı/Fire -> Çıkış).
+        private void CmbReason_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (_editing is not null)
+            {
+                return;
+            }
+
+            switch (SelectedReason)
+            {
+                case ProductMovementReason.CountingSurplus:
+                case ProductMovementReason.Sample:
+                case ProductMovementReason.Transfer:
+                    cmbMovementType.SelectedIndex = 0;
+                    break;
+                case ProductMovementReason.CountingDeficit:
+                case ProductMovementReason.Fire:
+                    cmbMovementType.SelectedIndex = 1;
+                    break;
+            }
         }
 
         private async void ProductMovementEditForm_Load(object? sender, EventArgs e)
@@ -87,6 +130,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             {
                 lookUpProduct.EditValue = _editing.ProductId;
                 cmbMovementType.SelectedIndex = _editing.MovementType == ProductMovementType.Input ? 0 : 1;
+                cmbReason.SelectedIndex = (int)_editing.Reason - 1;
                 spinQuantity.Value = _editing.Quantity;
                 spinPrice.Value = _editing.UnitPrice ?? 0;
                 dtDate.DateTime = _editing.Date.ToDateTime(TimeOnly.MinValue);
@@ -152,7 +196,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
                 UnitPrice: unitPrice,
                 Date: date,
                 ReferenceNo: txtReferenceNo.Text.Trim(),
-                Description: txtDescription.Text.Trim());
+                Description: txtDescription.Text.Trim(),
+                Reason: SelectedReason);
 
             btnSave.Enabled = false;
             try

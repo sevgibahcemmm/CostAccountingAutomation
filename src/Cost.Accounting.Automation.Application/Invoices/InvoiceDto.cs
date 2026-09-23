@@ -1,7 +1,27 @@
+using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Invoices;
 
 namespace Cost.Accounting.Automation.Application.Invoices;
+
+public static class InvoiceTypeInfo
+{
+    public static bool IsPurchaseSide(this InvoiceType type)
+        => type == InvoiceType.Purchase || type == InvoiceType.PurchaseReturn;
+
+    public static bool IsSalesSide(this InvoiceType type)
+        => type == InvoiceType.Sales || type == InvoiceType.SalesReturn ;
+
+    public static bool RequiresCustomer(this InvoiceType type)
+        => type.IsSalesSide();
+
+    public static bool RequiresSupplier(this InvoiceType type)
+        => type.IsPurchaseSide();
+
+
+    public static bool IsReturn(this InvoiceType type)
+        => type == InvoiceType.PurchaseReturn || type == InvoiceType.SalesReturn;
+}
 
 public sealed class InvoiceLineDto
 {
@@ -51,8 +71,8 @@ public sealed class InvoiceDto : EntityDto
     [Column("Fatura Tipi", IsVisible = false)]
     public InvoiceType InvoiceType { get; set; }
 
-    [Column("Fatura Tipi", Order = 15, Width = 110, Alignment = "Center")]
-    public string InvoiceTypeName => InvoiceType == InvoiceType.Sales ? "Satış Faturası" : "Satın Alma Faturası";
+    [Column("Fatura Tipi", Order = 15, Width = 130, Alignment = "Center")]
+    public string InvoiceTypeName => EnumDisplay.GetDisplayName(InvoiceType);
 
     [Column("Durum", IsVisible = false)]
     public InvoiceStatus Status { get; set; }
@@ -64,7 +84,7 @@ public sealed class InvoiceDto : EntityDto
     public DateOnly Date { get; set; }
 
     [Column("Cari Adı", Order = 30, Width = 180)]
-    public string CurrentAccountName => InvoiceType == InvoiceType.Sales
+    public string CurrentAccountName => InvoiceType.IsSalesSide()
         ? (CustomerName ?? "-")
         : (SupplierName ?? "-");
 

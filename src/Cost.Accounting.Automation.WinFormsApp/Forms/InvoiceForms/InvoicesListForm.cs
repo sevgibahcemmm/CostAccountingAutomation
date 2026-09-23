@@ -30,8 +30,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         public InvoicesListForm(InvoiceType? targetType)
             : base(targetType switch
             {
+                InvoiceType.Purchase => "Alış Faturaları",
+                InvoiceType.PurchaseReturn => "Alış İade Faturaları",
                 InvoiceType.Sales => "Satış Faturaları",
-                InvoiceType.Purchase => "Satın Alma Faturaları",
+                InvoiceType.SalesReturn => "Satış İade Faturaları",
                 _ => "Faturalar"
             })
         {
@@ -53,6 +55,46 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         {
             AddColumnsFromAttributes();
             View.Columns[nameof(InvoiceDto.IsActive)]!.Visible = false;
+
+            View.OptionsView.ShowGroupPanel = true;
+            View.OptionsView.ShowFooter = true;
+            SetColumnWidth(nameof(InvoiceDto.InvoiceTypeName), 120);
+            SetColumnWidth(nameof(InvoiceDto.StatusName), 70);
+            SetColumnWidth(nameof(InvoiceDto.Date), 95);
+            SetColumnWidth(nameof(InvoiceDto.CurrentAccountName), 220);
+            SetColumnWidth(nameof(InvoiceDto.SubTotal), 110);
+            SetColumnWidth(nameof(InvoiceDto.DiscountTotal), 110);
+            SetColumnWidth(nameof(InvoiceDto.TaxTotal), 110);
+            SetColumnWidth(nameof(InvoiceDto.GrandTotal), 120);
+
+            foreach (string fieldName in new[]
+                     {
+                         nameof(InvoiceDto.SubTotal),
+                         nameof(InvoiceDto.DiscountTotal),
+                         nameof(InvoiceDto.TaxTotal),
+                         nameof(InvoiceDto.GrandTotal)
+                     })
+            {
+                if (View.Columns[fieldName] is { } col)
+                {
+                    col.Summary.Add(SummaryItemType.Sum, col.FieldName, "{0:n2}");
+                }
+            }
+
+            if (View.Columns[nameof(InvoiceDto.CurrentAccountName)] is { } totalCol)
+            {
+                totalCol.Summary.Add(SummaryItemType.Sum, nameof(InvoiceDto.GrandTotal), "Genel Toplam: ");
+            }
+        }
+
+        private void SetColumnWidth(string fieldName, int width)
+        {
+            if (View.Columns[fieldName] is { } col)
+            {
+                col.Width = width;
+                col.MinWidth = width;
+                col.MaxWidth = width;
+            }
         }
 
         private void InitializeLinesDetailView()
@@ -72,6 +114,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             GridColumnFactory.ConfigureFromAttributes(linesView, typeof(InvoiceLineDto));
 
             linesView.Columns[nameof(InvoiceLineDto.ProductId)]!.Visible = false;
+
+            View.MasterRowExpanded += (_, e) =>
+            {
+                if (View.GetRow(e.RowHandle) is InvoiceDto invoice
+                    && linesView.Columns[nameof(InvoiceLineDto.UnitPrice)] is { } priceCol)
+                {
+                    priceCol.Caption = invoice.InvoiceType.IsPurchaseSide()
+                        ? "Alış Fiyatı"
+                        : "Satış Fiyatı";
+                }
+            };
 
             GridColumn colProductCode = linesView.Columns.AddField(nameof(InvoiceLineDto.ProductCode));
             colProductCode.Caption = "Ürün Kodu";
@@ -100,7 +153,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                     col.AppearanceCell.TextOptions.HAlignment = HorzAlignment.Far;
                     col.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Far;
 
-                    col.Summary.Add(SummaryItemType.Sum, col.FieldName, "Toplam: {0:n2}");
+                    col.Summary.Add(SummaryItemType.Sum, col.FieldName, "{0:n2}");
                 }
             }
 
@@ -143,7 +196,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         protected override IRequest<Result<string>> BuildRestoreCommand(InvoiceDto item)
             => new InvoiceRestoreCommand(item.Id);
 
-        protected override bool SupportsSlipPrint => _targetType != InvoiceType.Sales;
+        protected override bool SupportsSlipPrint => _targetType is null || _targetType == InvoiceType.Purchase;
 
         protected override bool CanPrintSlip(InvoiceDto item) => item.InvoiceType == InvoiceType.Purchase;
 

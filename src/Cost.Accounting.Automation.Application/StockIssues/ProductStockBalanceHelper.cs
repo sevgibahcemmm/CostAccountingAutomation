@@ -3,18 +3,15 @@ using Cost.Accounting.Automation.Domain.Products;
 namespace Cost.Accounting.Automation.Application.StockIssues;
 
 /// <summary>
-/// Atölye transferi tek bir olayda iki hareket üretir: depodan çıkış (-)
-/// ve "Atölye Transferi Girişi" (+). Maliyet pusulası onayı ise atölyede
-/// tüketilen malzemeler için "Maliyet Pusulası Tüketimi" (-) çıkışı üretir.
-/// İkisi de atölye stokunu temsil eder ve ürün/depo stok raporlarına girerse
-/// depo bakiyesi bozulur:
-///   - Atölye girişi (+) depo bakiyesine girerse transfer edilen miktar
-///     depodan hiç düşmemiş gibi görünür.
-///   - Atölye tüketimi (-) depo bakiyesine girerse tüketim depodan yapılmış
-///     gibi görünür.
-/// Bu yüzden ürün bazlı (depo) bakiye hesaplarında bu iki hareket hariç
-/// tutulur; çıkış/transfer bacakları depodan düşülmeye devam eder.
-/// Atölye tarafı için ise bakiye = atölye girişleri (+) - atölye tüketimleri (-).
+/// Ürün bazlı (depo) bakiye, tüm hareketlerin netiyle hesaplanır:
+/// bakiye = tüm girişler (+) - tüm çıkışlar (-).
+/// Atölye transferi tek olayda "Atölye Transferi" çıkışı (-) ve
+/// "Atölye Transferi Girişi" (+) ikilisi üretir; bu ikisi birlikte net
+/// sıfır etki yapar, dolayısıyla ayrıca hariç tutulmaz. Rafiye pusulası
+/// onayı da tüketim için "Maliyet Pusulası Tüketimi" (-) çıkışı, üretim
+/// için "Maliyet Pusulası Girişi" (+) girişi üretir; her ikisi de gerçek
+/// stok değişimidir ve bakiyeye dahil edilir. Böylece örneğin üretilip
+/// tüketilen bir yarımamülün net bakiyesi sıfır olur.
 /// </summary>
 public static class ProductStockBalanceHelper
 {
@@ -24,18 +21,12 @@ public static class ProductStockBalanceHelper
 
     public static IQueryable<ProductMovement> WhereCountsAsProductStock(this IQueryable<ProductMovement> movements)
     {
-        return movements.Where(m =>
-            !(m.MovementType == ProductMovementType.Input
-              && m.Description.Value != null
-              && m.Description.Value.StartsWith(AtelierTransferInputDescriptionPrefix))
-            && !(m.MovementType == ProductMovementType.Output
-              && m.Description.Value != null
-              && m.Description.Value.StartsWith(CostSlipConsumptionOutputDescriptionPrefix)));
+        return movements;
     }
 
     public static bool CountsAsProductStock(ProductMovement movement)
     {
-        return !IsAtelierTransferInput(movement) && !IsCostSlipConsumptionOutput(movement);
+        return true;
     }
 
     public static bool IsAtelierTransferInput(ProductMovement movement)
