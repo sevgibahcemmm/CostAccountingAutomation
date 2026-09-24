@@ -147,6 +147,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.btnRefresh.Size = new System.Drawing.Size(100, 36);
             this.btnRefresh.TabIndex = 0;
             this.btnRefresh.Text = "Yenile";
+            this.btnRefresh.ImageOptions.SvgImage = DxIcon.Refresh;
+            this.btnRefresh.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnRefresh.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnDebtors
             // 
@@ -155,6 +158,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.btnDebtors.Size = new System.Drawing.Size(100, 36);
             this.btnDebtors.TabIndex = 1;
             this.btnDebtors.Text = "Borçlular";
+            this.btnDebtors.ImageOptions.SvgImage = DxIcon.Customers;
+            this.btnDebtors.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnDebtors.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnCreditors
             // 
@@ -163,6 +169,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.btnCreditors.Size = new System.Drawing.Size(110, 36);
             this.btnCreditors.TabIndex = 2;
             this.btnCreditors.Text = "Alacaklılar";
+            this.btnCreditors.ImageOptions.SvgImage = DxIcon.Suppliers;
+            this.btnCreditors.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnCreditors.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // gridControl
             // 

@@ -39,6 +39,8 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired();
 
         builder.HasIndex(p => p.ProductCode).IsUnique();
+        builder.HasIndex(p => p.CreatedBy);
+        builder.HasIndex(p => p.UpdatedBy);
         builder.HasIndex(p => p.WarehouseId);
         builder.HasIndex(p => p.CategoryId);
         builder.HasIndex(p => p.ProductUnitTypeId);

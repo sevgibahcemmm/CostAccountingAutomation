@@ -19,7 +19,7 @@ internal sealed class DashboardDataProvider(
     IDbContextFactory<ApplicationDbContext> dbFactory) : IDashboardDataProvider
 {
     private const string CacheKey = "dashboard:overview:v1";
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(60);
 
     public async Task<DashboardSnapshot> GetOverviewAsync(
         bool forceRefresh = false,

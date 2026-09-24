@@ -136,6 +136,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
             this.btnSave.Size = new System.Drawing.Size(84, 34);
             this.btnSave.TabIndex = 4;
             this.btnSave.Text = "Kaydet";
+            this.btnSave.ImageOptions.SvgImage = DxIcon.Check;
+            this.btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnCancel
             // 
@@ -144,6 +147,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
             this.btnCancel.Size = new System.Drawing.Size(84, 34);
             this.btnCancel.TabIndex = 5;
             this.btnCancel.Text = "Kapat";
+            this.btnCancel.ImageOptions.SvgImage = DxIcon.Close;
+            this.btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // ManualAccountEditForm
             // 

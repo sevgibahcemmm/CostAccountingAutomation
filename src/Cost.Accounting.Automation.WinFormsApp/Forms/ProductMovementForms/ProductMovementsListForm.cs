@@ -52,6 +52,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             _ => DxIcon.StockMovements
         };
 
+        protected override bool AllowCreate => _targetType.HasValue;
+
+        protected override bool AllowDelete => false;
+
+        protected override bool AllowsEdit(ProductMovementListDto item) => false;
+
         protected override string[] SearchFieldNames =>
         [
             nameof(ProductMovementListDto.ProductName),
@@ -66,6 +72,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
         {
             AddColumnsFromAttributes();
             View.OptionsView.ColumnAutoWidth = false;
+            View.Columns[nameof(ProductMovementListDto.WarehouseName)]!.Visible = false;
+            ConfigureWarehouseGrouping(nameof(ProductMovementListDto.WarehouseGroup));
             View.Columns[nameof(ProductMovementListDto.MovementTypeName)]!.Visible = !_targetType.HasValue;
         }
 
@@ -82,7 +90,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
         protected override string GetDeleteSummary(ProductMovementListDto item)
             => $"{item.ProductName} ({item.MovementTypeName} - {item.Quantity:n2})";
 
-        protected override bool SupportsRestore => true;
+        protected override bool SupportsRestore => false;
 
         protected override bool SupportsStockMovementsListReport => true;
 
@@ -91,25 +99,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
 
         protected override async Task ShowStockMovementsListReportAsync(ProductMovementListDto? item)
         {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            var warehouseResult = await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None);
+            if (!warehouseResult.IsSuccessful || warehouseResult.Data is null)
+            {
+                ToastHelper.Show("Depo listesi yüklenemedi.", ToastType.Error);
+                return;
+            }
+
+            List<ChartOfAccountLookUpDto> warehouses = warehouseResult.Data
+                .Where(x => x.Type == ChartOfAccountType.Warehouse)
+                .ToList();
+
             using var dateForm = new DateRangePromptForm(
                 defaultStart: null,
                 defaultEnd: null,
                 showTypeSelector: false,
-                headerTitle: "Stok Hareket Listesi");
+                headerTitle: "Stok Hareket Listesi",
+                warehouses: warehouses,
+                defaultWarehouseId: SelectedFilterGuid);
             if (dateForm.ShowDialog(this) != DialogResult.OK)
             {
                 return;
             }
-
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
             List<StockMovementReportRowDto> rows = await mediator.Send(
                 new StockMovementsListReportQuery(
                     dateForm.StartDate,
                     dateForm.EndDate,
                     ProductId: _productId,
-                    WarehouseId: SelectedFilterGuid),
+                    WarehouseId: dateForm.WarehouseId),
                 CancellationToken.None);
 
             if (rows.Count == 0)

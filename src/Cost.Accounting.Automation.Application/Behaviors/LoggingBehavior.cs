@@ -1,20 +1,66 @@
-﻿using TS.MediatR;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
+using TS.MediatR;
 
 namespace Cost.Accounting.Automation.Application.Behaviors;
 
-public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public sealed class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    private const int SlowRequestThresholdMs = 500;
+    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
+
+    public LoggingBehavior(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<TResponse> Handle(
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
+        CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
-        Debug.WriteLine($"[LOG] Handling {requestName} - {DateTime.Now}");
+        var stopwatch = Stopwatch.StartNew();
 
-        var response = await next();
+        _logger.LogInformation("{RequestName} işleniyor.", requestName);
 
-        Debug.WriteLine($"[LOG] Handled {requestName} - {DateTime.Now}");
+        try
+        {
+            var response = await next();
 
-        return response;
+            stopwatch.Stop();
+
+            if (stopwatch.ElapsedMilliseconds > SlowRequestThresholdMs)
+            {
+                _logger.LogWarning(
+                    "{RequestName} tamamlandı ancak beklenenden yavaş sürdü ({ElapsedMilliseconds} ms).",
+                    requestName, stopwatch.ElapsedMilliseconds);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "{RequestName} başarıyla tamamlandı ({ElapsedMilliseconds} ms).",
+                    requestName, stopwatch.ElapsedMilliseconds);
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(
+                ex,
+                "{RequestName} işlenirken hata oluştu ({ElapsedMilliseconds} ms).",
+                requestName, stopwatch.ElapsedMilliseconds);
+
+            throw;
+        }
     }
 }
+
+
+
+
+

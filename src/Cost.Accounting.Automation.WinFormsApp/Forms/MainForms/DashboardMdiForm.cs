@@ -191,9 +191,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 SetKpis(snapshot);
 
-                if (BuildFingerprint(snapshot) != _lastFingerprint)
+                string fingerprint = BuildFingerprint(snapshot);
+
+                if (fingerprint != _lastFingerprint)
                 {
-                    _lastFingerprint = BuildFingerprint(snapshot);
+                    _lastFingerprint = fingerprint;
                     RenderDashboard(snapshot);
                 }
 

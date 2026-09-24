@@ -31,4 +31,51 @@ internal sealed class ProductRepository : AuditableRepository<Product, Applicati
             .Include(p => p.Movements)
             .Include(p => p.Images)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+    public async Task<Dictionary<Guid, decimal>> GetStockByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken = default)
+    {
+        HashSet<IdentityId> ids = productIds.Select(id => new IdentityId(id)).ToHashSet();
+        if (ids.Count == 0)
+        {
+            return new Dictionary<Guid, decimal>();
+        }
+
+        var stock = await Context.Set<ProductMovement>()
+            .AsNoTracking()
+            .Where(m => ids.Contains(m.ProductId))
+            .GroupBy(m => m.ProductId)
+            .Select(g => new
+            {
+                ProductId = g.Key,
+                Stock = g.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity)
+            })
+            .ToListAsync(cancellationToken);
+
+        return stock.ToDictionary(x => x.ProductId.Value, x => x.Stock);
+    }
+
+    public async Task<Dictionary<Guid, List<ProductPriceQueryResult>>> GetPricesByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken = default)
+    {
+        HashSet<IdentityId> ids = productIds.Select(id => new IdentityId(id)).ToHashSet();
+        if (ids.Count == 0)
+        {
+            return new Dictionary<Guid, List<ProductPriceQueryResult>>();
+        }
+
+        List<ProductPriceQueryResult> results = await Context.Set<Product>()
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .SelectMany(p => p.Prices, (p, price) => new ProductPriceQueryResult(
+                p.Id.Value,
+                price.Id.Value,
+                price.PriceType,
+                price.UnitPrice.Value,
+                price.StartDate,
+                price.EndDate))
+            .ToListAsync(cancellationToken);
+
+        return results
+            .GroupBy(x => x.ProductId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
 }

@@ -360,6 +360,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(100, 34);
             this.btnSave.Text = "Kaydet";
+            this.btnSave.ImageOptions.SvgImage = DxIcon.Check;
+            this.btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // btnCancel
@@ -369,6 +372,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             this.btnCancel.Location = new System.Drawing.Point(406, 14);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(94, 34);
+            this.btnCancel.ImageOptions.SvgImage = DxIcon.Close;
+            this.btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             this.btnCancel.Text = "Vazgeç";
 
             // 

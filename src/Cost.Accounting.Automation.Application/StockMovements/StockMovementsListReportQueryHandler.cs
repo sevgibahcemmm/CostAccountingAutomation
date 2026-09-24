@@ -14,7 +14,8 @@ namespace Cost.Accounting.Automation.Application.StockMovements;
 internal sealed class StockMovementsListReportQueryHandler(
     IProductMovementRepository productMovementRepository,
     IStockIssueRepository stockIssueRepository,
-    ICostSlipRepository costSlipRepository)
+    ICostSlipRepository costSlipRepository,
+    IChartOfAccountRepository chartOfAccountRepository)
     : IRequestHandler<StockMovementsListReportQuery, List<StockMovementReportRowDto>>
 {
     public async Task<List<StockMovementReportRowDto>> Handle(
@@ -24,6 +25,19 @@ internal sealed class StockMovementsListReportQueryHandler(
         var query = productMovementRepository.GetAll()
             .Where(m => m.Date >= request.StartDate && m.Date <= request.EndDate)
             .Where(m => !m.IsDeleted);
+
+        ChartOfAccount? selectedWarehouse = null;
+        if (request.WarehouseId.HasValue)
+        {
+            selectedWarehouse = await chartOfAccountRepository.GetByIdIncludingDeletedAsync(
+                new IdentityId(request.WarehouseId.Value),
+                cancellationToken);
+
+            if (selectedWarehouse is null)
+            {
+                return [];
+            }
+        }
 
         if (request.ProductId.HasValue)
         {
@@ -82,7 +96,8 @@ internal sealed class StockMovementsListReportQueryHandler(
              AccountType = accountType,
              SubGroupCode = subGroupCode,
              SubGroupName = subGroupName,
-             ProductId = m.ProductId
+             ProductId = m.ProductId,
+             UnitPrice = m.UnitPrice != null ? (decimal?)m.UnitPrice.Value : null
          };
      })
                     .Select(g =>
@@ -122,8 +137,19 @@ internal sealed class StockMovementsListReportQueryHandler(
             })
             .OrderBy(r => r.LocationCode)
             .ThenBy(r => r.SubGroupCode)
-            .ThenBy(r => r.ProductName)
-            .ToList();
+                    .ThenBy(r => r.ProductName)
+                    .ToList();
+
+        if (selectedWarehouse is not null)
+        {
+            string selectedWarehouseCode = selectedWarehouse.Code.Value;
+            grouped = grouped
+                .Where(r => string.Equals(
+                    r.LocationCode,
+                    selectedWarehouseCode,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
         return grouped;
     }

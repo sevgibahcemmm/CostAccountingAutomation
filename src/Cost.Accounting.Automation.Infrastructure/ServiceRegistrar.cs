@@ -20,6 +20,7 @@ services.AddDbContext<ApplicationDbContext>(opt =>
         {
             string con = configuration.GetConnectionString("SqlServer")!;
             opt.UseSqlServer(con);
+            opt.AddInterceptors(new Diagnostics.SqlTimingInterceptor());
         });
 
         services.AddDbContextFactory<ApplicationDbContext>(opt =>

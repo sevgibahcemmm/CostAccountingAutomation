@@ -36,15 +36,16 @@ public static class DatabaseInitializer
         ISupplierRepository supplierRepository = sp.GetRequiredService<ISupplierRepository>();
         IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
 
-        // 1. Veritabanı yoksa otomatik oluştur; varsa bekleyen migration'ları uygula
+// 1. Veritabanı yoksa otomatik oluştur; varsa bekleyen migration'ları uygula
+        bool pendingMigrations = (await dbContext.Database.GetPendingMigrationsAsync()).Any();
         await dbContext.Database.MigrateAsync();
 
-        // 1b. Legacy kayıtlara kopyalama anahtarı yaz (migration sonrası boş olanlar)
-        await BackfillDuplicateKeysAsync(dbContext);
-
-        // 2. Eski seed'lerin CreatedBy alanında, hiçbir kullanıcıya işaret etmeyen
- 
-        await RepairOrphanAuditReferencesAsync(dbContext);
+        // 1b. Sadece yeni migration uygulandıysa legacy kayıtlara kopyalama anahtarı yaz
+        if (pendingMigrations)
+        {
+            await BackfillDuplicateKeysAsync(dbContext);
+            await RepairOrphanAuditReferencesAsync(dbContext);
+        }
 
         // 3. Veritabanı boş mu? (Şirket yoksa seed yapılacak demektir)
         bool isEmpty = !await companyRepository.AnyAsync(i => i.Id != null);

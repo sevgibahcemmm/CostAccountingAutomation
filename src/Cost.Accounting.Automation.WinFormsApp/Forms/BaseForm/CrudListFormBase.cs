@@ -49,7 +49,9 @@ InitializeComponent();
 
         protected DevExpress.XtraEditors.PanelControl ToolbarPanel => pnlToolbar;
 
-protected virtual SvgImage ModuleIcon => DxIcon.Module;
+        protected virtual SvgImage ModuleIcon => DxIcon.Module;
+
+        protected virtual bool AllowCreate => true;
 
         protected virtual bool AllowDelete => true;
 
@@ -135,6 +137,19 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
 
         protected virtual TListQuery BuildListQuery() => new();
 
+        /// <summary>
+        /// Liste verisi yüklendikten sonra ek zenginleştirme (stok/fiyat gibi toplu hesaplar)
+        /// yapmak isteyen formlar bu metodu override eder. Varsayılan davranış veriyi aynen döndürür.
+        /// </summary>
+        protected virtual Task<IReadOnlyList<TDto>> EnrichAsync(List<TDto> items, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<TDto>>(items);
+
+        /// <summary>
+        /// <see cref="EnrichAsync"/> tüm listeyi yeniden üretiyorsa (ör. Fiyat &amp; Stok Listesi)
+        /// base sorgusu tamamen atlanır; böylece boşa çalışan ikinci bir sorgu olmaz.
+        /// </summary>
+        protected virtual bool EnrichReplacesBaseQuery => false;
+
         protected virtual IRequest<Result<string>>? BuildRestoreCommand(TDto item) => null;
 
         protected virtual string[] SearchFieldNames => [];
@@ -159,6 +174,7 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
         {
             base.OnLoad(e);
             IconOptions.SvgImage = ModuleIcon;
+            btnNew.Visible = AllowCreate;
             btnDeleted.Visible = SupportsRestore;
             if (!AllowDelete)
             {
@@ -339,6 +355,23 @@ button.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
 protected void AddColumnsFromAttributes()
             => GridColumnFactory.ConfigureFromAttributes(View, typeof(TDto));
 
+        protected void ConfigureWarehouseGrouping(string fieldName)
+        {
+            GridColumn? warehouseColumn = View.Columns[fieldName];
+            if (warehouseColumn is null)
+            {
+                return;
+            }
+
+            View.OptionsView.ShowGroupPanel = true;
+            View.OptionsView.ShowGroupPanelColumnsAsSingleRow = true;
+            View.ClearGrouping();
+            warehouseColumn.Group();
+            View.Appearance.GroupRow.BackColor = Color.FromArgb(232, 240, 254);
+            View.Appearance.GroupRow.ForeColor = Color.FromArgb(24, 70, 135);
+            View.Appearance.GroupRow.Font = new Font("Segoe UI", 10.5f, FontStyle.Bold);
+        }
+
         private void GridView_SelectionChanged(object? sender, EventArgs e)
         {
             UpdateButtonStates();
@@ -381,7 +414,8 @@ protected void AddColumnsFromAttributes()
                 }
             }
 
-            btnNew.Enabled = !showDeleted;
+            btnNew.Enabled = AllowCreate && !showDeleted;
+            btnNew.Visible = AllowCreate;
             btnEdit.Enabled = !showDeleted && selected == 1 && allEditable;
             btnDelete.Enabled = !showDeleted && selected >= 1 && allDeletable;
             btnDelete.Visible = AllowDelete && !showDeleted;
@@ -558,26 +592,55 @@ protected virtual async Task ReloadAsync()
             {
                 lblSub.Text = "Yenileniyor...";
                 TListQuery query = BuildListQuery();
-                List<TDto> items = await Task.Run(async () =>
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                List<TDto> items = [];
+
+                if (EnrichReplacesBaseQuery)
                 {
-                    using var scope = Program.Services.CreateScope();
-                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-                    IQueryable<TDto> result = await mediator.Send(query, CancellationToken.None);
-                    return result.OrderByDescending(x => x.CreatedAt)
-                        .ThenByDescending(x => x.Id)
-                        .ToList();
-                });
+                    items = (await Task.Run(
+                        () => EnrichAsync([], CancellationToken.None),
+                        CancellationToken.None)).ToList();
+                    CrashLog.Write("PageLoad", $"{GetType().Name} DB(Enrich Only) {sw.Elapsed.TotalMilliseconds:N0} ms ({items.Count} satir)");
+                }
+                else
+                {
+                    List<TDto> fetched = await Task.Run(async () =>
+                    {
+                        using var scope = Program.Services.CreateScope();
+                        ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                        IQueryable<TDto> result = await mediator.Send(query, CancellationToken.None);
+                        List<TDto> resultItems = result.ToList();
+                        return resultItems.OrderByDescending(x => x.CreatedAt)
+                            .ThenByDescending(x => x.Id)
+                            .ToList();
+                    });
+
+                    CrashLog.Write("PageLoad", $"{GetType().Name} DB(Query) {sw.Elapsed.TotalMilliseconds:N0} ms ({fetched.Count} satir)");
+
+                    if (version != _reloadVersion)
+                    {
+                        return;
+                    }
+
+                    sw.Restart();
+                    items = (await Task.Run(
+                        () => EnrichAsync(fetched, CancellationToken.None),
+                        CancellationToken.None)).ToList();
+                    CrashLog.Write("PageLoad", $"{GetType().Name} DB(Enrich) {sw.Elapsed.TotalMilliseconds:N0} ms ({items.Count} satir)");
+                }
 
                 if (version != _reloadVersion)
                 {
                     return;
                 }
 
+                sw.Restart();
                 _allItems = items;
                 gridControl.DataSource = null;
                 gridControl.DataSource = items;
                 FitColumnsToContent();
                 lblSub.Text = GetSubtitle(items.Count);
+                CrashLog.Write("PageLoad", $"{GetType().Name} Ready Toplam {sw.Elapsed.TotalMilliseconds:N0} ms");
             }
             catch (AuthorizationException ex)
             {
@@ -605,6 +668,14 @@ protected virtual async Task ReloadAsync()
         {
             if (_columnsFitted)
             {
+                return;
+            }
+
+            // Çok satırlı listelerde (ör. stok hareketleri) BestFit tüm satırları taradığı için
+            // arayüz birkaç saniye kilitlenebilir; büyük listelerde kolon genişlikleri korunur.
+            if (_allItems.Count > 25000)
+            {
+                _columnsFitted = true;
                 return;
             }
 
@@ -636,6 +707,11 @@ protected virtual async Task ReloadAsync()
 
         private async Task RunEditorAsync(TDto? item)
         {
+            if (item is null ? !AllowCreate : !AllowsEdit(item))
+            {
+                return;
+            }
+
             XtraForm form;
             try
             {

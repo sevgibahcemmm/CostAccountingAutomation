@@ -390,7 +390,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Name = "RibbonMainForm";
             Ribbon = ribbon;
             StatusBar = ribbonStatusBar;
-            Text = "Cost Accounting Automation V.01";
+            Text = "Maliyet Muhasebesi Otomasyonu V.01";
             WindowState = FormWindowState.Maximized;
             ((System.ComponentModel.ISupportInitialize)ribbon).EndInit();
             ((System.ComponentModel.ISupportInitialize)accordionControl).EndInit();

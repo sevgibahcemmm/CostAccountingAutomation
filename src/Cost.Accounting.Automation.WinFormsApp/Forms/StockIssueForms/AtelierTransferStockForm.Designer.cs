@@ -131,6 +131,9 @@ sealed partial class AtelierTransferStockForm
             this.btnRefresh.Size = new System.Drawing.Size(110, 30);
             this.btnRefresh.TabIndex = 2;
             this.btnRefresh.Text = "Yenile";
+            this.btnRefresh.ImageOptions.SvgImage = DxIcon.Refresh;
+            this.btnRefresh.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnRefresh.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnClose
             // 
@@ -140,6 +143,9 @@ sealed partial class AtelierTransferStockForm
             this.btnClose.Size = new System.Drawing.Size(110, 30);
             this.btnClose.TabIndex = 3;
             this.btnClose.Text = "Kapat";
+            this.btnClose.ImageOptions.SvgImage = DxIcon.Close;
+            this.btnClose.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnClose.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // AtelierTransferStockForm
             // 

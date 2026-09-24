@@ -66,6 +66,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private void ConfigurePriceGrid()
         {
             GridColumnFactory.ConfigureFromAttributes(gridPriceView, typeof(ProductPriceDto));
+            gridPriceView.Columns[nameof(ProductPriceDto.PriceTypeName)]!.Caption = "Fiyat Türü";
+            gridPriceView.Columns[nameof(ProductPriceDto.UnitPrice)]!.Caption = "Birim Fiyat";
+            gridPriceView.Columns[nameof(ProductPriceDto.StartDate)]!.Caption = "Başlangıç";
+            gridPriceView.Columns[nameof(ProductPriceDto.EndDate)]!.Caption = "Bitiş";
+            gridPriceView.OptionsView.ShowColumnHeaders = true;
 
             foreach (GridColumn column in gridPriceView.Columns)
             {
@@ -83,6 +88,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private void ConfigureMovementGrid()
         {
             GridColumnFactory.ConfigureFromAttributes(gridMovementView, typeof(ProductMovementDto));
+            gridMovementView.Columns[nameof(ProductMovementDto.Date)]!.Caption = "Tarih";
+            gridMovementView.Columns[nameof(ProductMovementDto.MovementType)]!.Caption = "Hareket Türü";
+            gridMovementView.Columns[nameof(ProductMovementDto.Quantity)]!.Caption = "Miktar";
+            gridMovementView.Columns[nameof(ProductMovementDto.UnitPrice)]!.Caption = "Birim Fiyat";
+            gridMovementView.Columns[nameof(ProductMovementDto.ReferenceNo)]!.Caption = "Belge / Ref No";
+            gridMovementView.Columns[nameof(ProductMovementDto.Description)]!.Caption = "Açıklama";
+            gridMovementView.OptionsView.ShowColumnHeaders = true;
             gridMovementView.OptionsBehavior.ReadOnly = true;
         }
 

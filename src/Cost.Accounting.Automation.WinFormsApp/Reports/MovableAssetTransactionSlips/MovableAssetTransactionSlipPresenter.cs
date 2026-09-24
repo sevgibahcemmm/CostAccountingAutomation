@@ -92,6 +92,30 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
             return fallbackCode;
         }
 
+        /// <summary>Katalog projeksiyonu (<see cref="ProductCatalogDto"/>) ile aynı kodu çözer.</summary>
+        public static string ResolveItemCode(ProductCatalogDto? product, string fallbackCode)
+        {
+            if (product is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(product.CategoryCode))
+                {
+                    return product.CategoryCode;
+                }
+
+                if (!string.IsNullOrWhiteSpace(product.ChartOfAccountCode))
+                {
+                    return product.ChartOfAccountCode;
+                }
+
+                if (!string.IsNullOrWhiteSpace(product.ProductCode))
+                {
+                    return product.ProductCode;
+                }
+            }
+
+            return fallbackCode;
+        }
+
         public static async Task ShowAsync(MovableAssetTransactionSlipData data)
         {
             WaitForm? waitForm = null;

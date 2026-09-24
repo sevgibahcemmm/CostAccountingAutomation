@@ -410,6 +410,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnAddProduct.Name = "btnAddProduct";
             this.btnAddProduct.Size = new System.Drawing.Size(490, 30);
             this.btnAddProduct.Text = "+ Ürünü Faturaya Ekle";
+            this.btnAddProduct.ImageOptions.SvgImage = DxIcon.Add;
+            this.btnAddProduct.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnAddProduct.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // pnlItemsPanel
@@ -452,6 +455,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnAddLine.Name = "btnAddLine";
             this.btnAddLine.Size = new System.Drawing.Size(105, 28);
             this.btnAddLine.Text = "+ Satır Ekle";
+            this.btnAddLine.ImageOptions.SvgImage = DxIcon.Add;
+            this.btnAddLine.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // btnDeleteLine
@@ -460,6 +466,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnDeleteLine.Name = "btnDeleteLine";
             this.btnDeleteLine.Size = new System.Drawing.Size(105, 28);
             this.btnDeleteLine.Text = "- Satır Sil";
+            this.btnDeleteLine.ImageOptions.SvgImage = DxIcon.Delete;
+            this.btnDeleteLine.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // gridLines
@@ -643,6 +652,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnPrintSlip.Name = "btnPrintSlip";
             this.btnPrintSlip.Size = new System.Drawing.Size(190, 34);
             this.btnPrintSlip.Text = "Taşınır İşlem Fişi Yazdır";
+            this.btnPrintSlip.ImageOptions.SvgImage = DxIcon.Print;
+            this.btnPrintSlip.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnPrintSlip.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // btnSaveDraft
@@ -653,6 +665,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnSaveDraft.Name = "btnSaveDraft";
             this.btnSaveDraft.Size = new System.Drawing.Size(130, 34);
             this.btnSaveDraft.Text = "Taslak Kaydet";
+            this.btnSaveDraft.ImageOptions.SvgImage = DxIcon.Save;
+            this.btnSaveDraft.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // btnSave
@@ -663,6 +678,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(130, 34);
             this.btnSave.Text = "Kaydet ve Onayla";
+            this.btnSave.ImageOptions.SvgImage = DxIcon.Check;
+            this.btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // btnApprove
@@ -673,6 +691,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnApprove.Name = "btnApprove";
             this.btnApprove.Size = new System.Drawing.Size(130, 34);
             this.btnApprove.Text = "Faturayı Onayla";
+            this.btnApprove.ImageOptions.SvgImage = DxIcon.CheckAll;
+            this.btnApprove.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // btnCancel
@@ -683,6 +704,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(94, 34);
             this.btnCancel.Text = "Vazgeç";
+            this.btnCancel.ImageOptions.SvgImage = DxIcon.Close;
+            this.btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
 
             // 
             // InvoiceEditForm

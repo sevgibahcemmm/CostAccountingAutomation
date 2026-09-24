@@ -13,17 +13,12 @@ using DevExpress.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraGrid.Columns;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using TS.MediatR;
 using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
-    public sealed partial class ProductPriceStockListForm : CrudListFormBase<ProductGetAllQuery, ProductDto, ProductEditForm>
+    public sealed partial class ProductPriceStockListForm : CrudListFormBase<ProductCatalogListQuery, ProductCatalogDto, ProductEditForm>
     {
         public ProductPriceStockListForm() : base("Fiyat & Stok Listesi")
         {
@@ -35,7 +30,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         protected override bool SupportsStockCountListReport => true;
 
-        protected override async Task ShowStockCountListReportAsync(ProductDto? item)
+        protected override async Task ShowStockCountListReportAsync(ProductCatalogDto? item)
         {
             using var scope = Program.Services.CreateScope();
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
@@ -94,19 +89,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
         protected override string[] SearchFieldNames =>
         [
-            nameof(ProductDto.Name),
-            nameof(ProductDto.ProductCode),
-            nameof(ProductDto.CategoryName),
-            nameof(ProductDto.WarehouseName),
-            nameof(ProductDto.ProductUnitTypeName)
+            nameof(ProductCatalogDto.Name),
+            nameof(ProductCatalogDto.ProductCode),
+            nameof(ProductCatalogDto.CategoryName),
+            nameof(ProductCatalogDto.WarehouseName),
+            nameof(ProductCatalogDto.ProductUnitTypeName)
         ];
 
         protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
+            View.Columns[nameof(ProductCatalogDto.WarehouseName)]!.Visible = false;
+            ConfigureWarehouseGrouping(nameof(ProductCatalogDto.WarehouseGroup));
 
-            View.Columns[nameof(ProductDto.TaxRateRate)]!.Visible = false;
-            View.Columns[nameof(ProductDto.ChartOfAccountCode)]!.Visible = false;
+            View.Columns[nameof(ProductCatalogDto.TaxRateRate)]!.Visible = false;
+            View.Columns[nameof(ProductCatalogDto.ChartOfAccountCode)]!.Visible = false;
 
             GridColumn purchasePrice = new()
             {
@@ -134,7 +131,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             salePrice.AppearanceCell.TextOptions.HAlignment = HorzAlignment.Far;
             salePrice.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Far;
 
-            int insertIndex = View.Columns[nameof(ProductDto.StockQuantity)]!.VisibleIndex + 1;
+            int insertIndex = View.Columns[nameof(ProductCatalogDto.StockQuantity)]!.VisibleIndex + 1;
             View.Columns.Add(purchasePrice);
             View.Columns.Add(salePrice);
             purchasePrice.VisibleIndex = insertIndex;
@@ -150,7 +147,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 return;
             }
 
-            if (View.GetRow(e.ListSourceRowIndex) is not ProductDto product)
+            if (View.GetRow(e.ListSourceRowIndex) is not ProductCatalogDto product)
             {
                 return;
             }
@@ -166,7 +163,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             }
         }
 
-        private static decimal? GetLatestPrice(ProductDto product, ProductPriceType priceType)
+        private static decimal? GetLatestPrice(ProductCatalogDto product, ProductPriceType priceType)
         {
             ProductPriceDto? latest = product.Prices
                 .Where(p => p.PriceType == priceType)
@@ -176,10 +173,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             return latest?.UnitPrice;
         }
 
-        protected override ProductGetAllQuery BuildListQuery()
+        protected override ProductCatalogListQuery BuildListQuery()
             => new(WarehouseId: SelectedFilterGuid, OnlyDeleted: ShowDeleted);
 
-        protected override IRequest<Result<string>> BuildDeleteCommand(ProductDto item)
+        protected override bool EnrichReplacesBaseQuery => true;
+
+        protected override Task<IReadOnlyList<ProductCatalogDto>> EnrichAsync(List<ProductCatalogDto> items, CancellationToken cancellationToken)
+            => Task.Run(async () =>
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                return (IReadOnlyList<ProductCatalogDto>)(await mediator.Send(
+                    new ProductCatalogGetAllQuery(WarehouseId: SelectedFilterGuid, OnlyDeleted: ShowDeleted),
+                    cancellationToken));
+            }, cancellationToken);
+
+        protected override IRequest<Result<string>> BuildDeleteCommand(ProductCatalogDto item)
             => throw new NotSupportedException("Fiyat & Stok Listesi salt okunurdur.");
+
+        protected override ProductEditForm CreateEditEditor(ProductCatalogDto item)
+            => new(new ProductDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+                ProductCode = item.ProductCode,
+                CategoryId = item.CategoryId
+            });
     }
 }

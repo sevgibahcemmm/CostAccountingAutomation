@@ -259,6 +259,9 @@ private void InitializeComponent()
         btnAddLine.Size = new Size(140, 28);
         btnAddLine.TabIndex = 0;
         btnAddLine.Text = "Malzeme Ekle";
+        btnAddLine.ImageOptions.SvgImage = DxIcon.Add;
+        btnAddLine.ImageOptions.SvgImageSize = new Size(16, 16);
+        btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
         // 
         // btnDeleteLine
         // 
@@ -267,6 +270,9 @@ private void InitializeComponent()
         btnDeleteLine.Size = new Size(140, 28);
         btnDeleteLine.TabIndex = 1;
         btnDeleteLine.Text = "Satır Sil";
+        btnDeleteLine.ImageOptions.SvgImage = DxIcon.Delete;
+        btnDeleteLine.ImageOptions.SvgImageSize = new Size(16, 16);
+        btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
         // 
         // pnlFooter
         // 

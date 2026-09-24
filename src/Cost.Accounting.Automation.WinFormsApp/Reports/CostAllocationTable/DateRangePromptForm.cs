@@ -1,4 +1,5 @@
-﻿using Cost.Accounting.Automation.Application.Helpers;
+﻿using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -10,6 +11,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 {
     public sealed partial class DateRangePromptForm : XtraForm
     {
+        private sealed record WarehouseChoice(Guid Id, string Display);
+
         // Height (px) freed up when the type selector section is hidden — must match the
         // vertical gap reserved for lblType/lookupType in the designer layout.
         private const int TypeSelectorSectionHeight = 64;
@@ -26,11 +29,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 
         public CostSlipType CostSlipType { get; private set; } = CostSlipType.Product;
 
+        public Guid? WarehouseId { get; private set; }
+
         public DateRangePromptForm(
             DateOnly? defaultStart = null,
             DateOnly? defaultEnd = null,
             bool showTypeSelector = true,
-            string headerTitle = "")
+            string headerTitle = "",
+            IReadOnlyList<ChartOfAccountLookUpDto>? warehouses = null,
+            Guid? defaultWarehouseId = null)
         {
             InitializeComponent();
 
@@ -68,7 +75,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
                 HighlightQuickButton(btnThisYear);
             };
 
-            if (!showTypeSelector)
+            if (warehouses is not null)
+            {
+                ConfigureWarehouseSelector(warehouses, defaultWarehouseId);
+            }
+            else if (!showTypeSelector)
             {
                 lblType.Visible = false;
                 lookupType.Visible = false;
@@ -117,6 +128,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
                 UpdateRangeLabel();
             };
             UpdateRangeLabel();
+        }
+
+        private void ConfigureWarehouseSelector(
+            IReadOnlyList<ChartOfAccountLookUpDto> warehouses,
+            Guid? defaultWarehouseId)
+        {
+            List<WarehouseChoice> choices =
+            [
+                new(Guid.Empty, "Tüm Depolar"),
+                .. warehouses
+                    .OrderBy(x => x.Code)
+                    .Select(x => new WarehouseChoice(x.Id, x.Display))
+            ];
+
+            lblType.Text = "DEPO";
+            lookupType.Properties.DataSource = choices;
+            lookupType.Properties.ValueMember = nameof(WarehouseChoice.Id);
+            lookupType.Properties.DisplayMember = nameof(WarehouseChoice.Display);
+            Guid selectedWarehouseId = defaultWarehouseId is Guid id && warehouses.Any(x => x.Id == id)
+                ? id
+                : Guid.Empty;
+            lookupType.EditValue = selectedWarehouseId;
+            WarehouseId = selectedWarehouseId == Guid.Empty ? null : selectedWarehouseId;
+            lookupType.EditValueChanged += (_, _) =>
+            {
+                Guid selectedId = lookupType.EditValue is Guid value ? value : Guid.Empty;
+                WarehouseId = selectedId == Guid.Empty ? null : selectedId;
+            };
+            lblHeaderSub.Text = "Tarih aralığını ve yazdırılacak depoyu seçin";
         }
 
         private void SetRange(DateTime start, DateTime end)

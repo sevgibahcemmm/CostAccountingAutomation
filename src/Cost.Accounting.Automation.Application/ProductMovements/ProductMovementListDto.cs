@@ -21,6 +21,9 @@ public sealed class ProductMovementListDto : EntityDto
     [Column("Depo", Order = 40, Width = 120)]
     public string WarehouseName { get; set; } = default!;
 
+    [Column("Depo", Order = 40, Width = 120)]
+    public string WarehouseGroup { get; set; } = default!;
+
     [Column("Birim", Order = 55, Width = 70, Alignment = "Center")]
     public string UnitTypeName { get; set; } = default!;
 
@@ -71,6 +74,9 @@ public static class ProductMovementExtensions
                 ProductCode = s.Entity.Product == null ? string.Empty : s.Entity.Product.ProductCode.Value,
                 Barcode = s.Entity.Product == null ? null : s.Entity.Product.Barcode.Value,
                 WarehouseName = s.Entity.Product == null || s.Entity.Product.Warehouse == null ? string.Empty : s.Entity.Product.Warehouse.Name.Value,
+                WarehouseGroup = s.Entity.Product == null || s.Entity.Product.Warehouse == null
+                    ? string.Empty
+                    : $"{s.Entity.Product.Warehouse.Code.Value} - {s.Entity.Product.Warehouse.Name.Value}",
                 UnitTypeName = s.Entity.Product == null || s.Entity.Product.ProductUnitType == null ? string.Empty : s.Entity.Product.ProductUnitType.Name.Value,
 
                 MovementType = s.Entity.MovementType,

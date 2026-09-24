@@ -24,12 +24,12 @@ public IQueryable<EntityWithAuditDto<TEntity>> GetAllWithAudit()
     public IQueryable<EntityWithAuditDto<TEntity>> GetAllWithAuditIncludingDeleted()
         => BuildGetAllWithAudit(includeDeleted: true);
 
-    private IQueryable<EntityWithAuditDto<TEntity>> BuildGetAllWithAudit(bool includeDeleted)
+private IQueryable<EntityWithAuditDto<TEntity>> BuildGetAllWithAudit(bool includeDeleted)
     {
         var entities = includeDeleted
-            ? _context.Set<TEntity>().IgnoreQueryFilters().AsQueryable()
-            : _context.Set<TEntity>().AsQueryable();
-        var users = _context.Set<User>().AsNoTracking().AsQueryable();
+            ? _context.Set<TEntity>().IgnoreQueryFilters().AsNoTrackingWithIdentityResolution()
+            : _context.Set<TEntity>().AsNoTrackingWithIdentityResolution();
+        var users = _context.Set<User>().AsNoTracking();
 
         var res = entities
           .Join(users, m => m.CreatedBy, m => m.Id, (b, user) =>

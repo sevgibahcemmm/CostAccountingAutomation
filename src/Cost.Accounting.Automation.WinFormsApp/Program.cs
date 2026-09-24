@@ -10,6 +10,7 @@ using DevExpress.UserSkins;
 using DevExpress.XtraEditors;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.IO;
 
 namespace Cost.Accounting.Automation.WinFormsApp
@@ -20,11 +21,16 @@ namespace Cost.Accounting.Automation.WinFormsApp
 
         private static void InstallCrashLogHandlers()
         {
-            System.Windows.Forms.Application.ThreadException += (s, e) => CrashLog.WriteException("ThreadException", e.Exception);
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-                CrashLog.WriteException("Unhandled" + (e.IsTerminating ? "(Terminating)" : ""), e.ExceptionObject as Exception ?? new Exception(e.ExceptionObject?.ToString()));
-            TaskScheduler.UnobservedTaskException += (s, e) =>
-            {
+            System.Windows.Forms.Application.ThreadException += (s, e) => {
+                CrashLog.WriteException("ThreadException", e.Exception);
+                Console.Error.WriteLine("[THREAD] " + e.Exception.Message);
+            };
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => {
+                var ex = e.ExceptionObject as Exception ?? new Exception(e.ExceptionObject?.ToString() ?? "Unknown");
+                CrashLog.WriteException("Unhandled" + (e.IsTerminating ? "(Terminating)" : ""), ex);
+                Console.Error.WriteLine("[UNHANDLED" + (e.IsTerminating ? "(Terminating)" : "") + "] " + ex.Message + "\n" + ex.StackTrace);
+            };
+            TaskScheduler.UnobservedTaskException += (s, e) => {
                 CrashLog.WriteException("UnobservedTask", e.Exception);
                 e.SetObserved();
             };
@@ -63,6 +69,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
             services.AddSingleton(configuration);
             services.AddApplication();
             services.AddInfrastructure(configuration);
+            services.AddLogging();
 
             services.AddSingleton<SessionClaimContext>();
             services.AddSingleton<IClaimContext>(sp => sp.GetRequiredService<SessionClaimContext>());
@@ -74,9 +81,22 @@ namespace Cost.Accounting.Automation.WinFormsApp
             InstallCrashLogHandlers();
             InstallSessionFileLogging();
             DatabaseInitializer.InitializeAsync(Services).GetAwaiter().GetResult();
+            CrashLog.Write("Main", "After DatabaseInitializer");
 
             var loginForm = Services.GetRequiredService<XtraLoginForm>();
-            System.Windows.Forms.Application.Run(loginForm);
+            CrashLog.Write("Main", "After loginForm");
+            CrashLog.Write("Main", "Before Application.Run");
+            try
+            {
+                System.Windows.Forms.Application.Run(loginForm);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("Main.ApplicationRun", ex);
+                Console.Error.WriteLine("[RUN] " + ex.Message);
+                throw;
+            }
+            CrashLog.Write("Main", "After Application.Run");
         }
     }
 }

@@ -84,6 +84,8 @@ public sealed class ProductPrice : Entity, IHardDeletable
     public DateOnly? EndDate { get; private set; }
 }
 
+public record ProductPriceQueryResult(Guid ProductId, Guid Id, ProductPriceType PriceType, decimal UnitPrice, DateOnly StartDate, DateOnly? EndDate);
+
 public sealed class ProductMovement : Entity, IHardDeletable
 {
     private ProductMovement()

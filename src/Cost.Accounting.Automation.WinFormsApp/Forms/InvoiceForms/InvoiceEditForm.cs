@@ -32,8 +32,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private readonly BindingList<InvoiceLineDto> _lines = [];
         private List<CustomerDto> _customers = [];
         private List<SupplierDto> _suppliers = [];
-        private List<ProductDto> _products = [];
-        private Dictionary<Guid, ProductDto> _productsById = [];
+        private List<ProductCatalogDto> _products = [];
+        private readonly List<ProductCatalogDto> _catalogProducts = [];
+        private Dictionary<Guid, ProductCatalogDto> _productsById = [];
+        private readonly Dictionary<Guid, List<ProductMovementDto>> _movementsByProductId = [];
         private List<ChartOfAccountLookUpDto> _accounts = [];
         private List<ChartOfAccountLookUpDto> _warehouses = [];
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
@@ -63,42 +65,87 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private bool IsNewSalesInvoice => _editing is null
             && SelectedInvoiceType == InvoiceType.Sales;
 
-        private decimal? SuggestedSalesPriceFor(ProductDto product, decimal saleUnitPrice)
+        private async Task<decimal?> AskSalesPriceAsync(ProductCatalogDto product, decimal currentUnitPrice)
         {
-            if (!IsNewSalesInvoice || saleUnitPrice > 0)
+            if (!IsNewSalesInvoice || currentUnitPrice > 0)
             {
                 return null;
             }
 
-            decimal costPrice = product.Prices
-                .Where(p => p.PriceType == ProductPriceType.Purchase)
-                .OrderByDescending(p => p.StartDate)
-                .FirstOrDefault()?.UnitPrice ?? 0m;
-
-            if (costPrice <= 0m)
+            List<ProductMovementDto> movements = await LoadMovementsAsync(product.Id);
+            decimal? costPrice = SalesPriceSuggestionCalculator.CostPriceOf(product.Prices, movements);
+            if (costPrice is null or <= 0)
             {
                 return null;
             }
 
-            decimal kdvRate = product.TaxRateRate > 0 && product.TaxRateRate <= 1
-                ? product.TaxRateRate
-                : product.TaxRateRate / 100m;
+            using var form = new SalesPriceSuggestionForm(
+                product.Name,
+                product.ProductCode,
+                costPrice.Value,
+                product.TaxRateRate);
 
-            decimal withKdv = costPrice * (1m + kdvRate);
-            decimal withProfit = withKdv * 1.10m;
-            decimal suggested = withProfit * (1m + kdvRate);
+            if (form.ShowDialog(this) != DialogResult.OK)
+            {
+                return null;
+            }
 
-            return Math.Ceiling(suggested);
+            if (form.SaveAsSalePrice)
+            {
+                await SaveSalePriceAsync(product, form.Price);
+                ApplySavedSalePriceToCache(product, form.Price);
+            }
+
+            return form.Price;
+        }
+
+        private static async Task SaveSalePriceAsync(ProductCatalogDto product, decimal price)
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                await mediator.Send(new ProductPriceCreateCommand(
+                    product.Id,
+                    ProductPriceType.Sale,
+                    price,
+                    DateOnly.FromDateTime(DateTime.Today)), CancellationToken.None);
+            }
+catch (Exception ex)
+            {
+                CrashLog.WriteException("Invoice.LoadLookUps", ex);
+                ToastHelper.Show("Veriler yüklenirken hata oluştu: " + ex.Message, ToastType.Error);
+            }
+        }
+
+        private void ApplySavedSalePriceToCache(ProductCatalogDto product, decimal price)
+        {
+            product.Prices.Insert(0, new ProductPriceDto
+            {
+                Id = Guid.Empty,
+                PriceType = ProductPriceType.Sale,
+                UnitPrice = price,
+                StartDate = DateOnly.FromDateTime(DateTime.Today),
+                EndDate = null
+            });
+
+            gridCatalogView.RefreshData();
         }
 
         private bool IsOutputInvoice => SelectedInvoiceType == InvoiceType.Sales
             || SelectedInvoiceType == InvoiceType.PurchaseReturn;
 
-        private decimal AvailableQuantity(ProductDto product, DateOnly asOfDate)
+        private decimal AvailableQuantity(Guid productId, DateOnly asOfDate)
         {
+            if (!_movementsByProductId.TryGetValue(productId, out List<ProductMovementDto>? movements))
+            {
+                return 0;
+            }
+
             decimal balance = 0;
 
-            foreach (ProductMovementDto movement in product.Movements.Where(m => m.Date <= asOfDate))
+            foreach (ProductMovementDto movement in movements.Where(m => m.Date <= asOfDate))
             {
                 balance += movement.MovementType == ProductMovementType.Input
                     ? movement.Quantity
@@ -106,6 +153,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             }
 
             return balance;
+        }
+
+        private async Task<List<ProductMovementDto>> LoadMovementsAsync(Guid productId)
+        {
+            if (_movementsByProductId.TryGetValue(productId, out List<ProductMovementDto>? cached))
+            {
+                return cached;
+            }
+
+            List<ProductMovementDto> movements = [];
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                ProductDto? full = (await mediator.Send(new ProductGetQuery(productId), CancellationToken.None)).Data;
+                movements = full?.Movements ?? [];
+            }
+catch (Exception ex)
+             {
+                 CrashLog.WriteException("Invoice.AskAndReload", ex);
+                 ToastHelper.Show("Veriler yüklenirken hata oluştu: " + ex.Message, ToastType.Error);
+             }
+
+            _movementsByProductId[productId] = movements;
+            return movements;
         }
 
         public InvoiceEditForm() : this(null)
@@ -179,14 +251,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
             _riProductLookUp = new RepositoryItemSearchLookUpEdit
             {
-                ValueMember = nameof(ProductDto.Id),
-                DisplayMember = nameof(ProductDto.Name),
+                ValueMember = nameof(ProductCatalogDto.Id),
+                DisplayMember = nameof(ProductCatalogDto.Name),
                 NullText = "Ürün Seçiniz...",
                 PopupFilterMode = PopupFilterMode.Contains
             };
             // Popup"ta yalnızca ürün görünsün: gereksiz alt-detail kolonları (Ürün Kodu, Stok) listelenmesin.
             _riProductLookUp.View.OptionsBehavior.AutoPopulateColumns = false;
-            _riProductLookUp.View.Columns.AddField(nameof(ProductDto.Name)).Caption = "Ürün Adı";
+            _riProductLookUp.View.Columns.AddField(nameof(ProductCatalogDto.Name)).Caption = "Ürün Adı";
             _riProductLookUp.View.Columns[0].Visible = true;
             _riProductLookUp.EditValueChanged += RiProductLookUp_EditValueChanged;
 
@@ -271,13 +343,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
             GridColumn[] columns =
             [
-                new() { Caption = "Ürün Adı", FieldName = nameof(ProductDto.Name), Visible = true, Width = 220 },
-                new() { Caption = "Ürün Kodu", FieldName = nameof(ProductDto.ProductCode), Visible = true, Width = 110 },
-                new() { Caption = "Depo", FieldName = nameof(ProductDto.WarehouseName), Visible = true, Width = 110 },
-                new() { FieldName = nameof(ProductDto.WarehouseId), Visible = false }, // filtre panelinde depo adını göstermek için gizli kolon
-                new() { Caption = "Birim", FieldName = nameof(ProductDto.ProductUnitTypeName), Visible = true, Width = 75 },
-                new() { Caption = "KDV %", FieldName = nameof(ProductDto.TaxRateRate), Visible = true, Width = 75, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "p0" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
-                new() { Caption = "Stok", FieldName = nameof(ProductDto.StockQuantity), Visible = true, Width = 90, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "n2" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
+                new() { Caption = "Ürün Adı", FieldName = nameof(ProductCatalogDto.Name), Visible = true, Width = 220 },
+                new() { Caption = "Ürün Kodu", FieldName = nameof(ProductCatalogDto.ProductCode), Visible = true, Width = 110 },
+                new() { Caption = "Depo", FieldName = nameof(ProductCatalogDto.WarehouseName), Visible = true, Width = 110 },
+                new() { FieldName = nameof(ProductCatalogDto.WarehouseId), Visible = false }, // filtre panelinde depo adını göstermek için gizli kolon
+                new() { Caption = "Birim", FieldName = nameof(ProductCatalogDto.ProductUnitTypeName), Visible = true, Width = 75 },
+                new() { Caption = "KDV %", FieldName = nameof(ProductCatalogDto.TaxRateRate), Visible = true, Width = 75, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "p0" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
+                new() { Caption = "Stok", FieldName = nameof(ProductCatalogDto.StockQuantity), Visible = true, Width = 90, DisplayFormat = { FormatType = FormatType.Custom, FormatString = "n2" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
                 new() { Caption = "Alış Fiyatı", FieldName = "PurchasePriceUnbound", UnboundDataType = typeof(decimal), Visible = true, Width = 110, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } },
                 new() { Caption = "Satış Fiyatı", FieldName = "SalePriceUnbound", UnboundDataType = typeof(decimal), Visible = true, Width = 110, DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" }, AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } } }
             ];
@@ -299,7 +371,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return;
             }
 
-            if (gridCatalogView.GetRow(e.ListSourceRowIndex) is not ProductDto product)
+            if (gridCatalogView.GetRow(e.ListSourceRowIndex) is not ProductCatalogDto product)
             {
                 return;
             }
@@ -318,6 +390,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         {
             Load += InvoiceEditForm_Load;
             cmbInvoiceType.SelectedIndexChanged += CmbInvoiceType_SelectedIndexChanged;
+            cmbInvoiceType.SelectedIndexChanged += (_, _) => RefreshForInvoiceTypeChange();
             btnAddLine.Click += (_, _) => AddEmptyLine();
             btnDeleteLine.Click += (_, _) => DeleteSelectedLine();
             btnAddProduct.Click += (_, _) => AddSelectedCatalogProduct();
@@ -329,7 +402,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
             gridLinesView.ValidatingEditor += GridLinesView_ValidatingEditor;
             gridCatalogView.DoubleClick += GridCatalogView_DoubleClick;
-            cmbCatalogWarehouse.EditValueChanged += CmbCatalogWarehouse_EditValueChanged;
+            cmbCatalogWarehouse.CloseUp += CmbCatalogWarehouse_CloseUp;
             txtCatalogProductSearch.EditValueChanged += TxtCatalogProductSearch_EditValueChanged;
 
             // Açıklama alanını otomatik oluşturmak için ilgili alanlardaki değişiklikleri izle.
@@ -433,11 +506,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         private async void InvoiceEditForm_Load(object? sender, EventArgs e)
         {
-            await LoadLookUpsAsync();
-
-            if (_editing is not null)
+            try
             {
-                PopulateExisting(_editing);
+                await LoadLookUpsAsync();
+                if (_editing is not null)
+                {
+                    PopulateExisting(_editing);
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("Invoice.Load", ex);
+                ToastHelper.Show("Hata: " + ex.Message, ToastType.Error);
             }
         }
 
@@ -445,40 +525,94 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         {
             try
             {
-                using var scope = Program.Services.CreateScope();
-                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                // Dört sorguyu ayrı scope'larla paralel çalıştırıyoruz: DbContext tek scope'ta
+                // thread-safe değildir, bu yüzden her sorgu kendi scope'unu kullanır. Böylece
+                // katalog (en yavaş veri) hazır olana kadar firma ve depo listeleri bağlanır.
+                Task<List<CustomerDto>> customersTask = LoadCustomersAsync();
+                Task<List<SupplierDto>> suppliersTask = LoadSuppliersAsync();
+                Task<List<ChartOfAccountLookUpDto>> accountsTask = LoadAccountsAsync();
+                Task<List<ProductCatalogDto>> productsTask = LoadProductsAsync();
 
-                _customers = (await mediator.Send(new CustomerGetAllQuery())).ToList();
-                _suppliers = (await mediator.Send(new SupplierGetAllQuery())).ToList();
-                _products = (await mediator.Send(new ProductGetAllQuery())).ToList();
-                _productsById = _products.ToDictionary(p => p.Id);
-                _accounts = (await mediator.Send(new ChartOfAccountLookUpQuery())).Data ?? [];
+                _customers = await customersTask;
+                _suppliers = await suppliersTask;
+                _accounts = (await accountsTask) ?? [];
                 _warehouses = _accounts
                     .Where(w => w.Type == ChartOfAccountType.Warehouse)
                     .ToList();
 
-                _riProductLookUp.DataSource = _products;
+                // Firma ve depo listeleri katalogu beklemeden hazır; önce bunları bağlıyoruz.
                 UpdateAccountDataSource();
+                BindWarehouseCombo();
 
-                cmbCatalogWarehouse.Properties.DataSource = _warehouses;
-                cmbCatalogWarehouse.Properties.ValueMember = nameof(ChartOfAccountLookUpDto.Id);
-                cmbCatalogWarehouse.Properties.DisplayMember = nameof(ChartOfAccountLookUpDto.Display);
-                cmbCatalogWarehouse.Properties.PopupFilterMode = PopupFilterMode.Contains;
-                cmbCatalogWarehouse.Properties.BestFitMode = BestFitMode.BestFit;
-                cmbCatalogWarehouseView.Columns.Clear();
-                GridColumn whColumn = cmbCatalogWarehouseView.Columns.AddField(nameof(ChartOfAccountLookUpDto.Display));
-                whColumn.Caption = "Depo";
-                whColumn.VisibleIndex = 0;
-                whColumn.Width = 300;
-                cmbCatalogWarehouseView.BestFitColumns();
+                if (_editing is { Lines.Count: > 0 })
+                {
+                    foreach (Guid productId in _editing.Lines.Select(l => l.ProductId).Distinct())
+                    {
+                        if (productId != Guid.Empty)
+                        {
+                            await LoadMovementsAsync(productId);
+                        }
+                    }
+                }
 
-                gridCatalog.DataSource = _products;
+                _products = await productsTask;
+                _productsById = _products.ToDictionary(p => p.Id);
+
+                _riProductLookUp.DataSource = _products;
+
+                _catalogProducts.Clear();
+                _catalogProducts.AddRange(_products);
+                gridCatalog.DataSource = _catalogProducts;
                 gridCatalogView.BestFitColumns();
+                UpdateCatalogFeedback();
             }
             catch (Exception ex)
             {
                 ToastHelper.Show("Veriler yüklenirken hata oluştu: " + ex.Message, ToastType.Error);
             }
+        }
+
+        private async Task<List<CustomerDto>> LoadCustomersAsync()
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            return (await mediator.Send(new CustomerGetAllQuery())).ToList();
+        }
+
+        private async Task<List<SupplierDto>> LoadSuppliersAsync()
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            return (await mediator.Send(new SupplierGetAllQuery())).ToList();
+        }
+
+        private async Task<List<ChartOfAccountLookUpDto>> LoadAccountsAsync()
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            return (await mediator.Send(new ChartOfAccountLookUpQuery())).Data ?? [];
+        }
+
+        private async Task<List<ProductCatalogDto>> LoadProductsAsync()
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            return (await mediator.Send(new ProductCatalogGetAllQuery())).ToList();
+        }
+
+        private void BindWarehouseCombo()
+        {
+            cmbCatalogWarehouse.Properties.DataSource = _warehouses;
+            cmbCatalogWarehouse.Properties.ValueMember = nameof(ChartOfAccountLookUpDto.Id);
+            cmbCatalogWarehouse.Properties.DisplayMember = nameof(ChartOfAccountLookUpDto.Display);
+            cmbCatalogWarehouse.Properties.PopupFilterMode = PopupFilterMode.Contains;
+            cmbCatalogWarehouse.Properties.BestFitMode = BestFitMode.BestFit;
+            cmbCatalogWarehouseView.Columns.Clear();
+            GridColumn whColumn = cmbCatalogWarehouseView.Columns.AddField(nameof(ChartOfAccountLookUpDto.Display));
+            whColumn.Caption = "Depo";
+            whColumn.VisibleIndex = 0;
+            whColumn.Width = 300;
+            cmbCatalogWarehouseView.BestFitColumns();
         }
 
         private void CmbInvoiceType_SelectedIndexChanged(object? sender, EventArgs e)
@@ -490,6 +624,90 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 && string.IsNullOrWhiteSpace(txtInvoiceNumber.Text))
             {
                 _ = TrySetNextSalesNumberAsync(SelectedInvoiceType);
+            }
+        }
+
+        private void RefreshForInvoiceTypeChange()
+        {
+            if (_editing is not null || !HasUnsavedEntry())
+            {
+                return;
+            }
+
+            _ = AskAndReloadLookUpsAsync(SelectedInvoiceType);
+        }
+
+        private bool HasUnsavedEntry()
+        {
+            if (_lines.Any(l => l.ProductId != Guid.Empty))
+            {
+                return true;
+            }
+
+            if (lookUpAccount.EditValue is Guid accountId && accountId != Guid.Empty)
+            {
+                return true;
+            }
+
+            return !string.IsNullOrWhiteSpace(txtInvoiceNumber.Text);
+        }
+
+        private async Task AskAndReloadLookUpsAsync(InvoiceType newType)
+        {
+            DialogResult result = MsgBox.Confirm(
+                this,
+                "Fatura tipi seçildiği için sayfa yenilenecektir. Girilen veriler temizlenecektir. Devam edilsin mi?",
+                "Fatura Tipi Değişikliği");
+
+            if (result != DialogResult.Yes)
+            {
+                return;
+            }
+
+            txtDescription.Text = string.Empty;
+            _lastAutoDescription = null;
+            _lines.Clear();
+            lookUpAccount.EditValue = null;
+            RecalculateTotals();
+
+            try
+            {
+                Task<List<CustomerDto>> customersTask = LoadCustomersAsync();
+                Task<List<SupplierDto>> suppliersTask = LoadSuppliersAsync();
+                Task<List<ChartOfAccountLookUpDto>> accountsTask = LoadAccountsAsync();
+                Task<List<ProductCatalogDto>> productsTask = LoadProductsAsync();
+
+                _customers = await customersTask;
+                _suppliers = await suppliersTask;
+                _accounts = (await accountsTask) ?? [];
+                _warehouses = _accounts
+                    .Where(w => w.Type == ChartOfAccountType.Warehouse)
+                    .ToList();
+
+                UpdateAccountDataSource();
+                BindWarehouseCombo();
+
+                _products = await productsTask;
+                _productsById = _products.ToDictionary(p => p.Id);
+                _riProductLookUp.DataSource = _products;
+
+                _catalogProducts.Clear();
+                _catalogProducts.AddRange(_products);
+                gridCatalog.DataSource = _catalogProducts;
+                gridCatalogView.BestFitColumns();
+                UpdateCatalogFeedback();
+
+                if (newType is InvoiceType.Sales or InvoiceType.SalesReturn
+                    && string.IsNullOrWhiteSpace(txtInvoiceNumber.Text))
+                {
+                    await TrySetNextSalesNumberAsync(newType);
+                }
+
+                UpdateAutoDescription();
+            }
+            catch (Exception ex)
+            {
+                ToastHelper.Show("Veriler yüklenirken hata oluştu: " + ex.Message, ToastType.Error);
             }
         }
 
@@ -608,8 +826,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             }
         }
 
-        private void CmbCatalogWarehouse_EditValueChanged(object? sender, EventArgs e)
+        private void CmbCatalogWarehouse_CloseUp(object? sender, EventArgs e)
         {
+            // Depo açılır penceresi kapanınca seçim kesinleşir; bu noktada filtreyi uygulamak
+            // güvenlidir. EditValueChanged kapanış sırasında yarıda kalıp listeyi boş bırakıyordu;
+            // CloseUp, değerin commit edildiği ve listeyi tekrar doldurmanın güvenli olduğu andır.
             ApplyCatalogFilter();
         }
 
@@ -620,12 +841,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         private void ApplyCatalogFilter()
         {
-            if (gridCatalogView.GridControl == null)
-            {
-                return;
-            }
-
-            IEnumerable<ProductDto> filtered = _products;
+            IEnumerable<ProductCatalogDto> filtered = _products;
 
             if (cmbCatalogWarehouse.EditValue is Guid warehouseId)
             {
@@ -641,7 +857,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                     || (p.Barcode?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
             }
 
-            gridCatalog.DataSource = filtered.ToList();
+            // DataSource'u her filtrelemede değiştirmek DevExpress tarafında bazen
+            // listenin boş görünmesine neden olur; tek kalıcı liste üzerinde güncelleyip
+            // RefreshData ile yenilemek bu sorunu ortadan kaldırır.
+            _catalogProducts.Clear();
+            _catalogProducts.AddRange(filtered);
+
+            gridCatalogView.RefreshData();
+            UpdateCatalogFeedback();
+        }
+
+        private void UpdateCatalogFeedback()
+        {
+            int count = _catalogProducts.Count;
+
+            if (count == 0)
+            {
+                lblCatalogTitle.Text = "Ürün bulunamadı";
+                lblCatalogTitle.Appearance.ForeColor = Color.FromArgb(200, 60, 60);
+                return;
+            }
+
+            lblCatalogTitle.Text = $"Tanımlı Ürünler ({count})";
+            lblCatalogTitle.Appearance.ForeColor = Color.FromArgb(64, 64, 64);
         }
 
         private void GridCatalogView_DoubleClick(object? sender, EventArgs e)
@@ -649,9 +887,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             AddSelectedCatalogProduct();
         }
 
-        private void AddSelectedCatalogProduct()
+        private async void AddSelectedCatalogProduct()
         {
-            if (gridCatalogView.GetFocusedRow() is not ProductDto product)
+            if (gridCatalogView.GetFocusedRow() is not ProductCatalogDto product)
             {
                 ToastHelper.Show("Lütfen listeden bir ürün seçin.", ToastType.Warning);
                 return;
@@ -665,23 +903,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 return;
             }
 
+            await LoadMovementsAsync(product.Id);
+
             ProductPriceDto? price = product.Prices
                 .Where(p => p.PriceType == PriceTypeFor(SelectedInvoiceType))
                 .OrderByDescending(p => p.StartDate)
                 .FirstOrDefault();
 
             decimal unitPrice = price?.UnitPrice ?? 0;
-            if (unitPrice <= 0
-                && SuggestedSalesPriceFor(product, unitPrice) is decimal suggested
-                && MsgBox.Confirm(
-                    this,
-                    $"'{product.Name}' için satış fiyatı tanımlı değil.{Environment.NewLine}"
-                    + $"Önerilen satış fiyatı: {suggested:N0} TL{Environment.NewLine}"
-                    + "(maliyet + KDV, %10 kâr, KDV; yukarı yuvarlanmış).{Environment.NewLine}"
-                    + "Bu fiyatı birim fiyat olarak kullanmak ister misiniz?",
-                    "Satış Fiyatı Önerisi") == DialogResult.Yes)
+            if (unitPrice <= 0)
             {
-                unitPrice = suggested;
+                unitPrice = await AskSalesPriceAsync(product, unitPrice) ?? 0m;
             }
 
             _lines.Add(new InvoiceLineDto
@@ -698,11 +930,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             UpdateAutoDescription();
         }
 
-        private void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
+private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
         {
             if (sender is SearchLookUpEdit edit && edit.EditValue is Guid productId)
             {
-                ProductDto? prod = _productsById.GetValueOrDefault(productId);
+                ProductCatalogDto? prod = _productsById.GetValueOrDefault(productId);
                 if (prod is not null)
                 {
                     int rowHandle = gridLinesView.FocusedRowHandle;
@@ -721,23 +953,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                         line.ProductId = prod.Id;
                         line.TaxRateRate = prod.TaxRateRate > 0 && prod.TaxRateRate <= 1 ? prod.TaxRateRate * 100 : prod.TaxRateRate;
 
+                        await LoadMovementsAsync(prod.Id);
+
                         var priceObj = prod.Prices
                             .Where(p => p.PriceType == PriceTypeFor(SelectedInvoiceType))
                             .OrderByDescending(p => p.StartDate)
                             .FirstOrDefault();
 
                         decimal inGridUnitPrice = priceObj?.UnitPrice ?? 0;
-                        if (inGridUnitPrice <= 0
-                            && SuggestedSalesPriceFor(prod, inGridUnitPrice) is decimal suggestedInGrid
-                            && MsgBox.Confirm(
-                                this,
-                                $"'{prod.Name}' için satış fiyatı tanımlı değil.{Environment.NewLine}"
-                                + $"Önerilen satış fiyatı: {suggestedInGrid:N0} TL{Environment.NewLine}"
-                                + "(maliyet + KDV, %10 kâr, KDV; yukarı yuvarlanmış).{Environment.NewLine}"
-                                + "Bu fiyatı birim fiyat olarak kullanmak ister misiniz?",
-                                "Satış Fiyatı Önerisi") == DialogResult.Yes)
+                        if (inGridUnitPrice <= 0)
                         {
-                            inGridUnitPrice = suggestedInGrid;
+                            inGridUnitPrice = await AskSalesPriceAsync(prod, inGridUnitPrice) ?? 0m;
                         }
 
                         line.UnitPrice = inGridUnitPrice;
@@ -776,10 +1002,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 if (dataRowForQty >= 0
                     && gridLinesView.GetRow(gridLinesView.FocusedRowHandle) is InvoiceLineDto currentForQty
                     && currentForQty.ProductId != Guid.Empty
-                    && _productsById.TryGetValue(currentForQty.ProductId, out ProductDto? productForQty))
+                    && _productsById.TryGetValue(currentForQty.ProductId, out ProductCatalogDto? productForQty)
+                    && _movementsByProductId.ContainsKey(currentForQty.ProductId))
                 {
                     DateOnly asOf = DateOnly.FromDateTime(dtDate.DateTime);
-                    decimal available = AvailableQuantity(productForQty, asOf);
+                    decimal available = AvailableQuantity(currentForQty.ProductId, asOf);
 
                     if (quantity > available)
                     {
@@ -926,12 +1153,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 foreach (var line in validLines)
                 {
-                    if (!_productsById.TryGetValue(line.ProductId, out ProductDto? productCheck))
+                    if (!_productsById.TryGetValue(line.ProductId, out ProductCatalogDto? productCheck))
                     {
                         continue;
                     }
 
-                    decimal available = AvailableQuantity(productCheck, date);
+                    await LoadMovementsAsync(line.ProductId);
+
+                    decimal available = AvailableQuantity(line.ProductId, date);
 
                     if (line.Quantity > available)
                     {
@@ -1118,7 +1347,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             int order = 0;
             foreach (InvoiceLineDto line in _lines.Where(l => l.ProductId != Guid.Empty && l.Quantity > 0))
             {
-                ProductDto? product = _productsById.GetValueOrDefault(line.ProductId);
+                ProductCatalogDto? product = _productsById.GetValueOrDefault(line.ProductId);
                 order++;
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {

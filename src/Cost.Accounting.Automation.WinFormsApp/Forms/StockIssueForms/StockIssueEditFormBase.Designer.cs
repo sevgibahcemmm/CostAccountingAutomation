@@ -247,6 +247,9 @@ abstract partial class StockIssueEditFormBase
             this.btnAddLine.Size = new System.Drawing.Size(110, 30);
             this.btnAddLine.TabIndex = 7;
             this.btnAddLine.Text = "Satır Ekle";
+            this.btnAddLine.ImageOptions.SvgImage = DxIcon.Add;
+            this.btnAddLine.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnDeleteLine
             // 
@@ -256,6 +259,9 @@ abstract partial class StockIssueEditFormBase
             this.btnDeleteLine.Size = new System.Drawing.Size(110, 30);
             this.btnDeleteLine.TabIndex = 8;
             this.btnDeleteLine.Text = "Satır Sil";
+            this.btnDeleteLine.ImageOptions.SvgImage = DxIcon.Delete;
+            this.btnDeleteLine.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // lblTotalCaption
             // 
@@ -284,6 +290,9 @@ abstract partial class StockIssueEditFormBase
             this.btnSave.Size = new System.Drawing.Size(92, 32);
             this.btnSave.TabIndex = 10;
             this.btnSave.Text = "Kaydet";
+            this.btnSave.ImageOptions.SvgImage = DxIcon.Check;
+            this.btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnCancel
             // 
@@ -293,6 +302,9 @@ abstract partial class StockIssueEditFormBase
             this.btnCancel.Size = new System.Drawing.Size(92, 32);
             this.btnCancel.TabIndex = 11;
             this.btnCancel.Text = "Kapat";
+            this.btnCancel.ImageOptions.SvgImage = DxIcon.Close;
+            this.btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnPrintSlip
             // 
@@ -303,6 +315,9 @@ abstract partial class StockIssueEditFormBase
             this.btnPrintSlip.Size = new System.Drawing.Size(180, 32);
             this.btnPrintSlip.TabIndex = 12;
             this.btnPrintSlip.Text = "Taşınır İşlem Fişi Yazdır";
+            this.btnPrintSlip.ImageOptions.SvgImage = DxIcon.Print;
+            this.btnPrintSlip.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
+            this.btnPrintSlip.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // StockIssueEditFormBase
             // 
