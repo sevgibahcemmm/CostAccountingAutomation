@@ -69,697 +69,725 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.pnlHeader = new DevExpress.XtraEditors.PanelControl();
-            this.lblHeaderIcon = new DevExpress.XtraEditors.LabelControl();
-            this.lblTitle = new DevExpress.XtraEditors.LabelControl();
-            this.lblSubtitle = new DevExpress.XtraEditors.LabelControl();
-            this.pnlHeaderLine = new DevExpress.XtraEditors.PanelControl();
-            this.pnlBody = new System.Windows.Forms.Panel();
-            this.lblTypeLabel = new DevExpress.XtraEditors.LabelControl();
-            this.cmbInvoiceType = new DevExpress.XtraEditors.ComboBoxEdit();
-            this.lblNumberLabel = new DevExpress.XtraEditors.LabelControl();
-            this.txtInvoiceNumber = new DevExpress.XtraEditors.TextEdit();
-            this.lblDateLabel = new DevExpress.XtraEditors.LabelControl();
-            this.dtDate = new DevExpress.XtraEditors.DateEdit();
-            this.lblAccountLabel = new DevExpress.XtraEditors.LabelControl();
-            this.lookUpAccount = new DevExpress.XtraEditors.SearchLookUpEdit();
-            this.lookUpAccountView = new DevExpress.XtraGrid.Views.Grid.GridView();
-            this.lblStatusValue = new DevExpress.XtraEditors.LabelControl();
-            this.lblDescLabel = new DevExpress.XtraEditors.LabelControl();
-            this.txtDescription = new DevExpress.XtraEditors.TextEdit();
-            this.pnlCatalog = new DevExpress.XtraEditors.PanelControl();
-            this.lblCatalogTitle = new DevExpress.XtraEditors.LabelControl();
-            this.cmbCatalogWarehouse = new DevExpress.XtraEditors.SearchLookUpEdit();
-            this.cmbCatalogWarehouseView = new DevExpress.XtraGrid.Views.Grid.GridView();
-            this.gridCatalog = new DevExpress.XtraGrid.GridControl();
-            this.gridCatalogView = new DevExpress.XtraGrid.Views.Grid.GridView();
-            this.txtCatalogProductSearch = new DevExpress.XtraEditors.TextEdit();
-            this.btnAddProduct = new DevExpress.XtraEditors.SimpleButton();
-            this.pnlItemsPanel = new DevExpress.XtraEditors.PanelControl();
-            this.pnlItemsHeader = new DevExpress.XtraEditors.PanelControl();
-            this.lblItemsTitle = new DevExpress.XtraEditors.LabelControl();
-            this.btnAddLine = new DevExpress.XtraEditors.SimpleButton();
-            this.btnDeleteLine = new DevExpress.XtraEditors.SimpleButton();
-            this.gridLines = new DevExpress.XtraGrid.GridControl();
-            this.gridLinesView = new DevExpress.XtraGrid.Views.Grid.GridView();
-            this.pnlTotals = new DevExpress.XtraEditors.PanelControl();
-            this.lblSubTotalTitle = new DevExpress.XtraEditors.LabelControl();
-            this.lblSubTotalValue = new DevExpress.XtraEditors.LabelControl();
-            this.lblDiscountTotalTitle = new DevExpress.XtraEditors.LabelControl();
-            this.lblDiscountTotalValue = new DevExpress.XtraEditors.LabelControl();
-            this.lblTaxTotalTitle = new DevExpress.XtraEditors.LabelControl();
-            this.lblTaxTotalValue = new DevExpress.XtraEditors.LabelControl();
-            this.lblGrandTotalTitle = new DevExpress.XtraEditors.LabelControl();
-            this.lblGrandTotalValue = new DevExpress.XtraEditors.LabelControl();
-            this.lblTaxBrkTitle = new DevExpress.XtraEditors.LabelControl();
-            this.lblTaxBreakdown = new System.Windows.Forms.Label();
-            this.pnlFooter = new DevExpress.XtraEditors.PanelControl();
-            this.pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
-            this.btnSaveDraft = new DevExpress.XtraEditors.SimpleButton();
-            this.btnSave = new DevExpress.XtraEditors.SimpleButton();
-            this.btnApprove = new DevExpress.XtraEditors.SimpleButton();
-            this.btnCancel = new DevExpress.XtraEditors.SimpleButton();
-            this.btnPrintSlip = new DevExpress.XtraEditors.SimpleButton();
-
-            ((System.ComponentModel.ISupportInitialize)(this.pnlHeader)).BeginInit();
-            this.pnlHeader.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlHeaderLine)).BeginInit();
-            this.pnlBody.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbInvoiceType.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtInvoiceNumber.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dtDate.Properties.CalendarTimeProperties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dtDate.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.lookUpAccount.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.lookUpAccountView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtDescription.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlCatalog)).BeginInit();
-            this.pnlCatalog.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCatalogWarehouse.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCatalogWarehouseView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridCatalog)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridCatalogView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtCatalogProductSearch.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlItemsPanel)).BeginInit();
-            this.pnlItemsPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlItemsHeader)).BeginInit();
-            this.pnlItemsHeader.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridLines)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridLinesView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlTotals)).BeginInit();
-            this.pnlTotals.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlFooter)).BeginInit();
-            this.pnlFooter.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlFooterLine)).BeginInit();
-            this.SuspendLayout();
-
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(InvoiceEditForm));
+            pnlHeader = new DevExpress.XtraEditors.PanelControl();
+            lblSubtitle = new DevExpress.XtraEditors.LabelControl();
+            lblTitle = new DevExpress.XtraEditors.LabelControl();
+            lblHeaderIcon = new DevExpress.XtraEditors.LabelControl();
+            pnlHeaderLine = new DevExpress.XtraEditors.PanelControl();
+            pnlBody = new Panel();
+            pnlItemsPanel = new DevExpress.XtraEditors.PanelControl();
+            pnlTotals = new DevExpress.XtraEditors.PanelControl();
+            lblTaxBreakdown = new Label();
+            lblTaxBrkTitle = new DevExpress.XtraEditors.LabelControl();
+            lblGrandTotalValue = new DevExpress.XtraEditors.LabelControl();
+            lblGrandTotalTitle = new DevExpress.XtraEditors.LabelControl();
+            lblTaxTotalValue = new DevExpress.XtraEditors.LabelControl();
+            lblTaxTotalTitle = new DevExpress.XtraEditors.LabelControl();
+            lblDiscountTotalValue = new DevExpress.XtraEditors.LabelControl();
+            lblDiscountTotalTitle = new DevExpress.XtraEditors.LabelControl();
+            lblSubTotalValue = new DevExpress.XtraEditors.LabelControl();
+            lblSubTotalTitle = new DevExpress.XtraEditors.LabelControl();
+            gridLines = new DevExpress.XtraGrid.GridControl();
+            gridLinesView = new DevExpress.XtraGrid.Views.Grid.GridView();
+            pnlItemsHeader = new DevExpress.XtraEditors.PanelControl();
+            btnDeleteLine = new DevExpress.XtraEditors.SimpleButton();
+            btnAddLine = new DevExpress.XtraEditors.SimpleButton();
+            lblItemsTitle = new DevExpress.XtraEditors.LabelControl();
+            pnlCatalog = new DevExpress.XtraEditors.PanelControl();
+            btnAddProduct = new DevExpress.XtraEditors.SimpleButton();
+            txtCatalogProductSearch = new DevExpress.XtraEditors.TextEdit();
+            gridCatalog = new DevExpress.XtraGrid.GridControl();
+            gridCatalogView = new DevExpress.XtraGrid.Views.Grid.GridView();
+            cmbCatalogWarehouse = new DevExpress.XtraEditors.SearchLookUpEdit();
+            cmbCatalogWarehouseView = new DevExpress.XtraGrid.Views.Grid.GridView();
+            lblCatalogTitle = new DevExpress.XtraEditors.LabelControl();
+            txtDescription = new DevExpress.XtraEditors.TextEdit();
+            lblDescLabel = new DevExpress.XtraEditors.LabelControl();
+            lblStatusValue = new DevExpress.XtraEditors.LabelControl();
+            lookUpAccount = new DevExpress.XtraEditors.SearchLookUpEdit();
+            lookUpAccountView = new DevExpress.XtraGrid.Views.Grid.GridView();
+            lblAccountLabel = new DevExpress.XtraEditors.LabelControl();
+            dtDate = new DevExpress.XtraEditors.DateEdit();
+            lblDateLabel = new DevExpress.XtraEditors.LabelControl();
+            txtInvoiceNumber = new DevExpress.XtraEditors.TextEdit();
+            lblNumberLabel = new DevExpress.XtraEditors.LabelControl();
+            cmbInvoiceType = new DevExpress.XtraEditors.ComboBoxEdit();
+            lblTypeLabel = new DevExpress.XtraEditors.LabelControl();
+            pnlFooter = new DevExpress.XtraEditors.PanelControl();
+            btnPrintSlip = new DevExpress.XtraEditors.SimpleButton();
+            btnCancel = new DevExpress.XtraEditors.SimpleButton();
+            btnSave = new DevExpress.XtraEditors.SimpleButton();
+            btnSaveDraft = new DevExpress.XtraEditors.SimpleButton();
+            btnApprove = new DevExpress.XtraEditors.SimpleButton();
+            pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
+            ((System.ComponentModel.ISupportInitialize)pnlHeader).BeginInit();
+            pnlHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlHeaderLine).BeginInit();
+            pnlBody.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlItemsPanel).BeginInit();
+            pnlItemsPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlTotals).BeginInit();
+            pnlTotals.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)gridLines).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridLinesView).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pnlItemsHeader).BeginInit();
+            pnlItemsHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlCatalog).BeginInit();
+            pnlCatalog.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)txtCatalogProductSearch.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridCatalog).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridCatalogView).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)cmbCatalogWarehouse.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)cmbCatalogWarehouseView).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)txtDescription.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpAccount.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpAccountView).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dtDate.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dtDate.Properties.CalendarTimeProperties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)txtInvoiceNumber.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)cmbInvoiceType.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pnlFooter).BeginInit();
+            pnlFooter.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlFooterLine).BeginInit();
+            SuspendLayout();
             // 
             // pnlHeader
             // 
-            this.pnlHeader.Appearance.BackColor = System.Drawing.Color.FromArgb(248, 249, 250);
-            this.pnlHeader.Appearance.Options.UseBackColor = true;
-            this.pnlHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            this.pnlHeader.Controls.Add(this.lblSubtitle);
-            this.pnlHeader.Controls.Add(this.lblTitle);
-            this.pnlHeader.Controls.Add(this.lblHeaderIcon);
-            this.pnlHeader.Controls.Add(this.pnlHeaderLine);
-            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(1420, 68);
-            this.pnlHeader.TabIndex = 0;
-
-            // 
-            // lblHeaderIcon
-            // 
-            this.lblHeaderIcon.Location = new System.Drawing.Point(20, 18);
-            this.lblHeaderIcon.Name = "lblHeaderIcon";
-            this.lblHeaderIcon.Size = new System.Drawing.Size(32, 32);
-            this.lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Invoices;
-
-            // 
-            // lblTitle
-            // 
-            this.lblTitle.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.Appearance.ForeColor = System.Drawing.Color.FromArgb(17, 24, 39);
-            this.lblTitle.Appearance.Options.UseFont = true;
-            this.lblTitle.Appearance.Options.UseForeColor = true;
-            this.lblTitle.Location = new System.Drawing.Point(62, 14);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(89, 21);
-            this.lblTitle.Text = "Yeni Fatura";
-
+            pnlHeader.Appearance.BackColor = Color.FromArgb(248, 249, 250);
+            pnlHeader.Appearance.Options.UseBackColor = true;
+            pnlHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlHeader.Controls.Add(lblSubtitle);
+            pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Controls.Add(lblHeaderIcon);
+            pnlHeader.Controls.Add(pnlHeaderLine);
+            pnlHeader.Dock = DockStyle.Top;
+            pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Name = "pnlHeader";
+            pnlHeader.Size = new Size(1217, 59);
+            pnlHeader.TabIndex = 0;
             // 
             // lblSubtitle
             // 
-            this.lblSubtitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.lblSubtitle.Appearance.ForeColor = System.Drawing.Color.FromArgb(107, 114, 128);
-            this.lblSubtitle.Appearance.Options.UseFont = true;
-            this.lblSubtitle.Appearance.Options.UseForeColor = true;
-            this.lblSubtitle.Location = new System.Drawing.Point(62, 38);
-            this.lblSubtitle.Name = "lblSubtitle";
-            this.lblSubtitle.Size = new System.Drawing.Size(340, 13);
-            this.lblSubtitle.Text = "Fatura ve kalem bilgilerini eksiksiz doldurunuz";
-
+            lblSubtitle.Appearance.Font = new Font("Segoe UI", 8.5F);
+            lblSubtitle.Appearance.ForeColor = Color.FromArgb(107, 114, 128);
+            lblSubtitle.Appearance.Options.UseFont = true;
+            lblSubtitle.Appearance.Options.UseForeColor = true;
+            lblSubtitle.Location = new Point(53, 33);
+            lblSubtitle.Name = "lblSubtitle";
+            lblSubtitle.Size = new Size(238, 13);
+            lblSubtitle.TabIndex = 0;
+            lblSubtitle.Text = "Fatura ve kalem bilgilerini eksiksiz doldurunuz";
+            // 
+            // lblTitle
+            // 
+            lblTitle.Appearance.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
+            lblTitle.Appearance.ForeColor = Color.FromArgb(17, 24, 39);
+            lblTitle.Appearance.Options.UseFont = true;
+            lblTitle.Appearance.Options.UseForeColor = true;
+            lblTitle.Location = new Point(53, 12);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(80, 21);
+            lblTitle.TabIndex = 1;
+            lblTitle.Text = "Yeni Fatura";
+            // 
+            // lblHeaderIcon
+            // 
+            lblHeaderIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblHeaderIcon.ImageOptions.SvgImage");
+            lblHeaderIcon.Location = new Point(17, 16);
+            lblHeaderIcon.Name = "lblHeaderIcon";
+            lblHeaderIcon.Size = new Size(32, 32);
+            lblHeaderIcon.TabIndex = 2;
             // 
             // pnlHeaderLine
             // 
-            this.pnlHeaderLine.Appearance.BackColor = System.Drawing.Color.FromArgb(229, 231, 235);
-            this.pnlHeaderLine.Appearance.Options.UseBackColor = true;
-            this.pnlHeaderLine.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            this.pnlHeaderLine.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlHeaderLine.Location = new System.Drawing.Point(0, 67);
-            this.pnlHeaderLine.Name = "pnlHeaderLine";
-            this.pnlHeaderLine.Size = new System.Drawing.Size(1420, 1);
-
+            pnlHeaderLine.Appearance.BackColor = Color.FromArgb(229, 231, 235);
+            pnlHeaderLine.Appearance.Options.UseBackColor = true;
+            pnlHeaderLine.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlHeaderLine.Dock = DockStyle.Bottom;
+            pnlHeaderLine.Location = new Point(0, 58);
+            pnlHeaderLine.Name = "pnlHeaderLine";
+            pnlHeaderLine.Size = new Size(1217, 1);
+            pnlHeaderLine.TabIndex = 3;
             // 
             // pnlBody
             // 
-            this.pnlBody.Controls.Add(this.pnlItemsPanel);
-            this.pnlBody.Controls.Add(this.pnlCatalog);
-            this.pnlBody.Controls.Add(this.txtDescription);
-            this.pnlBody.Controls.Add(this.lblDescLabel);
-            this.pnlBody.Controls.Add(this.lblStatusValue);
-            this.pnlBody.Controls.Add(this.lookUpAccount);
-            this.pnlBody.Controls.Add(this.lblAccountLabel);
-            this.pnlBody.Controls.Add(this.dtDate);
-            this.pnlBody.Controls.Add(this.lblDateLabel);
-            this.pnlBody.Controls.Add(this.txtInvoiceNumber);
-            this.pnlBody.Controls.Add(this.lblNumberLabel);
-            this.pnlBody.Controls.Add(this.cmbInvoiceType);
-            this.pnlBody.Controls.Add(this.lblTypeLabel);
-            this.pnlBody.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlBody.Location = new System.Drawing.Point(0, 68);
-            this.pnlBody.Name = "pnlBody";
-            this.pnlBody.Padding = new System.Windows.Forms.Padding(20);
-            this.pnlBody.Size = new System.Drawing.Size(1420, 592);
-            this.pnlBody.TabIndex = 1;
-
-            // 
-            // lblTypeLabel
-            // 
-            this.lblTypeLabel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblTypeLabel.Location = new System.Drawing.Point(20, 15);
-            this.lblTypeLabel.Name = "lblTypeLabel";
-            this.lblTypeLabel.Size = new System.Drawing.Size(65, 15);
-            this.lblTypeLabel.Text = "Fatura Türü:";
-
-            // 
-            // cmbInvoiceType
-            // 
-            this.cmbInvoiceType.Location = new System.Drawing.Point(20, 35);
-            this.cmbInvoiceType.Name = "cmbInvoiceType";
-            this.cmbInvoiceType.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
-            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
-            this.cmbInvoiceType.Properties.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
-            this.cmbInvoiceType.Size = new System.Drawing.Size(220, 26);
-
-            // 
-            // lblNumberLabel
-            // 
-            this.lblNumberLabel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblNumberLabel.Location = new System.Drawing.Point(185, 15);
-            this.lblNumberLabel.Name = "lblNumberLabel";
-            this.lblNumberLabel.Size = new System.Drawing.Size(58, 15);
-            this.lblNumberLabel.Text = "Fatura No:";
-
-            // 
-            // txtInvoiceNumber
-            // 
-            this.txtInvoiceNumber.Location = new System.Drawing.Point(185, 35);
-            this.txtInvoiceNumber.Name = "txtInvoiceNumber";
-            this.txtInvoiceNumber.Size = new System.Drawing.Size(170, 26);
-
-            // 
-            // lblDateLabel
-            // 
-            this.lblDateLabel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblDateLabel.Location = new System.Drawing.Point(370, 15);
-            this.lblDateLabel.Name = "lblDateLabel";
-            this.lblDateLabel.Size = new System.Drawing.Size(32, 15);
-            this.lblDateLabel.Text = "Tarih:";
-
-            // 
-            // dtDate
-            // 
-            this.dtDate.EditValue = null;
-            this.dtDate.Location = new System.Drawing.Point(370, 35);
-            this.dtDate.Name = "dtDate";
-            this.dtDate.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
-            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
-            this.dtDate.Size = new System.Drawing.Size(140, 26);
-
-            // 
-            // lblAccountLabel
-            // 
-            this.lblAccountLabel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblAccountLabel.Location = new System.Drawing.Point(525, 15);
-            this.lblAccountLabel.Name = "lblAccountLabel";
-            this.lblAccountLabel.Size = new System.Drawing.Size(117, 15);
-            this.lblAccountLabel.Text = "Cari (Müşteri/Tedarikçi):";
-
-            // 
-            // lookUpAccount
-            // 
-            this.lookUpAccount.Location = new System.Drawing.Point(525, 35);
-            this.lookUpAccount.Name = "lookUpAccount";
-            this.lookUpAccount.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
-            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
-            this.lookUpAccount.Properties.PopupView = this.lookUpAccountView;
-            this.lookUpAccount.Size = new System.Drawing.Size(380, 26);
-
-            // 
-            // lblStatusValue
-            // 
-            this.lblStatusValue.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.lblStatusValue.Appearance.ForeColor = System.Drawing.Color.FromArgb(30, 64, 175);
-            this.lblStatusValue.Appearance.Options.UseFont = true;
-            this.lblStatusValue.Appearance.Options.UseForeColor = true;
-            this.lblStatusValue.Location = new System.Drawing.Point(1080, 38);
-            this.lblStatusValue.Name = "lblStatusValue";
-            this.lblStatusValue.Size = new System.Drawing.Size(120, 15);
-            this.lblStatusValue.Text = "";
-
-            // 
-            // lblDescLabel
-            // 
-            this.lblDescLabel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblDescLabel.Location = new System.Drawing.Point(20, 75);
-            this.lblDescLabel.Name = "lblDescLabel";
-            this.lblDescLabel.Size = new System.Drawing.Size(53, 15);
-            this.lblDescLabel.Text = "Açıklama:";
-
-            // 
-            // txtDescription
-            // 
-            this.txtDescription.Location = new System.Drawing.Point(20, 95);
-            this.txtDescription.Name = "txtDescription";
-            this.txtDescription.Size = new System.Drawing.Size(1380, 26);
-
-            // 
-            // pnlCatalog
-            // 
-            this.pnlCatalog.Appearance.BackColor = System.Drawing.Color.FromArgb(249, 250, 251);
-            this.pnlCatalog.Appearance.Options.UseBackColor = true;
-            this.pnlCatalog.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Simple;
-            this.pnlCatalog.Controls.Add(this.btnAddProduct);
-            this.pnlCatalog.Controls.Add(this.txtCatalogProductSearch);
-            this.pnlCatalog.Controls.Add(this.gridCatalog);
-            this.pnlCatalog.Controls.Add(this.cmbCatalogWarehouse);
-            this.pnlCatalog.Controls.Add(this.lblCatalogTitle);
-            this.pnlCatalog.Location = new System.Drawing.Point(20, 135);
-            this.pnlCatalog.Name = "pnlCatalog";
-            this.pnlCatalog.Size = new System.Drawing.Size(500, 380);
-            this.pnlCatalog.TabIndex = 5;
-
-            // 
-            // lblCatalogTitle
-            // 
-            this.lblCatalogTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblCatalogTitle.Location = new System.Drawing.Point(5, 6);
-            this.lblCatalogTitle.Name = "lblCatalogTitle";
-            this.lblCatalogTitle.Size = new System.Drawing.Size(105, 17);
-            this.lblCatalogTitle.Text = "Tanımlı Ürünler";
-
-            // 
-            // cmbCatalogWarehouse
-            // 
-            this.cmbCatalogWarehouse.Location = new System.Drawing.Point(5, 28);
-            this.cmbCatalogWarehouse.Name = "cmbCatalogWarehouse";
-            this.cmbCatalogWarehouse.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
-            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
-            this.cmbCatalogWarehouse.Properties.NullText = "Depo (Tümü)";
-            this.cmbCatalogWarehouse.Properties.PopupView = this.cmbCatalogWarehouseView;
-            this.cmbCatalogWarehouse.Size = new System.Drawing.Size(490, 26);
-
-            // 
-            // txtCatalogProductSearch
-            // 
-            this.txtCatalogProductSearch.Properties.NullText = "Ürün ara (ad, kod veya barkod)";
-            this.txtCatalogProductSearch.Location = new System.Drawing.Point(5, 58);
-            this.txtCatalogProductSearch.Name = "txtCatalogProductSearch";
-            this.txtCatalogProductSearch.Size = new System.Drawing.Size(490, 30);
-
-            // 
-            // gridCatalog
-            // 
-            this.gridCatalog.Location = new System.Drawing.Point(5, 92);
-            this.gridCatalog.MainView = this.gridCatalogView;
-            this.gridCatalog.Name = "gridCatalog";
-            this.gridCatalog.Size = new System.Drawing.Size(490, 250);
-            this.gridCatalog.TabIndex = 6;
-            this.gridCatalog.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
-            this.gridCatalogView});
-
-            // 
-            // gridCatalogView
-            // 
-            this.gridCatalogView.GridControl = this.gridCatalog;
-            this.gridCatalogView.Name = "gridCatalogView";
-            this.gridCatalogView.OptionsBehavior.AutoPopulateColumns = false;
-            this.gridCatalogView.OptionsBehavior.Editable = false;
-            this.gridCatalogView.OptionsSelection.MultiSelect = false;
-            this.gridCatalogView.OptionsView.ShowGroupPanel = false;
-            this.gridCatalogView.RowHeight = 26;
-
-            // 
-            // btnAddProduct
-            // 
-            this.btnAddProduct.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.btnAddProduct.Location = new System.Drawing.Point(5, 345);
-            this.btnAddProduct.Name = "btnAddProduct";
-            this.btnAddProduct.Size = new System.Drawing.Size(490, 30);
-            this.btnAddProduct.Text = "+ Ürünü Faturaya Ekle";
-            this.btnAddProduct.ImageOptions.SvgImage = DxIcon.Add;
-            this.btnAddProduct.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnAddProduct.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
+            pnlBody.Controls.Add(pnlItemsPanel);
+            pnlBody.Controls.Add(pnlCatalog);
+            pnlBody.Controls.Add(txtDescription);
+            pnlBody.Controls.Add(lblDescLabel);
+            pnlBody.Controls.Add(lblStatusValue);
+            pnlBody.Controls.Add(lookUpAccount);
+            pnlBody.Controls.Add(lblAccountLabel);
+            pnlBody.Controls.Add(dtDate);
+            pnlBody.Controls.Add(lblDateLabel);
+            pnlBody.Controls.Add(txtInvoiceNumber);
+            pnlBody.Controls.Add(lblNumberLabel);
+            pnlBody.Controls.Add(cmbInvoiceType);
+            pnlBody.Controls.Add(lblTypeLabel);
+            pnlBody.Dock = DockStyle.Fill;
+            pnlBody.Location = new Point(0, 59);
+            pnlBody.Name = "pnlBody";
+            pnlBody.Padding = new Padding(17, 17, 17, 17);
+            pnlBody.Size = new Size(1217, 513);
+            pnlBody.TabIndex = 1;
             // 
             // pnlItemsPanel
             // 
-            this.pnlItemsPanel.Appearance.BackColor = System.Drawing.Color.Transparent;
-            this.pnlItemsPanel.Appearance.Options.UseBackColor = true;
-            this.pnlItemsPanel.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            this.pnlItemsPanel.Controls.Add(this.pnlTotals);
-            this.pnlItemsPanel.Controls.Add(this.gridLines);
-            this.pnlItemsPanel.Controls.Add(this.pnlItemsHeader);
-            this.pnlItemsPanel.Location = new System.Drawing.Point(540, 135);
-            this.pnlItemsPanel.Name = "pnlItemsPanel";
-            this.pnlItemsPanel.Size = new System.Drawing.Size(860, 420);
-            this.pnlItemsPanel.TabIndex = 7;
-
-            // 
-            // pnlItemsHeader
-            // 
-            this.pnlItemsHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            this.pnlItemsHeader.Controls.Add(this.btnDeleteLine);
-            this.pnlItemsHeader.Controls.Add(this.btnAddLine);
-            this.pnlItemsHeader.Controls.Add(this.lblItemsTitle);
-            this.pnlItemsHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlItemsHeader.Name = "pnlItemsHeader";
-            this.pnlItemsHeader.Size = new System.Drawing.Size(860, 36);
-
-            // 
-            // lblItemsTitle
-            // 
-            this.lblItemsTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblItemsTitle.Location = new System.Drawing.Point(5, 8);
-            this.lblItemsTitle.Name = "lblItemsTitle";
-            this.lblItemsTitle.Size = new System.Drawing.Size(100, 17);
-            this.lblItemsTitle.Text = "Fatura Kalemleri";
-
-            // 
-            // btnAddLine
-            // 
-            this.btnAddLine.Location = new System.Drawing.Point(640, 4);
-            this.btnAddLine.Name = "btnAddLine";
-            this.btnAddLine.Size = new System.Drawing.Size(105, 28);
-            this.btnAddLine.Text = "+ Satır Ekle";
-            this.btnAddLine.ImageOptions.SvgImage = DxIcon.Add;
-            this.btnAddLine.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
-            // 
-            // btnDeleteLine
-            // 
-            this.btnDeleteLine.Location = new System.Drawing.Point(755, 4);
-            this.btnDeleteLine.Name = "btnDeleteLine";
-            this.btnDeleteLine.Size = new System.Drawing.Size(105, 28);
-            this.btnDeleteLine.Text = "- Satır Sil";
-            this.btnDeleteLine.ImageOptions.SvgImage = DxIcon.Delete;
-            this.btnDeleteLine.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
-            // 
-            // gridLines
-            // 
-            this.gridLines.Location = new System.Drawing.Point(0, 40);
-            this.gridLines.MainView = this.gridLinesView;
-            this.gridLines.Name = "gridLines";
-            this.gridLines.Size = new System.Drawing.Size(860, 250);
-            this.gridLines.TabIndex = 4;
-            this.gridLines.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
-            this.gridLinesView});
-
-            // 
-            // gridLinesView
-            // 
-            this.gridLinesView.GridControl = this.gridLines;
-            this.gridLinesView.Name = "gridLinesView";
-            this.gridLinesView.OptionsBehavior.AutoPopulateColumns = false;
-            this.gridLinesView.OptionsView.ShowGroupPanel = false;
-
+            pnlItemsPanel.Appearance.BackColor = Color.Transparent;
+            pnlItemsPanel.Appearance.Options.UseBackColor = true;
+            pnlItemsPanel.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlItemsPanel.Controls.Add(pnlTotals);
+            pnlItemsPanel.Controls.Add(gridLines);
+            pnlItemsPanel.Controls.Add(pnlItemsHeader);
+            pnlItemsPanel.Location = new Point(463, 117);
+            pnlItemsPanel.Name = "pnlItemsPanel";
+            pnlItemsPanel.Size = new Size(737, 364);
+            pnlItemsPanel.TabIndex = 7;
             // 
             // pnlTotals
             // 
-            this.pnlTotals.Appearance.BackColor = System.Drawing.Color.FromArgb(249, 250, 251);
-            this.pnlTotals.Appearance.Options.UseBackColor = true;
-            this.pnlTotals.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Simple;
-            this.pnlTotals.Controls.Add(this.lblTaxBreakdown);
-            this.pnlTotals.Controls.Add(this.lblTaxBrkTitle);
-            this.pnlTotals.Controls.Add(this.lblGrandTotalValue);
-            this.pnlTotals.Controls.Add(this.lblGrandTotalTitle);
-            this.pnlTotals.Controls.Add(this.lblTaxTotalValue);
-            this.pnlTotals.Controls.Add(this.lblTaxTotalTitle);
-            this.pnlTotals.Controls.Add(this.lblDiscountTotalValue);
-            this.pnlTotals.Controls.Add(this.lblDiscountTotalTitle);
-            this.pnlTotals.Controls.Add(this.lblSubTotalValue);
-            this.pnlTotals.Controls.Add(this.lblSubTotalTitle);
-            this.pnlTotals.Location = new System.Drawing.Point(0, 300);
-            this.pnlTotals.Name = "pnlTotals";
-            this.pnlTotals.Size = new System.Drawing.Size(860, 120);
-
-            // 
-            // lblSubTotalTitle
-            // 
-            this.lblSubTotalTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblSubTotalTitle.Location = new System.Drawing.Point(15, 8);
-            this.lblSubTotalTitle.Name = "lblSubTotalTitle";
-            this.lblSubTotalTitle.Size = new System.Drawing.Size(90, 15);
-            this.lblSubTotalTitle.Text = "KDV'siz Tutar:";
-
-            // 
-            // lblSubTotalValue
-            // 
-            this.lblSubTotalValue.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.lblSubTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
-            this.lblSubTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            this.lblSubTotalValue.Location = new System.Drawing.Point(115, 8);
-            this.lblSubTotalValue.Name = "lblSubTotalValue";
-            this.lblSubTotalValue.Size = new System.Drawing.Size(130, 15);
-            this.lblSubTotalValue.Text = "0,00 ₺";
-
-            // 
-            // lblDiscountTotalTitle
-            // 
-            this.lblDiscountTotalTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblDiscountTotalTitle.Location = new System.Drawing.Point(15, 30);
-            this.lblDiscountTotalTitle.Name = "lblDiscountTotalTitle";
-            this.lblDiscountTotalTitle.Size = new System.Drawing.Size(65, 15);
-            this.lblDiscountTotalTitle.Text = "İskonto:";
-
-            // 
-            // lblDiscountTotalValue
-            // 
-            this.lblDiscountTotalValue.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.lblDiscountTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
-            this.lblDiscountTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            this.lblDiscountTotalValue.Location = new System.Drawing.Point(105, 30);
-            this.lblDiscountTotalValue.Name = "lblDiscountTotalValue";
-            this.lblDiscountTotalValue.Size = new System.Drawing.Size(130, 15);
-            this.lblDiscountTotalValue.Text = "0,00 ₺";
-
-            // 
-            // lblTaxTotalTitle
-            // 
-            this.lblTaxTotalTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblTaxTotalTitle.Location = new System.Drawing.Point(15, 52);
-            this.lblTaxTotalTitle.Name = "lblTaxTotalTitle";
-            this.lblTaxTotalTitle.Size = new System.Drawing.Size(64, 15);
-            this.lblTaxTotalTitle.Text = "KDV Toplam:";
-
-            // 
-            // lblTaxTotalValue
-            // 
-            this.lblTaxTotalValue.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.lblTaxTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
-            this.lblTaxTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            this.lblTaxTotalValue.Location = new System.Drawing.Point(105, 52);
-            this.lblTaxTotalValue.Name = "lblTaxTotalValue";
-            this.lblTaxTotalValue.Size = new System.Drawing.Size(130, 15);
-            this.lblTaxTotalValue.Text = "0,00 ₺";
-
-            // 
-            // lblGrandTotalTitle
-            // 
-            this.lblGrandTotalTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblGrandTotalTitle.Appearance.ForeColor = System.Drawing.Color.FromArgb(30, 64, 175);
-            this.lblGrandTotalTitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            this.lblGrandTotalTitle.Location = new System.Drawing.Point(15, 76);
-            this.lblGrandTotalTitle.Name = "lblGrandTotalTitle";
-            this.lblGrandTotalTitle.Size = new System.Drawing.Size(100, 17);
-            this.lblGrandTotalTitle.Text = "Genel Toplam:";
-
-            // 
-            // lblGrandTotalValue
-            // 
-            this.lblGrandTotalValue.Appearance.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
-            this.lblGrandTotalValue.Appearance.ForeColor = System.Drawing.Color.FromArgb(30, 64, 175);
-            this.lblGrandTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
-            this.lblGrandTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            this.lblGrandTotalValue.Location = new System.Drawing.Point(115, 76);
-            this.lblGrandTotalValue.Name = "lblGrandTotalValue";
-            this.lblGrandTotalValue.Size = new System.Drawing.Size(120, 20);
-            this.lblGrandTotalValue.Text = "0,00 ₺";
-
-            // 
-            // lblTaxBrkTitle
-            // 
-            this.lblTaxBrkTitle.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblTaxBrkTitle.Location = new System.Drawing.Point(280, 10);
-            this.lblTaxBrkTitle.Name = "lblTaxBrkTitle";
-            this.lblTaxBrkTitle.Size = new System.Drawing.Size(80, 15);
-            this.lblTaxBrkTitle.Text = "KDV Kırılımı:";
-
+            pnlTotals.Appearance.BackColor = Color.FromArgb(249, 250, 251);
+            pnlTotals.Appearance.Options.UseBackColor = true;
+            pnlTotals.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Simple;
+            pnlTotals.Controls.Add(lblTaxBreakdown);
+            pnlTotals.Controls.Add(lblTaxBrkTitle);
+            pnlTotals.Controls.Add(lblGrandTotalValue);
+            pnlTotals.Controls.Add(lblGrandTotalTitle);
+            pnlTotals.Controls.Add(lblTaxTotalValue);
+            pnlTotals.Controls.Add(lblTaxTotalTitle);
+            pnlTotals.Controls.Add(lblDiscountTotalValue);
+            pnlTotals.Controls.Add(lblDiscountTotalTitle);
+            pnlTotals.Controls.Add(lblSubTotalValue);
+            pnlTotals.Controls.Add(lblSubTotalTitle);
+            pnlTotals.Location = new Point(0, 260);
+            pnlTotals.Name = "pnlTotals";
+            pnlTotals.Size = new Size(737, 104);
+            pnlTotals.TabIndex = 0;
             // 
             // lblTaxBreakdown
             // 
-            this.lblTaxBreakdown.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
-            this.lblTaxBreakdown.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblTaxBreakdown.Font = new System.Drawing.Font("Consolas", 9F);
-            this.lblTaxBreakdown.Location = new System.Drawing.Point(280, 28);
-            this.lblTaxBreakdown.Name = "lblTaxBreakdown";
-            this.lblTaxBreakdown.Size = new System.Drawing.Size(560, 80);
-            this.lblTaxBreakdown.TabIndex = 9;
-            this.lblTaxBreakdown.Text = "";
-
+            lblTaxBreakdown.BackColor = Color.FromArgb(255, 255, 255);
+            lblTaxBreakdown.BorderStyle = BorderStyle.FixedSingle;
+            lblTaxBreakdown.Font = new Font("Consolas", 9F);
+            lblTaxBreakdown.Location = new Point(240, 24);
+            lblTaxBreakdown.Name = "lblTaxBreakdown";
+            lblTaxBreakdown.Size = new Size(480, 70);
+            lblTaxBreakdown.TabIndex = 9;
+            // 
+            // lblTaxBrkTitle
+            // 
+            lblTaxBrkTitle.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblTaxBrkTitle.Appearance.Options.UseFont = true;
+            lblTaxBrkTitle.Location = new Point(240, 9);
+            lblTaxBrkTitle.Name = "lblTaxBrkTitle";
+            lblTaxBrkTitle.Size = new Size(70, 15);
+            lblTaxBrkTitle.TabIndex = 10;
+            lblTaxBrkTitle.Text = "KDV Kırılımı:";
+            // 
+            // lblGrandTotalValue
+            // 
+            lblGrandTotalValue.Appearance.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblGrandTotalValue.Appearance.ForeColor = Color.FromArgb(30, 64, 175);
+            lblGrandTotalValue.Appearance.Options.UseFont = true;
+            lblGrandTotalValue.Appearance.Options.UseForeColor = true;
+            lblGrandTotalValue.Appearance.Options.UseTextOptions = true;
+            lblGrandTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+            lblGrandTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblGrandTotalValue.Location = new Point(99, 66);
+            lblGrandTotalValue.Name = "lblGrandTotalValue";
+            lblGrandTotalValue.Size = new Size(103, 17);
+            lblGrandTotalValue.TabIndex = 11;
+            lblGrandTotalValue.Text = "0,00 ₺";
+            // 
+            // lblGrandTotalTitle
+            // 
+            lblGrandTotalTitle.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblGrandTotalTitle.Appearance.ForeColor = Color.FromArgb(30, 64, 175);
+            lblGrandTotalTitle.Appearance.Options.UseFont = true;
+            lblGrandTotalTitle.Appearance.Options.UseForeColor = true;
+            lblGrandTotalTitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblGrandTotalTitle.Location = new Point(13, 66);
+            lblGrandTotalTitle.Name = "lblGrandTotalTitle";
+            lblGrandTotalTitle.Size = new Size(86, 15);
+            lblGrandTotalTitle.TabIndex = 12;
+            lblGrandTotalTitle.Text = "Genel Toplam:";
+            // 
+            // lblTaxTotalValue
+            // 
+            lblTaxTotalValue.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblTaxTotalValue.Appearance.Options.UseFont = true;
+            lblTaxTotalValue.Appearance.Options.UseTextOptions = true;
+            lblTaxTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+            lblTaxTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblTaxTotalValue.Location = new Point(90, 45);
+            lblTaxTotalValue.Name = "lblTaxTotalValue";
+            lblTaxTotalValue.Size = new Size(111, 13);
+            lblTaxTotalValue.TabIndex = 13;
+            lblTaxTotalValue.Text = "0,00 ₺";
+            // 
+            // lblTaxTotalTitle
+            // 
+            lblTaxTotalTitle.Appearance.Font = new Font("Segoe UI", 9F);
+            lblTaxTotalTitle.Appearance.Options.UseFont = true;
+            lblTaxTotalTitle.Location = new Point(13, 45);
+            lblTaxTotalTitle.Name = "lblTaxTotalTitle";
+            lblTaxTotalTitle.Size = new Size(69, 15);
+            lblTaxTotalTitle.TabIndex = 14;
+            lblTaxTotalTitle.Text = "KDV Toplam:";
+            // 
+            // lblDiscountTotalValue
+            // 
+            lblDiscountTotalValue.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblDiscountTotalValue.Appearance.Options.UseFont = true;
+            lblDiscountTotalValue.Appearance.Options.UseTextOptions = true;
+            lblDiscountTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+            lblDiscountTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblDiscountTotalValue.Location = new Point(90, 26);
+            lblDiscountTotalValue.Name = "lblDiscountTotalValue";
+            lblDiscountTotalValue.Size = new Size(111, 13);
+            lblDiscountTotalValue.TabIndex = 15;
+            lblDiscountTotalValue.Text = "0,00 ₺";
+            // 
+            // lblDiscountTotalTitle
+            // 
+            lblDiscountTotalTitle.Appearance.Font = new Font("Segoe UI", 9F);
+            lblDiscountTotalTitle.Appearance.Options.UseFont = true;
+            lblDiscountTotalTitle.Location = new Point(13, 26);
+            lblDiscountTotalTitle.Name = "lblDiscountTotalTitle";
+            lblDiscountTotalTitle.Size = new Size(42, 15);
+            lblDiscountTotalTitle.TabIndex = 16;
+            lblDiscountTotalTitle.Text = "İskonto:";
+            // 
+            // lblSubTotalValue
+            // 
+            lblSubTotalValue.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblSubTotalValue.Appearance.Options.UseFont = true;
+            lblSubTotalValue.Appearance.Options.UseTextOptions = true;
+            lblSubTotalValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+            lblSubTotalValue.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblSubTotalValue.Location = new Point(99, 7);
+            lblSubTotalValue.Name = "lblSubTotalValue";
+            lblSubTotalValue.Size = new Size(111, 13);
+            lblSubTotalValue.TabIndex = 17;
+            lblSubTotalValue.Text = "0,00 ₺";
+            // 
+            // lblSubTotalTitle
+            // 
+            lblSubTotalTitle.Appearance.Font = new Font("Segoe UI", 9F);
+            lblSubTotalTitle.Appearance.Options.UseFont = true;
+            lblSubTotalTitle.Location = new Point(13, 7);
+            lblSubTotalTitle.Name = "lblSubTotalTitle";
+            lblSubTotalTitle.Size = new Size(72, 15);
+            lblSubTotalTitle.TabIndex = 18;
+            lblSubTotalTitle.Text = "KDV'siz Tutar:";
+            // 
+            // gridLines
+            // 
+            gridLines.Location = new Point(0, 35);
+            gridLines.MainView = gridLinesView;
+            gridLines.Name = "gridLines";
+            gridLines.Size = new Size(737, 217);
+            gridLines.TabIndex = 4;
+            gridLines.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridLinesView });
+            // 
+            // gridLinesView
+            // 
+            gridLinesView.DetailHeight = 303;
+            gridLinesView.GridControl = gridLines;
+            gridLinesView.Name = "gridLinesView";
+            gridLinesView.OptionsBehavior.AutoPopulateColumns = false;
+            gridLinesView.OptionsEditForm.PopupEditFormWidth = 686;
+            gridLinesView.OptionsView.ShowGroupPanel = false;
+            // 
+            // pnlItemsHeader
+            // 
+            pnlItemsHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlItemsHeader.Controls.Add(btnDeleteLine);
+            pnlItemsHeader.Controls.Add(btnAddLine);
+            pnlItemsHeader.Controls.Add(lblItemsTitle);
+            pnlItemsHeader.Location = new Point(0, 0);
+            pnlItemsHeader.Name = "pnlItemsHeader";
+            pnlItemsHeader.Size = new Size(737, 31);
+            pnlItemsHeader.TabIndex = 5;
+            // 
+            // btnDeleteLine
+            // 
+            btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnDeleteLine.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnDeleteLine.ImageOptions.SvgImage");
+            btnDeleteLine.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnDeleteLine.Location = new Point(647, 3);
+            btnDeleteLine.Name = "btnDeleteLine";
+            btnDeleteLine.Size = new Size(90, 24);
+            btnDeleteLine.TabIndex = 0;
+            btnDeleteLine.Text = "- Satır Sil";
+            // 
+            // btnAddLine
+            // 
+            btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnAddLine.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddLine.ImageOptions.SvgImage");
+            btnAddLine.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnAddLine.Location = new Point(549, 3);
+            btnAddLine.Name = "btnAddLine";
+            btnAddLine.Size = new Size(90, 24);
+            btnAddLine.TabIndex = 1;
+            btnAddLine.Text = "+ Satır Ekle";
+            // 
+            // lblItemsTitle
+            // 
+            lblItemsTitle.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblItemsTitle.Appearance.Options.UseFont = true;
+            lblItemsTitle.Location = new Point(4, 7);
+            lblItemsTitle.Name = "lblItemsTitle";
+            lblItemsTitle.Size = new Size(101, 17);
+            lblItemsTitle.TabIndex = 2;
+            lblItemsTitle.Text = "Fatura Kalemleri";
+            // 
+            // pnlCatalog
+            // 
+            pnlCatalog.Appearance.BackColor = Color.FromArgb(249, 250, 251);
+            pnlCatalog.Appearance.Options.UseBackColor = true;
+            pnlCatalog.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Simple;
+            pnlCatalog.Controls.Add(btnAddProduct);
+            pnlCatalog.Controls.Add(txtCatalogProductSearch);
+            pnlCatalog.Controls.Add(gridCatalog);
+            pnlCatalog.Controls.Add(cmbCatalogWarehouse);
+            pnlCatalog.Controls.Add(lblCatalogTitle);
+            pnlCatalog.Location = new Point(17, 117);
+            pnlCatalog.Name = "pnlCatalog";
+            pnlCatalog.Size = new Size(429, 329);
+            pnlCatalog.TabIndex = 5;
+            // 
+            // btnAddProduct
+            // 
+            btnAddProduct.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnAddProduct.Appearance.Options.UseFont = true;
+            btnAddProduct.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnAddProduct.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddProduct.ImageOptions.SvgImage");
+            btnAddProduct.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnAddProduct.Location = new Point(4, 299);
+            btnAddProduct.Name = "btnAddProduct";
+            btnAddProduct.Size = new Size(420, 26);
+            btnAddProduct.TabIndex = 0;
+            btnAddProduct.Text = "+ Ürünü Faturaya Ekle";
+            // 
+            // txtCatalogProductSearch
+            // 
+            txtCatalogProductSearch.Location = new Point(4, 50);
+            txtCatalogProductSearch.Name = "txtCatalogProductSearch";
+            txtCatalogProductSearch.Properties.NullText = "Ürün ara (ad, kod veya barkod)";
+            txtCatalogProductSearch.Size = new Size(420, 20);
+            txtCatalogProductSearch.TabIndex = 1;
+            // 
+            // gridCatalog
+            // 
+            gridCatalog.Location = new Point(4, 80);
+            gridCatalog.MainView = gridCatalogView;
+            gridCatalog.Name = "gridCatalog";
+            gridCatalog.Size = new Size(420, 217);
+            gridCatalog.TabIndex = 6;
+            gridCatalog.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridCatalogView });
+            // 
+            // gridCatalogView
+            // 
+            gridCatalogView.DetailHeight = 303;
+            gridCatalogView.GridControl = gridCatalog;
+            gridCatalogView.Name = "gridCatalogView";
+            gridCatalogView.OptionsBehavior.AutoPopulateColumns = false;
+            gridCatalogView.OptionsBehavior.Editable = false;
+            gridCatalogView.OptionsEditForm.PopupEditFormWidth = 686;
+            gridCatalogView.OptionsView.ShowGroupPanel = false;
+            gridCatalogView.RowHeight = 23;
+            // 
+            // cmbCatalogWarehouse
+            // 
+            cmbCatalogWarehouse.Location = new Point(4, 24);
+            cmbCatalogWarehouse.Name = "cmbCatalogWarehouse";
+            cmbCatalogWarehouse.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
+            cmbCatalogWarehouse.Properties.NullText = "Depo (Tümü)";
+            cmbCatalogWarehouse.Properties.PopupView = cmbCatalogWarehouseView;
+            cmbCatalogWarehouse.Size = new Size(420, 20);
+            cmbCatalogWarehouse.TabIndex = 7;
+            // 
+            // cmbCatalogWarehouseView
+            // 
+            cmbCatalogWarehouseView.DetailHeight = 303;
+            cmbCatalogWarehouseView.FocusRectStyle = DevExpress.XtraGrid.Views.Grid.DrawFocusRectStyle.RowFocus;
+            cmbCatalogWarehouseView.Name = "cmbCatalogWarehouseView";
+            cmbCatalogWarehouseView.OptionsEditForm.PopupEditFormWidth = 686;
+            cmbCatalogWarehouseView.OptionsSelection.EnableAppearanceFocusedCell = false;
+            cmbCatalogWarehouseView.OptionsView.ShowGroupPanel = false;
+            // 
+            // lblCatalogTitle
+            // 
+            lblCatalogTitle.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblCatalogTitle.Appearance.Options.UseFont = true;
+            lblCatalogTitle.Location = new Point(4, 5);
+            lblCatalogTitle.Name = "lblCatalogTitle";
+            lblCatalogTitle.Size = new Size(97, 17);
+            lblCatalogTitle.TabIndex = 8;
+            lblCatalogTitle.Text = "Tanımlı Ürünler";
+            // 
+            // txtDescription
+            // 
+            txtDescription.Location = new Point(17, 82);
+            txtDescription.Name = "txtDescription";
+            txtDescription.Size = new Size(1183, 20);
+            txtDescription.TabIndex = 8;
+            // 
+            // lblDescLabel
+            // 
+            lblDescLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblDescLabel.Appearance.Options.UseFont = true;
+            lblDescLabel.Location = new Point(17, 65);
+            lblDescLabel.Name = "lblDescLabel";
+            lblDescLabel.Size = new Size(53, 15);
+            lblDescLabel.TabIndex = 9;
+            lblDescLabel.Text = "Açıklama:";
+            // 
+            // lblStatusValue
+            // 
+            lblStatusValue.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblStatusValue.Appearance.ForeColor = Color.FromArgb(30, 64, 175);
+            lblStatusValue.Appearance.Options.UseFont = true;
+            lblStatusValue.Appearance.Options.UseForeColor = true;
+            lblStatusValue.Location = new Point(926, 33);
+            lblStatusValue.Name = "lblStatusValue";
+            lblStatusValue.Size = new Size(0, 15);
+            lblStatusValue.TabIndex = 10;
+            // 
+            // lookUpAccount
+            // 
+            lookUpAccount.Location = new Point(450, 30);
+            lookUpAccount.Name = "lookUpAccount";
+            lookUpAccount.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
+            lookUpAccount.Properties.PopupView = lookUpAccountView;
+            lookUpAccount.Size = new Size(326, 20);
+            lookUpAccount.TabIndex = 11;
+            // 
+            // lookUpAccountView
+            // 
+            lookUpAccountView.DetailHeight = 303;
+            lookUpAccountView.FocusRectStyle = DevExpress.XtraGrid.Views.Grid.DrawFocusRectStyle.RowFocus;
+            lookUpAccountView.Name = "lookUpAccountView";
+            lookUpAccountView.OptionsEditForm.PopupEditFormWidth = 686;
+            lookUpAccountView.OptionsSelection.EnableAppearanceFocusedCell = false;
+            lookUpAccountView.OptionsView.ShowGroupPanel = false;
+            // 
+            // lblAccountLabel
+            // 
+            lblAccountLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblAccountLabel.Appearance.Options.UseFont = true;
+            lblAccountLabel.Location = new Point(450, 13);
+            lblAccountLabel.Name = "lblAccountLabel";
+            lblAccountLabel.Size = new Size(134, 15);
+            lblAccountLabel.TabIndex = 12;
+            lblAccountLabel.Text = "Cari (Müşteri/Tedarikçi):";
+            // 
+            // dtDate
+            // 
+            dtDate.EditValue = null;
+            dtDate.Location = new Point(317, 30);
+            dtDate.Name = "dtDate";
+            dtDate.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
+            dtDate.Size = new Size(120, 20);
+            dtDate.TabIndex = 13;
+            // 
+            // lblDateLabel
+            // 
+            lblDateLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblDateLabel.Appearance.Options.UseFont = true;
+            lblDateLabel.Location = new Point(317, 13);
+            lblDateLabel.Name = "lblDateLabel";
+            lblDateLabel.Size = new Size(31, 15);
+            lblDateLabel.TabIndex = 14;
+            lblDateLabel.Text = "Tarih:";
+            // 
+            // txtInvoiceNumber
+            // 
+            txtInvoiceNumber.Location = new Point(159, 30);
+            txtInvoiceNumber.Name = "txtInvoiceNumber";
+            txtInvoiceNumber.Size = new Size(146, 20);
+            txtInvoiceNumber.TabIndex = 15;
+            // 
+            // lblNumberLabel
+            // 
+            lblNumberLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblNumberLabel.Appearance.Options.UseFont = true;
+            lblNumberLabel.Location = new Point(159, 13);
+            lblNumberLabel.Name = "lblNumberLabel";
+            lblNumberLabel.Size = new Size(57, 15);
+            lblNumberLabel.TabIndex = 16;
+            lblNumberLabel.Text = "Fatura No:";
+            // 
+            // cmbInvoiceType
+            // 
+            cmbInvoiceType.Location = new Point(17, 30);
+            cmbInvoiceType.Name = "cmbInvoiceType";
+            cmbInvoiceType.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
+            cmbInvoiceType.Properties.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
+            cmbInvoiceType.Size = new Size(189, 20);
+            cmbInvoiceType.TabIndex = 17;
+            // 
+            // lblTypeLabel
+            // 
+            lblTypeLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblTypeLabel.Appearance.Options.UseFont = true;
+            lblTypeLabel.Location = new Point(17, 13);
+            lblTypeLabel.Name = "lblTypeLabel";
+            lblTypeLabel.Size = new Size(67, 15);
+            lblTypeLabel.TabIndex = 18;
+            lblTypeLabel.Text = "Fatura Türü:";
             // 
             // pnlFooter
             // 
-            this.pnlFooter.Appearance.BackColor = System.Drawing.Color.FromArgb(248, 249, 250);
-            this.pnlFooter.Appearance.Options.UseBackColor = true;
-            this.pnlFooter.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            this.pnlFooter.Controls.Add(this.btnPrintSlip);
-            this.pnlFooter.Controls.Add(this.btnCancel);
-            this.pnlFooter.Controls.Add(this.btnSave);
-            this.pnlFooter.Controls.Add(this.btnSaveDraft);
-            this.pnlFooter.Controls.Add(this.btnApprove);
-            this.pnlFooter.Controls.Add(this.pnlFooterLine);
-            this.pnlFooter.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlFooter.Location = new System.Drawing.Point(0, 660);
-            this.pnlFooter.Name = "pnlFooter";
-            this.pnlFooter.Size = new System.Drawing.Size(1420, 60);
-            this.pnlFooter.TabIndex = 2;
-
-            // 
-            // pnlFooterLine
-            // 
-            this.pnlFooterLine.Appearance.BackColor = System.Drawing.Color.FromArgb(229, 231, 235);
-            this.pnlFooterLine.Appearance.Options.UseBackColor = true;
-            this.pnlFooterLine.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            this.pnlFooterLine.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlFooterLine.Location = new System.Drawing.Point(0, 0);
-            this.pnlFooterLine.Name = "pnlFooterLine";
-            this.pnlFooterLine.Size = new System.Drawing.Size(1420, 1);
-
+            pnlFooter.Appearance.BackColor = Color.FromArgb(248, 249, 250);
+            pnlFooter.Appearance.Options.UseBackColor = true;
+            pnlFooter.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlFooter.Controls.Add(btnPrintSlip);
+            pnlFooter.Controls.Add(btnCancel);
+            pnlFooter.Controls.Add(btnSave);
+            pnlFooter.Controls.Add(btnSaveDraft);
+            pnlFooter.Controls.Add(btnApprove);
+            pnlFooter.Controls.Add(pnlFooterLine);
+            pnlFooter.Dock = DockStyle.Bottom;
+            pnlFooter.Location = new Point(0, 572);
+            pnlFooter.Name = "pnlFooter";
+            pnlFooter.Size = new Size(1217, 52);
+            pnlFooter.TabIndex = 2;
             // 
             // btnPrintSlip
             // 
-            this.btnPrintSlip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnPrintSlip.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnPrintSlip.Enabled = false;
-            this.btnPrintSlip.Location = new System.Drawing.Point(15, 14);
-            this.btnPrintSlip.Name = "btnPrintSlip";
-            this.btnPrintSlip.Size = new System.Drawing.Size(190, 34);
-            this.btnPrintSlip.Text = "Taşınır İşlem Fişi Yazdır";
-            this.btnPrintSlip.ImageOptions.SvgImage = DxIcon.Print;
-            this.btnPrintSlip.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnPrintSlip.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
-            // 
-            // btnSaveDraft
-            // 
-            this.btnSaveDraft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSaveDraft.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSaveDraft.Location = new System.Drawing.Point(1028, 14);
-            this.btnSaveDraft.Name = "btnSaveDraft";
-            this.btnSaveDraft.Size = new System.Drawing.Size(130, 34);
-            this.btnSaveDraft.Text = "Taslak Kaydet";
-            this.btnSaveDraft.ImageOptions.SvgImage = DxIcon.Save;
-            this.btnSaveDraft.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
-            // 
-            // btnSave
-            // 
-            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.btnSave.Location = new System.Drawing.Point(1166, 14);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(130, 34);
-            this.btnSave.Text = "Kaydet ve Onayla";
-            this.btnSave.ImageOptions.SvgImage = DxIcon.Check;
-            this.btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
-            // 
-            // btnApprove
-            // 
-            this.btnApprove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnApprove.Appearance.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.btnApprove.Location = new System.Drawing.Point(1166, 14);
-            this.btnApprove.Name = "btnApprove";
-            this.btnApprove.Size = new System.Drawing.Size(130, 34);
-            this.btnApprove.Text = "Faturayı Onayla";
-            this.btnApprove.ImageOptions.SvgImage = DxIcon.CheckAll;
-            this.btnApprove.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
+            btnPrintSlip.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            btnPrintSlip.Appearance.Font = new Font("Segoe UI", 9F);
+            btnPrintSlip.Appearance.Options.UseFont = true;
+            btnPrintSlip.Enabled = false;
+            btnPrintSlip.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnPrintSlip.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnPrintSlip.ImageOptions.SvgImage");
+            btnPrintSlip.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnPrintSlip.Location = new Point(13, 12);
+            btnPrintSlip.Name = "btnPrintSlip";
+            btnPrintSlip.Size = new Size(163, 29);
+            btnPrintSlip.TabIndex = 0;
+            btnPrintSlip.Text = "Taşınır İşlem Fişi Yazdır";
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Appearance.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(1304, 14);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(94, 34);
-            this.btnCancel.Text = "Vazgeç";
-            this.btnCancel.ImageOptions.SvgImage = DxIcon.Close;
-            this.btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-
+            btnCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnCancel.Appearance.Font = new Font("Segoe UI", 9F);
+            btnCancel.Appearance.Options.UseFont = true;
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnCancel.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnCancel.ImageOptions.SvgImage");
+            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnCancel.Location = new Point(1118, 12);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(81, 29);
+            btnCancel.TabIndex = 1;
+            btnCancel.Text = "Vazgeç";
+            // 
+            // btnSave
+            // 
+            btnSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnSave.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnSave.Appearance.Options.UseFont = true;
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSave.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSave.ImageOptions.SvgImage");
+            btnSave.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnSave.Location = new Point(960, 12);
+            btnSave.Name = "btnSave";
+            btnSave.Size = new Size(150, 29);
+            btnSave.TabIndex = 2;
+            btnSave.Text = "Kaydet ve Onayla";
+            // 
+            // btnSaveDraft
+            // 
+            btnSaveDraft.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnSaveDraft.Appearance.Font = new Font("Segoe UI", 9F);
+            btnSaveDraft.Appearance.Options.UseFont = true;
+            btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSaveDraft.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSaveDraft.ImageOptions.SvgImage");
+            btnSaveDraft.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnSaveDraft.Location = new Point(843, 12);
+            btnSaveDraft.Name = "btnSaveDraft";
+            btnSaveDraft.Size = new Size(111, 29);
+            btnSaveDraft.TabIndex = 3;
+            btnSaveDraft.Text = "Taslak Kaydet";
+            // 
+            // btnApprove
+            // 
+            btnApprove.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnApprove.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnApprove.Appearance.Options.UseFont = true;
+            btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnApprove.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnApprove.ImageOptions.SvgImage");
+            btnApprove.ImageOptions.SvgImageSize = new Size(16, 16);
+            btnApprove.Location = new Point(999, 12);
+            btnApprove.Name = "btnApprove";
+            btnApprove.Size = new Size(111, 29);
+            btnApprove.TabIndex = 4;
+            btnApprove.Text = "Faturayı Onayla";
+            // 
+            // pnlFooterLine
+            // 
+            pnlFooterLine.Appearance.BackColor = Color.FromArgb(229, 231, 235);
+            pnlFooterLine.Appearance.Options.UseBackColor = true;
+            pnlFooterLine.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlFooterLine.Dock = DockStyle.Top;
+            pnlFooterLine.Location = new Point(0, 0);
+            pnlFooterLine.Name = "pnlFooterLine";
+            pnlFooterLine.Size = new Size(1217, 1);
+            pnlFooterLine.TabIndex = 5;
             // 
             // InvoiceEditForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1420, 720);
-            this.Controls.Add(this.pnlBody);
-            this.Controls.Add(this.pnlFooter);
-            this.Controls.Add(this.pnlHeader);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.IconOptions.SvgImage = DxIcon.Invoices;
-            this.Name = "InvoiceEditForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Fatura";
-
-            ((System.ComponentModel.ISupportInitialize)(this.pnlHeader)).EndInit();
-            this.pnlHeader.ResumeLayout(false);
-            this.pnlHeader.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlHeaderLine)).EndInit();
-            this.pnlBody.ResumeLayout(false);
-            this.pnlBody.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbInvoiceType.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtInvoiceNumber.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dtDate.Properties.CalendarTimeProperties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dtDate.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.lookUpAccount.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.lookUpAccountView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtDescription.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlCatalog)).EndInit();
-            this.pnlCatalog.ResumeLayout(false);
-            this.pnlCatalog.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCatalogWarehouse.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCatalogWarehouseView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridCatalog)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridCatalogView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.txtCatalogProductSearch.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlItemsPanel)).EndInit();
-            this.pnlItemsPanel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pnlItemsHeader)).EndInit();
-            this.pnlItemsHeader.ResumeLayout(false);
-            this.pnlItemsHeader.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridLines)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridLinesView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlTotals)).EndInit();
-            this.pnlTotals.ResumeLayout(false);
-            this.pnlTotals.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pnlFooter)).EndInit();
-            this.pnlFooter.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pnlFooterLine)).EndInit();
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(6F, 13F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1217, 624);
+            Controls.Add(pnlBody);
+            Controls.Add(pnlFooter);
+            Controls.Add(pnlHeader);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            IconOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("InvoiceEditForm.IconOptions.SvgImage");
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "InvoiceEditForm";
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "Fatura";
+            ((System.ComponentModel.ISupportInitialize)pnlHeader).EndInit();
+            pnlHeader.ResumeLayout(false);
+            pnlHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlHeaderLine).EndInit();
+            pnlBody.ResumeLayout(false);
+            pnlBody.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlItemsPanel).EndInit();
+            pnlItemsPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pnlTotals).EndInit();
+            pnlTotals.ResumeLayout(false);
+            pnlTotals.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)gridLines).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridLinesView).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pnlItemsHeader).EndInit();
+            pnlItemsHeader.ResumeLayout(false);
+            pnlItemsHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlCatalog).EndInit();
+            pnlCatalog.ResumeLayout(false);
+            pnlCatalog.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)txtCatalogProductSearch.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridCatalog).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridCatalogView).EndInit();
+            ((System.ComponentModel.ISupportInitialize)cmbCatalogWarehouse.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)cmbCatalogWarehouseView).EndInit();
+            ((System.ComponentModel.ISupportInitialize)txtDescription.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpAccount.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpAccountView).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dtDate.Properties.CalendarTimeProperties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dtDate.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)txtInvoiceNumber.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)cmbInvoiceType.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pnlFooter).EndInit();
+            pnlFooter.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pnlFooterLine).EndInit();
+            ResumeLayout(false);
         }
     }
 }

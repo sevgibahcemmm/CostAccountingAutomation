@@ -210,7 +210,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmFiyatStokListesi"] = () => MdiFormManager.Instance.OpenForm<ProductPriceStockListForm>(this, "Fiyat & Stok Listesi");
             _menuActions["elmTuketim"] = () => MdiFormManager.Instance.OpenForm<ConsumptionsListForm>(this, "Tüketim");
             _menuActions["elmAtolyeTransferi"] = () => MdiFormManager.Instance.OpenForm<AtelierTransfersListForm>(this, "Atölye Transferi");
-            _menuActions["elmAtolyeStokRaporu"] = () => MdiFormManager.Instance.OpenForm<AtelierTransferStockForm>(this, "Atölye Stok Raporu");
+            _menuActions["elmAtolyeStokRaporu"] = () => MdiFormManager.Instance.OpenForm<AtelierTransferStockForm>(this, "Atölye Transfer Raporu");
             _menuActions["elmTuketimBirimleri"] = () => MdiFormManager.Instance.OpenForm<ConsumptionUnitsListForm>(this, "Tüketim Birimleri");
             _menuActions["elmHesapPlani"] = () => MdiFormManager.Instance.OpenForm<ChartOfAccountsListForm>(this, "Hesap Planı");
             _menuActions["elmMaliyetPusulasi"] = () => MdiFormManager.Instance.OpenForm<CostSlipsListForm>(this, "Maliyet Pusulası");

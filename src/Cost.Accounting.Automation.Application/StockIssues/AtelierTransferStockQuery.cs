@@ -1,5 +1,7 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.StockIssues;
 using Microsoft.EntityFrameworkCore;
@@ -8,106 +10,171 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.Application.StockIssues;
 
+/// <summary>
+/// Atölye Stok Raporu: hareket görmüş her atölye için özet üst satır ve o atölyeye
+/// transfer edilen tüm ürünlerin (giren / tüketilen / bakiye) detayını döndürür.
+/// </summary>
 [Permission("stock_issue:view")]
-public sealed record AtelierTransferStockQuery : IRequest<Result<List<AtelierTransferStockMasterDto>>>;
+public sealed record AtelierTransferStockQuery : IRequest<Result<List<AtelierTransferWorkshopDto>>>;
 
-public sealed class AtelierTransferStockDetailDto
+public sealed class AtelierTransferWorkshopDto
 {
-    public DateOnly Date { get; set; }
-    public string DocumentNumber { get; set; } = default!;
-    public string TargetAccountCode { get; set; } = default!;
-    public string TargetAccountName { get; set; } = default!;
-    public decimal Quantity { get; set; }
-    public decimal UnitCost { get; set; }
+    public Guid WorkshopId { get; set; }
+    public string WorkshopCode { get; set; } = default!;
+    public string WorkshopName { get; set; } = default!;
+    public int ProductCount { get; set; }
+    public decimal TotalQuantity { get; set; }
     public decimal TotalAmount { get; set; }
+    public DateOnly LastTransferDate { get; set; }
+    public List<AtelierTransferWorkshopProductDto> Products { get; set; } = [];
 }
 
-public sealed class AtelierTransferStockMasterDto
+public sealed class AtelierTransferWorkshopProductDto
 {
+    public string WorkshopCode { get; set; } = default!;
+    public string WorkshopName { get; set; } = default!;
     public Guid ProductId { get; set; }
     public string ProductCode { get; set; } = default!;
     public string ProductName { get; set; } = default!;
     public string UnitTypeName { get; set; } = default!;
-    public decimal TotalQuantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal TransferredQuantity { get; set; }
+    public decimal ConsumedQuantity { get; set; }
+    public decimal DraftQuantity { get; set; }
     public decimal TotalAmount { get; set; }
-    public decimal CurrentStock { get; set; }
-    public List<AtelierTransferStockDetailDto> Transfers { get; set; } = [];
+
+    public decimal AvailableQuantity => Math.Max(0m, TransferredQuantity - ConsumedQuantity);
 }
 
 internal sealed class AtelierTransferStockQueryHandler(
     IStockIssueRepository stockIssueRepository,
-    IProductMovementRepository productMovementRepository) : IRequestHandler<AtelierTransferStockQuery, Result<List<AtelierTransferStockMasterDto>>>
+    ICostSlipRepository costSlipRepository) : IRequestHandler<AtelierTransferStockQuery, Result<List<AtelierTransferWorkshopDto>>>
 {
-    public async Task<Result<List<AtelierTransferStockMasterDto>>> Handle(AtelierTransferStockQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<AtelierTransferWorkshopDto>>> Handle(AtelierTransferStockQuery request, CancellationToken cancellationToken)
     {
         List<StockIssue> transfers = await stockIssueRepository.GetAll()
             .Where(i => i.IssueType == StockIssueType.AtelierTransfer && !i.IsDeleted)
+            .Where(i => i.TargetAccount != null)
             .Include(i => i.Lines).ThenInclude(l => l.Product!).ThenInclude(p => p.ProductUnitType)
             .Include(i => i.TargetAccount)
             .OrderBy(i => i.Date)
             .ThenBy(i => i.DocumentNumber)
             .ToListAsync(cancellationToken);
 
-        HashSet<IdentityId> productIds = transfers
+        List<IdentityId> productIds = transfers
             .SelectMany(t => t.Lines)
+            .Where(l => l.Product != null)
             .Select(l => l.ProductId)
             .Distinct()
-            .ToHashSet();
+            .ToList();
 
-        List<ProductMovement> movements = productIds.Count == 0
+        List<IdentityId> workshopIds = transfers
+            .Select(t => t.TargetAccountId)
+            .Distinct()
+            .ToList();
+
+        List<GroupedSlipItem> slipItems = productIds.Count == 0 || workshopIds.Count == 0
             ? []
-            : await productMovementRepository.GetAll()
-                .Where(m => productIds.Contains(m.ProductId) && !m.IsDeleted)
-                .ToListAsync(cancellationToken);
+            : await GetSlipItemsAsync(workshopIds, productIds, cancellationToken);
 
-        Dictionary<IdentityId, decimal> currentStockMap = movements
-            .GroupBy(m => m.ProductId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity));
+        Dictionary<(Guid WorkshopId, Guid ProductId), decimal> consumedMap = slipItems
+            .Where(x => x.Status == CostSlipStatus.Approved)
+            .GroupBy(x => (x.WorkshopId, x.ProductId))
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
-        List<AtelierTransferStockMasterDto> result = [];
+        Dictionary<(Guid WorkshopId, Guid ProductId), decimal> draftMap = slipItems
+            .Where(x => x.Status == CostSlipStatus.Draft)
+            .GroupBy(x => (x.WorkshopId, x.ProductId))
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
-        foreach (IGrouping<IdentityId, StockIssueLine> group in transfers
-            .SelectMany(t => t.Lines)
-            .Where(l => l.Product is not null)
-            .GroupBy(l => l.ProductId))
+        List<AtelierTransferWorkshopDto> result = [];
+
+        foreach (IGrouping<IdentityId, StockIssue> group in transfers.GroupBy(t => t.TargetAccountId))
         {
-            Product product = group.First().Product!;
+            ChartOfAccount target = group.First().TargetAccount!;
+            Guid workshopId = group.Key.Value;
 
-            List<AtelierTransferStockDetailDto> details = transfers
-                .Where(t => t.Lines.Any(l => l.ProductId == product.Id))
-                .SelectMany(t => t.Lines
-                    .Where(l => l.ProductId == product.Id)
-                    .Select(l => new AtelierTransferStockDetailDto
+            List<AtelierTransferWorkshopProductDto> products = group
+                .SelectMany(t => t.Lines)
+                .Where(l => l.Product != null)
+                .GroupBy(l => l.ProductId)
+                .Select(lines =>
+                {
+                    Product product = lines.First().Product!;
+                    decimal transferred = lines.Sum(l => l.Quantity);
+
+                    (Guid, Guid) key = (workshopId, product.Id.Value);
+
+                    return new AtelierTransferWorkshopProductDto
                     {
-                        Date = t.Date,
-                        DocumentNumber = t.DocumentNumber,
-                        TargetAccountCode = t.TargetAccount?.Code.Value ?? string.Empty,
-                        TargetAccountName = t.TargetAccount?.Name.Value ?? string.Empty,
-                        Quantity = l.Quantity,
-                        UnitCost = l.UnitCost.Value,
-                        TotalAmount = l.Quantity * l.UnitCost.Value
-                    }))
-                .OrderBy(d => d.Date)
+                        ProductId = product.Id,
+                        ProductCode = product.ProductCode.Value,
+                        ProductName = product.Name.Value,
+                        UnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
+                        UnitPrice = lines.Last().UnitCost.Value,
+                        TransferredQuantity = transferred,
+                        ConsumedQuantity = consumedMap.TryGetValue(key, out decimal consumed) ? consumed : 0m,
+                        DraftQuantity = draftMap.TryGetValue(key, out decimal drafted) ? drafted : 0m,
+                        TotalAmount = lines.Sum(l => l.Quantity * l.UnitCost.Value)
+                    };
+                })
+                .OrderBy(p => p.ProductCode)
+                .ThenBy(p => p.ProductName)
                 .ToList();
 
-            result.Add(new AtelierTransferStockMasterDto
+            result.Add(new AtelierTransferWorkshopDto
             {
-                ProductId = product.Id,
-                ProductCode = product.ProductCode.Value,
-                ProductName = product.Name.Value,
-                UnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
-                TotalQuantity = group.Sum(l => l.Quantity),
-                TotalAmount = group.Sum(l => l.Quantity * l.UnitCost.Value),
-                CurrentStock = currentStockMap.TryGetValue(product.Id, out decimal stock) ? stock : 0m,
-                Transfers = details
+                WorkshopId = workshopId,
+                WorkshopCode = target.Code.Value,
+                WorkshopName = target.Name.Value,
+                ProductCount = products.Count,
+                TotalQuantity = group.SelectMany(t => t.Lines).Where(l => l.Product != null).Sum(l => l.Quantity),
+                TotalAmount = group.SelectMany(t => t.Lines).Where(l => l.Product != null).Sum(l => l.Quantity * l.UnitCost.Value),
+                LastTransferDate = group.Max(t => t.Date),
+                Products = products
             });
         }
 
         return result
-            .OrderBy(m => m.ProductCode)
-            .ThenBy(m => m.ProductName)
+            .OrderBy(w => w.WorkshopCode)
+            .ThenBy(w => w.WorkshopName)
             .ToList();
+    }
+
+    private async Task<List<GroupedSlipItem>> GetSlipItemsAsync(
+        List<IdentityId> workshopIds,
+        List<IdentityId> productIds,
+        CancellationToken cancellationToken)
+    {
+        List<IdentityId?> workshopKeySet = workshopIds.Select(w => (IdentityId?)w).ToList();
+        List<IdentityId?> productKeySet = productIds.Select(p => (IdentityId?)p).ToList();
+
+        List<CostSlip> slips = await costSlipRepository.GetAll()
+            .Where(s => !s.IsDeleted
+                && s.WorkshopId != null
+                && workshopKeySet.Contains(s.WorkshopId)
+                && s.CostSlipItems.Any(i => i.ProductId != null && productKeySet.Contains(i.ProductId)))
+            .Include(s => s.CostSlipItems)
+            .ToListAsync(cancellationToken);
+
+        return slips
+            .SelectMany(s => s.CostSlipItems
+                .Where(i => i.ProductId != null)
+                .Select(i => new GroupedSlipItem
+                {
+                    WorkshopId = s.WorkshopId!.Value,
+                    ProductId = i.ProductId!.Value,
+                    Quantity = i.Quantity,
+                    Status = s.Status
+                }))
+            .ToList();
+    }
+
+    private sealed class GroupedSlipItem
+    {
+        public Guid WorkshopId { get; set; }
+        public Guid ProductId { get; set; }
+        public decimal Quantity { get; set; }
+        public CostSlipStatus Status { get; set; }
     }
 }

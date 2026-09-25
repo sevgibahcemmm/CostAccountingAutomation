@@ -11,7 +11,9 @@ using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils;
 using DevExpress.Utils.Svg;
+using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Columns;
+using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
@@ -96,11 +98,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             nameof(ProductCatalogDto.ProductUnitTypeName)
         ];
 
+      
         protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
             View.Columns[nameof(ProductCatalogDto.WarehouseName)]!.Visible = false;
             ConfigureWarehouseGrouping(nameof(ProductCatalogDto.WarehouseGroup));
+
+            // Modern grup satırı görünümü
+            View.Appearance.GroupRow.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F);
+            View.Appearance.GroupRow.ForeColor = System.Drawing.Color.FromArgb(45, 52, 71);
+            View.Appearance.GroupRow.BackColor = System.Drawing.Color.FromArgb(235, 238, 245);
+            View.Appearance.GroupRow.BackColor2 = System.Drawing.Color.FromArgb(235, 238, 245);
+            View.Appearance.GroupRow.Options.UseFont = true;
+            View.Appearance.GroupRow.Options.UseForeColor = true;
+            View.Appearance.GroupRow.Options.UseBackColor = true;
 
             View.Columns[nameof(ProductCatalogDto.TaxRateRate)]!.Visible = false;
             View.Columns[nameof(ProductCatalogDto.ChartOfAccountCode)]!.Visible = false;
@@ -138,6 +150,41 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             salePrice.VisibleIndex = insertIndex + 1;
 
             View.CustomUnboundColumnData += View_CustomUnboundColumnData;
+            ConfigurePricesDetailView();
+        }
+        private void ConfigurePricesDetailView()
+        {
+            GridView pricesView = new(BaseGrid)
+            {
+                Name = "PricesDetailView"
+            };
+            pricesView.OptionsBehavior.Editable = false;
+            pricesView.OptionsDetail.AllowOnlyOneMasterRowExpanded = true;
+            pricesView.OptionsView.ShowGroupPanel = false;
+            pricesView.OptionsView.ShowHorizontalLines = DefaultBoolean.False;
+            pricesView.RowHeight = 26;
+            pricesView.Appearance.HeaderPanel.Font = new System.Drawing.Font("Segoe UI Semibold", 9F);
+            pricesView.Appearance.HeaderPanel.Options.UseFont = true;
+
+            GridColumnFactory.ConfigureFromAttributes(pricesView, typeof(ProductPriceDto));
+
+            View.MasterRowGetRelationCount += (_, e) => e.RelationCount = 1;
+            View.MasterRowGetRelationName += (_, e) => e.RelationName = "Fiyatlar";
+            View.MasterRowGetChildList += (_, e) =>
+                e.ChildList = (View.GetRow(e.RowHandle) as ProductCatalogDto)?.Prices;
+            View.MasterRowEmpty += (_, e) =>
+            {
+                if (View.GetRow(e.RowHandle) is ProductCatalogDto product)
+                {
+                    e.IsEmpty = product.Prices is null || product.Prices.Count == 0;
+                }
+            };
+
+            BaseGrid.LevelTree.Nodes.Add(new GridLevelNode
+            {
+                RelationName = "Fiyatlar",
+                LevelTemplate = pricesView
+            });
         }
 
         private void View_CustomUnboundColumnData(object? sender, DevExpress.XtraGrid.Views.Base.CustomColumnDataEventArgs e)

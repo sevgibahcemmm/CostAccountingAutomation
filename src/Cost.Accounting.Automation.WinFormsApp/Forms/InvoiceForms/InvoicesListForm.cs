@@ -214,7 +214,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
             CompanyDto company = await MovableAssetTransactionSlipPresenter.LoadCompanyAsync();
             List<ChartOfAccountLookUpDto> accounts = await MovableAssetTransactionSlipPresenter.LoadAccountsAsync();
-            Dictionary<Guid, ProductDto> productsById = await MovableAssetTransactionSlipPresenter.LoadProductsByIdAsync();
+            Dictionary<Guid, ProductCatalogDto> productsById = await MovableAssetTransactionSlipPresenter.LoadProductsByIdAsync();
 
             string city = string.IsNullOrWhiteSpace(company.City) ? string.Empty : company.City.Trim();
             string district = string.IsNullOrWhiteSpace(company.District) ? string.Empty : company.District.Trim();
@@ -243,7 +243,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
             foreach (InvoiceLineDto line in lines)
             {
-                ProductDto? product = productsById.GetValueOrDefault(line.ProductId);
+                ProductCatalogDto? product = productsById.GetValueOrDefault(line.ProductId);
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
                     Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),

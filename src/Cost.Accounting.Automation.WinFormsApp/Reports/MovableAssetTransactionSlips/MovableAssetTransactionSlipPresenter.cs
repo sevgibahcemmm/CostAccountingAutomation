@@ -43,11 +43,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
             return (await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [];
         }
 
-        public static async Task<Dictionary<Guid, ProductDto>> LoadProductsByIdAsync()
+        public static async Task<Dictionary<Guid, ProductCatalogDto>> LoadProductsByIdAsync()
         {
             using var scope = Program.Services.CreateScope();
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-            List<ProductDto> products = (await mediator.Send(new ProductGetAllQuery(), CancellationToken.None)).ToList();
+            List<ProductCatalogDto> products = await mediator.Send(new ProductCatalogGetAllQuery(), CancellationToken.None);
             return products.ToDictionary(p => p.Id);
         }
 

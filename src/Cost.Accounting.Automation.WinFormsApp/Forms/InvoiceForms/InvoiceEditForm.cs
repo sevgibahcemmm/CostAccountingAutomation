@@ -18,7 +18,6 @@ using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraEditors.Repository;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Base;
-using DevExpress.XtraReports.UI;
 using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Data;
@@ -828,10 +827,11 @@ catch (Exception ex)
 
         private void CmbCatalogWarehouse_CloseUp(object? sender, EventArgs e)
         {
-            // Depo açılır penceresi kapanınca seçim kesinleşir; bu noktada filtreyi uygulamak
-            // güvenlidir. EditValueChanged kapanış sırasında yarıda kalıp listeyi boş bırakıyordu;
-            // CloseUp, değerin commit edildiği ve listeyi tekrar doldurmanın güvenli olduğu andır.
-            ApplyCatalogFilter();
+            // Katalog grid'i popup kapanış işleminin içindeyken filtre uygulamak DevExpress'in
+            // kendi update akışına denk gelir ve ilk seferde listeyi boş bırakır (EditValueChanged
+            // ile de aynısı yaşanmıştı). Arama kutusu gibi popup dışı aksiyonlarda aynı kod doğru
+            // çalıştığı için kapanış tamamlanana dek filtreyi erteliyoruz.
+            BeginInvoke((Action)ApplyCatalogFilter);
         }
 
         private void TxtCatalogProductSearch_EditValueChanged(object? sender, EventArgs e)
@@ -848,7 +848,9 @@ catch (Exception ex)
                 filtered = filtered.Where(p => p.WarehouseId == warehouseId);
             }
 
-            string term = txtCatalogProductSearch.Text?.Trim() ?? string.Empty;
+            // EditValue'dan okunur - boş kutu iken Text, NullText watermark'ını ("Ürün ara...")
+            // döndürür ve bu gerçek bir arama terimi gibi filtrelenerek listeyi boşaltırdı.
+            string term = (txtCatalogProductSearch.EditValue as string)?.Trim() ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(term))
             {
                 filtered = filtered.Where(p =>
@@ -857,13 +859,12 @@ catch (Exception ex)
                     || (p.Barcode?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
             }
 
-            // DataSource'u her filtrelemede değiştirmek DevExpress tarafında bazen
-            // listenin boş görünmesine neden olur; tek kalıcı liste üzerinde güncelleyip
-            // RefreshData ile yenilemek bu sorunu ortadan kaldırır.
+            List<ProductCatalogDto> result = filtered.ToList();
             _catalogProducts.Clear();
-            _catalogProducts.AddRange(filtered);
+            _catalogProducts.AddRange(result);
 
-            gridCatalogView.RefreshData();
+            gridCatalog.DataSource = null;
+            gridCatalog.DataSource = result;
             UpdateCatalogFeedback();
         }
 

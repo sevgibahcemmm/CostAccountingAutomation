@@ -36,7 +36,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
     {
         private CostSlipListDto? _editing;
         private readonly BindingList<CostSlipItemEditDto> _lines = [];
-        private List<ProductDto> _products = [];
+        private List<ProductCatalogDto> _products = [];
         private readonly Dictionary<Guid, List<AtelierTransferProductDto>> _transferredByWorkshop = [];
         private Dictionary<Guid, WorkshopLink> _workshopLinks = [];
         private readonly Dictionary<ExpenseAccountType, decimal> _accountAmounts = [];
@@ -297,10 +297,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         {
             try
             {
-                Task<List<ProductDto>> productsTask = LoadProductsAsync();
+                Task<List<ProductCatalogDto>> productsTask = LoadProductsAsync();
                 Task<List<ChartOfAccountLookUpDto>> accountsTask = LoadAccountLookUpsAsync();
 
-                _products = await productsTask;
                 List<ChartOfAccountLookUpDto> accountLookUps = await accountsTask;
 
                 _workshops = accountLookUps
@@ -311,6 +310,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     w => w.Id,
                     w => new WorkshopLink(w.Code, w.SemiFinishedAccountId, w.FinishedAccountId));
 
+                // Atölye kutusu, ürün sorgusu beklenmeden bağlanır; aksi halde combo
+                // ürünler yüklenene dek boş kalıp geç doluyordu.
                 lookUpWorkshop.Properties.DataSource = _workshops;
                 lookUpWorkshop.Properties.ValueMember = nameof(ChartOfAccountLookUpDto.Id);
                 lookUpWorkshop.Properties.DisplayMember = nameof(ChartOfAccountLookUpDto.Display);
@@ -323,18 +324,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 workshopColumn.Width = 300;
                 lookUpWorkshopView.BestFitColumns();
 
+                _products = await productsTask;
+
                 lookUpProducedProduct.Properties.DataSource = _products;
-                lookUpProducedProduct.Properties.ValueMember = nameof(ProductDto.Id);
-                lookUpProducedProduct.Properties.DisplayMember = nameof(ProductDto.Name);
+                lookUpProducedProduct.Properties.ValueMember = nameof(ProductCatalogDto.Id);
+                lookUpProducedProduct.Properties.DisplayMember = nameof(ProductCatalogDto.Name);
                 lookUpProducedProduct.Properties.BestFitMode = BestFitMode.BestFit;
                 lookUpProducedProductView.Columns.Clear();
                 lookUpProducedProductView.OptionsBehavior.AutoPopulateColumns = false;
-                GridColumn productColumn = lookUpProducedProductView.Columns.AddField(nameof(ProductDto.Name));
+                GridColumn productColumn = lookUpProducedProductView.Columns.AddField(nameof(ProductCatalogDto.Name));
                 productColumn.Caption = "Ürün Adı";
                 productColumn.VisibleIndex = 0;
                 productColumn.Width = 240;
-                lookUpProducedProductView.Columns.AddField(nameof(ProductDto.ProductCode)).Caption = "Ürün Kodu";
-                lookUpProducedProductView.Columns.AddField(nameof(ProductDto.ProductUnitTypeName)).Caption = "Birim";
+                lookUpProducedProductView.Columns.AddField(nameof(ProductCatalogDto.ProductCode)).Caption = "Ürün Kodu";
+                lookUpProducedProductView.Columns.AddField(nameof(ProductCatalogDto.ProductUnitTypeName)).Caption = "Birim";
                 foreach (GridColumn col in lookUpProducedProductView.Columns)
                 {
                     col.Visible = true;
@@ -349,12 +352,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
         }
 
-        private static async Task<List<ProductDto>> LoadProductsAsync()
+        private static async Task<List<ProductCatalogDto>> LoadProductsAsync()
         {
             using var scope = Program.Services.CreateScope();
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-            IQueryable<ProductDto> query = await mediator.Send(new ProductGetAllQuery(), CancellationToken.None);
-            return await Task.Run(() => query.ToList());
+            return await mediator.Send(new ProductCatalogGetAllQuery(), CancellationToken.None);
         }
 
         private static async Task<List<ChartOfAccountLookUpDto>> LoadAccountLookUpsAsync()
@@ -410,7 +412,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 });
             }
 
-            ProductDto? produced = _products.FirstOrDefault(p => p.Id == slip.ProducedProductId);
+            ProductCatalogDto? produced = _products.FirstOrDefault(p => p.Id == slip.ProducedProductId);
             if (produced?.SemiFinishedProductId is Guid semiId)
             {
                 _semiFinishedProductId = semiId;
@@ -601,7 +603,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
         private void AddSemiFinishedLine(Guid productId, decimal quantity, decimal unitPrice)
         {
-            ProductDto? prod = _products.FirstOrDefault(p => p.Id == productId);
+            ProductCatalogDto? prod = _products.FirstOrDefault(p => p.Id == productId);
 
             _lines.Add(new CostSlipItemEditDto
             {
@@ -737,7 +739,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             bool hasSelector = targetAccountId is not null || !string.IsNullOrWhiteSpace(workshopName);
 
-            List<ProductDto> filtered = isService
+            List<ProductCatalogDto> filtered = isService
                 ? []
                 : !hasSelector
                     ? []
@@ -791,16 +793,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         {
             Guid? workshopId = SelectedWorkshopId;
 
-            List<ProductDto> filtered;
+            List<ProductCatalogDto> filtered;
             List<ProductLookUpItem> lookupItems;
             if (workshopId is Guid wid
                 && _transferredByWorkshop.TryGetValue(wid, out List<AtelierTransferProductDto>? transferred))
             {
-                List<ProductDto> transferredProducts = _products
+                List<ProductCatalogDto> transferredProducts = _products
                     .Where(p => transferred.Any(t => t.ProductId == p.Id))
                     .ToList();
 
-                List<ProductDto> materialProducts = transferredProducts.Count > 0
+                List<ProductCatalogDto> materialProducts = transferredProducts.Count > 0
                     ? transferredProducts
                     : GetWorkshopMaterialProducts(wid);
 
@@ -822,7 +824,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             if (_semiFinishedProductId is Guid semiId)
             {
-                ProductDto? semi = _products.FirstOrDefault(p => p.Id == semiId);
+                ProductCatalogDto? semi = _products.FirstOrDefault(p => p.Id == semiId);
                 if (semi is not null && !lookupItems.Any(x => x.Id == semiId))
                 {
                     lookupItems.Add(new ProductLookUpItem(
@@ -864,9 +866,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLinesView.RefreshData();
         }
 
-        private List<ProductDto> GetWorkshopMaterialProducts(Guid workshopId)
+        private List<ProductCatalogDto> GetWorkshopMaterialProducts(Guid workshopId)
         {
-            List<ProductDto> materialPool = _products
+            List<ProductCatalogDto> materialPool = _products
                 .Where(p => MatchesWarehouse(p, "150"))
                 .ToList();
 
@@ -874,7 +876,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             Guid? finishedAccountId = GetWorkshopProducedAccountId(workshopId, CostSlipType.Product);
             string? workshopName = GetSelectedWorkshopName();
 
-            List<ProductDto> matched = materialPool
+            List<ProductCatalogDto> matched = materialPool
                 .Where(p =>
                     (semiAccountId is Guid semi && p.CategoryId == semi)
                     || (finishedAccountId is Guid fin && p.CategoryId == fin)
@@ -956,7 +958,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             return transferred.FirstOrDefault(t => t.ProductId == productId);
         }
 
-        private static bool MatchesWarehouse(ProductDto product, string warehouseCode)
+        private static bool MatchesWarehouse(ProductCatalogDto product, string warehouseCode)
             => product.WarehouseCode.Equals(warehouseCode, StringComparison.OrdinalIgnoreCase)
                || product.WarehouseCode.StartsWith(warehouseCode + ".", StringComparison.OrdinalIgnoreCase);
 
@@ -1098,7 +1100,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         {
             if (sender is SearchLookUpEdit edit && edit.EditValue is Guid productId)
             {
-                ProductDto? prod = _products.FirstOrDefault(p => p.Id == productId);
+                ProductCatalogDto? prod = _products.FirstOrDefault(p => p.Id == productId);
                 if (prod is not null)
                 {
                     int rowHandle = gridLinesView.FocusedRowHandle;

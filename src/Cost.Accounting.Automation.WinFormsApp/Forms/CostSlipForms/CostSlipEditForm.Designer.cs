@@ -57,6 +57,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CostSlipEditForm));
             pnlHeader = new DevExpress.XtraEditors.PanelControl();
             lblSubtitle = new DevExpress.XtraEditors.LabelControl();
             lblTitle = new DevExpress.XtraEditors.LabelControl();
@@ -64,8 +65,8 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlHeaderLine = new DevExpress.XtraEditors.PanelControl();
             pnlBody = new Panel();
             pnlAccounts = new DevExpress.XtraEditors.PanelControl();
+            flpAccounts = new FlowLayoutPanel();
             lblAccountsTitle = new DevExpress.XtraEditors.LabelControl();
-            flpAccounts = new System.Windows.Forms.FlowLayoutPanel();
             pnlItemsPanel = new DevExpress.XtraEditors.PanelControl();
             gridLines = new DevExpress.XtraGrid.GridControl();
             gridLinesView = new DevExpress.XtraGrid.Views.Grid.GridView();
@@ -140,7 +141,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // lblSubtitle
             // 
             lblSubtitle.Appearance.Font = new Font("Segoe UI", 8.5F);
-            lblSubtitle.Appearance.ForeColor = Color.FromArgb(107, 114, 128);
+            lblSubtitle.Appearance.ForeColor = Color.FromArgb(120, 120, 120);
             lblSubtitle.Appearance.Options.UseFont = true;
             lblSubtitle.Appearance.Options.UseForeColor = true;
             lblSubtitle.Location = new Point(53, 33);
@@ -152,7 +153,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // lblTitle
             // 
             lblTitle.Appearance.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
-            lblTitle.Appearance.ForeColor = Color.FromArgb(17, 24, 39);
+            lblTitle.Appearance.ForeColor = Color.FromArgb(40, 40, 40);
             lblTitle.Appearance.Options.UseFont = true;
             lblTitle.Appearance.Options.UseForeColor = true;
             lblTitle.Location = new Point(53, 12);
@@ -163,11 +164,11 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // 
             // lblHeaderIcon
             // 
+            lblHeaderIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblHeaderIcon.ImageOptions.SvgImage");
             lblHeaderIcon.Location = new Point(17, 16);
             lblHeaderIcon.Name = "lblHeaderIcon";
-            lblHeaderIcon.Size = new Size(0, 13);
+            lblHeaderIcon.Size = new Size(32, 32);
             lblHeaderIcon.TabIndex = 2;
-            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Percent;
             // 
             // pnlHeaderLine
             // 
@@ -215,6 +216,15 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlAccounts.Size = new Size(1183, 243);
             pnlAccounts.TabIndex = 0;
             // 
+            // flpAccounts
+            // 
+            flpAccounts.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            flpAccounts.AutoScroll = true;
+            flpAccounts.Location = new Point(10, 40);
+            flpAccounts.Name = "flpAccounts";
+            flpAccounts.Size = new Size(1155, 240);
+            flpAccounts.TabIndex = 1;
+            // 
             // lblAccountsTitle
             // 
             lblAccountsTitle.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
@@ -224,18 +234,6 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             lblAccountsTitle.Size = new Size(205, 17);
             lblAccountsTitle.TabIndex = 0;
             lblAccountsTitle.Text = "Hesap Bazlı Gider Girişi (710-780)";
-            // 
-            // flpAccounts
-            // 
-            flpAccounts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            flpAccounts.AutoScroll = true;
-            flpAccounts.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            flpAccounts.Location = new Point(10, 40);
-            flpAccounts.Name = "flpAccounts";
-            flpAccounts.Size = new Size(1155, 240);
-            flpAccounts.TabIndex = 1;
-            flpAccounts.WrapContents = true;
             // 
             // pnlItemsPanel
             // 
@@ -280,25 +278,25 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // 
             // btnDeleteLine
             // 
+            btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnDeleteLine.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnDeleteLine.ImageOptions.SvgImage");
+            btnDeleteLine.ImageOptions.SvgImageSize = new Size(16, 16);
             btnDeleteLine.Location = new Point(1093, 3);
             btnDeleteLine.Name = "btnDeleteLine";
             btnDeleteLine.Size = new Size(90, 24);
             btnDeleteLine.TabIndex = 0;
             btnDeleteLine.Text = "- Satır Sil";
-            btnDeleteLine.ImageOptions.SvgImage = DxIcon.Delete;
-            btnDeleteLine.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnAddLine
             // 
+            btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnAddLine.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddLine.ImageOptions.SvgImage");
+            btnAddLine.ImageOptions.SvgImageSize = new Size(16, 16);
             btnAddLine.Location = new Point(994, 3);
             btnAddLine.Name = "btnAddLine";
             btnAddLine.Size = new Size(90, 24);
             btnAddLine.TabIndex = 1;
             btnAddLine.Text = "+ Satır Ekle";
-            btnAddLine.ImageOptions.SvgImage = DxIcon.Add;
-            btnAddLine.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // lblItemsTitle
             // 
@@ -312,16 +310,16 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // 
             // txtDescription
             // 
-            txtDescription.Location = new Point(359, 82);
+            txtDescription.Location = new Point(627, 82);
             txtDescription.Name = "txtDescription";
-            txtDescription.Size = new Size(841, 20);
+            txtDescription.Size = new Size(573, 20);
             txtDescription.TabIndex = 8;
             // 
             // lblDescLabel
             // 
             lblDescLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblDescLabel.Appearance.Options.UseFont = true;
-            lblDescLabel.Location = new Point(359, 65);
+            lblDescLabel.Location = new Point(627, 65);
             lblDescLabel.Name = "lblDescLabel";
             lblDescLabel.Size = new Size(53, 15);
             lblDescLabel.TabIndex = 9;
@@ -329,16 +327,16 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // 
             // txtQuantity
             // 
-            txtQuantity.Location = new Point(1120, 30);
+            txtQuantity.Location = new Point(500, 82);
             txtQuantity.Name = "txtQuantity";
-            txtQuantity.Size = new Size(77, 20);
+            txtQuantity.Size = new Size(94, 20);
             txtQuantity.TabIndex = 10;
             // 
             // lblQuantityLabel
             // 
             lblQuantityLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblQuantityLabel.Appearance.Options.UseFont = true;
-            lblQuantityLabel.Location = new Point(1120, 13);
+            lblQuantityLabel.Location = new Point(500, 65);
             lblQuantityLabel.Name = "lblQuantityLabel";
             lblQuantityLabel.Size = new Size(40, 15);
             lblQuantityLabel.TabIndex = 11;
@@ -350,7 +348,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             lookUpProducedProduct.Name = "lookUpProducedProduct";
             lookUpProducedProduct.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             lookUpProducedProduct.Properties.PopupView = lookUpProducedProductView;
-            lookUpProducedProduct.Size = new Size(336, 20);
+            lookUpProducedProduct.Size = new Size(471, 20);
             lookUpProducedProduct.TabIndex = 12;
             // 
             // lookUpProducedProductView
@@ -375,7 +373,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // lblStatusValue
             // 
             lblStatusValue.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            lblStatusValue.Appearance.ForeColor = Color.FromArgb(30, 64, 175);
+            lblStatusValue.Appearance.ForeColor = Color.FromArgb(78, 109, 156);
             lblStatusValue.Appearance.Options.UseFont = true;
             lblStatusValue.Appearance.Options.UseForeColor = true;
             lblStatusValue.Location = new Point(900, 33);
@@ -389,7 +387,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             lookUpWorkshop.Name = "lookUpWorkshop";
             lookUpWorkshop.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             lookUpWorkshop.Properties.PopupView = lookUpWorkshopView;
-            lookUpWorkshop.Size = new Size(487, 20);
+            lookUpWorkshop.Size = new Size(573, 20);
             lookUpWorkshop.TabIndex = 15;
             // 
             // lookUpWorkshopView
@@ -487,70 +485,70 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             btnPrintSlip.Appearance.Font = new Font("Segoe UI", 9F);
             btnPrintSlip.Appearance.Options.UseFont = true;
             btnPrintSlip.Enabled = false;
+            btnPrintSlip.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnPrintSlip.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnPrintSlip.ImageOptions.SvgImage");
+            btnPrintSlip.ImageOptions.SvgImageSize = new Size(18, 18);
             btnPrintSlip.Location = new Point(13, 12);
             btnPrintSlip.Name = "btnPrintSlip";
             btnPrintSlip.Size = new Size(171, 29);
             btnPrintSlip.TabIndex = 0;
             btnPrintSlip.Text = "Maliyet Pusulası Yazdır";
-            btnPrintSlip.ImageOptions.SvgImage = DxIcon.Print;
-            btnPrintSlip.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnPrintSlip.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnCancel
             // 
             btnCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnCancel.Appearance.Font = new Font("Segoe UI", 9F);
             btnCancel.Appearance.Options.UseFont = true;
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnCancel.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnCancel.ImageOptions.SvgImage");
+            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
             btnCancel.Location = new Point(1111, 12);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(81, 29);
             btnCancel.TabIndex = 1;
             btnCancel.Text = "Vazgeç";
-            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
-            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnSave
             // 
             btnSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnSave.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnSave.Appearance.Options.UseFont = true;
-            btnSave.Location = new Point(984, 12);
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSave.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSave.ImageOptions.SvgImage");
+            btnSave.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnSave.Location = new Point(964, 12);
             btnSave.Name = "btnSave";
-            btnSave.Size = new Size(120, 29);
+            btnSave.Size = new Size(140, 29);
             btnSave.TabIndex = 2;
             btnSave.Text = "Kaydet ve Onayla";
-            btnSave.ImageOptions.SvgImage = DxIcon.Check;
-            btnSave.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnSaveDraft
             // 
             btnSaveDraft.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnSaveDraft.Appearance.Font = new Font("Segoe UI", 9F);
             btnSaveDraft.Appearance.Options.UseFont = true;
-            btnSaveDraft.Location = new Point(866, 12);
+            btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSaveDraft.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSaveDraft.ImageOptions.SvgImage");
+            btnSaveDraft.ImageOptions.SvgImageSize = new Size(18, 18);
+            btnSaveDraft.Location = new Point(847, 12);
             btnSaveDraft.Name = "btnSaveDraft";
             btnSaveDraft.Size = new Size(111, 29);
             btnSaveDraft.TabIndex = 3;
             btnSaveDraft.Text = "Taslak Kaydet";
-            btnSaveDraft.ImageOptions.SvgImage = DxIcon.Save;
-            btnSaveDraft.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnApprove
             // 
             btnApprove.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnApprove.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnApprove.Appearance.Options.UseFont = true;
+            btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnApprove.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnApprove.ImageOptions.SvgImage");
+            btnApprove.ImageOptions.SvgImageSize = new Size(18, 18);
             btnApprove.Location = new Point(984, 12);
             btnApprove.Name = "btnApprove";
             btnApprove.Size = new Size(120, 29);
             btnApprove.TabIndex = 4;
             btnApprove.Text = "Yazdır";
-            btnApprove.ImageOptions.SvgImage = DxIcon.CheckAll;
-            btnApprove.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnApprove.Visible = false;
             // 
             // pnlFooterLine
@@ -571,12 +569,9 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             Controls.Add(pnlFooter);
             Controls.Add(pnlHeader);
             FormBorderStyle = FormBorderStyle.FixedDialog;
+            IconOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("CostSlipEditForm.IconOptions.SvgImage");
             MaximizeBox = false;
             MinimizeBox = false;
-            IconOptions.SvgImage = DxIcon.Percent;
-            lblTitle.Appearance.ForeColor = SkinTheme.Text;
-            lblSubtitle.Appearance.ForeColor = SkinTheme.SecondaryText;
-            lblStatusValue.Appearance.ForeColor = SkinTheme.Primary;
             Name = "CostSlipEditForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Maliyet Pusulası";
