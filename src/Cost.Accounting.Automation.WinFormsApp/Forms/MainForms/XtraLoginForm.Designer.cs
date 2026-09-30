@@ -42,6 +42,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlUserNameBox = new DevExpress.XtraEditors.PanelControl();
             lblUserIcon = new DevExpress.XtraEditors.LabelControl();
             txtUserName = new DevExpress.XtraEditors.TextEdit();
+            pnlYearBox = new DevExpress.XtraEditors.PanelControl();
+            lookUpYear = new DevExpress.XtraEditors.SearchLookUpEdit();
+            lookUpYearView = new DevExpress.XtraGrid.Views.Grid.GridView();
+            pnlCompanyBox = new DevExpress.XtraEditors.PanelControl();
+            lookUpCompany = new DevExpress.XtraEditors.SearchLookUpEdit();
+            lookUpCompanyView = new DevExpress.XtraGrid.Views.Grid.GridView();
             lblFormSubtitle = new DevExpress.XtraEditors.LabelControl();
             lblFormTitle = new DevExpress.XtraEditors.LabelControl();
             pnlUserBadge = new DevExpress.XtraEditors.PanelControl();
@@ -62,6 +68,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ((System.ComponentModel.ISupportInitialize)pnlUserNameBox).BeginInit();
             pnlUserNameBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)txtUserName.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pnlYearBox).BeginInit();
+            pnlYearBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)lookUpYear.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpYearView).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pnlCompanyBox).BeginInit();
+            pnlCompanyBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)lookUpCompany.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpCompanyView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pnlUserBadge).BeginInit();
             pnlUserBadge.SuspendLayout();
             SuspendLayout();
@@ -79,17 +93,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlLeft.Dock = DockStyle.Left;
             pnlLeft.Location = new Point(0, 0);
             pnlLeft.Name = "pnlLeft";
-            pnlLeft.Size = new Size(343, 555);
+            pnlLeft.Size = new Size(343, 690);
             pnlLeft.TabIndex = 0;
             pnlLeft.Paint += pnlLeft_Paint;
             // 
             // pnlLeftBadge
             // 
-            pnlLeftBadge.Appearance.BackColor = Color.FromArgb(15, 23, 42);
+            pnlLeftBadge.Appearance.BackColor = Color.Transparent;
             pnlLeftBadge.Appearance.Options.UseBackColor = true;
             pnlLeftBadge.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlLeftBadge.Controls.Add(pnlLeftLockGlyph);
-            pnlLeftBadge.Location = new Point(126, 50);
+            pnlLeftBadge.Location = new Point(126, 90);
             pnlLeftBadge.Name = "pnlLeftBadge";
             pnlLeftBadge.Size = new Size(92, 92);
             pnlLeftBadge.TabIndex = 0;
@@ -105,13 +119,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlLeftLockGlyph.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             pnlLeftLockGlyph.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             pnlLeftLockGlyph.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            pnlLeftLockGlyph.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("pnlLeftLockGlyph.ImageOptions.SvgImage");
+            pnlLeftLockGlyph.ImageOptions.SvgImageSize = new Size(48, 48);
             pnlLeftLockGlyph.Location = new Point(23, 23);
             pnlLeftLockGlyph.Name = "pnlLeftLockGlyph";
             pnlLeftLockGlyph.Size = new Size(46, 46);
             pnlLeftLockGlyph.TabIndex = 0;
-            pnlLeftLockGlyph.Text = "";
-            pnlLeftLockGlyph.ImageOptions.SvgImage = DxIcon.Lock;
-            pnlLeftLockGlyph.ImageOptions.SvgImageSize = new Size(48, 48);
             // 
             // lblLeftTitle
             // 
@@ -123,7 +136,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblLeftTitle.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblLeftTitle.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblLeftTitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblLeftTitle.Location = new Point(26, 165);
+            lblLeftTitle.Location = new Point(26, 205);
             lblLeftTitle.Name = "lblLeftTitle";
             lblLeftTitle.Size = new Size(291, 38);
             lblLeftTitle.TabIndex = 1;
@@ -138,7 +151,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblLeftCompany.Appearance.Options.UseTextOptions = true;
             lblLeftCompany.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblLeftCompany.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblLeftCompany.Location = new Point(26, 207);
+            lblLeftCompany.Location = new Point(26, 247);
             lblLeftCompany.Name = "lblLeftCompany";
             lblLeftCompany.Size = new Size(291, 21);
             lblLeftCompany.TabIndex = 2;
@@ -151,7 +164,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblLeftFeatures.Appearance.Options.UseFont = true;
             lblLeftFeatures.Appearance.Options.UseForeColor = true;
             lblLeftFeatures.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblLeftFeatures.Location = new Point(57, 282);
+            lblLeftFeatures.Location = new Point(57, 332);
             lblLeftFeatures.Name = "lblLeftFeatures";
             lblLeftFeatures.Size = new Size(242, 121);
             lblLeftFeatures.TabIndex = 3;
@@ -167,7 +180,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblLeftFooter.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblLeftFooter.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblLeftFooter.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblLeftFooter.Location = new Point(26, 511);
+            lblLeftFooter.Location = new Point(26, 652);
             lblLeftFooter.Name = "lblLeftFooter";
             lblLeftFooter.Size = new Size(291, 26);
             lblLeftFooter.TabIndex = 4;
@@ -185,6 +198,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlRight.Controls.Add(lblCaptchaQuestion);
             pnlRight.Controls.Add(pnlPasswordBox);
             pnlRight.Controls.Add(pnlUserNameBox);
+            pnlRight.Controls.Add(pnlYearBox);
+            pnlRight.Controls.Add(pnlCompanyBox);
             pnlRight.Controls.Add(lblFormSubtitle);
             pnlRight.Controls.Add(lblFormTitle);
             pnlRight.Controls.Add(pnlUserBadge);
@@ -192,7 +207,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlRight.Dock = DockStyle.Fill;
             pnlRight.Location = new Point(343, 0);
             pnlRight.Name = "pnlRight";
-            pnlRight.Size = new Size(446, 555);
+            pnlRight.Size = new Size(446, 690);
             pnlRight.TabIndex = 1;
             // 
             // lblMessage
@@ -206,9 +221,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblMessage.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblMessage.Appearance.TextOptions.WordWrap = DevExpress.Utils.WordWrap.Wrap;
             lblMessage.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblMessage.Location = new Point(51, 426);
+            lblMessage.Location = new Point(51, 534);
             lblMessage.Name = "lblMessage";
-            lblMessage.Size = new Size(343, 19);
+            lblMessage.Size = new Size(344, 19);
             lblMessage.TabIndex = 6;
             lblMessage.Visible = false;
             // 
@@ -227,9 +242,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lnkForgot.AppearanceHovered.Options.UseForeColor = true;
             lnkForgot.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             lnkForgot.Cursor = Cursors.Hand;
-            lnkForgot.Location = new Point(51, 505);
+            lnkForgot.Location = new Point(51, 618);
             lnkForgot.Name = "lnkForgot";
-            lnkForgot.Size = new Size(343, 21);
+            lnkForgot.Size = new Size(344, 21);
             lnkForgot.TabIndex = 8;
             lnkForgot.Text = "Şifremi unuttum";
             // 
@@ -253,15 +268,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnLogin.AppearancePressed.Options.UseForeColor = true;
             btnLogin.ButtonStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             btnLogin.Cursor = Cursors.Hand;
+            btnLogin.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
             btnLogin.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnLogin.ImageOptions.SvgImage");
-            btnLogin.Location = new Point(51, 450);
+            btnLogin.ImageOptions.SvgImageSize = new Size(22, 22);
+            btnLogin.Location = new Point(51, 560);
             btnLogin.Name = "btnLogin";
-            btnLogin.Size = new Size(343, 46);
+            btnLogin.Size = new Size(344, 46);
             btnLogin.TabIndex = 7;
             btnLogin.Text = "Giriş Yap";
-            btnLogin.ImageOptions.SvgImage = DxIcon.Next;
-            btnLogin.ImageOptions.SvgImageSize = new Size(22, 22);
-            btnLogin.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
             btnLogin.Click += btnLogin_Click;
             // 
             // pnlCaptchaResult
@@ -270,9 +284,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCaptchaResult.Appearance.Options.UseBackColor = true;
             pnlCaptchaResult.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlCaptchaResult.Controls.Add(txtCaptchaResult);
-            pnlCaptchaResult.Location = new Point(51, 372);
+            pnlCaptchaResult.Location = new Point(51, 480);
             pnlCaptchaResult.Name = "pnlCaptchaResult";
-            pnlCaptchaResult.Size = new Size(343, 48);
+            pnlCaptchaResult.Size = new Size(344, 48);
             pnlCaptchaResult.TabIndex = 0;
             // 
             // txtCaptchaResult
@@ -287,7 +301,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             txtCaptchaResult.Properties.Appearance.Options.UseForeColor = true;
             txtCaptchaResult.Properties.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             txtCaptchaResult.Properties.NullText = "Sonuç ve kod (örn: 29 5424)";
-            txtCaptchaResult.Size = new Size(319, 24);
+            txtCaptchaResult.Size = new Size(320, 24);
             txtCaptchaResult.TabIndex = 0;
             // 
             // lblCaptchaQuestion
@@ -303,9 +317,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblCaptchaQuestion.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblCaptchaQuestion.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             lblCaptchaQuestion.Cursor = Cursors.Hand;
-            lblCaptchaQuestion.Location = new Point(51, 346);
+            lblCaptchaQuestion.Location = new Point(51, 456);
             lblCaptchaQuestion.Name = "lblCaptchaQuestion";
-            lblCaptchaQuestion.Size = new Size(343, 21);
+            lblCaptchaQuestion.Size = new Size(344, 21);
             lblCaptchaQuestion.TabIndex = 0;
             lblCaptchaQuestion.Text = "12 + 30 = ?   •   Kod: 5424";
             lblCaptchaQuestion.Click += lblCaptchaQuestion_Click;
@@ -318,10 +332,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlPasswordBox.Controls.Add(lblPassIcon);
             pnlPasswordBox.Controls.Add(txtPassword);
             pnlPasswordBox.Controls.Add(lblTogglePassword);
-            pnlPasswordBox.Location = new Point(51, 282);
+            pnlPasswordBox.Location = new Point(51, 392);
             pnlPasswordBox.Name = "pnlPasswordBox";
-            pnlPasswordBox.Size = new Size(343, 48);
-            pnlPasswordBox.TabIndex = 4;
+            pnlPasswordBox.Size = new Size(344, 48);
+            pnlPasswordBox.TabIndex = 6;
             // 
             // lblPassIcon
             // 
@@ -333,18 +347,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblPassIcon.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblPassIcon.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblPassIcon.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblPassIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblPassIcon.ImageOptions.SvgImage");
+            lblPassIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             lblPassIcon.Location = new Point(0, 0);
             lblPassIcon.Name = "lblPassIcon";
             lblPassIcon.Size = new Size(42, 48);
             lblPassIcon.TabIndex = 0;
-            lblPassIcon.Text = "";
-            lblPassIcon.ImageOptions.SvgImage = DxIcon.Key;
-            lblPassIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             // 
             // txtPassword
             // 
-            txtPassword.EditValue = "1";
-            txtPassword.Location = new Point(48, 11);
+            txtPassword.Location = new Point(48, 12);
             txtPassword.Name = "txtPassword";
             txtPassword.Properties.Appearance.BackColor = Color.Transparent;
             txtPassword.Properties.Appearance.Font = new Font("Segoe UI", 11F);
@@ -357,7 +369,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             txtPassword.Properties.PasswordChar = '•';
             txtPassword.Size = new Size(250, 24);
             txtPassword.TabIndex = 0;
-            txtPassword.ToolTip = "Şifre <Giriniz>";
+            txtPassword.ToolTip = "Şifre";
             // 
             // lblTogglePassword
             // 
@@ -370,13 +382,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblTogglePassword.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblTogglePassword.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             lblTogglePassword.Cursor = Cursors.Hand;
-            lblTogglePassword.Location = new Point(303, 10);
+            lblTogglePassword.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblTogglePassword.ImageOptions.SvgImage");
+            lblTogglePassword.ImageOptions.SvgImageSize = new Size(22, 22);
+            lblTogglePassword.Location = new Point(302, 10);
             lblTogglePassword.Name = "lblTogglePassword";
             lblTogglePassword.Size = new Size(34, 28);
             lblTogglePassword.TabIndex = 1;
-            lblTogglePassword.Text = "";
-            lblTogglePassword.ImageOptions.SvgImage = DxIcon.Eye;
-            lblTogglePassword.ImageOptions.SvgImageSize = new Size(22, 22);
             lblTogglePassword.Click += lblTogglePassword_Click;
             // 
             // pnlUserNameBox
@@ -386,10 +397,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlUserNameBox.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlUserNameBox.Controls.Add(lblUserIcon);
             pnlUserNameBox.Controls.Add(txtUserName);
-            pnlUserNameBox.Location = new Point(51, 228);
+            pnlUserNameBox.Location = new Point(51, 334);
             pnlUserNameBox.Name = "pnlUserNameBox";
-            pnlUserNameBox.Size = new Size(343, 48);
-            pnlUserNameBox.TabIndex = 3;
+            pnlUserNameBox.Size = new Size(344, 48);
+            pnlUserNameBox.TabIndex = 5;
             // 
             // lblUserIcon
             // 
@@ -401,18 +412,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblUserIcon.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblUserIcon.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblUserIcon.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblUserIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblUserIcon.ImageOptions.SvgImage");
+            lblUserIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             lblUserIcon.Location = new Point(0, 0);
             lblUserIcon.Name = "lblUserIcon";
             lblUserIcon.Size = new Size(42, 48);
             lblUserIcon.TabIndex = 0;
-            lblUserIcon.Text = "";
-            lblUserIcon.ImageOptions.SvgImage = DxIcon.User;
-            lblUserIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             // 
             // txtUserName
             // 
-            txtUserName.EditValue = "Admin";
-            txtUserName.Location = new Point(48, 11);
+            txtUserName.Location = new Point(48, 12);
             txtUserName.Name = "txtUserName";
             txtUserName.Properties.Appearance.BackColor = Color.Transparent;
             txtUserName.Properties.Appearance.Font = new Font("Segoe UI", 11F);
@@ -422,9 +431,81 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             txtUserName.Properties.Appearance.Options.UseForeColor = true;
             txtUserName.Properties.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             txtUserName.Properties.NullText = "Kullanıcı adı veya e-posta";
-            txtUserName.Size = new Size(287, 24);
+            txtUserName.Size = new Size(284, 24);
             txtUserName.TabIndex = 0;
             txtUserName.ToolTip = "Kullanıcı adı veya e-posta";
+            // 
+            // pnlYearBox
+            // 
+            pnlYearBox.Appearance.BackColor = Color.FromArgb(248, 250, 252);
+            pnlYearBox.Appearance.Options.UseBackColor = true;
+            pnlYearBox.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlYearBox.Controls.Add(lookUpYear);
+            pnlYearBox.Location = new Point(51, 276);
+            pnlYearBox.Name = "pnlYearBox";
+            pnlYearBox.Size = new Size(344, 48);
+            pnlYearBox.TabIndex = 4;
+            // 
+            // lookUpYear
+            // 
+            lookUpYear.Location = new Point(12, 12);
+            lookUpYear.Name = "lookUpYear";
+            lookUpYear.Properties.Appearance.BackColor = Color.Transparent;
+            lookUpYear.Properties.Appearance.Font = new Font("Segoe UI", 11F);
+            lookUpYear.Properties.Appearance.ForeColor = Color.FromArgb(15, 23, 42);
+            lookUpYear.Properties.Appearance.Options.UseBackColor = true;
+            lookUpYear.Properties.Appearance.Options.UseFont = true;
+            lookUpYear.Properties.Appearance.Options.UseForeColor = true;
+            lookUpYear.Properties.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            lookUpYear.Properties.NullText = "Mali yıl seçin";
+            lookUpYear.Properties.PopupView = lookUpYearView;
+            lookUpYear.Size = new Size(320, 24);
+            lookUpYear.TabIndex = 0;
+            lookUpYear.ToolTip = "Mali Yıl";
+            // 
+            // lookUpYearView
+            // 
+            lookUpYearView.FocusRectStyle = DevExpress.XtraGrid.Views.Grid.DrawFocusRectStyle.RowFocus;
+            lookUpYearView.Name = "lookUpYearView";
+            lookUpYearView.OptionsBehavior.AutoPopulateColumns = false;
+            lookUpYearView.OptionsSelection.EnableAppearanceFocusedCell = false;
+            lookUpYearView.OptionsView.ShowGroupPanel = false;
+            // 
+            // pnlCompanyBox
+            // 
+            pnlCompanyBox.Appearance.BackColor = Color.FromArgb(248, 250, 252);
+            pnlCompanyBox.Appearance.Options.UseBackColor = true;
+            pnlCompanyBox.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            pnlCompanyBox.Controls.Add(lookUpCompany);
+            pnlCompanyBox.Location = new Point(51, 218);
+            pnlCompanyBox.Name = "pnlCompanyBox";
+            pnlCompanyBox.Size = new Size(344, 48);
+            pnlCompanyBox.TabIndex = 3;
+            // 
+            // lookUpCompany
+            // 
+            lookUpCompany.Location = new Point(12, 12);
+            lookUpCompany.Name = "lookUpCompany";
+            lookUpCompany.Properties.Appearance.BackColor = Color.Transparent;
+            lookUpCompany.Properties.Appearance.Font = new Font("Segoe UI", 11F);
+            lookUpCompany.Properties.Appearance.ForeColor = Color.FromArgb(15, 23, 42);
+            lookUpCompany.Properties.Appearance.Options.UseBackColor = true;
+            lookUpCompany.Properties.Appearance.Options.UseFont = true;
+            lookUpCompany.Properties.Appearance.Options.UseForeColor = true;
+            lookUpCompany.Properties.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            lookUpCompany.Properties.NullText = "Kurum seçin";
+            lookUpCompany.Properties.PopupView = lookUpCompanyView;
+            lookUpCompany.Size = new Size(320, 24);
+            lookUpCompany.TabIndex = 0;
+            lookUpCompany.ToolTip = "Kurum";
+            // 
+            // lookUpCompanyView
+            // 
+            lookUpCompanyView.FocusRectStyle = DevExpress.XtraGrid.Views.Grid.DrawFocusRectStyle.RowFocus;
+            lookUpCompanyView.Name = "lookUpCompanyView";
+            lookUpCompanyView.OptionsBehavior.AutoPopulateColumns = false;
+            lookUpCompanyView.OptionsSelection.EnableAppearanceFocusedCell = false;
+            lookUpCompanyView.OptionsView.ShowGroupPanel = false;
             // 
             // lblFormSubtitle
             // 
@@ -436,7 +517,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblFormSubtitle.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblFormSubtitle.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblFormSubtitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblFormSubtitle.Location = new Point(34, 190);
+            lblFormSubtitle.Location = new Point(34, 178);
             lblFormSubtitle.Name = "lblFormSubtitle";
             lblFormSubtitle.Size = new Size(377, 21);
             lblFormSubtitle.TabIndex = 2;
@@ -452,7 +533,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblFormTitle.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblFormTitle.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblFormTitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblFormTitle.Location = new Point(34, 152);
+            lblFormTitle.Location = new Point(34, 140);
             lblFormTitle.Name = "lblFormTitle";
             lblFormTitle.Size = new Size(377, 34);
             lblFormTitle.TabIndex = 1;
@@ -472,18 +553,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // _lblLogoIcon
             // 
-            _lblLogoIcon.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             _lblLogoIcon.Appearance.Options.UseTextOptions = true;
             _lblLogoIcon.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             _lblLogoIcon.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
+            _lblLogoIcon.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             _lblLogoIcon.Dock = DockStyle.Fill;
+            _lblLogoIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("_lblLogoIcon.ImageOptions.SvgImage");
+            _lblLogoIcon.ImageOptions.SvgImageSize = new Size(54, 54);
             _lblLogoIcon.Location = new Point(0, 0);
             _lblLogoIcon.Name = "_lblLogoIcon";
             _lblLogoIcon.Size = new Size(92, 92);
             _lblLogoIcon.TabIndex = 0;
-            _lblLogoIcon.Text = "";
-            _lblLogoIcon.ImageOptions.SvgImage = DxIcon.Shield;
-            _lblLogoIcon.ImageOptions.SvgImageSize = new Size(54, 54);
             // 
             // lblFooter
             // 
@@ -496,7 +576,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblFooter.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblFooter.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             lblFooter.Dock = DockStyle.Bottom;
-            lblFooter.Location = new Point(0, 529);
+            lblFooter.Location = new Point(0, 664);
             lblFooter.Name = "lblFooter";
             lblFooter.Size = new Size(446, 26);
             lblFooter.TabIndex = 9;
@@ -509,7 +589,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Appearance.Options.UseBackColor = true;
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(789, 555);
+            ClientSize = new Size(789, 690);
             Controls.Add(pnlRight);
             Controls.Add(pnlLeft);
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -534,6 +614,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ((System.ComponentModel.ISupportInitialize)pnlUserNameBox).EndInit();
             pnlUserNameBox.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)txtUserName.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pnlYearBox).EndInit();
+            pnlYearBox.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)lookUpYear.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpYearView).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pnlCompanyBox).EndInit();
+            pnlCompanyBox.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)lookUpCompany.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)lookUpCompanyView).EndInit();
             ((System.ComponentModel.ISupportInitialize)pnlUserBadge).EndInit();
             pnlUserBadge.ResumeLayout(false);
             ResumeLayout(false);
@@ -555,6 +643,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraEditors.PanelControl pnlUserNameBox;
         private DevExpress.XtraEditors.LabelControl lblUserIcon;
         private DevExpress.XtraEditors.TextEdit txtUserName;
+        private DevExpress.XtraEditors.PanelControl pnlYearBox;
+        private DevExpress.XtraEditors.SearchLookUpEdit lookUpYear;
+        private DevExpress.XtraGrid.Views.Grid.GridView lookUpYearView;
+        private DevExpress.XtraEditors.PanelControl pnlCompanyBox;
+        private DevExpress.XtraEditors.SearchLookUpEdit lookUpCompany;
+        private DevExpress.XtraGrid.Views.Grid.GridView lookUpCompanyView;
         private DevExpress.XtraEditors.PanelControl pnlPasswordBox;
         private DevExpress.XtraEditors.LabelControl lblPassIcon;
         private DevExpress.XtraEditors.TextEdit txtPassword;
@@ -563,9 +657,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraEditors.PanelControl pnlCaptchaResult;
         private DevExpress.XtraEditors.TextEdit txtCaptchaResult;
         private DevExpress.XtraEditors.LabelControl lblMessage;
-        private DevExpress.XtraEditors.SimpleButton btnLogin;
         private DevExpress.XtraEditors.HyperlinkLabelControl lnkForgot;
-private DevExpress.XtraEditors.LabelControl lblFooter;
+        private DevExpress.XtraEditors.LabelControl lblFooter;
         private DevExpress.XtraEditors.LabelControl _lblLogoIcon;
+        private GradientButton btnLogin;
     }
 }

@@ -86,6 +86,19 @@ public sealed class ProductPrice : Entity, IHardDeletable
 
 public record ProductPriceQueryResult(Guid ProductId, Guid Id, ProductPriceType PriceType, decimal UnitPrice, DateOnly StartDate, DateOnly? EndDate);
 
+public record ProductMovementQueryResult(
+    Guid ProductId,
+    Guid Id,
+    ProductMovementType MovementType,
+    ProductMovementReason Reason,
+    decimal Quantity,
+    decimal? UnitPrice,
+    DateOnly Date,
+    string? ReferenceNo,
+    string Description,
+    Guid? InvoiceId,
+    Guid? StockIssueId);
+
 public sealed class ProductMovement : Entity, IHardDeletable
 {
     private ProductMovement()

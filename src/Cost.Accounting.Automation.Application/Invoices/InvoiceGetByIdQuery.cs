@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ internal sealed class InvoiceGetByIdQueryHandler(
         var invoiceDto = await invoiceRepository.GetAllWithAudit()
             .Where(i => i.Entity.Id == request.Id)
             .MapTo()
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultSafeAsync(cancellationToken);
 
         if (invoiceDto is null)
         {

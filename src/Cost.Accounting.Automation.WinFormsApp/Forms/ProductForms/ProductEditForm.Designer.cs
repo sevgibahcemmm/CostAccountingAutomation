@@ -72,9 +72,10 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                skinBinding?.Dispose();
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -93,6 +94,8 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             tabMain = new DevExpress.XtraTab.XtraTabControl();
             tabBasic = new DevExpress.XtraTab.XtraTabPage();
             chkActive = new DevExpress.XtraEditors.CheckEdit();
+            lblCreatePair = new DevExpress.XtraEditors.LabelControl();
+            chkCreatePair = new DevExpress.XtraEditors.CheckEdit();
             lblDescription = new DevExpress.XtraEditors.LabelControl();
             memoDescription = new DevExpress.XtraEditors.MemoEdit();
             lblUnitType = new DevExpress.XtraEditors.LabelControl();
@@ -102,8 +105,6 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             lblWarehouse = new DevExpress.XtraEditors.LabelControl();
             lblCategory = new DevExpress.XtraEditors.LabelControl();
             cmbUnitType = new DevExpress.XtraEditors.SearchLookUpEdit();
-            chkCreatePair = new DevExpress.XtraEditors.CheckEdit();
-            lblCreatePair = new DevExpress.XtraEditors.LabelControl();
             lblMinLevel = new DevExpress.XtraEditors.LabelControl();
             spinMinLevel = new DevExpress.XtraEditors.SpinEdit();
             picQR = new DevExpress.XtraEditors.PictureEdit();
@@ -160,11 +161,11 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             tabMain.SuspendLayout();
             tabBasic.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)chkCreatePair.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)memoDescription.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbCategory.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbWarehouse.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbUnitType.Properties).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)chkCreatePair.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)spinMinLevel.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picQR.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picBarcode.Properties).BeginInit();
@@ -209,7 +210,6 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // lblSubtitle
             // 
             lblSubtitle.Appearance.Font = new Font("Segoe UI", 8.5F);
-            lblSubtitle.Appearance.ForeColor = Color.FromArgb(130, 138, 150);
             lblSubtitle.Appearance.Options.UseFont = true;
             lblSubtitle.Appearance.Options.UseForeColor = true;
             lblSubtitle.Location = new Point(62, 35);
@@ -230,16 +230,15 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             // lblHeaderIcon
             // 
+            lblHeaderIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblHeaderIcon.ImageOptions.SvgImage");
+            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             lblHeaderIcon.Location = new Point(18, 13);
             lblHeaderIcon.Name = "lblHeaderIcon";
-            lblHeaderIcon.Size = new Size(0, 13);
+            lblHeaderIcon.Size = new Size(32, 32);
             lblHeaderIcon.TabIndex = 0;
-            lblHeaderIcon.ImageOptions.SvgImage = DxIcon.Barcode;
-            lblHeaderIcon.ImageOptions.SvgImageSize = new Size(32, 32);
             // 
             // pnlHeaderLine
             // 
-            pnlHeaderLine.Appearance.BackColor = Color.FromArgb(224, 226, 230);
             pnlHeaderLine.Appearance.Options.UseBackColor = true;
             pnlHeaderLine.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlHeaderLine.Dock = DockStyle.Bottom;
@@ -264,27 +263,27 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             btnCancel.Appearance.Font = new Font("Segoe UI", 9.5F);
             btnCancel.Appearance.Options.UseFont = true;
             btnCancel.DialogResult = DialogResult.Cancel;
+            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnCancel.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnCancel.ImageOptions.SvgImage");
+            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
             btnCancel.Location = new Point(493, 18);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(112, 34);
             btnCancel.TabIndex = 0;
             btnCancel.Text = "Vazgeç";
-            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
-            btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnSave
             // 
             btnSave.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             btnSave.Appearance.Options.UseFont = true;
+            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSave.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSave.ImageOptions.SvgImage");
+            btnSave.ImageOptions.SvgImageSize = new Size(18, 18);
             btnSave.Location = new Point(611, 18);
             btnSave.Name = "btnSave";
-            btnSave.Size = new Size(110, 34);
+            btnSave.Size = new Size(98, 34);
             btnSave.TabIndex = 1;
             btnSave.Text = "Kaydet";
-            btnSave.ImageOptions.SvgImage = DxIcon.Check;
-            btnSave.ImageOptions.SvgImageSize = new Size(20, 20);
-            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // tabMain
             // 
@@ -326,11 +325,11 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             tabBasic.Controls.Add(lblCode);
             tabBasic.Controls.Add(txtName);
             tabBasic.Controls.Add(lblName);
-            tabBasic.Name = "tabBasic";
-            tabBasic.Size = new Size(751, 553);
-            tabBasic.Text = "Temel Bilgiler";
-            tabBasic.ImageOptions.SvgImage = DxIcon.Products;
+            tabBasic.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("tabBasic.ImageOptions.SvgImage");
             tabBasic.ImageOptions.SvgImageSize = new Size(16, 16);
+            tabBasic.Name = "tabBasic";
+            tabBasic.Size = new Size(751, 550);
+            tabBasic.Text = "Temel Bilgiler";
             // 
             // chkActive
             // 
@@ -340,11 +339,32 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             chkActive.Size = new Size(64, 20);
             chkActive.TabIndex = 21;
             // 
+            // lblCreatePair
+            // 
+            lblCreatePair.Appearance.Font = new Font("Segoe UI Semibold", 9F);
+            lblCreatePair.Appearance.Options.UseFont = true;
+            lblCreatePair.Location = new Point(28, 161);
+            lblCreatePair.Name = "lblCreatePair";
+            lblCreatePair.Size = new Size(131, 15);
+            lblCreatePair.TabIndex = 19;
+            lblCreatePair.Text = "Mamül / Yarımamül Çifti";
+            lblCreatePair.Visible = false;
+            // 
+            // chkCreatePair
+            // 
+            chkCreatePair.Location = new Point(28, 178);
+            chkCreatePair.Name = "chkCreatePair";
+            chkCreatePair.Properties.Caption = "Mamül ve Yarımamül kartını birlikte oluştur";
+            chkCreatePair.Size = new Size(440, 20);
+            chkCreatePair.TabIndex = 18;
+            chkCreatePair.ToolTip = "152 deposunda MAMÜL, 151 deposunda YARIMAMÜL kartı aynı anda oluşturulur";
+            chkCreatePair.Visible = false;
+            // 
             // lblDescription
             // 
             lblDescription.Appearance.Font = new Font("Segoe UI Semibold", 9F);
             lblDescription.Appearance.Options.UseFont = true;
-            lblDescription.Location = new Point(28, 196);
+            lblDescription.Location = new Point(28, 207);
             lblDescription.Name = "lblDescription";
             lblDescription.Size = new Size(49, 15);
             lblDescription.TabIndex = 19;
@@ -352,9 +372,9 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             // memoDescription
             // 
-            memoDescription.Location = new Point(28, 216);
+            memoDescription.Location = new Point(28, 230);
             memoDescription.Name = "memoDescription";
-            memoDescription.Size = new Size(692, 80);
+            memoDescription.Size = new Size(680, 66);
             memoDescription.TabIndex = 20;
             // 
             // lblUnitType
@@ -369,14 +389,16 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             // btnAddUnitType
             // 
+            btnAddUnitType.Appearance.Font = new Font("Segoe UI", 9.5F);
+            btnAddUnitType.Appearance.Options.UseFont = true;
+            btnAddUnitType.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnAddUnitType.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddUnitType.ImageOptions.SvgImage");
+            btnAddUnitType.ImageOptions.SvgImageSize = new Size(14, 14);
             btnAddUnitType.Location = new Point(629, 147);
             btnAddUnitType.Name = "btnAddUnitType";
             btnAddUnitType.Size = new Size(79, 20);
             btnAddUnitType.TabIndex = 18;
             btnAddUnitType.Text = "Yeni";
-            btnAddUnitType.ImageOptions.SvgImage = DxIcon.Add;
-            btnAddUnitType.ImageOptions.SvgImageSize = new Size(14, 14);
-            btnAddUnitType.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // cmbCategory
             // 
@@ -425,27 +447,6 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             cmbUnitType.Properties.NullText = "";
             cmbUnitType.Size = new Size(120, 20);
             cmbUnitType.TabIndex = 17;
-            // 
-            // chkCreatePair
-            // 
-            chkCreatePair.Location = new Point(28, 171);
-            chkCreatePair.Name = "chkCreatePair";
-            chkCreatePair.Properties.Caption = "Mamül ve Yarımamül kartını birlikte oluştur";
-            chkCreatePair.Size = new Size(440, 20);
-            chkCreatePair.TabIndex = 18;
-            chkCreatePair.ToolTip = "152 deposunda MAMÜL, 151 deposunda YARIMAMÜL kartı aynı anda oluşturulur";
-            chkCreatePair.Visible = false;
-            // 
-            // lblCreatePair
-            // 
-            lblCreatePair.Appearance.Font = new Font("Segoe UI Semibold", 9F);
-            lblCreatePair.Appearance.Options.UseFont = true;
-            lblCreatePair.Location = new Point(28, 151);
-            lblCreatePair.Name = "lblCreatePair";
-            lblCreatePair.Size = new Size(180, 15);
-            lblCreatePair.TabIndex = 19;
-            lblCreatePair.Text = "Mamül / Yarımamül Çifti";
-            lblCreatePair.Visible = false;
             // 
             // lblMinLevel
             // 
@@ -507,7 +508,6 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // lblBarcodeValue
             // 
             lblBarcodeValue.Appearance.Font = new Font("Segoe UI", 8.5F);
-            lblBarcodeValue.Appearance.ForeColor = Color.FromArgb(80, 90, 105);
             lblBarcodeValue.Appearance.Options.UseFont = true;
             lblBarcodeValue.Appearance.Options.UseForeColor = true;
             lblBarcodeValue.Appearance.Options.UseTextOptions = true;
@@ -522,7 +522,6 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // lblQrValue
             // 
             lblQrValue.Appearance.Font = new Font("Segoe UI", 8F);
-            lblQrValue.Appearance.ForeColor = Color.FromArgb(80, 90, 105);
             lblQrValue.Appearance.Options.UseFont = true;
             lblQrValue.Appearance.Options.UseForeColor = true;
             lblQrValue.Appearance.Options.UseTextOptions = true;
@@ -540,7 +539,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             lookUpTaxRate.Name = "lookUpTaxRate";
             lookUpTaxRate.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             lookUpTaxRate.Properties.NullText = "";
-            lookUpTaxRate.Size = new Size(120, 20);
+            lookUpTaxRate.Size = new Size(80, 20);
             lookUpTaxRate.TabIndex = 5;
             // 
             // lblTax
@@ -558,7 +557,6 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             txtProductCode.Location = new Point(500, 36);
             txtProductCode.Name = "txtProductCode";
             txtProductCode.Properties.AllowFocused = false;
-            txtProductCode.Properties.Appearance.BackColor = Color.FromArgb(240, 240, 240);
             txtProductCode.Properties.Appearance.Options.UseBackColor = true;
             txtProductCode.Properties.ReadOnly = true;
             txtProductCode.Size = new Size(208, 20);
@@ -595,11 +593,11 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             tabPrices.Controls.Add(gridPrices);
             tabPrices.Controls.Add(pnlPriceButtons);
-            tabPrices.Name = "tabPrices";
-            tabPrices.Size = new Size(751, 553);
-            tabPrices.Text = "Fiyatlar";
-            tabPrices.ImageOptions.SvgImage = DxIcon.Tag;
+            tabPrices.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("tabPrices.ImageOptions.SvgImage");
             tabPrices.ImageOptions.SvgImageSize = new Size(16, 16);
+            tabPrices.Name = "tabPrices";
+            tabPrices.Size = new Size(751, 550);
+            tabPrices.Text = "Fiyatlar";
             // 
             // gridPrices
             // 
@@ -608,7 +606,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             gridPrices.MainView = gridPriceView;
             gridPrices.Name = "gridPrices";
             gridPrices.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] { riCombo, riSpin, riDate, riDateNull });
-            gridPrices.Size = new Size(751, 503);
+            gridPrices.Size = new Size(751, 500);
             gridPrices.TabIndex = 1;
             gridPrices.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridPriceView });
             // 
@@ -668,34 +666,38 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             // btnRemovePrice
             // 
+            btnRemovePrice.Appearance.Font = new Font("Segoe UI", 9.5F);
+            btnRemovePrice.Appearance.Options.UseFont = true;
+            btnRemovePrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnRemovePrice.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnRemovePrice.ImageOptions.SvgImage");
+            btnRemovePrice.ImageOptions.SvgImageSize = new Size(18, 18);
             btnRemovePrice.Location = new Point(120, 10);
             btnRemovePrice.Name = "btnRemovePrice";
             btnRemovePrice.Size = new Size(110, 32);
             btnRemovePrice.TabIndex = 1;
             btnRemovePrice.Text = "Seçiliyi Sil";
-            btnRemovePrice.ImageOptions.SvgImage = DxIcon.Delete;
-            btnRemovePrice.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnRemovePrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnAddPrice
             // 
+            btnAddPrice.Appearance.Font = new Font("Segoe UI", 9.5F);
+            btnAddPrice.Appearance.Options.UseFont = true;
+            btnAddPrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnAddPrice.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddPrice.ImageOptions.SvgImage");
+            btnAddPrice.ImageOptions.SvgImageSize = new Size(18, 18);
             btnAddPrice.Location = new Point(4, 10);
             btnAddPrice.Name = "btnAddPrice";
             btnAddPrice.Size = new Size(110, 32);
             btnAddPrice.TabIndex = 0;
             btnAddPrice.Text = "Fiyat Ekle";
-            btnAddPrice.ImageOptions.SvgImage = DxIcon.Add;
-            btnAddPrice.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnAddPrice.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // tabMovements
             // 
             tabMovements.Controls.Add(gridMovements);
-            tabMovements.Name = "tabMovements";
-            tabMovements.Size = new Size(751, 553);
-            tabMovements.Text = "Stok Hareketleri";
-            tabMovements.ImageOptions.SvgImage = DxIcon.Trend;
+            tabMovements.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("tabMovements.ImageOptions.SvgImage");
             tabMovements.ImageOptions.SvgImageSize = new Size(16, 16);
+            tabMovements.Name = "tabMovements";
+            tabMovements.Size = new Size(751, 550);
+            tabMovements.Text = "Stok Hareketleri";
             // 
             // gridMovements
             // 
@@ -703,7 +705,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             gridMovements.Location = new Point(0, 0);
             gridMovements.MainView = gridMovementView;
             gridMovements.Name = "gridMovements";
-            gridMovements.Size = new Size(751, 553);
+            gridMovements.Size = new Size(751, 550);
             gridMovements.TabIndex = 0;
             gridMovements.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridMovementView });
             // 
@@ -743,11 +745,11 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             tabImages.Controls.Add(gridImages);
             tabImages.Controls.Add(pnlImageButtons);
-            tabImages.Name = "tabImages";
-            tabImages.Size = new Size(751, 553);
-            tabImages.Text = "Resimler";
-            tabImages.ImageOptions.SvgImage = DxIcon.Photo;
+            tabImages.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("tabImages.ImageOptions.SvgImage");
             tabImages.ImageOptions.SvgImageSize = new Size(16, 16);
+            tabImages.Name = "tabImages";
+            tabImages.Size = new Size(751, 550);
+            tabImages.Text = "Resimler";
             // 
             // gridImages
             // 
@@ -756,7 +758,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             gridImages.MainView = gridImageView;
             gridImages.Name = "gridImages";
             gridImages.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] { riCheck });
-            gridImages.Size = new Size(751, 503);
+            gridImages.Size = new Size(751, 500);
             gridImages.TabIndex = 1;
             gridImages.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridImageView });
             // 
@@ -793,36 +795,42 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             // btnSetPrimary
             // 
+            btnSetPrimary.Appearance.Font = new Font("Segoe UI", 9.5F);
+            btnSetPrimary.Appearance.Options.UseFont = true;
+            btnSetPrimary.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSetPrimary.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSetPrimary.ImageOptions.SvgImage");
+            btnSetPrimary.ImageOptions.SvgImageSize = new Size(18, 18);
             btnSetPrimary.Location = new Point(206, 10);
             btnSetPrimary.Name = "btnSetPrimary";
             btnSetPrimary.Size = new Size(80, 32);
             btnSetPrimary.TabIndex = 2;
             btnSetPrimary.Text = "Ana Yap";
-            btnSetPrimary.ImageOptions.SvgImage = DxIcon.Check;
-            btnSetPrimary.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnSetPrimary.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnRemoveImage
             // 
+            btnRemoveImage.Appearance.Font = new Font("Segoe UI", 9.5F);
+            btnRemoveImage.Appearance.Options.UseFont = true;
+            btnRemoveImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnRemoveImage.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnRemoveImage.ImageOptions.SvgImage");
+            btnRemoveImage.ImageOptions.SvgImageSize = new Size(18, 18);
             btnRemoveImage.Location = new Point(120, 10);
             btnRemoveImage.Name = "btnRemoveImage";
             btnRemoveImage.Size = new Size(80, 32);
             btnRemoveImage.TabIndex = 1;
             btnRemoveImage.Text = "Kaldır";
-            btnRemoveImage.ImageOptions.SvgImage = DxIcon.Delete;
-            btnRemoveImage.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnRemoveImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // btnAddImage
             // 
+            btnAddImage.Appearance.Font = new Font("Segoe UI", 9.5F);
+            btnAddImage.Appearance.Options.UseFont = true;
+            btnAddImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnAddImage.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddImage.ImageOptions.SvgImage");
+            btnAddImage.ImageOptions.SvgImageSize = new Size(18, 18);
             btnAddImage.Location = new Point(4, 10);
             btnAddImage.Name = "btnAddImage";
             btnAddImage.Size = new Size(110, 32);
             btnAddImage.TabIndex = 0;
             btnAddImage.Text = "Resim Ekle";
-            btnAddImage.ImageOptions.SvgImage = DxIcon.Add;
-            btnAddImage.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnAddImage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // ProductEditForm
             // 
@@ -850,11 +858,11 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             tabBasic.ResumeLayout(false);
             tabBasic.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)chkCreatePair.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)memoDescription.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbCategory.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbWarehouse.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbUnitType.Properties).EndInit();
-            ((System.ComponentModel.ISupportInitialize)chkCreatePair.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)spinMinLevel.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)picQR.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)picBarcode.Properties).EndInit();

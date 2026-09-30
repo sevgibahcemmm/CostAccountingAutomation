@@ -39,7 +39,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         {
             _targetType = targetType;
             InitializeLinesDetailView();
+
+            // Taban sınıf master-detail ayarlarını kendi Load/ctor akışında değiştirmiş olabilir;
+            // form ekrana geldiğinde ayarları ve seviye düğümünü yeniden garanti altına al.
+            Shown += (_, _) => EnsureMasterDetail();
         }
+
+        private GridView? _linesView;
 
         protected override SvgImage ModuleIcon => DxIcon.Invoices;
 
@@ -85,6 +91,41 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 totalCol.Summary.Add(SummaryItemType.Sum, nameof(InvoiceDto.GrandTotal), "Genel Toplam: ");
             }
+
+            EnsureMasterDetail();
+        }
+
+        /// <summary>
+        /// Ana gridde master-detail'in açık olduğundan ve "Lines" ilişkisinin seviye ağacında
+        /// bulunduğundan emin olur. Birden çok kez çağrılması güvenlidir.
+        /// </summary>
+        private void EnsureMasterDetail()
+        {
+            View.OptionsDetail.EnableMasterViewMode = true;
+            View.OptionsDetail.ShowDetailTabs = false;
+            View.OptionsDetail.AllowExpandEmptyDetails = false;
+            View.OptionsDetail.AllowOnlyOneMasterRowExpanded = true;
+            View.OptionsDetail.SmartDetailHeight = true;
+            View.OptionsView.ShowDetailButtons = true;
+
+            if (_linesView is null)
+            {
+                return;
+            }
+
+            foreach (GridLevelNode node in BaseGrid.LevelTree.Nodes)
+            {
+                if (node.RelationName == nameof(InvoiceDto.Lines))
+                {
+                    return;
+                }
+            }
+
+            BaseGrid.LevelTree.Nodes.Add(new GridLevelNode
+            {
+                RelationName = nameof(InvoiceDto.Lines),
+                LevelTemplate = _linesView
+            });
         }
 
         private void SetColumnWidth(string fieldName, int width)
@@ -103,8 +144,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 Name = "InvoiceLinesDetailView"
             };
+            _linesView = linesView;
             linesView.OptionsBehavior.Editable = false;
-            linesView.OptionsDetail.AllowOnlyOneMasterRowExpanded = true;
             linesView.OptionsView.ShowGroupPanel = false;
             linesView.OptionsView.ShowFooter = true;
             linesView.RowHeight = 26;
@@ -118,7 +159,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             View.MasterRowExpanded += (_, e) =>
             {
                 if (View.GetRow(e.RowHandle) is InvoiceDto invoice
-                    && linesView.Columns[nameof(InvoiceLineDto.UnitPrice)] is { } priceCol)
+                    && View.GetDetailView(e.RowHandle, e.RelationIndex) is GridView detailView
+                    && detailView.Columns[nameof(InvoiceLineDto.UnitPrice)] is { } priceCol)
                 {
                     priceCol.Caption = invoice.InvoiceType.IsPurchaseSide()
                         ? "Alış Fiyatı"
@@ -126,13 +168,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 }
             };
 
-            GridColumn colProductCode = linesView.Columns.AddField(nameof(InvoiceLineDto.ProductCode));
+            GridColumn colProductCode = linesView.Columns[nameof(InvoiceLineDto.ProductCode)]
+                ?? linesView.Columns.AddField(nameof(InvoiceLineDto.ProductCode));
             colProductCode.Caption = "Ürün Kodu";
             colProductCode.Visible = true;
             colProductCode.VisibleIndex = 0;
             colProductCode.Width = 90;
 
-            GridColumn colProductName = linesView.Columns.AddField(nameof(InvoiceLineDto.ProductName));
+            GridColumn colProductName = linesView.Columns[nameof(InvoiceLineDto.ProductName)]
+                ?? linesView.Columns.AddField(nameof(InvoiceLineDto.ProductName));
             colProductName.Caption = "Ürün Adı";
             colProductName.Visible = true;
             colProductName.VisibleIndex = 1;
@@ -165,12 +209,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 }
             };
 
-            GridLevelNode levelNode = new()
-            {
-                RelationName = nameof(InvoiceDto.Lines),
-                LevelTemplate = linesView
-            };
-            BaseGrid.LevelTree.Nodes.Add(levelNode);
+            EnsureMasterDetail();
         }
 
         protected override InvoiceGetAllQuery BuildListQuery()

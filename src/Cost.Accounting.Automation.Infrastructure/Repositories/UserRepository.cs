@@ -3,9 +3,10 @@ using Cost.Accounting.Automation.Infrastructure.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context;
 
 namespace Cost.Accounting.Automation.Infrastructure.Repositories;
-internal sealed class UserRepository : AuditableRepository<User, ApplicationDbContext>, IUserRepository
+
+internal sealed class UserRepository : MasterAuditableRepository<User>, IUserRepository
 {
-    public UserRepository(ApplicationDbContext context) : base(context)
+    public UserRepository(MasterDbContext context) : base(context)
     {
     }
 }

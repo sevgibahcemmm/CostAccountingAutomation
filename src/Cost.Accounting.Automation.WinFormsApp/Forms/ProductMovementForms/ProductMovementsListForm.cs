@@ -109,10 +109,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
 
         protected override async Task ShowStockMovementsListReportAsync(ProductMovementListDto? item)
         {
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            // Bekleme penceresi yalnızca veri çekilişini kapsar; tarih aralığı
+            // seçimi ve rapor önizlemesi modal oldukları için bekleme kapalıyken
+            // açılır.
+            var warehouseResult = await LoadingHelper.RunAsync(
+                async () =>
+                {
+                    using var scope = Program.Services.CreateScope();
+                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            var warehouseResult = await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None);
+                    return await mediator.Send(
+                        new ChartOfAccountLookUpQuery(),
+                        CancellationToken.None);
+                },
+                caption: "Depo listesi yükleniyor...",
+                description: "Lütfen bekleyin...");
+
             if (!warehouseResult.IsSuccessful || warehouseResult.Data is null)
             {
                 ToastHelper.Show("Depo listesi yüklenemedi.", ToastType.Error);
@@ -122,6 +134,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             List<ChartOfAccountLookUpDto> warehouses = warehouseResult.Data
                 .Where(x => x.Type == ChartOfAccountType.Warehouse)
                 .ToList();
+
 
             using var dateForm = new DateRangePromptForm(
                 defaultStart: null,
@@ -135,13 +148,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
                 return;
             }
 
-            List<StockMovementReportRowDto> rows = await mediator.Send(
-                new StockMovementsListReportQuery(
-                    dateForm.StartDate,
-                    dateForm.EndDate,
-                    ProductId: _productId,
-                    WarehouseId: dateForm.WarehouseId),
-                CancellationToken.None);
+            List<StockMovementReportRowDto> rows = await LoadingHelper.RunAsync(
+                async () =>
+                {
+                    using var scope = Program.Services.CreateScope();
+                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                    return await mediator.Send(
+                        new StockMovementsListReportQuery(
+                            dateForm.StartDate,
+                            dateForm.EndDate,
+                            ProductId: _productId,
+                            WarehouseId: dateForm.WarehouseId),
+                        CancellationToken.None);
+                },
+                caption: "Stok hareket listesi hazırlanıyor...",
+                description: "Lütfen bekleyin...");
 
             if (rows.Count == 0)
             {

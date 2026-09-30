@@ -49,12 +49,8 @@ internal sealed class InvoiceApproveCommandHandler(
             return Result<string>.Failure("Bu fatura için stok/cari hareketleri zaten kayıtlı.");
         }
 
-        DateOnly? lastApprovedDate = await invoiceRepository
-            .GetAllWithAudit()
-            .Where(i => i.Entity.Status == InvoiceStatus.Approved && i.Entity.Id != invoice.Id)
-            .Select(i => i.Entity.Date)
-            .OrderByDescending(d => d)
-            .FirstOrDefaultAsync(cancellationToken);
+        DateOnly? lastApprovedDate = await InvoiceLedgerHelper.GetLastApprovedDateAsync(
+                invoiceRepository, invoice.Id, cancellationToken);
 
         if (lastApprovedDate.HasValue && invoice.Date < lastApprovedDate.Value)
         {

@@ -387,8 +387,8 @@
             lookupType.Properties.Appearance.Font = new Font("Segoe UI", 10F);
             lookupType.Properties.Appearance.Options.UseFont = true;
             lookupType.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
-            lookupType.Properties.DropDownRows = 8;
-            lookupType.Properties.ShowHeader = false;
+            lookupType.Properties.DropDownRows = 10;
+            lookupType.Properties.ShowHeader = true;
             lookupType.Size = new Size(432, 24);
             lookupType.TabIndex = 16;
             // 

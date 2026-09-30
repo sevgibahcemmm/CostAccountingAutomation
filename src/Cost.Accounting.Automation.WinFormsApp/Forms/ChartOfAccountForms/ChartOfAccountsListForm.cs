@@ -1,14 +1,10 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
-using Cost.Accounting.Automation.Application.ProductMovements;
-using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
-using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
-using DevExpress.XtraEditors;
 using DevExpress.XtraTreeList;
 using DevExpress.XtraTreeList.Nodes;
 using Microsoft.Extensions.DependencyInjection;
@@ -106,6 +102,14 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
     }
 
     private async Task ReloadAsync()
+    {
+        await LoadingHelper.RunAsync(
+            ReloadCoreAsync,
+            caption: "Hesap planı yükleniyor...",
+            description: "Lütfen bekleyin...");
+    }
+
+    private async Task ReloadCoreAsync()
     {
         int version = ++_reloadVersion;
         try

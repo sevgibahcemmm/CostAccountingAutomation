@@ -165,24 +165,36 @@ protected override void ConfigureColumns()
                 return;
             }
 
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            // Bekleme penceresi yalnızca veri hazırlığını kapsar; önizleme
+            // modal bir pencere olduğu için bekleme kapandıktan sonra açılır.
+            ICostAllocationTableReport? report = await LoadingHelper.RunAsync(
+                async () =>
+                {
+                    using var scope = Program.Services.CreateScope();
+                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            GiderDagilimReportResult result = await mediator.Send(
-                new GiderDagilimReportQuery(dateForm.StartDate, dateForm.EndDate, dateForm.CostSlipType));
+                    GiderDagilimReportResult result = await mediator.Send(
+                        new GiderDagilimReportQuery(dateForm.StartDate, dateForm.EndDate, dateForm.CostSlipType));
 
-            if (result.Rows.Count == 0)
-            {
-                ToastHelper.Show("Seçilen tarih aralığında atölye kaydı bulunamadı.", ToastType.Warning);
-                return;
-            }
+                    if (result.Rows.Count == 0)
+                    {
+                        ToastHelper.Show("Seçilen tarih aralığında atölye kaydı bulunamadı.", ToastType.Warning);
+                        return null;
+                    }
 
-            ICostAllocationTableReport report = dateForm.CostSlipType is CostSlipType.Service or CostSlipType.SemiFinishedService
-                ? new ServiceCostAllocationTable()
-                : new ProductCostAllocationTableReport();
-            CompanyDto company = await LoadCompanyAsync();
-            report.SetData(dateForm.StartDate, dateForm.EndDate, result, company.Letterhead, dateForm.CostSlipType);
-            report.PrintReport();
+                    ICostAllocationTableReport built = dateForm.CostSlipType is CostSlipType.Service or CostSlipType.SemiFinishedService
+                        ? new ServiceCostAllocationTable()
+                        : new ProductCostAllocationTableReport();
+
+                    CompanyDto company = await LoadCompanyAsync();
+
+                    built.SetData(dateForm.StartDate, dateForm.EndDate, result, company.Letterhead, dateForm.CostSlipType);
+                    return built;
+                },
+                caption: "Rapor hazırlanıyor...",
+                description: "Lütfen bekleyin...");
+
+            report?.PrintReport();
         }
 
         protected override async Task ShowProductDeclarationReportAsync(CostSlipListDto? item)
@@ -197,12 +209,21 @@ protected override void ConfigureColumns()
                 return;
             }
 
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            // Yalnızca veri çekilişi bekleme penceresinde bekler; sonrasındaki
+            // atölye seçimi ve rapor önizlemesi modal pencereler oldukları için
+            // bekleme penceresi kapalıyken çalışır.
+            List<ProductDeclarationRowDto> rows = await LoadingHelper.RunAsync(
+                async () =>
+                {
+                    using var scope = Program.Services.CreateScope();
+                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            List<ProductDeclarationRowDto> rows = await mediator.Send(
-                new ProductDeclarationReportQuery(dateForm.StartDate, dateForm.EndDate),
-                CancellationToken.None);
+                    return await mediator.Send(
+                        new ProductDeclarationReportQuery(dateForm.StartDate, dateForm.EndDate),
+                        CancellationToken.None);
+                },
+                caption: "Rapor hazırlanıyor...",
+                description: "Lütfen bekleyin...");
 
             if (rows.Count == 0)
             {

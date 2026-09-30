@@ -19,7 +19,7 @@ internal sealed class JwtProvider(
     ILoginTokenRepository loginTokenRepository,
     IRoleRepository roleRepository,
     ICompanyRepository companyRepository,
-    IUnitOfWork unitOfWork,
+    IMasterUnitOfWork unitOfWork,
     IOptions<JwtOptions> options) : IJwtProvider
 {
     public async Task<string> CreateTokenAsync(User user, CancellationToken cancellationToken = default)

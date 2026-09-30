@@ -2,19 +2,43 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils;
 
 public static class RolePermissionLabels
 {
-    private static readonly Dictionary<string, string> GroupCaptions = new()
-    {
-        ["dashboard"] = "Panel",
-        ["user"] = "Kullanıcı",
-        ["role"] = "Rol",
-        ["company"] = "Şirket",
-        ["customer"] = "Müşteri",
-        ["supplier"] = "Tedarikçi",
-        ["chartofaccount"] = "Hesap Planı",
-        ["permission"] = "Yetki Yönetimi",
-    };
+    /// <summary>
+    /// İzin gruplarının görünüm sırası ve başlıkları.
+    /// Sıra burada açıkça tanımlanır: aksi halde gruplar
+    /// <c>PermissionService.GetAll</c> içindeki <see cref="HashSet{T}"/>
+    /// sırasına göre kararsız biçimde dizilir.
+    /// Sıra <c>PermissionService.GetAll</c> ile üretilen gerçek izin
+    /// kataloğuyla eşleşmelidir.
+    /// </summary>
+    private static readonly (string Key, string Caption)[] Groups =
+    [
+        ("dashboard", "Panel"),
+        ("permission", "Yetki Yönetimi"),
+        ("user", "Kullanıcı"),
+        ("role", "Rol"),
+        ("company", "Şirket"),
+        ("customer", "Müşteri"),
+        ("supplier", "Tedarikçi"),
+        ("chartofaccount", "Hesap Planı"),
+        ("devir", "Devir"),
+        ("current_account_movement", "Cari Hesap Hareketi"),
+        ("product", "Ürün"),
+        ("recipe", "Reçete"),
+        ("stock_movement", "Stok Hareketi"),
+        ("stockmovement", "Stok Hareket Raporu"),
+        ("stock_issue", "Stok Fişi"),
+        ("invoice", "Fatura"),
+        ("costslip", "Maliyet Pusulası"),
+    ];
 
-    private static readonly Dictionary<string, string> ActionTexts = new()
+    private static readonly Dictionary<string, string> GroupCaptions =
+        Groups.ToDictionary(g => g.Key, g => g.Caption, StringComparer.OrdinalIgnoreCase);
+
+    private static readonly Dictionary<string, int> GroupIndexes =
+        Groups.Select((g, i) => (g.Key, Index: i))
+            .ToDictionary(g => g.Key, g => g.Index, StringComparer.OrdinalIgnoreCase);
+
+    private static readonly Dictionary<string, string> ActionTexts = new(StringComparer.OrdinalIgnoreCase)
     {
         ["view"] = "Görüntüle",
         ["create"] = "Oluştur",
@@ -22,22 +46,42 @@ public static class RolePermissionLabels
         ["edit"] = "Düzenle",
         ["delete"] = "Sil",
         ["restore"] = "Geri Yükle",
+        ["approve"] = "Onayla",
         ["import"] = "İçe Aktar",
+        ["manage"] = "Yönet",
         ["update_permissions"] = "Yetkileri Güncelle",
     };
 
-    public static string GetGroup(string permission)
+    public static string GetGroup(string? permission)
     {
+        if (string.IsNullOrEmpty(permission))
+        {
+            return string.Empty;
+        }
+
         int separator = permission.IndexOf(':');
         return separator > 0 ? permission[..separator] : permission;
     }
 
-    public static string GetGroupCaption(string group)
-        => GroupCaptions.TryGetValue(group, out string? caption)
-            ? caption
-            : char.ToUpperInvariant(group[0]) + group[1..];
+    public static string GetGroupCaption(string? group)
+    {
+        if (string.IsNullOrEmpty(group))
+        {
+            return string.Empty;
+        }
 
-    public static int GroupOrder(string group) => GroupCaptions.ContainsKey(group) ? 0 : 1;
+        return GroupCaptions.TryGetValue(group, out string? caption)
+            ? caption
+            : group;
+    }
+
+    /// <summary>
+    /// Tanımlı grupları liste sırasına göre, tanımsız grupları en sona alır.
+    /// </summary>
+    public static int GroupOrder(string? group)
+        => group is not null && GroupIndexes.TryGetValue(group, out int index)
+            ? index
+            : int.MaxValue;
 
     public static string GetLabel(string? permission)
     {

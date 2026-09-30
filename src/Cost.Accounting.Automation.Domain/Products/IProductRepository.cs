@@ -11,4 +11,10 @@ public interface IProductRepository : IAuditableRepository<Product>
     Task<Dictionary<Guid, decimal>> GetStockByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken = default);
 
     Task<Dictionary<Guid, List<ProductPriceQueryResult>>> GetPricesByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fiyat kaydı olmayan ürünlerde (ör. 151/152 depoları) maliyet fiyatı: giriş stok
+    /// hareketlerinin birim maliyetlerinin ağırlıklı ortalaması.
+    /// </summary>
+    Task<Dictionary<Guid, decimal>> GetCostByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken = default);
 }

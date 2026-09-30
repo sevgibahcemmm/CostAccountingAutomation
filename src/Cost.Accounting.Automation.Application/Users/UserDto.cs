@@ -72,12 +72,8 @@ public static class UserExtensions
                 UpdatedBy = s.Entity.UpdatedBy != null ? s.Entity.UpdatedBy.Value : null,
                 UpdatedFullName = s.UpdatedUser != null ? s.UpdatedUser.FullName.Value : null,
                 TRIdentityNumber = s.Entity.TRIdentityNumber != null ? s.Entity.TRIdentityNumber.Value : null,
-                PhotoCount = s.Entity.Photos.Count(),
-                DefaultPhotoPath = s.Entity.Photos
-                    .OrderByDescending(p => p.IsDefault)
-                    .ThenBy(p => p.CreatedAt)
-                    .Select(p => p.Path)
-                    .FirstOrDefault(),
+                PhotoCount = s.Entity.AvatarPath == null ? 0 : 1,
+                DefaultPhotoPath = s.Entity.AvatarPath,
             });
 
         return res;

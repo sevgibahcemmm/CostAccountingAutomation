@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Companies;
@@ -40,7 +41,7 @@ internal sealed class InvoiceGetNextNumberQueryHandler(
             .GetAllWithAuditIncludingDeleted()
             .Where(i => i.Entity.InvoiceType == InvoiceType.Sales || i.Entity.InvoiceType == InvoiceType.SalesReturn)
             .Select(i => i.Entity.InvoiceNumber)
-            .ToListAsync(cancellationToken);
+            .ToListSafeAsync(cancellationToken);
 
         long maxSequence = 0;
         foreach (string number in numbers)

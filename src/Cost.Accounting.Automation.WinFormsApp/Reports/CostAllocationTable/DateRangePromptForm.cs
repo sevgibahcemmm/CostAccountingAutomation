@@ -5,13 +5,20 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
+using DevExpress.XtraEditors.Controls;
 using System.Windows.Controls.Primitives;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 {
     public sealed partial class DateRangePromptForm : XtraForm
     {
-        private sealed record WarehouseChoice(Guid Id, string Display);
+        private sealed class WarehouseChoice(Guid id, string code, string name)
+        {
+            public Guid Id { get; } = id;
+            public string Code { get; } = code;
+            public string Name { get; } = name;
+            public string Display => string.IsNullOrEmpty(Code) ? Name : $"{Code} - {Name}";
+        }
 
         // Height (px) freed up when the type selector section is hidden — must match the
         // vertical gap reserved for lblType/lookupType in the designer layout.
@@ -136,16 +143,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
         {
             List<WarehouseChoice> choices =
             [
-                new(Guid.Empty, "Tüm Depolar"),
+                new(Guid.Empty, string.Empty, "Tüm Depolar"),
                 .. warehouses
                     .OrderBy(x => x.Code)
-                    .Select(x => new WarehouseChoice(x.Id, x.Display))
+                    .Select(x => new WarehouseChoice(x.Id, x.Code, x.Name))
             ];
 
             lblType.Text = "DEPO";
+
+            // Açılır liste yalnızca "Kod" ve "Ad" sütunlarını gösterir; iç tekil değerler
+            // (Id) liste ve düzenleme kutusunda hiç görünmez.
             lookupType.Properties.DataSource = choices;
             lookupType.Properties.ValueMember = nameof(WarehouseChoice.Id);
             lookupType.Properties.DisplayMember = nameof(WarehouseChoice.Display);
+            lookupType.Properties.Columns.Clear();
+            lookupType.Properties.Columns.Add(
+                new LookUpColumnInfo(nameof(WarehouseChoice.Code), "Kod", 110));
+            lookupType.Properties.Columns.Add(
+                new LookUpColumnInfo(nameof(WarehouseChoice.Name), "Ad", 250));
+
             Guid selectedWarehouseId = defaultWarehouseId is Guid id && warehouses.Any(x => x.Id == id)
                 ? id
                 : Guid.Empty;

@@ -31,4 +31,10 @@
     <ProjectReference Include="..\Cost.Accounting.Automation.Application\Cost.Accounting.Automation.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Standart UFRS hesap planı. Yeni mali yıl veritabanı açılırken
+         YearDatabaseProvisioner tarafından gömülü kaynaktan okunur. -->
+    <EmbeddedResource Include="Resources\HesapPlani.xlsx" />
+  </ItemGroup>
+
 </Project>

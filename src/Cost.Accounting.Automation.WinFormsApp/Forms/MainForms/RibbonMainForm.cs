@@ -8,6 +8,7 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.DevirForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms;
@@ -57,6 +58,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmCariHareketler"] = DxIcon.CurrentAccounts,
             ["elmCariBorcAlacakOzeti"] = DxIcon.Balance,
             ["elmHesapPlani"] = DxIcon.ChartAccounts,
+            ["elmDevirIslemleri"] = DxIcon.Sales,
             ["elmOdemeTahsilat"] = DxIcon.Payments,
             ["elmMaliyetPusulasi"] = DxIcon.Balance,
             ["elmRecete"] = DxIcon.Recipe,
@@ -213,6 +215,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmAtolyeStokRaporu"] = () => MdiFormManager.Instance.OpenForm<AtelierTransferStockForm>(this, "Atölye Transfer Raporu");
             _menuActions["elmTuketimBirimleri"] = () => MdiFormManager.Instance.OpenForm<ConsumptionUnitsListForm>(this, "Tüketim Birimleri");
             _menuActions["elmHesapPlani"] = () => MdiFormManager.Instance.OpenForm<ChartOfAccountsListForm>(this, "Hesap Planı");
+            _menuActions["elmDevirIslemleri"] = () => MdiFormManager.Instance.OpenForm<DevirIslemleriForm>(this, "Devir İşlemleri");
             _menuActions["elmMaliyetPusulasi"] = () => MdiFormManager.Instance.OpenForm<CostSlipsListForm>(this, "Maliyet Pusulası");
             _menuActions["elmRecete"] = () => MdiFormManager.Instance.OpenForm<RecipeListForm>(this, "Reçeteler");
             _menuActions["elmUrunler"] = () => MdiFormManager.Instance.OpenForm<ProductsListForm>(this, "Ürünler");

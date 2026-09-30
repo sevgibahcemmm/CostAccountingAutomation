@@ -1,26 +1,28 @@
-using Cost.Accounting.Automation.Application.Services;
+﻿using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.AccountingYears;
+using Cost.Accounting.Automation.Domain.AccountingYears.ValueObjects;
 using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
-using Cost.Accounting.Automation.Domain.Customers;
-using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Roles;
-using Cost.Accounting.Automation.Domain.Suppliers;
 using Cost.Accounting.Automation.Domain.Shared;
 using Cost.Accounting.Automation.Domain.Users;
 using Cost.Accounting.Automation.Domain.Users.ValueObjects;
 using Cost.Accounting.Automation.Infrastructure.Context;
-using GenericRepository;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
-using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
-using Cost.Accounting.Automation.Domain.Products.TaxRates;
-using System.Reflection;
 
 namespace Cost.Accounting.Automation.Infrastructure;
 
+/// <summary>
+/// Uygulama açılışında master (merkezi) veritabanını hazırlar ve master'ı tohumlar.
+///
+/// Tek istisna içinde bulunulan yılın açılmasıdır: giriş ekranında seçilebilir bir
+/// yıl listesi oluşsun diye, yıl kaydı olmayan şirketler için yılın iş veritabanı
+/// <see cref="IAccountingYearProvisioner"/> üzerinden açılır. Sonraki yıllar
+/// "Mali Yıl Aç" formundan açılır ve başlangıçta hiçbir yıl veritabanına
+/// dokunulmaz.
+/// </summary>
 public static class DatabaseInitializer
 {
     public static async Task InitializeAsync(IServiceProvider services)
@@ -28,47 +30,36 @@ public static class DatabaseInitializer
         using var scope = services.CreateScope();
         IServiceProvider sp = scope.ServiceProvider;
 
-        ApplicationDbContext dbContext = sp.GetRequiredService<ApplicationDbContext>();
-        ICompanyRepository companyRepository = sp.GetRequiredService<ICompanyRepository>();
-        IRoleRepository roleRepository = sp.GetRequiredService<IRoleRepository>();
-        IUserRepository userRepository = sp.GetRequiredService<IUserRepository>();
-        ICustomerRepository customerRepository = sp.GetRequiredService<ICustomerRepository>();
-        ISupplierRepository supplierRepository = sp.GetRequiredService<ISupplierRepository>();
-        IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
+        var masterContext = sp.GetRequiredService<MasterDbContext>();
+        var roleRepository = sp.GetRequiredService<IRoleRepository>();
+        var permissionService = sp.GetRequiredService<PermissionService>();
+        var databaseNameBuilder = sp.GetRequiredService<IDatabaseNameBuilder>();
+        var provisioner = sp.GetRequiredService<IAccountingYearProvisioner>();
 
-// 1. Veritabanı yoksa otomatik oluştur; varsa bekleyen migration'ları uygula
-        bool pendingMigrations = (await dbContext.Database.GetPendingMigrationsAsync()).Any();
-        await dbContext.Database.MigrateAsync();
+        await masterContext.Database.MigrateAsync();
 
-        // 1b. Sadece yeni migration uygulandıysa legacy kayıtlara kopyalama anahtarı yaz
-        if (pendingMigrations)
+        await SeedMasterAsync(masterContext, permissionService, roleRepository);
+        await EnsureCurrentYearAsync(masterContext, databaseNameBuilder, provisioner);
+    }
+
+    /// <summary>
+    /// Master'da şirket yoksa ilk kurulumdur: örnek şirketler, roller ve
+    /// kullanıcılar tohumlanır. Ardından sys_admin rolüne yeni yetkiler eklenir.
+    /// </summary>
+    private static async Task SeedMasterAsync(
+        MasterDbContext masterContext,
+        PermissionService permissionService,
+        IRoleRepository roleRepository)
+    {
+        if (!await masterContext.Companies.AnyAsync())
         {
-            await BackfillDuplicateKeysAsync(dbContext);
-            await RepairOrphanAuditReferencesAsync(dbContext);
-        }
-
-        // 3. Veritabanı boş mu? (Şirket yoksa seed yapılacak demektir)
-        bool isEmpty = !await companyRepository.AnyAsync(i => i.Id != null);
-
-        await SeedProductUnitTypesIfMissingAsync(dbContext, sp);
-        await SeedTaxRatesIfMissingAsync(dbContext, sp);
-        if (!isEmpty)
-        {
-            await SeedCustomersAndSuppliersIfMissingAsync(dbContext, sp);
-            await EnsureAdminRolePermissionsAsync(dbContext, sp);
-            return;
-        }
-
-        try
-        {
-            // ---------- ŞİRKETLER ----------
-            Company merkezCompany = new(
-                new Name("DEMİRCİ AÇIK CEZA İNFAZ KURUMU İŞYURDU MÜDÜRLÜĞÜ"),
+            var merkezCompany = new Company(
+                new Name("DEMİRCİ AÇIK CEZA İNFAZ KURUMU MÜDÜRLÜĞÜ"),
                 new TaxOffice("DEMİRCİ"),
                 new TaxNumber("1234567890"),
                 new Description("DEMİRCİ"),
-                new Invoiceinformation("DACİK"),
-                new Letterhead("DEMİRCİ AÇIK CEZA İNFAZ KURUMU İŞYURDU MÜDÜRLÜĞÜ"),
+                new Invoiceinformation("DACIK"),
+                new Letterhead("DEMİRCİ AÇIK CEZA İNFAZ KURUMU MÜDÜRLÜĞÜ"),
                 new CompanyPrefix("08691234"),
                 new Address("Manisa", "Demirci", "www"),
                 new Contact("02161234567", "", "info@merkez.com"),
@@ -76,7 +67,7 @@ public static class DatabaseInitializer
                 new AccountingUnit("DEMİRCİ MAL MÜDÜRLÜĞÜ", "45103"),
                 true);
 
-            Company anadoluCompany = new(
+            var anadoluCompany = new Company(
                 new Name("Anadolu Şube"),
                 new TaxOffice("Ankara"),
                 new TaxNumber("4567890123"),
@@ -90,7 +81,7 @@ public static class DatabaseInitializer
                 new AccountingUnit("ANADOLU MUHASEBE BİRİMİ", "2002"),
                 true);
 
-            Company egeCompany = new(
+            var egeCompany = new Company(
                 new Name("Ege Şube"),
                 new TaxOffice("İzmir"),
                 new TaxNumber("7890123456"),
@@ -104,13 +95,11 @@ public static class DatabaseInitializer
                 new AccountingUnit("EGE MUHASEBE BİRİMİ", "3003"),
                 true);
 
-            // ---------- ROLLER ----------
-            Role sysAdminRole = new(new Name("sys_admin"), true);
-            Role accountingManagerRole = new(new Name("muhasebe_muduru"), true);
-            Role accountantRole = new(new Name("muhasebe_elemani"), true);
+            var sysAdminRole = new Role(new Name("sys_admin"), true);
+            var accountingManagerRole = new Role(new Name("muhasebe_muduru"), true);
+            var accountantRole = new Role(new Name("muhasebe_elemani"), true);
 
-            // ---------- ADMIN KULLANICI ----------
-            User adminUser = new(
+            var adminUser = new User(
                 new FirstName("Emrullah"),
                 new LastName("AKPINAR"),
                 new Email("admin@test.com"),
@@ -120,357 +109,140 @@ public static class DatabaseInitializer
                 sysAdminRole.Id,
                 true);
 
-            // CreatedBy alanı NOT NULL. Seed edilecek TÜM kayıtların CreatedBy'su admin
-            // kullanıcının gerçek Id'sine işaret etsin; aksi halde GetAllWithAudit,
-            // CreatedBy üzerinden Users'a inner-join yaptığı için liste boş döner.
-            dbContext.SetSeedAdminUserId(adminUser.Id.Value);
+            // CreatedBy alanı NOT NULL ve GetAllWithAudit, CreatedBy üzerinden
+            // Users'a inner-join yapar. Tohumlanan tüm kayıtların CreatedBy'si
+            // bu yüzden admin kullanıcının gerçek Id'sine bağlanmalı.
+            masterContext.SetSeedAdminUserId(adminUser.Id.Value);
 
-            await companyRepository.AddAsync(merkezCompany);
-            await companyRepository.AddAsync(anadoluCompany);
-            await companyRepository.AddAsync(egeCompany);
-
-            await roleRepository.AddAsync(sysAdminRole);
-            await roleRepository.AddAsync(accountingManagerRole);
-            await roleRepository.AddAsync(accountantRole);
-
-            await unitOfWork.SaveChangesAsync();
-
-            await userRepository.AddAsync(adminUser);
-
-            await unitOfWork.SaveChangesAsync();
-
-            // ---------- ÖRNEK KULLANICILAR ----------
-            (string Name, string Email, IdentityId CompanyId, IdentityId RoleId)[] sampleUsers =
+            try
             {
-                ("ahmet.yilmaz", "ahmet@test.com", merkezCompany.Id, accountingManagerRole.Id),
-                ("ayse.kaya", "ayse@test.com", anadoluCompany.Id, accountantRole.Id),
-                ("mehmet.demir", "mehmet@test.com", anadoluCompany.Id, accountantRole.Id),
-                ("fatma.celik", "fatma@test.com", egeCompany.Id, accountantRole.Id),
-            };
+                masterContext.Companies.AddRange(merkezCompany, anadoluCompany, egeCompany);
+                masterContext.Roles.AddRange(sysAdminRole, accountingManagerRole, accountantRole);
+                masterContext.Users.Add(adminUser);
 
-            foreach (var (name, email, companyId, roleId) in sampleUsers)
-            {
-                string firstName = char.ToUpperInvariant(name[0]) + name.Substring(1, name.IndexOf('.') - 1);
+                await masterContext.SaveChangesAsync();
 
-                await userRepository.AddAsync(
-                    new User(
-                        new FirstName(firstName),
-                        new LastName("Soyad"),
-                        new Email(email),
-                        new UserName(name),
-                        new Password("1"),
-                        companyId,
-                        roleId,
-                        true));
-            }
+                (string UserName, string Email, IdentityId CompanyId, IdentityId RoleId)[] sampleUsers =
+                [
+                    ("ahmet.yilmaz", "ahmet@test.com", merkezCompany.Id, accountingManagerRole.Id),
+                    ("ayse.kaya", "ayse@test.com", anadoluCompany.Id, accountantRole.Id),
+                    ("mehmet.demir", "mehmet@test.com", anadoluCompany.Id, accountantRole.Id),
+                    ("fatma.celik", "fatma@test.com", egeCompany.Id, accountantRole.Id),
+                ];
 
-            await unitOfWork.SaveChangesAsync();
-
-            // ---------- ÖRNEK MÜŞTERİLER / TEDARİKÇİLER ----------
-            await SeedCustomersAndSuppliersAsync(dbContext, customerRepository, supplierRepository, unitOfWork);
-            await EnsureAdminRolePermissionsAsync(dbContext, sp);
-        }
-        finally
-        {
-            dbContext.ClearSeedAdminUserId();
-        }
-    }
-
-    private static async Task EnsureAdminRolePermissionsAsync(ApplicationDbContext dbContext, IServiceProvider sp)
-    {
-        PermissionService permissionService = sp.GetRequiredService<PermissionService>();
-        IRoleRepository roleRepository = sp.GetRequiredService<IRoleRepository>();
-        IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
-
-        Guid? adminId = await dbContext.Set<User>()
-            .Where(u => u.UserName.Value == "admin")
-            .Select(u => (Guid?)u.Id.Value)
-            .FirstOrDefaultAsync();
-
-        if (adminId is null)
-        {
-            return;
-        }
-
-        // Yeni Permission kayıtlarının CreatedBy alanını müşterek admin olarak işaretle
-        dbContext.SetSeedAdminUserId(adminId.Value);
-        try
-        {
-            await permissionService.EnsureAdminRoleHasAllPermissionsAsync(roleRepository, unitOfWork);
-        }
-        finally
-        {
-            dbContext.ClearSeedAdminUserId();
-        }
-    }
-
-    private static async Task SeedProductUnitTypesIfMissingAsync(ApplicationDbContext dbContext, IServiceProvider sp)
-    {
-        IProductUnitTypeRepository unitTypeRepository = sp.GetRequiredService<IProductUnitTypeRepository>();
-        IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
-
-        if (await unitTypeRepository.AnyAsync(i => i.Id != null))
-        {
-            return;
-        }
-
-        Guid? adminId = await dbContext.Set<User>()
-            .Where(u => u.UserName.Value == "admin")
-            .Select(u => (Guid?)u.Id.Value)
-            .FirstOrDefaultAsync();
-
-        if (adminId is null)
-        {
-            return;
-        }
-
-        dbContext.SetSeedAdminUserId(adminId.Value);
-        try
-        {
-            foreach (string unitName in new[]
-            {
-                "Adet", "Kg", "Lt", "m", "m²", "m³", "Paket", "Koli", "Kutu", "Çuval", "Teneke"
-            })
-            {
-                await unitTypeRepository.AddAsync(new ProductUnitType(new Name(unitName), true));
-            }
-
-            await unitOfWork.SaveChangesAsync();
-        }
-        finally
-        {
-            dbContext.ClearSeedAdminUserId();
-        }
-    }
-
-    private static async Task SeedTaxRatesIfMissingAsync(ApplicationDbContext dbContext, IServiceProvider sp)
-    {
-        ITaxRateRepository taxRateRepository = sp.GetRequiredService<ITaxRateRepository>();
-        IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
-
-        if (await taxRateRepository.AnyAsync(i => i.Id != null))
-        {
-            return;
-        }
-
-        Guid? adminId = await dbContext.Set<User>()
-            .Where(u => u.UserName.Value == "admin")
-            .Select(u => (Guid?)u.Id.Value)
-            .FirstOrDefaultAsync();
-
-        if (adminId is null)
-        {
-            return;
-        }
-
-        dbContext.SetSeedAdminUserId(adminId.Value);
-        try
-        {
-            foreach ((string name, decimal rate) in new[]
-            {
-                ("KDV % 00", 0m),
-                ("KDV % 01", 0.01m),
-                ("KDV % 10", 0.10m),
-                ("KDV % 20", 0.20m)
-            })
-            {
-                await taxRateRepository.AddAsync(new TaxRate(new Name(name), rate, true));
-            }
-
-            await unitOfWork.SaveChangesAsync();
-        }
-        finally
-        {
-            dbContext.ClearSeedAdminUserId();
-        }
-    }
-
-    private static async Task SeedCustomersAndSuppliersIfMissingAsync(ApplicationDbContext dbContext, IServiceProvider sp)
-    {
-        ICustomerRepository customerRepository = sp.GetRequiredService<ICustomerRepository>();
-        ISupplierRepository supplierRepository = sp.GetRequiredService<ISupplierRepository>();
-        IUnitOfWork unitOfWork = sp.GetRequiredService<IUnitOfWork>();
-
-        if (await customerRepository.AnyAsync(i => i.Id != null))
-        {
-            return;
-        }
-
-        await SeedCustomersAndSuppliersAsync(dbContext, customerRepository, supplierRepository, unitOfWork);
-    }
-
-    private static async Task SeedCustomersAndSuppliersAsync(
-        ApplicationDbContext dbContext,
-        ICustomerRepository customerRepository,
-        ISupplierRepository supplierRepository,
-        IUnitOfWork unitOfWork)
-    {
-        // CreatedBy NULL olamaz. Örnek kayıtları admin kullanıcıya bağla;
-        // aksi halde GetAllWithAudit join'den dolayı liste boş döner.
-        Guid? adminId = await dbContext.Set<User>()
-            .Where(u => u.UserName.Value == "admin")
-            .Select(u => (Guid?)u.Id.Value)
-            .FirstOrDefaultAsync();
-
-        if (adminId is null)
-        {
-            return;
-        }
-
-        dbContext.SetSeedAdminUserId(adminId.Value);
-        try
-        {
-            Customer[] sampleCustomers =
-            [
-                new(
-                    new Name("Anadolu Yapı Market A.Ş."),
-                    new TaxOffice("Kadıköy"),
-                    new TaxNumber("1234567801"),
-                    new Contact("02161234501", "02161234502", "info@anadoluyapi.com"),
-                    new Address("İstanbul", "Kadıköy", "Caferağa Mah. Bahariye Cad. No:12"),
-                    new Description("İnşaat malzemeleri toptan-perakende"),
-                    true),
-                new(
-                    new Name("Doğuş Tekstil Sanayi"),
-                    new TaxOffice("Nilüfer"),
-                    new TaxNumber("2345678902"),
-                    new Contact("02241234503", "", "satis@dogustekstil.com"),
-                    new Address("Bursa", "Nilüfer", "Organize Sanayi Bölgesi 3. Cadde No:45"),
-                    new Description("Kumaş ve hazır giyim hammaddesi"),
-                    true),
-                new(
-                    new Name("Karadeniz Tarım Ürünleri Ltd."),
-                    new TaxOffice("Atakum"),
-                    new TaxNumber("3456789013"),
-                    new Contact("03621234504", "", "info@karadeniztarim.com"),
-                    new Address("Samsun", "Atakum", "Yeşilyurt Mah. Sahil Yolu No:78"),
-                    new Description("Fındık ve tarım ürünleri alımı"),
-                    true),
-                new(
-                    new Name("Aegean Gayrimenkul Danışmanlık"),
-                    new TaxOffice("Bornova"),
-                    new TaxNumber("4567890124"),
-                    new Contact("02321234505", "05551234505", "ofis@aegeandanismanlik.com"),
-                    new Address("İzmir", "Bornova", "Kazımdirik Mah. Üniversite Cad. No:23"),
-                    new Description("Gayrimenkul değerleme danışmanlığı"),
-                    false),
-            ];
-
-            foreach (Customer customer in sampleCustomers)
-            {
-                await customerRepository.AddAsync(customer);
-            }
-
-            await unitOfWork.SaveChangesAsync();
-
-            Supplier[] sampleSuppliers =
-            [
-                new(
-                    new Name("Anadolu Tedarik A.Ş."),
-                    new TaxOffice("Çankaya"),
-                    new TaxNumber("5678901235"),
-                    new Contact("03121234506", "03121234507", "tedarik@anadolutedarik.com"),
-                    new Address("Ankara", "Çankaya", "Kızılay Mah. Atatürk Bulvarı No:56"),
-                    new Description("Ofis malzemeleri ve kırtasiye toptan"),
-                    true),
-                new(
-                    new Name("Ege Alüminyum Sanayi"),
-                    new TaxOffice("Aliağa"),
-                    new TaxNumber("6789012346"),
-                    new Contact("02321234508", "", "satis@egealuminyum.com"),
-                    new Address("İzmir", "Aliağa", "Sanayi Mah. 12. Cadde No:321"),
-                    new Description("Alüminyum profil ve bileşen tedariki"),
-                    true),
-                new(
-                    new Name("Marmara Kırtasiye Toptan"),
-                    new TaxOffice("Kartal"),
-                    new TaxNumber("7890123457"),
-                    new Contact("02161234509", "", "siparis@marmarakirtasiye.com"),
-                    new Address("İstanbul", "Kartal", "Yukarı Mah. Göksu Cad. No:88"),
-                    new Description("Ofis ve kırtasiye ürünleri tedarikçisi"),
-                    true),
-                new(
-                    new Name("Güney Enerji Sistemleri"),
-                    new TaxOffice("Muratpaşa"),
-                    new TaxNumber("8901234568"),
-                    new Contact("02421234510", "05541234510", "info@guneveryenerji.com"),
-                    new Address("Antalya", "Muratpaşa", "Kızılsaray Mah. Cumhuriyet Cad. No:34"),
-                    new Description("Jeneratör ve enerji sistemleri"),
-                    false),
-            ];
-
-            foreach (Supplier supplier in sampleSuppliers)
-            {
-                await supplierRepository.AddAsync(supplier);
-            }
-
-            await unitOfWork.SaveChangesAsync();
-        }
-        finally
-        {
-            dbContext.ClearSeedAdminUserId();
-        }
-    }
-
-    private static readonly MethodInfo GetAllIncludingDeletedMethod =
-        typeof(DatabaseInitializer).GetMethod(
-            nameof(GetAllIncludingDeleted),
-            BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static IQueryable GetAllIncludingDeleted<TEntity>(ApplicationDbContext dbContext)
-        where TEntity : Entity
-        => dbContext.Set<TEntity>().IgnoreQueryFilters();
-
-    private static async Task BackfillDuplicateKeysAsync(ApplicationDbContext dbContext)
-    {
-        bool changed = false;
-
-        foreach (IEntityType entityType in dbContext.Model.GetEntityTypes())
-        {
-            if (entityType.BaseType is not null || entityType.IsOwned())
-            {
-                continue;
-            }
-
-            Type clrType = entityType.ClrType;
-            if (!typeof(Entity).IsAssignableFrom(clrType))
-            {
-                continue;
-            }
-
-            MethodInfo? resolve = clrType.GetMethod("ResolveDuplicateKey", BindingFlags.Instance | BindingFlags.Public);
-
-            if (resolve is null)
-            {
-                continue;
-            }
-
-            IQueryable query = GetAllIncludingDeletedMethod
-                .MakeGenericMethod(clrType)
-                .Invoke(null, new object[] { dbContext }) as IQueryable
-                ?? throw new InvalidOperationException("Sorgu oluşturulamadı.");
-
-            foreach (object entityObject in query)
-            {
-                if (entityObject is not Entity entity || entity.DuplicateKey is not null)
+                foreach ((string userName, string email, IdentityId companyId, IdentityId roleId) in sampleUsers)
                 {
-                    continue;
+                    string firstName = char.ToUpperInvariant(userName[0])
+                        + userName.Substring(1, userName.IndexOf('.') - 1);
+
+                    masterContext.Users.Add(
+                        new User(
+                            new FirstName(firstName),
+                            new LastName("Soyad"),
+                            new Email(email),
+                            new UserName(userName),
+                            new Password("1"),
+                            companyId,
+                            roleId,
+                            true));
                 }
 
-                resolve.Invoke(entityObject, null);
-                changed = true;
+                await masterContext.SaveChangesAsync();
+            }
+            finally
+            {
+                masterContext.ClearSeedAdminUserId();
             }
         }
 
-        if (changed)
+        await EnsureAdminRolePermissionsAsync(masterContext, permissionService, roleRepository);
+    }
+
+    /// <summary>
+    /// İlk kurulumda, içinde bulunulan yılın kaydı olmayan her şirket için yılın
+    /// iş veritabanını açar. Böylece uygulama ilk açılışta giriş ekranında seçilebilir
+    /// bir yıl listesiyle karşılaşır. Kontrol şirket bazında yapılır: bir şirkette
+    /// yıl açılmış olması diğer şirketleri etkilemez. Sonraki yıllar
+    /// "Mali Yıl Aç" formundan açılır.
+    /// </summary>
+    private static async Task EnsureCurrentYearAsync(
+        MasterDbContext masterContext,
+        IDatabaseNameBuilder databaseNameBuilder,
+        IAccountingYearProvisioner provisioner)
+    {
+        int currentYear = DateTime.Now.Year;
+
+        var companies = await masterContext.Companies
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(c => c.Name.Value)
+            .Select(c => new { Id = c.Id.Value, Name = c.Name.Value })
+            .ToListAsync();
+
+        if (companies.Count == 0)
         {
-            await dbContext.SaveChangesAsync();
+            return;
+        }
+
+        // Yıl kaydı olmayan şirketler belirlenir; var olan yıllara dokunulmaz.
+        // Year ve IdentityId value converter ile eşlendiği için sorgu, alanların
+        // .Value özelliklerine değil nesnelerin kendisine karşı yazılmalıdır.
+        var companiesWithCurrentYear = await masterContext.CompanyYears
+            .AsNoTracking()
+            .Where(cy => cy.Year == new Year(currentYear))
+            .Select(cy => cy.CompanyId)
+            .ToListAsync();
+
+        var pendingCompanies = companies
+            .Where(c => !companiesWithCurrentYear.Contains(new IdentityId(c.Id)))
+            .ToList();
+
+        if (pendingCompanies.Count == 0)
+        {
+            return;
+        }
+
+        // CompanyYears kaydının CreatedBy alanı NOT NULL; açılışta oturum olmadığı
+        // için admin kullanıcısı tohumlayıcı olarak işaretlenir.
+        Guid? adminId = await masterContext.Users
+            .AsNoTracking()
+            .Where(u => u.UserName.Value == "admin")
+            .Select(u => (Guid?)u.Id.Value)
+            .FirstOrDefaultAsync();
+
+        masterContext.SetSeedAdminUserId(adminId);
+
+        try
+        {
+            foreach (var company in pendingCompanies)
+            {
+                string databaseName = await databaseNameBuilder.SuggestAvailableAsync(company.Name, currentYear);
+
+                await provisioner.EnsureDatabaseAsync(new IdentityId(company.Id), currentYear, databaseName);
+
+                var companyYear = new CompanyYear(
+                    new IdentityId(company.Id),
+                    new Year(currentYear),
+                    new DatabaseName(databaseName));
+
+                companyYear.SetOpeningDate(new DateTimeOffset(currentYear, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+                masterContext.CompanyYears.Add(companyYear);
+                await masterContext.SaveChangesAsync();
+            }
+        }
+        finally
+        {
+            masterContext.ClearSeedAdminUserId();
         }
     }
 
-    private static async Task RepairOrphanAuditReferencesAsync(ApplicationDbContext dbContext)
+    private static async Task EnsureAdminRolePermissionsAsync(
+        MasterDbContext masterContext,
+        PermissionService permissionService,
+        IRoleRepository roleRepository)
     {
-        Guid? adminId = await dbContext.Set<User>()
+        Guid? adminId = await masterContext.Users
+            .AsNoTracking()
             .Where(u => u.UserName.Value == "admin")
             .Select(u => (Guid?)u.Id.Value)
             .FirstOrDefaultAsync();
@@ -480,43 +252,15 @@ public static class DatabaseInitializer
             return;
         }
 
-        var parameter = new SqlParameter("@adminId", adminId.Value);
-
-        foreach (IEntityType entityType in dbContext.Model.GetEntityTypes())
+        // Yeni yetki kayıtlarının CreatedBy alanı da admin'i işaretlemeli.
+        masterContext.SetSeedAdminUserId(adminId.Value);
+        try
         {
-            if (entityType.IsOwned() || entityType.BaseType is not null)
-            {
-                continue;
-            }
-
-            string? table = entityType.GetTableName();
-            if (string.IsNullOrEmpty(table))
-            {
-                continue;
-            }
-
-            IProperty? createdBy = entityType.FindProperty(nameof(Entity.CreatedBy));
-            IProperty? updatedBy = entityType.FindProperty(nameof(Entity.UpdatedBy));
-            if (createdBy is null && updatedBy is null)
-            {
-                continue;
-            }
-
-            StoreObjectIdentifier storeId = StoreObjectIdentifier.Table(table, null);
-
-            if (createdBy is not null)
-            {
-                string column = createdBy.GetColumnName(storeId) ?? nameof(Entity.CreatedBy);
-                string sql = "UPDATE [" + table + "] SET [" + column + "] = @adminId WHERE [" + column + "] NOT IN (SELECT [Id] FROM [Users])";
-                await dbContext.Database.ExecuteSqlRawAsync(sql, parameter);
-            }
-
-            if (updatedBy is not null)
-            {
-                string column = updatedBy.GetColumnName(storeId) ?? nameof(Entity.UpdatedBy);
-                string sql = "UPDATE [" + table + "] SET [" + column + "] = @adminId WHERE [" + column + "] IS NOT NULL AND [" + column + "] NOT IN (SELECT [Id] FROM [Users])";
-                await dbContext.Database.ExecuteSqlRawAsync(sql, parameter);
-            }
+            await permissionService.EnsureAdminRoleHasAllPermissionsAsync(roleRepository, masterContext);
+        }
+        finally
+        {
+            masterContext.ClearSeedAdminUserId();
         }
     }
 }

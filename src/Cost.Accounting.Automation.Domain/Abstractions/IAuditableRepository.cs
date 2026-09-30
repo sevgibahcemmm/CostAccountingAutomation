@@ -1,5 +1,5 @@
 ﻿using GenericRepository;
-using Cost.Accounting.Automation.Domain.Users;
+using Cost.Accounting.Automation.Domain.Abstractions;
 
 namespace Cost.Accounting.Automation.Domain.Abstractions;
 
@@ -37,6 +37,6 @@ public sealed class EntityWithAuditDto<TEntity>
     where TEntity : Entity
 {
     public TEntity Entity { get; set; } = default!;
-    public User CreatedUser { get; set; } = default!;
-    public User? UpdatedUser { get; set; }
+    public AuditUser CreatedUser { get; set; } = default!;
+    public AuditUser? UpdatedUser { get; set; }
 }

@@ -153,12 +153,8 @@ internal sealed class InvoiceCreateCommandHandler(
 
         if (request.IsApproved)
         {
-            DateOnly? lastApprovedDate = await invoiceRepository
-                .GetAllWithAudit()
-                .Where(i => i.Entity.Status == InvoiceStatus.Approved && i.Entity.Id != invoice.Id)
-                .Select(i => i.Entity.Date)
-                .OrderByDescending(d => d)
-                .FirstOrDefaultAsync(cancellationToken);
+            DateOnly? lastApprovedDate = await InvoiceLedgerHelper.GetLastApprovedDateAsync(
+                    invoiceRepository, invoice.Id, cancellationToken);
 
             if (lastApprovedDate.HasValue && request.Date < lastApprovedDate.Value)
             {

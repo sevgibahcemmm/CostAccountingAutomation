@@ -37,6 +37,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private List<ChartOfAccountLookUpDto> _accounts = [];
         private List<SemiFinishedOption> _semiFinishedOptions = [];
         private string _productCode = string.Empty;
+        private readonly bool _priceAndPhotosOnly;
+        private readonly IDisposable? skinBinding;
+
+        /// <summary>
+        /// Kısıtlı stok kartında "Fiyat Başlangıç / Fiyat Bitiş" sütunlarının anlamını açıklayan
+        /// kalıcı not. Fiyat sekmesindeki buton panelinin sağında durur.
+        /// </summary>
+        private readonly LabelControl lblPriceHint = new()
+        {
+            Name = "lblPriceHint",
+            AutoSize = false,
+            AutoSizeMode = LabelAutoSizeMode.None,
+            Visible = false,
+            Size = new Size(500, 32),
+            Appearance =
+            {
+                TextOptions = { VAlignment = VertAlignment.Center }
+            },
+            Text = "Fiyat Başlangıç: fiyatın geçerli olduğu ilk tarih.   •   "
+                   + "Fiyat Bitiş: geçerliliğin bittiği tarih — boş bırakılırsa süresiz geçerlidir."
+        };
 
         private bool _isPopulating;
         private readonly System.Windows.Forms.Timer _previewDebounce = new() { Interval = 500 };
@@ -45,14 +66,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         {
         }
 
-        public ProductEditForm(ProductDto? existing)
+        public ProductEditForm(ProductDto? existing) : this(existing, false)
+        {
+        }
+
+        /// <param name="priceAndPhotosOnly">
+        /// <c>true</c> ise mevcut kartta yalnızca <b>satış fiyatı</b> ve <b>fotoğraf</b> düzenlenebilir;
+        /// ad, depo, kategori, birim, KDV, açıklama gibi ana alanlar mevcut değerleriyle kilitlenir.
+        /// </param>
+        public ProductEditForm(ProductDto? existing, bool priceAndPhotosOnly)
         {
             _editing = existing;
+            _priceAndPhotosOnly = priceAndPhotosOnly && existing is not null;
             InitializeComponent();
 
-            Text = _editing is null ? "Yeni Ürün" : "Ürün Düzenle";
+            Text = _editing is null ? "Yeni Ürün" : _priceAndPhotosOnly ? "Stok Kartı — Fiyat / Fotoğraf" : "Ürün Düzenle";
             lblTitle.Text = Text;
-            lblSubtitle.Text = _editing is null ? "Yeni ürün kartı oluşturmak için bilgileri doldurun" : "Ürün bilgilerini güncelleyin";
+            lblSubtitle.Text = _editing is null
+                ? "Yeni ürün kartı oluşturmak için bilgileri doldurun"
+                : _priceAndPhotosOnly
+                    ? "Yalnızca satış fiyatı ve fotoğraf güncellenebilir; ürün künyesi değiştirilemez"
+                    : "Ürün bilgilerini güncelleyin";
 
             ConfigurePriceGrid();
             ConfigureMovementGrid();
@@ -60,16 +94,90 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             gridPrices.DataSource = _prices;
             gridImages.DataSource = _images;
 
+            lblPriceHint.Appearance.Font = new Font("Segoe UI", 8.5F);
+            lblPriceHint.SetBounds(240, 10, Math.Max(240, pnlPriceButtons.Width - 246), 32);
+            pnlPriceButtons.Controls.Add(lblPriceHint);
+
+            ApplySkin();
+            skinBinding = SkinTheme.Bind(ApplySkin);
             WireEvents();
+        }
+
+        /// <summary>Renkler aktif skinden çözülür; skin değişiminde yeniden uygulanır.</summary>
+        private void ApplySkin()
+        {
+            Color surface = SkinTheme.SurfaceOf(this);
+
+            lblSubtitle.Appearance.ForeColor = SkinTheme.SecondaryText;
+            lblPriceHint.Appearance.ForeColor = SkinTheme.MutedText(surface);
+            lblBarcodeValue.Appearance.ForeColor = SkinTheme.Text;
+            lblQrValue.Appearance.ForeColor = SkinTheme.Text;
+            pnlHeaderLine.Appearance.BackColor = SkinTheme.BorderMuted(surface);
+
+            // Kilitli alan zemini koyu temada koyu kalmalı, aksi halde salt okunur
+            // alanlar düz zeminden ayırt edilemiyor.
+            txtProductCode.Properties.Appearance.BackColor = SkinTheme.SurfaceReadOnly(surface);
+            txtProductCode.Properties.Appearance.Options.UseBackColor = true;
+        }
+
+        /// <summary>Bu kartta yalnızca satış fiyatı ve fotoğraf düzenlenebilir mi?</summary>
+        private bool IsRestricted => _priceAndPhotosOnly;
+
+        /// <summary>
+        /// Kısıtlı modda ürün künyesi (ad, kod, depo, kategori, birim, KDV, açıklama) ve stok
+        /// hareketleri kilitlenir; yalnızca satış fiyatı satırları ile fotoğraflar düzenlenebilir.
+        /// </summary>
+        private void ApplyRestrictedMode()
+        {
+            if (!IsRestricted)
+            {
+                return;
+            }
+
+            txtProductCode.Properties.ReadOnly = true;
+            txtName.Properties.ReadOnly = true;
+            lookUpTaxRate.Properties.ReadOnly = true;
+            spinMinLevel.Properties.ReadOnly = true;
+            cmbUnitType.Properties.ReadOnly = true;
+            cmbWarehouse.Properties.ReadOnly = true;
+            cmbCategory.Properties.ReadOnly = true;
+            memoDescription.Properties.ReadOnly = true;
+            chkActive.Properties.ReadOnly = true;
+            chkCreatePair.Visible = false;
+            btnAddUnitType.Enabled = false;
+
+            // Kullanıcı "Fiyat Başlangıç / Fiyat Bitiş" sütunlarının anlamını sordu: ipucu hem
+            // sütun başlığına (ToolTip) hem de fiyat sekmesindeki kalıcı nota yazılır.
+            lblPriceHint.Visible = true;
+            tabPrices.Text = "Satış Fiyatları";
+
+            // Fiyat türü değiştirilemez, sadece satış fiyatı satırları düzenlenebilir.
+            GridColumn priceTypeColumn = gridPriceView.Columns[nameof(ProductPriceDto.PriceTypeName)]!;
+            priceTypeColumn.OptionsColumn.ReadOnly = true;
+
+            gridPriceView.ShowingEditor += (_, _) =>
+            {
+                int handle = gridPriceView.FocusedRowHandle;
+                if (handle >= 0
+                    && gridPriceView.GetRow(handle) is ProductPriceDto row
+                    && row.PriceType != ProductPriceType.Sale)
+                {
+                    gridPriceView.CloseEditor();
+                }
+            };
         }
 
         private void ConfigurePriceGrid()
         {
             GridColumnFactory.ConfigureFromAttributes(gridPriceView, typeof(ProductPriceDto));
             gridPriceView.Columns[nameof(ProductPriceDto.PriceTypeName)]!.Caption = "Fiyat Türü";
-            gridPriceView.Columns[nameof(ProductPriceDto.UnitPrice)]!.Caption = "Birim Fiyat";
-            gridPriceView.Columns[nameof(ProductPriceDto.StartDate)]!.Caption = "Başlangıç";
-            gridPriceView.Columns[nameof(ProductPriceDto.EndDate)]!.Caption = "Bitiş";
+            gridPriceView.Columns[nameof(ProductPriceDto.UnitPrice)]!.Caption = "Birim Fiyat (Kdv Hariç)";
+            gridPriceView.Columns[nameof(ProductPriceDto.StartDate)]!.Caption = "Fiyat Başlangıç";
+            gridPriceView.Columns[nameof(ProductPriceDto.StartDate)]!.ToolTip =
+                "Bu fiyatın geçerli olmaya başladığı tarih.";
+            gridPriceView.Columns[nameof(ProductPriceDto.EndDate)]!.Caption = "Fiyat Bitiş";
+            gridPriceView.Columns[nameof(ProductPriceDto.EndDate)]!.ToolTip =
+                "Fiyatın geçerliliğinin bittiği tarih. Boş bırakılırsa süresiz geçerlidir.";
             gridPriceView.OptionsView.ShowColumnHeaders = true;
 
             foreach (GridColumn column in gridPriceView.Columns)
@@ -166,7 +274,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 await GenerateBarcodePreviewAsync();
             };
             btnAddPrice.Click += BtnAddPrice_Click;
-            btnRemovePrice.Click += (_, _) => { if (gridPriceView.FocusedRowHandle >= 0) _prices.RemoveAt(gridPriceView.FocusedRowHandle); };
+            btnRemovePrice.Click += (_, _) =>
+            {
+                if (gridPriceView.FocusedRowHandle < 0)
+                {
+                    return;
+                }
+
+                ProductPriceDto? row = gridPriceView.GetRow(gridPriceView.FocusedRowHandle) as ProductPriceDto;
+                if (row is null)
+                {
+                    return;
+                }
+
+                if (IsRestricted && row.PriceType != ProductPriceType.Sale)
+                {
+                    ToastHelper.Show("Yalnızca satış fiyatı kaydı eklenebilir veya silinebilir.", ToastType.Warning);
+                    return;
+                }
+
+                _prices.Remove(row);
+            };
             btnAddImage.Click += BtnAddImage_Click;
             btnRemoveImage.Click += (_, _) =>
             {
@@ -218,6 +346,7 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
                 if (_editing is not null)
                 {
                     await PopulateAsync(_editing);
+                    ApplyRestrictedMode();
                 }
                 else
                 {

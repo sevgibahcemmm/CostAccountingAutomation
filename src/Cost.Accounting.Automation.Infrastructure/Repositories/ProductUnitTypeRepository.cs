@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.Domain.Products;
+﻿using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
 using Cost.Accounting.Automation.Infrastructure.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context;
@@ -8,10 +8,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Repositories;
 
 internal sealed class ProductUnitTypeRepository : AuditableRepository<ProductUnitType, ApplicationDbContext>, IProductUnitTypeRepository
 {
-    public ProductUnitTypeRepository(ApplicationDbContext context) : base(context)
+    public ProductUnitTypeRepository(ApplicationDbContext context, MasterDbContext masterContext) : base(context, masterContext)
     {
     }
 
     public Task<List<ProductUnitType>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default)
-        => Context.Set<ProductUnitType>().IgnoreQueryFilters().ToListAsync(cancellationToken);
+        => this.Context.Set<ProductUnitType>().IgnoreQueryFilters().ToListAsync(cancellationToken);
 }

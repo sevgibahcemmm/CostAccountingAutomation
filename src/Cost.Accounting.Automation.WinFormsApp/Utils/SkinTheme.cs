@@ -43,11 +43,64 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         /// <summary>Aktif skin bilgi (mavi) rengi.</summary>
         public static Color Question => Resolve(DXSkinColors.FillColors.Question);
 
-        /// <summary>Aktif skin birincil metin rengi.</summary>
-        public static Color Text => Resolve(DXSkinColors.ForeColors.WindowText);
+        /// <summary>
+        /// Aktif skin birincil metin rengi. Koyu temalarda token çözümü koyu bir palete
+        /// düşebildiği için (bilinmeyen skinlerde DXSkinColorHelper eski palete dönüyor)
+        /// açık temelli bir metin zorlanır; aksi halde koyu metin koyu zeminde kaybolur.
+        /// </summary>
+        public static Color Text => IsDarkSkin ? Color.FromArgb(232, 232, 234) : RawText;
+
+        private static Color RawText => Resolve(DXSkinColors.ForeColors.WindowText);
+
+        /// <summary>
+        /// Skin'in gerçek zemin rengi. DevExpress koyu temalarda kontrolün <c>BackColor</c>
+        /// değerini güncellemediği için zemini temaya göre seçip metin rengiyle tutarlı
+        /// tutuyoruz; aksi halde koyu temada açık metin açık zemin üzerinde kayboluyor.
+        /// </summary>
+        public static Color SurfaceOf(Control? surface)
+        {
+            Color resolved = surface is { IsDisposed: false } ? surface.BackColor : Color.Empty;
+
+            if (IsDarkSkin)
+            {
+                return IsColorDark(resolved) ? resolved : Color.FromArgb(48, 48, 52);
+            }
+
+            return resolved.A > 0 ? resolved : Color.FromArgb(240, 240, 240);
+        }
+
+        /// <summary>Zemin üzerinde hafif ayrışan yüzey (başlık ve kart panelleri).</summary>
+        public static Color SurfaceMuted(Color surface)
+            => Blend(surface, Text, IsDarkSkin ? 0.10F : 0.04F);
+
+        /// <summary>Aksan renginin zeminle harmanlandığı yüzey (özet paneli).</summary>
+        public static Color SurfaceAccent(Color surface)
+            => Blend(surface, Primary, IsDarkSkin ? 0.24F : 0.10F);
+
+        /// <summary>Panel kenarlıkları ve ayırıcı çizgiler için renk.</summary>
+        public static Color BorderMuted(Color surface)
+            => Blend(surface, Text, IsDarkSkin ? 0.24F : 0.14F);
+
+        /// <summary>Buton/grid hover arka planı.</summary>
+        public static Color SurfaceHover(Color surface)
+            => Blend(surface, Text, IsDarkSkin ? 0.16F : 0.07F);
+
+        /// <summary>Salt okunur (kilitli) alan arka planı.</summary>
+        public static Color SurfaceReadOnly(Color surface)
+            => Blend(surface, Text, IsDarkSkin ? 0.12F : 0.05F);
+
+        /// <summary>Boş durum/ipucu metinleri için soluk metin rengi.</summary>
+        public static Color MutedText(Color surface) => Blend(Text, surface, 0.35F);
+
+        /// <summary>
+        /// Skin değiştiğinde <paramref name="handler"/>'ı yeniden çalıştırır. Dönen IDisposable,
+        /// form Dispose edilirken çağrılmalıdır (bkz. skinBinding alanı).
+        /// </summary>
+        public static IDisposable Bind(Action handler) => new Binding(handler);
 
         /// <summary>Aktif skin ikincil (soluk) metin rengi.</summary>
-        public static Color SecondaryText => Resolve(DXSkinColors.ForeColors.DisabledText);
+        public static Color SecondaryText
+            => IsDarkSkin ? Color.FromArgb(162, 162, 168) : Resolve(DXSkinColors.ForeColors.DisabledText);
 
         /// <summary>Skin genel aksan koyu ise true (beyaz metin gerekir).</summary>
         public static bool IsDarkAccent => IsColorDark(Primary);
@@ -72,7 +125,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
                     return false;
                 }
 
-                return !IsColorDark(Text);
+                return !IsColorDark(RawText);
             }
         }
 
@@ -129,5 +182,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
                 UserLookAndFeel.Default.ActiveSvgPaletteName);
 
         private static int Clamp255(int value) => Math.Max(0, Math.Min(255, value));
+
+        /// <summary>Skin değişimini dinleyip Dispose ile bağı çözen hafif abonelik.</summary>
+        private sealed class Binding : IDisposable
+        {
+            private readonly EventHandler _handler;
+
+            public Binding(Action action)
+            {
+                _handler = (_, _) => action();
+                Changed += _handler;
+            }
+
+            public void Dispose() => Changed -= _handler;
+        }
     }
 }

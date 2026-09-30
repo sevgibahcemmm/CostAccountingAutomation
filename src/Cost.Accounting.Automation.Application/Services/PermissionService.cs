@@ -43,7 +43,7 @@ public sealed class PermissionService
     /// </summary>
     public async Task EnsureAdminRoleHasAllPermissionsAsync(
         IRoleRepository roleRepository,
-        IUnitOfWork unitOfWork,
+        IMasterUnitOfWork unitOfWork,
         CancellationToken cancellationToken = default)
     {
         List<string> catalog = GetAll();

@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.Application.Dashboards;
-using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -9,10 +8,10 @@ using DevExpress.XtraCharts;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.Extensions.DependencyInjection;
-using System.Drawing;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -21,8 +20,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private const int DashboardAutoRefreshIntervalMs = 30_000;
 
         private readonly SessionClaimContext _session;
+        private readonly ISender _sender;
         private readonly Dictionary<int, Label> _kpiValues = new();
         private readonly System.Windows.Forms.Timer _refreshTimer;
+
+        private CancellationTokenSource? _loadCts;
         private bool _refreshing;
         private bool _hasLoadedOnce;
         private bool _tableColumnsConfigured;
@@ -33,6 +35,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _session =
                 Program.Services
                     .GetRequiredService<SessionClaimContext>();
+
+            _sender =
+                Program.Services
+                    .GetRequiredService<ISender>();
 
             Size =
                 new Size(1280, 720);
@@ -72,7 +78,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             LoadSessionInfo();
 
-            _ = LoadDashboardDataAsync();
+            // Bekleme formu veri yüklenirken açılır; tüm veri uygulandıktan
+            // sonra "tüm veriler yüklendi" onayı gösterip kapanır.
+            _ = LoadDashboardDataAsync(showLoading: true);
 
             _refreshTimer.Start();
         }
@@ -82,6 +90,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _refreshTimer.Stop();
             _refreshTimer.Tick -= RefreshDashboardTimer_Tick;
             _refreshTimer.Dispose();
+
+            // Form kapanırken devam eden yükleme isteğini iptal ediyoruz.
+            _loadCts?.Cancel();
+            _loadCts?.Dispose();
+
+            // Yarım kalmış yüklemenin bekleme penceresini de kapat.
+            LoadingHelper.CloseCurrent();
 
             base.OnFormClosed(e);
         }
@@ -96,8 +111,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _refreshing = true;
             try
             {
-                await LoadDashboardDataAsync(quiet: true, forceRefresh: false);
-            }
+                await LoadDashboardDataAsync(quiet: true, forceRefresh: false);            }
             finally
             {
                 _refreshing = false;
@@ -116,7 +130,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             UpdateLastUpdatedStamp();
             try
             {
-                await LoadDashboardDataAsync(quiet: true, forceRefresh: true);
+                await LoadDashboardDataAsync(
+                quiet: true,
+                forceRefresh: true,
+                showLoading: true);
             }
             finally
             {
@@ -128,11 +145,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void LoadSessionInfo()
         {
             string roleName;
+            string? userFullName = "-";
 
             try
             {
                 roleName =
                     _session.GetRoleName();
+                userFullName =
+                    _session.GetUserFullName();
             }
             catch
             {
@@ -169,7 +189,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
 
             lblSub.Text =
-                $"Rol: {roleName}   •   Kurum: {companyName}";
+                $"Kurum: {companyName}     *   Kullanıcı: {userFullName}    *    Rolü : {roleName}";
 
             lblDate.Text =
                 DateTime.Now.ToString(
@@ -179,49 +199,142 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private async Task LoadDashboardDataAsync(
             bool quiet = false,
-            bool forceRefresh = false)
+            bool forceRefresh = false,
+            bool showLoading = false)
         {
-            try
+            // Önceki yükleme hâlâ sürüyorsa onu iptal edip yenisini başlatıyoruz.
+            CancellationTokenSource? previousCts =
+                Interlocked.Exchange(
+                    ref _loadCts,
+                    new CancellationTokenSource());
+
+            previousCts?.Cancel();
+            previousCts?.Dispose();
+
+            CancellationTokenSource cts =
+                _loadCts!;
+
+            CancellationToken token =
+                cts.Token;
+
+            string loadedSummary = string.Empty;
+
+            // Bekleme penceresi yalnızca kullanıcıya görünür yüklemelerde açılır;
+            // 30 saniyelik arka plan yenilemesi sessizdir. Tüm KPI, tablo ve
+            // grafikler uygulandıktan SONRA "tüm veriler yüklendi" onayı
+            // gösterilir.
+            Func<Task> loadTask = async () =>
             {
-                IDashboardDataProvider provider =
-                    Program.Services.GetRequiredService<IDashboardDataProvider>();
-
-                DashboardSnapshot snapshot =
-                    await provider.GetOverviewAsync(forceRefresh);
-
-                SetKpis(snapshot);
-
-                string fingerprint = BuildFingerprint(snapshot);
-
-                if (fingerprint != _lastFingerprint)
+                try
                 {
-                    _lastFingerprint = fingerprint;
-                    RenderDashboard(snapshot);
-                }
+                    TS.Result.Result<DashboardSnapshot> result =
+                        await _sender.Send(
+                            new DashboardGetOverviewQuery(forceRefresh),
+                            token);
 
-                _hasLoadedOnce =
-                    true;
-            }
-            catch (Exception ex)
-            {
-                CrashLog.WriteException("Dashboard.Load", ex);
-
-                // İlk yükleme başarısızsa kartlar boş gösterilir;
-                // arka plandaki otomatik yenileme başarısızsa mevcut değerler korunur.
-                if (!quiet || !_hasLoadedOnce)
-                {
-                    for (int i = 1; i <= 8; i++)
+                    if (result.IsSuccessful && result.Data is DashboardSnapshot snapshot)
                     {
-                        SetKpi(i, null);
+                        // İptal edildiyse veya form kapanmışsa sonucu uygulama.
+                        if (token.IsCancellationRequested
+                            || IsDisposed
+                            || Disposing)
+                        {
+                            return;
+                        }
+
+                        SetKpis(snapshot);
+
+                        string fingerprint = BuildFingerprint(snapshot);
+
+                        // Veri değişmediyse grafikler yeniden çizilmez; bu, 30 saniyelik
+                        // otomatik yenilemede gereksiz yeniden boyamayı engeller.
+                        if (fingerprint != _lastFingerprint)
+                        {
+                            _lastFingerprint = fingerprint;
+                            RenderDashboard(snapshot);
+                        }
+
+                        _hasLoadedOnce = true;
+                        loadedSummary = BuildLoadedSummary(snapshot);
                     }
                 }
-            }
-            finally
+                catch (OperationCanceledException)
+                {
+                    // Beklenen: yeni bir yenileme bu isteği iptal etti.
+                }
+                catch (Exception ex)
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    CrashLog.WriteException("Dashboard.Load", ex);
+
+                    // İlk yükleme başarısızsa kartlar boş gösterilir;
+                    // arka plandaki otomatik yenileme başarısızsa mevcut değerler korunur.
+                    if (!quiet || !_hasLoadedOnce)
+                    {
+                        for (int i = 1; i <= 8; i++)
+                        {
+                            SetKpi(i, null);
+                        }
+                    }
+                }
+            };
+
+            if (showLoading)
             {
-                // "Son güncelleme" damgası, veri adımlarından biri hata verse bile
-                // yükleme girişiminde bulunulduğunu göstersin.
-                UpdateLastUpdatedStamp();
+                await LoadingHelper.RunAsync(
+                    loadTask,
+                    caption: "Veriler yükleniyor...",
+                    description: "Lütfen bekleyin...",
+                    showCompleted: true,
+                    completionSummary: () => loadedSummary);
             }
+            else
+            {
+                await loadTask();
+            }
+
+            if (ReferenceEquals(
+                    Interlocked.CompareExchange(
+                        ref _loadCts,
+                        null,
+                        cts),
+                    cts))
+            {
+                cts.Dispose();
+            }
+
+            // "Son güncelleme" damgası, veri adımlarından biri hata verse bile
+            // yükleme girişiminde bulunulduğunu göstersin.
+            UpdateLastUpdatedStamp();
+        }
+
+
+        /// <summary>
+        /// Bekleme katmanında gösterilecek özet satır. Tüm seriler dolduğunda
+        /// grafik sayıları burada görünür olur.
+        /// </summary>
+        private static string BuildLoadedSummary(DashboardSnapshot snapshot)
+        {
+            int charts =
+                snapshot.InvoiceStatus.Count
+                + snapshot.InvoiceTypes.Count
+                + snapshot.InvoiceTrend.Count
+                + snapshot.MonthlyBalances.Count
+                + snapshot.StockMovements.Count
+                + snapshot.CategoryStocks.Count
+                + snapshot.TopMovementProducts.Count;
+
+            int tables =
+                snapshot.Receivables.Count
+                + snapshot.Payables.Count
+                + snapshot.CriticalStocks.Count
+                + snapshot.ProductStocks.Count;
+
+            return $"{charts} grafik noktası, {tables} tablo satırı";
         }
 
         private void UpdateLastUpdatedStamp()
@@ -290,7 +403,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                         .Take(10)
                         .Select(r => new DashboardBalancePoint(r.AccountName, r.Balance))
                         .ToList(),
-                    DashColors.Blue);
+                    DashboardChartPalette.Success);
 
                 LoadMoneyBar(
                     chartPayables,
@@ -298,7 +411,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                         .Take(10)
                         .Select(r => new DashboardBalancePoint(r.AccountName, -r.Balance))
                         .ToList(),
-                    DashColors.Red);
+                    DashboardChartPalette.Danger);
 
                 LoadDoughnut(
                     chartCriticalStock,
@@ -306,13 +419,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                         .GroupBy(c => c.CategoryName)
                         .Select(g => new DashboardChartPoint(g.Key, g.Count()))
                         .OrderByDescending(p => p.Count)
-                        .ToList(),
-                    DashColors.DoughnutPalette);
+                        .ToList());
 
                 LoadDoughnut(
                     chartInvoiceStatus,
-                    snapshot.InvoiceStatus,
-                    DashColors.DoughnutPalette);
+                    snapshot.InvoiceStatus);
+
+                // Yeni: fatura türü dağılımı
+                LoadDoughnut(
+                    chartInvoiceTypes,
+                    snapshot.InvoiceTypes);
 
                 LoadTrend(
                     chartInvoiceTrend,
@@ -321,6 +437,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 LoadStockBar(
                     chartStockMovements,
                     snapshot.StockMovements);
+
+                // Yeni: aylık alacak / borç seyri
+                DashboardChartLoader.LoadDualArea(
+                    chartMonthlyBalances,
+                    snapshot.MonthlyBalances,
+                    "Alacak",
+                    "Borç",
+                    DashboardChartPalette.Secondary,
+                    DashboardChartPalette.Danger);
+
+                // Yeni: kategori bazında stok değeri
+                DashboardChartLoader.LoadHorizontalBar(
+                    chartCategoryStocks,
+                    snapshot.CategoryStocks,
+                    DashboardChartPalette.Accent);
+
+                // Yeni: en hareketli ürünler
+                DashboardChartLoader.LoadRankedBar(
+                    chartTopMovements,
+                    snapshot.TopMovementProducts);
             }
             finally
             {
@@ -383,8 +519,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             foreach (var point in snapshot.StockMovements)
             {
                 sb.Append(point.Label).Append(':')
-                  .Append(point.Input.ToString("G29", CultureInfo.InvariantCulture)).Append(':')
-                  .Append(point.Output.ToString("G29", CultureInfo.InvariantCulture)).Append('#');
+                  .Append(point.First.ToString("G29", CultureInfo.InvariantCulture)).Append(':')
+                  .Append(point.Second.ToString("G29", CultureInfo.InvariantCulture)).Append('#');
             }
 
             sb.Append('|');
@@ -398,6 +534,40 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                   .Append(row.TotalInputCost.ToString("G29", CultureInfo.InvariantCulture)).Append(':')
                   .Append(row.TotalOutputCost.ToString("G29", CultureInfo.InvariantCulture)).Append(':')
                   .Append(row.BalanceCost.ToString("G29", CultureInfo.InvariantCulture)).Append('#');
+            }
+
+            sb.Append('|');
+
+            foreach (var point in snapshot.InvoiceTypes)
+            {
+                sb.Append(point.Label).Append(':')
+                  .Append(point.Count.ToString("G29", CultureInfo.InvariantCulture)).Append('#');
+            }
+
+            sb.Append('|');
+
+            foreach (var point in snapshot.MonthlyBalances)
+            {
+                sb.Append(point.Label).Append(':')
+                  .Append(point.First.ToString("G29", CultureInfo.InvariantCulture)).Append(':')
+                  .Append(point.Second.ToString("G29", CultureInfo.InvariantCulture)).Append('#');
+            }
+
+            sb.Append('|');
+
+            foreach (var point in snapshot.CategoryStocks)
+            {
+                sb.Append(point.Label).Append(':')
+                  .Append(point.Amount.ToString("G29", CultureInfo.InvariantCulture)).Append('#');
+            }
+
+            sb.Append('|');
+
+            foreach (var point in snapshot.TopMovementProducts)
+            {
+                sb.Append(point.Label).Append(':')
+                  .Append(point.Quantity.ToString("G29", CultureInfo.InvariantCulture)).Append(':')
+                  .Append(point.Amount.ToString("G29", CultureInfo.InvariantCulture)).Append('#');
             }
 
             return sb.ToString();
@@ -472,360 +642,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ChartControl chart,
             List<DashboardBalancePoint> data,
             Color color)
-        {
-            chart.BeginInit();
-
-            try
-            {
-                chart.Series.Clear();
-
-                chart.Legend.Visibility =
-                    DefaultBoolean.False;
-
-                if (data.Count == 0)
-                {
-                    return;
-                }
-
-                Series series =
-                    new Series(
-                        "Tutar",
-                        ViewType.Bar)
-                    {
-                        DataSource = data,
-                        ArgumentDataMember =
-                            nameof(DashboardBalancePoint.Label)
-                    };
-
-                series.ValueDataMembers.AddRange(
-                    nameof(DashboardBalancePoint.Amount));
-
-                if (series.View is BarSeriesView barView)
-                {
-                    barView.Border.Visibility =
-                        DefaultBoolean.False;
-
-                    barView.Color =
-                        color;
-                }
-
-                chart.Series.Add(series);
-
-                if (chart.Diagram is XYDiagram diagram)
-                {
-                    diagram.Rotated =
-                        true;
-
-                    diagram.AxisX.Title.Visibility =
-                        DefaultBoolean.False;
-
-                    diagram.AxisY.Title.Visibility =
-                        DefaultBoolean.False;
-
-                    diagram.AxisX.Label.TextPattern =
-                        "{A}";
-
-                    diagram.AxisY.Label.TextPattern =
-                        "{V:N0}";
-
-                    diagram.AxisY.WholeRange.Auto =
-                        true;
-
-                    HideGridLines(diagram);
-                }
-            }
-            finally
-            {
-                chart.EndInit();
-            }
-        }
+            => DashboardChartLoader.LoadHorizontalBar(
+                chart,
+                data,
+                color);
 
         private static void LoadDoughnut(
             ChartControl chart,
-            IReadOnlyList<DashboardChartPoint> data,
-            Color[] palette)
-        {
-            chart.BeginInit();
-
-            try
-            {
-                chart.Series.Clear();
-
-                chart.Legend.Visibility =
-                    DefaultBoolean.False;
-
-                if (data.Count == 0)
-                {
-                    return;
-                }
-
-                Series series =
-                    new Series(
-                        "Dağılım",
-                        ViewType.Doughnut);
-
-                series.LabelsVisibility =
-                    DefaultBoolean.True;
-
-                series.Label.TextPattern =
-                    "{A}: {V}";
-
-                if (series.View is DoughnutSeriesView view)
-                {
-                    view.HoleRadiusPercent =
-                        62;
-                }
-
-                for (int i = 0; i < data.Count; i++)
-                {
-                    int pointIndex =
-                        series.Points.Add(
-                            new SeriesPoint(
-                                data[i].Label,
-                                data[i].Count));
-
-                    series.Points[pointIndex].Color =
-                        palette[i % palette.Length];
-                }
-
-                chart.Series.Add(series);
-
-                chart.Legend.Visibility =
-                    DefaultBoolean.True;
-
-                chart.Legend.AlignmentHorizontal =
-                    LegendAlignmentHorizontal.Center;
-
-                chart.Legend.AlignmentVertical =
-                    LegendAlignmentVertical.Bottom;
-
-                chart.Legend.EnableAntialiasing =
-                    DefaultBoolean.True;
-            }
-            finally
-            {
-                chart.EndInit();
-            }
-        }
+            IReadOnlyList<DashboardChartPoint> data)
+            => DashboardChartLoader.LoadDoughnut(
+                chart,
+                data);
 
         private static void LoadTrend(
             ChartControl chart,
             IReadOnlyList<DashboardBalancePoint> data)
-        {
-            chart.BeginInit();
-
-            try
-            {
-                chart.Series.Clear();
-
-                chart.Legend.Visibility =
-                    DefaultBoolean.False;
-
-                if (data.Count == 0)
-                {
-                    return;
-                }
-
-                Series series =
-                    new Series(
-                        "Aylık Tutar",
-                        ViewType.Area)
-                    {
-                        DataSource = data,
-                        ArgumentDataMember =
-                            nameof(DashboardBalancePoint.Label)
-                    };
-
-                series.ValueDataMembers.AddRange(
-                    nameof(DashboardBalancePoint.Amount));
-
-                series.LabelsVisibility =
-                    DefaultBoolean.False;
-
-                if (series.View is AreaSeriesView areaView)
-                {
-                    areaView.MarkerVisibility =
-                        DefaultBoolean.False;
-
-                    areaView.Border.Visibility =
-                        DefaultBoolean.False;
-
-                    areaView.Color =
-                        DashColors.Blue;
-
-                    areaView.Transparency =
-                        200;
-
-                    areaView.EnableAntialiasing =
-                        DefaultBoolean.True;
-                }
-
-                chart.Series.Add(series);
-
-                if (chart.Diagram is XYDiagram diagram)
-                {
-                    diagram.AxisX.Title.Visibility =
-                        DefaultBoolean.False;
-
-                    diagram.AxisY.Title.Visibility =
-                        DefaultBoolean.False;
-
-                    diagram.AxisX.Label.TextPattern =
-                        "{A}";
-
-                    diagram.AxisY.Label.TextPattern =
-                        "{V:N0}";
-
-                    diagram.AxisY.WholeRange.Auto =
-                        true;
-
-                    HideGridLines(diagram);
-                }
-            }
-            finally
-            {
-                chart.EndInit();
-            }
-        }
+            => DashboardChartLoader.LoadArea(
+                chart,
+                data,
+                DashboardChartPalette.Primary);
 
         private static void LoadStockBar(
             ChartControl chart,
-            IReadOnlyList<DashboardStockPoint> data)
-        {
-            chart.BeginInit();
-
-            try
-            {
-                chart.Series.Clear();
-
-                chart.Legend.Visibility =
-                    DefaultBoolean.False;
-
-                if (data.Count == 0)
-                {
-                    return;
-                }
-
-                Series inputSeries =
-                    new Series(
-                        "Giriş",
-                        ViewType.Bar)
-                    {
-                        DataSource = data,
-                        ArgumentDataMember =
-                            nameof(DashboardStockPoint.Label)
-                    };
-
-                inputSeries.ValueDataMembers.AddRange(
-                    nameof(DashboardStockPoint.Input));
-
-                inputSeries.LabelsVisibility =
-                    DefaultBoolean.False;
-
-                Series outputSeries =
-                    new Series(
-                        "Çıkış",
-                        ViewType.Bar)
-                    {
-                        DataSource = data,
-                        ArgumentDataMember =
-                            nameof(DashboardStockPoint.Label)
-                    };
-
-                outputSeries.ValueDataMembers.AddRange(
-                    nameof(DashboardStockPoint.Output));
-
-                outputSeries.LabelsVisibility =
-                    DefaultBoolean.False;
-
-                if (inputSeries.View is BarSeriesView inView)
-                {
-                    inView.Border.Visibility =
-                        DefaultBoolean.False;
-
-                    inView.Color =
-                        DashColors.Green;
-                }
-
-                if (outputSeries.View is BarSeriesView outView)
-                {
-                    outView.Border.Visibility =
-                        DefaultBoolean.False;
-
-                    outView.Color =
-                        DashColors.Red;
-                }
-
-                chart.Series.Add(inputSeries);
-                chart.Series.Add(outputSeries);
-
-                chart.Legend.Visibility =
-                    DefaultBoolean.True;
-
-                chart.Legend.AlignmentHorizontal =
-                    LegendAlignmentHorizontal.Center;
-
-                chart.Legend.AlignmentVertical =
-                    LegendAlignmentVertical.Bottom;
-
-                chart.Legend.EnableAntialiasing =
-                    DefaultBoolean.True;
-
-                if (chart.Diagram is XYDiagram diagram)
-                {
-                    diagram.AxisX.Title.Visibility =
-                        DefaultBoolean.False;
-
-                    diagram.AxisY.Title.Visibility =
-                        DefaultBoolean.False;
-
-                    diagram.AxisX.Label.TextPattern =
-                        "{A}";
-
-                    diagram.AxisY.Label.TextPattern =
-                        "{V:N0}";
-
-                    diagram.AxisY.WholeRange.Auto =
-                        true;
-
-                    HideGridLines(diagram);
-                }
-            }
-            finally
-            {
-                chart.EndInit();
-            }
-        }
-
-        private static void HideGridLines(XYDiagram diagram)
-        {
-            diagram.AxisX.GridLines.Visible =
-                false;
-
-            diagram.AxisY.GridLines.Visible =
-                false;
-
-            diagram.AxisX.Tickmarks.Visible =
-                false;
-
-            diagram.AxisY.Tickmarks.Visible =
-                false;
-        }
-
-        private static class DashColors
-        {
-            public static readonly Color Blue = Color.FromArgb(46, 117, 182);
-            public static readonly Color Teal = Color.FromArgb(38, 166, 154);
-            public static readonly Color Green = Color.FromArgb(40, 167, 69);
-            public static readonly Color Red = Color.FromArgb(220, 53, 69);
-            public static readonly Color Orange = Color.FromArgb(253, 126, 20);
-            public static readonly Color Purple = Color.FromArgb(111, 66, 193);
-            public static readonly Color Pink = Color.FromArgb(232, 62, 140);
-            public static readonly Color Cyan = Color.FromArgb(23, 162, 184);
-            public static readonly Color Gray = Color.FromArgb(134, 142, 150);
-
-            public static readonly Color[] DoughnutPalette =
-                [Blue, Teal, Green, Orange, Purple, Red, Pink, Cyan, Gray];
-        }
+            IReadOnlyList<DashboardDualPoint> data)
+            => DashboardChartLoader.LoadGroupedBar(
+                chart,
+                data,
+                "Giriş",
+                "Çıkış",
+                DashboardChartPalette.Success,
+                DashboardChartPalette.Danger);
     }
 }

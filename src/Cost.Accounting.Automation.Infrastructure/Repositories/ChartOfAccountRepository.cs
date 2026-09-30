@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.Domain.Abstractions;
+﻿using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems;
@@ -12,12 +12,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Repositories;
 
 internal sealed class ChartOfAccountRepository : AuditableRepository<ChartOfAccount, ApplicationDbContext>, IChartOfAccountRepository
 {
-    public ChartOfAccountRepository(ApplicationDbContext context) : base(context)
+    public ChartOfAccountRepository(ApplicationDbContext context, MasterDbContext masterContext) : base(context, masterContext)
     {
     }
 
     public Task<List<ChartOfAccount>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default)
-        => Context.Set<ChartOfAccount>().IgnoreQueryFilters().ToListAsync(cancellationToken);
+        => this.Context.Set<ChartOfAccount>().IgnoreQueryFilters().ToListAsync(cancellationToken);
 
     public async Task<AccountDeletionCheck> GetDeletionCheckAsync(IReadOnlyCollection<Guid> accountIds, CancellationToken cancellationToken = default)
     {
@@ -31,7 +31,7 @@ internal sealed class ChartOfAccountRepository : AuditableRepository<ChartOfAcco
         HashSet<Guid> relatedIds = new();
 
         // Hareket: hesap üzerinde gerçekleşen işlem/fiş kayıtları (engellenir).
-        List<IdentityId> ledgerAccounts = await Context.Set<ChartOfAccountLedger>()
+        List<IdentityId> ledgerAccounts = await this.Context.Set<ChartOfAccountLedger>()
             .Where(x => ids.Contains(x.ChartOfAccountId))
             .Select(x => x.ChartOfAccountId)
             .Distinct()
@@ -39,21 +39,21 @@ internal sealed class ChartOfAccountRepository : AuditableRepository<ChartOfAcco
         AddAll(movementIds, ledgerAccounts);
 
         // İlişkili (yapısal): hareket değil, yalnızca başka kayıtlar tarafından referans verilmiş.
-        List<IdentityId> warehouseIds = await Context.Set<Product>()
+        List<IdentityId> warehouseIds = await this.Context.Set<Product>()
             .Where(p => ids.Contains(p.WarehouseId))
             .Select(p => p.WarehouseId)
             .Distinct()
             .ToListAsync(cancellationToken);
         AddAll(relatedIds, warehouseIds);
 
-        List<IdentityId> categoryIds = await Context.Set<Product>()
+        List<IdentityId> categoryIds = await this.Context.Set<Product>()
             .Where(p => ids.Contains(p.CategoryId))
             .Select(p => p.CategoryId)
             .Distinct()
             .ToListAsync(cancellationToken);
         AddAll(relatedIds, categoryIds);
 
-        List<IdentityId?> chartAccountIds = await Context.Set<Product>()
+        List<IdentityId?> chartAccountIds = await this.Context.Set<Product>()
             .Where(p => p.ChartOfAccountId != null)
             .Select(p => p.ChartOfAccountId)
             .Distinct()
@@ -66,28 +66,28 @@ internal sealed class ChartOfAccountRepository : AuditableRepository<ChartOfAcco
             }
         }
 
-        List<IdentityId> workshopIds = await Context.Set<CostSlip>()
+        List<IdentityId> workshopIds = await this.Context.Set<CostSlip>()
             .Where(c => ids.Contains(c.WorkshopId))
             .Select(c => c.WorkshopId)
             .Distinct()
             .ToListAsync(cancellationToken);
         AddAll(relatedIds, workshopIds);
 
-        List<IdentityId> sourceWarehouseIds = await Context.Set<StockIssue>()
+        List<IdentityId> sourceWarehouseIds = await this.Context.Set<StockIssue>()
             .Where(s => ids.Contains(s.SourceWarehouseId))
             .Select(s => s.SourceWarehouseId)
             .Distinct()
             .ToListAsync(cancellationToken);
         AddAll(relatedIds, sourceWarehouseIds);
 
-        List<IdentityId> targetAccountIds = await Context.Set<StockIssue>()
+        List<IdentityId> targetAccountIds = await this.Context.Set<StockIssue>()
             .Where(s => ids.Contains(s.TargetAccountId))
             .Select(s => s.TargetAccountId)
             .Distinct()
             .ToListAsync(cancellationToken);
         AddAll(relatedIds, targetAccountIds);
 
-        List<IdentityId?> consumptionRefs = await Context.Set<CostSlipItem>()
+        List<IdentityId?> consumptionRefs = await this.Context.Set<CostSlipItem>()
             .Where(i => i.ProductUnitTypeId != null)
             .Select(i => i.ProductUnitTypeId)
             .Distinct()

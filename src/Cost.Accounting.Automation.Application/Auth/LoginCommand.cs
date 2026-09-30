@@ -2,13 +2,15 @@
 using GenericRepository;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Users;
+using Cost.Accounting.Automation.Domain.Roles;
 using TS.MediatR;
 using TS.Result;
 
 namespace Cost.Accounting.Automation.Application.Auth;
 public sealed record LoginCommand(
     string EmailOrUserName,
-    string Password) : IRequest<Result<LoginCommandResponse>>;
+    string Password,
+    Guid? CompanyId = null) : IRequest<Result<LoginCommandResponse>>;
 
 
 public sealed record LoginCommandResponse
@@ -26,13 +28,15 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
 
 public sealed class LoginCommandHandler(
     IUserRepository userRepository,
+    IRoleRepository roleRepository,
     IJwtProvider jwtProvider) : IRequestHandler<LoginCommand, Result<LoginCommandResponse>>
 {
     public async Task<Result<LoginCommandResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var user = await userRepository.FirstOrDefaultAsync(p =>
             p.Email.Value == request.EmailOrUserName
-            || p.UserName.Value == request.EmailOrUserName);
+            || p.UserName.Value == request.EmailOrUserName,
+            cancellationToken);
 
         if (user is null)
         {
@@ -44,6 +48,20 @@ public sealed class LoginCommandHandler(
         if (!checkPassword)
         {
             return Result<LoginCommandResponse>.Failure("Kullanıcı adı ya da şifre yanlış");
+        }
+
+        // Giriş ekranında kurum seçimi zorunludur. sys_admin tüm kurumların
+        // verisine erişebilir; diğer kullanıcılar yalnızca kendi kurumunda
+        // oturum açabilir.
+        if (request.CompanyId is { } selectedCompanyId && user.CompanyId.Value != selectedCompanyId)
+        {
+            var role = await roleRepository.FirstOrDefaultAsync(r => r.Id == user.RoleId, cancellationToken);
+
+            if (role?.Name.Value != "sys_admin")
+            {
+                return Result<LoginCommandResponse>.Failure(
+                    "Bu kullanıcı seçilen kuruma ait değil. Kendi kurumunuzla giriş yapın.");
+            }
         }
 
         var token = await jwtProvider.CreateTokenAsync(user, cancellationToken);

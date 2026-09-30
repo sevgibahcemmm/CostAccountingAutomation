@@ -38,11 +38,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         private DevExpress.XtraEditors.CheckEdit chkActive;
         private DevExpress.XtraEditors.LabelControl lblPasswordNote;
 
-        // Sekme 3 - Fotoğraflar
-        private DevExpress.XtraEditors.ListBoxControl lstPhotos;
+        // Sekme 3 - Avatar
         private DevExpress.XtraEditors.PictureEdit picPhoto;
         private DevExpress.XtraEditors.SimpleButton btnAddPhoto;
-        private DevExpress.XtraEditors.SimpleButton btnSetDefault;
         private DevExpress.XtraEditors.SimpleButton btnRemovePhoto;
 
         // Alan simgeleri
@@ -100,10 +98,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             chkActive = new DevExpress.XtraEditors.CheckEdit();
             lblPasswordNote = new DevExpress.XtraEditors.LabelControl();
 
-            lstPhotos = new DevExpress.XtraEditors.ListBoxControl();
             picPhoto = new DevExpress.XtraEditors.PictureEdit();
             btnAddPhoto = new DevExpress.XtraEditors.SimpleButton();
-            btnSetDefault = new DevExpress.XtraEditors.SimpleButton();
             btnRemovePhoto = new DevExpress.XtraEditors.SimpleButton();
 
             lblIconFirstName = new DevExpress.XtraEditors.LabelControl();
@@ -130,7 +126,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             ((System.ComponentModel.ISupportInitialize)cmbCompany.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbRole.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)lstPhotos).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picPhoto.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pnlFooter).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pnlFooterLine).BeginInit();
@@ -536,35 +531,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             // tabPhotos
             //
             tabPhotos.Controls.Add(btnRemovePhoto);
-            tabPhotos.Controls.Add(btnSetDefault);
             tabPhotos.Controls.Add(btnAddPhoto);
             tabPhotos.Controls.Add(picPhoto);
-            tabPhotos.Controls.Add(lstPhotos);
             tabPhotos.ImageOptions.SvgImage = DxIcon.Photo;
             tabPhotos.ImageOptions.SvgImageSize = new Size(16, 16);
             tabPhotos.Name = "tabPhotos";
             tabPhotos.Size = new Size(474, 297);
             tabPhotos.Text = "Fotoğraflar";
             //
-            // lstPhotos
-            //
-            lstPhotos.Location = new Point(20, 20);
-            lstPhotos.Margin = new Padding(3, 2, 3, 2);
-            lstPhotos.Name = "lstPhotos";
-            lstPhotos.Size = new Size(207, 138);
-            lstPhotos.TabIndex = 0;
-            lstPhotos.SelectedIndexChanged += LstPhotos_SelectedIndexChanged;
-            //
             // picPhoto
             //
-            picPhoto.Location = new Point(247, 20);
+            picPhoto.Location = new Point(20, 20);
             picPhoto.Margin = new Padding(3, 2, 3, 2);
             picPhoto.Name = "picPhoto";
             picPhoto.Properties.Appearance.BackColor = Color.FromArgb(245, 246, 248);
             picPhoto.Properties.Appearance.Options.UseBackColor = true;
             picPhoto.Properties.ShowMenu = false;
             picPhoto.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
-            picPhoto.Size = new Size(207, 138);
+            picPhoto.Size = new Size(434, 178);
             picPhoto.TabIndex = 1;
             //
             // btnAddPhoto
@@ -580,21 +564,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnAddPhoto.ImageOptions.SvgImage = DxIcon.Add;
             btnAddPhoto.ImageOptions.SvgImageSize = new Size(16, 16);
             btnAddPhoto.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            //
-            // btnSetDefault
-            //
-            btnSetDefault.Appearance.Font = new Font("Segoe UI", 9F);
-            btnSetDefault.Appearance.Options.UseFont = true;
-            btnSetDefault.Location = new Point(164, 170);
-            btnSetDefault.Margin = new Padding(3, 2, 3, 2);
-            btnSetDefault.Name = "btnSetDefault";
-            btnSetDefault.Size = new Size(136, 28);
-            btnSetDefault.TabIndex = 3;
-            btnSetDefault.Text = "Varsayılan Yap";
-            btnSetDefault.ImageOptions.SvgImage = DxIcon.Star;
-            btnSetDefault.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnSetDefault.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            //
+//
             // btnRemovePhoto
             //
             btnRemovePhoto.Appearance.Font = new Font("Segoe UI", 9F);
@@ -696,7 +666,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             ((System.ComponentModel.ISupportInitialize)cmbRole.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).EndInit();
             tabPhotos.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)lstPhotos).EndInit();
             ((System.ComponentModel.ISupportInitialize)picPhoto.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)tabMain).EndInit();
             tabMain.ResumeLayout(false);

@@ -41,7 +41,6 @@ public sealed class UserCreateCommandValidator : AbstractValidator<UserCreateCom
 
 internal sealed class UserCreateCommandHandler(
     IUserRepository userRepository,
-    IPhotoRepository photoRepository,
     IFileStorageService fileStorage,
     IClaimContext claimContext,
     IDuplicateCheckService duplicateCheckService) : IRequestHandler<UserCreateCommand, Result<string>>
@@ -99,19 +98,21 @@ internal sealed class UserCreateCommandHandler(
 
         if (request.Photos is { Count: > 0 })
         {
-            bool anyDefault = request.Photos.Any(p => p.IsDefault);
-            for (int i = 0; i < request.Photos.Count; i++)
-            {
-                var photo = request.Photos[i];
-                bool isDefault = photo.IsDefault || (!anyDefault && i == 0);
+            var avatar = ResolveAvatar(request.Photos);
 
-                string relativePath = await fileStorage.SaveAsync(
-                    photo.Data, photo.FileName, "UserImages", cancellationToken);
+            string relativePath = await fileStorage.SaveAsync(
+                avatar.Data, avatar.FileName, "UserImages", cancellationToken);
 
-                photoRepository.Add(new Photo(PhotoOwnerType.User, user.Id, photo.FileName, photo.ContentType, relativePath, isDefault));
-            }
+            user.SetAvatarPath(relativePath);
         }
 
         return Result<string>.Succeed("Kullanıcı başarıyla oluşturuldu");
     }
+
+    /// <summary>
+    /// Kullanıcı verileri master veritabanında tek bir avatar yoluna sahip
+    /// olabildiği için çoklu fotoğraf listesinden varsayılan (yoksa ilk) seçilir.
+    /// </summary>
+    internal static PhotoInput ResolveAvatar(IReadOnlyList<PhotoInput> photos)
+        => photos.FirstOrDefault(p => p.IsDefault) ?? photos[0];
 }

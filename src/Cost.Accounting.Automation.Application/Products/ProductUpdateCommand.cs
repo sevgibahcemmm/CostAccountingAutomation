@@ -186,8 +186,6 @@ internal sealed class ProductUpdateCommandHandler(
             new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
 
         product.ReplaceImages(request.Images.Select(i => new Photo(
-            PhotoOwnerType.Product,
-            product.Id,
             System.IO.Path.GetFileName(i.Path),
             GetContentType(i.Path),
             i.Path,
@@ -280,8 +278,6 @@ internal sealed class ProductUpdateCommandHandler(
             // yarımamül maliyeti de mamüle bulaşmamalı; fiyatlar bağımsız yönetilir.
 
             companion.ReplaceImages(request.Images.Select(i => new Photo(
-                PhotoOwnerType.Product,
-                companion.Id,
                 System.IO.Path.GetFileName(i.Path),
                 GetContentType(i.Path),
                 i.Path,

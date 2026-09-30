@@ -10,20 +10,24 @@ public sealed class ProductPriceDto
 
     public ProductPriceType PriceType { get; set; }
 
-    [Column("Fiyat Türü", Order = 10, Width = 90, Alignment = "Center")]
+    [Column("Fiyat Türü", Order = 10, Width = 90, Alignment = "Center",
+        Tip = "Alış: ürünün maliyet/almış fiyatı. Satış: müşteriye uygulanan fiyat.")]
     public string PriceTypeName
     {
         get => PriceType == ProductPriceType.Sale ? "Satış" : "Alış";
         set => PriceType = value == "Alış" ? ProductPriceType.Purchase : ProductPriceType.Sale;
     }
 
-    [Column("Birim Fiyat", Order = 20, Width = 110, Format = "n2", Alignment = "Right")]
+    [Column("Birim Fiyat", Order = 20, Width = 110, Format = "n2", Alignment = "Right",
+        Tip = "Fiyat tutarı (Kdv hariç).")]
     public decimal UnitPrice { get; set; }
 
-    [Column("Başlangıç", Order = 30, Width = 110, Format = "dd.MM.yyyy", Alignment = "Center")]
+    [Column("Fiyat Başlangıç", Order = 30, Width = 120, Format = "dd.MM.yyyy", Alignment = "Center",
+        Tip = "Bu fiyatın geçerli olmaya başladığı tarih. Fiyat listelerinde ve stok kartında bu tarihten sonraki belgelere bu fiyat uygulanır.")]
     public DateOnly StartDate { get; set; }
 
-    [Column("Bitiş", Order = 40, Width = 110, Format = "dd.MM.yyyy", Alignment = "Center")]
+    [Column("Fiyat Bitiş", Order = 40, Width = 120, Format = "dd.MM.yyyy", Alignment = "Center",
+        Tip = "Bu fiyatın geçerliliğinin bittiği tarih. Boş bırakılırsa fiyat süresiz olarak geçerli sayılır.")]
     public DateOnly? EndDate { get; set; }
 }
 
@@ -150,19 +154,19 @@ public static class ProductExtensions
                 QRCode = s.Entity.QRCode.Value,
                 MinimumProductLevel = s.Entity.MinimumProductLevel,
                 TaxRateId = s.Entity.TaxRateId,
-                TaxRateName = s.Entity.TaxRate!.Name.Value,
-                TaxRateRate = s.Entity.TaxRate!.Rate,
+                TaxRateName = s.Entity.TaxRate == null ? string.Empty : s.Entity.TaxRate.Name.Value,
+                TaxRateRate = s.Entity.TaxRate == null ? 0m : s.Entity.TaxRate.Rate,
 
                 WarehouseId = s.Entity.WarehouseId,
-                WarehouseCode = s.Entity.Warehouse!.Code.Value,
-                WarehouseName = s.Entity.Warehouse.Name.Value,
+                WarehouseCode = s.Entity.Warehouse == null ? string.Empty : s.Entity.Warehouse.Code.Value,
+                WarehouseName = s.Entity.Warehouse == null ? string.Empty : s.Entity.Warehouse.Name.Value,
 
                 CategoryId = s.Entity.CategoryId,
-                CategoryCode = s.Entity.Category!.Code.Value,
-                CategoryName = s.Entity.Category.Name.Value,
+                CategoryCode = s.Entity.Category == null ? string.Empty : s.Entity.Category.Code.Value,
+                CategoryName = s.Entity.Category == null ? string.Empty : s.Entity.Category.Name.Value,
 
                 ProductUnitTypeId = s.Entity.ProductUnitTypeId,
-                ProductUnitTypeName = s.Entity.ProductUnitType!.Name.Value,
+                ProductUnitTypeName = s.Entity.ProductUnitType == null ? string.Empty : s.Entity.ProductUnitType.Name.Value,
 
                 ChartOfAccountId = s.Entity.ChartOfAccountId == null ? null : s.Entity.ChartOfAccountId.Value,
                 ChartOfAccountCode = s.Entity.ChartOfAccount == null ? null : s.Entity.ChartOfAccount.Code.Value,

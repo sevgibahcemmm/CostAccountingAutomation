@@ -36,6 +36,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
         private async Task LoadDataAsync()
         {
+            await LoadingHelper.RunAsync(
+                LoadDataCoreAsync,
+                caption: "Cari hesaplar yükleniyor...",
+                description: "Lütfen bekleyin...");
+        }
+
+        private async Task LoadDataCoreAsync()
+        {
             try
             {
                 lblSub.Text = "Yükleniyor...";

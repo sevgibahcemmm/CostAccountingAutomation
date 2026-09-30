@@ -70,6 +70,24 @@ internal static class InvoiceLedgerHelper
         return null;
     }
 
+    /// <summary>
+    /// Onaylanmış faturalar arasındaki en son tarihi döndürür (yoksa null).
+    /// Denetim (kullanıcı) join'i gerekmediği için doğrudan EF sorgusu kullanılır;
+    /// GetAllWithAudit() bellek içi sorgu döndürdüğünden async operatörleri desteklemez.
+    /// </summary>
+    internal static async Task<DateOnly?> GetLastApprovedDateAsync(
+        IInvoiceRepository invoiceRepository,
+        IdentityId excludeInvoiceId,
+        CancellationToken cancellationToken)
+    {
+        return await invoiceRepository
+            .GetAll()
+            .Where(i => i.Status == InvoiceStatus.Approved && i.Id != excludeInvoiceId)
+            .OrderByDescending(i => i.Date)
+            .Select(i => (DateOnly?)i.Date)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public static async Task CreateLedgerMovementsAsync(
         Invoice invoice,
         IProductMovementRepository productMovementRepository,

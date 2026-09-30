@@ -12,6 +12,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private System.Windows.Forms.Label lblDate;
 
         private System.Windows.Forms.Panel pnlBody;
+        private System.Windows.Forms.Panel pnlScroll;
         private System.Windows.Forms.TableLayoutPanel tblLayout;
         private System.Windows.Forms.TableLayoutPanel tblKpi;
 
@@ -118,6 +119,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraGrid.GridControl gridProductStocks;
         private DevExpress.XtraGrid.Views.Grid.GridView viewProductStocks;
 
+        private DevExpress.XtraEditors.PanelControl pnlChartInvoiceTypes;
+        private System.Windows.Forms.Label lblChartInvoiceTypesTitle;
+        private DevExpress.XtraCharts.ChartControl chartInvoiceTypes;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartMonthlyBalances;
+        private System.Windows.Forms.Label lblChartMonthlyBalancesTitle;
+        private DevExpress.XtraCharts.ChartControl chartMonthlyBalances;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartCategoryStocks;
+        private System.Windows.Forms.Label lblChartCategoryStocksTitle;
+        private DevExpress.XtraCharts.ChartControl chartCategoryStocks;
+
+        private DevExpress.XtraEditors.PanelControl pnlChartTopMovements;
+        private System.Windows.Forms.Label lblChartTopMovementsTitle;
+        private DevExpress.XtraCharts.ChartControl chartTopMovements;
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && components != null)
@@ -146,6 +163,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 new System.Windows.Forms.Label();
 
             pnlBody =
+                new System.Windows.Forms.Panel();
+
+            pnlScroll =
                 new System.Windows.Forms.Panel();
 
             tblLayout =
@@ -403,6 +423,42 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             viewProductStocks =
                 new DevExpress.XtraGrid.Views.Grid.GridView();
 
+            pnlChartInvoiceTypes =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartInvoiceTypesTitle =
+                new System.Windows.Forms.Label();
+
+            chartInvoiceTypes =
+                new DevExpress.XtraCharts.ChartControl();
+
+            pnlChartMonthlyBalances =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartMonthlyBalancesTitle =
+                new System.Windows.Forms.Label();
+
+            chartMonthlyBalances =
+                new DevExpress.XtraCharts.ChartControl();
+
+            pnlChartCategoryStocks =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartCategoryStocksTitle =
+                new System.Windows.Forms.Label();
+
+            chartCategoryStocks =
+                new DevExpress.XtraCharts.ChartControl();
+
+            pnlChartTopMovements =
+                new DevExpress.XtraEditors.PanelControl();
+
+            lblChartTopMovementsTitle =
+                new System.Windows.Forms.Label();
+
+            chartTopMovements =
+                new DevExpress.XtraCharts.ChartControl();
+
             btnRefresh =
                 new DevExpress.XtraEditors.SimpleButton();
 
@@ -498,6 +554,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             ((System.ComponentModel.ISupportInitialize)gridProductStocks).BeginInit();
             ((System.ComponentModel.ISupportInitialize)viewProductStocks).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartInvoiceTypes).BeginInit();
+            pnlChartInvoiceTypes.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartInvoiceTypes).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartMonthlyBalances).BeginInit();
+            pnlChartMonthlyBalances.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartMonthlyBalances).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartCategoryStocks).BeginInit();
+            pnlChartCategoryStocks.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartCategoryStocks).BeginInit();
+
+            ((System.ComponentModel.ISupportInitialize)pnlChartTopMovements).BeginInit();
+            pnlChartTopMovements.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)chartTopMovements).BeginInit();
 
             SuspendLayout();
 
@@ -652,6 +728,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlBody.TabIndex =
                 1;
 
+            pnlBody.Controls.Add(pnlScroll);
+
+            pnlScroll.AutoScroll =
+                true;
+
+            pnlScroll.BackColor =
+                System.Drawing.Color.Transparent;
+
+            pnlScroll.Dock =
+                System.Windows.Forms.DockStyle.Fill;
+
+            pnlScroll.Location =
+                new System.Drawing.Point(16, 16);
+
+            pnlScroll.Name =
+                "pnlScroll";
+
+            pnlScroll.Size =
+                new System.Drawing.Size(1248, 592);
+
+            pnlScroll.TabIndex =
+                0;
+
+            pnlScroll.Controls.Add(tblLayout);
+
             tblLayout.ColumnCount =
                 1;
 
@@ -670,11 +771,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 0,
                 1);
 
+            // Kaydırılabilir gövde içinde büyüyen panel: grafik satırları sabit
+            // yükseklikte olup ekran küçüldüğünde dikey kaydırma çubuğu devreye girer.
+            tblLayout.AutoSize =
+                true;
+
+            tblLayout.AutoSizeMode =
+                System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+
             tblLayout.Dock =
-                System.Windows.Forms.DockStyle.Fill;
+                System.Windows.Forms.DockStyle.Top;
 
             tblLayout.Location =
-                new System.Drawing.Point(16, 16);
+                new System.Drawing.Point(0, 0);
 
             tblLayout.Margin =
                 new System.Windows.Forms.Padding(0);
@@ -687,16 +796,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             tblLayout.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    14F));
+                    System.Windows.Forms.SizeType.Absolute,
+                    104F));
 
             tblLayout.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    86F));
+                    System.Windows.Forms.SizeType.AutoSize));
 
             tblLayout.Size =
-                new System.Drawing.Size(1248, 592);
+                new System.Drawing.Size(1248, 1294);
 
             tblLayout.TabIndex =
                 0;
@@ -774,7 +882,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     100F));
 
             tblKpi.Size =
-                new System.Drawing.Size(1248, 183);
+                new System.Drawing.Size(1248, 104);
 
             tblKpi.TabIndex =
                 0;
@@ -867,24 +975,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 "✓",
                 "#17A2B8");
 
+            // 4 sütun x 5 satır: 10 grafik (3 satır) + 4 tablo (2 satır)
             tblBottom.ColumnCount =
-                3;
+                4;
 
             tblBottom.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    33.3333F));
+                    25F));
 
             tblBottom.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    33.3333F));
+                    25F));
 
             tblBottom.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    33.3334F));
+                    25F));
 
+            tblBottom.ColumnStyles.Add(
+                new System.Windows.Forms.ColumnStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    25F));
+
+            // Satır 0: alacak / borç / kritik stok / fatura durumu
             tblBottom.Controls.Add(
                 pnlChartReceivables,
                 0,
@@ -902,6 +1017,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             tblBottom.Controls.Add(
                 pnlChartInvoiceStatus,
+                3,
+                0);
+
+            // Satır 1: fatura türleri / aylık ciro / stok giriş-çıkış / aylık bakiye
+            tblBottom.Controls.Add(
+                pnlChartInvoiceTypes,
                 0,
                 1);
 
@@ -916,34 +1037,64 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 1);
 
             tblBottom.Controls.Add(
-                pnlTableReceivables,
+                pnlChartMonthlyBalances,
+                3,
+                1);
+
+            // Satır 2: geniş yerleşimli veri ağırlıklı iki bar grafik
+            tblBottom.Controls.Add(
+                pnlChartCategoryStocks,
                 0,
                 2);
+
+            tblBottom.SetColumnSpan(
+                pnlChartCategoryStocks,
+                2);
+
+            tblBottom.Controls.Add(
+                pnlChartTopMovements,
+                2,
+                2);
+
+            tblBottom.SetColumnSpan(
+                pnlChartTopMovements,
+                2);
+
+            // Satır 3: tablo satırı
+            tblBottom.Controls.Add(
+                pnlTableReceivables,
+                0,
+                3);
 
             tblBottom.Controls.Add(
                 pnlTablePayables,
                 1,
-                2);
+                3);
 
             tblBottom.Controls.Add(
                 pnlTableCriticalStock,
                 2,
-                2);
-
-            tblBottom.Controls.Add(
-                pnlTableProductStocks,
-                0,
                 3);
 
             tblBottom.SetColumnSpan(
+                pnlTableCriticalStock,
+                2);
+
+            // Satır 4: ürün stok tablosu tüm genişlikte
+            tblBottom.Controls.Add(
                 pnlTableProductStocks,
-                3);
+                0,
+                4);
+
+            tblBottom.SetColumnSpan(
+                pnlTableProductStocks,
+                4);
 
             tblBottom.Dock =
                 System.Windows.Forms.DockStyle.Fill;
 
             tblBottom.Location =
-                new System.Drawing.Point(0, 187);
+                new System.Drawing.Point(0, 104);
 
             tblBottom.Margin =
                 new System.Windows.Forms.Padding(
@@ -956,30 +1107,36 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 "tblBottom";
 
             tblBottom.RowCount =
-                4;
+                5;
+
+            // Grafik satırları sabit yükseklikte: pencere küçülünce kaydırma devreye girer.
+            tblBottom.RowStyles.Add(
+                new System.Windows.Forms.RowStyle(
+                    System.Windows.Forms.SizeType.Absolute,
+                    300F));
 
             tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    28F));
+                    System.Windows.Forms.SizeType.Absolute,
+                    300F));
 
             tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    24F));
+                    System.Windows.Forms.SizeType.Absolute,
+                    320F));
 
             tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    24F));
+                    System.Windows.Forms.SizeType.Absolute,
+                    280F));
 
             tblBottom.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    24F));
+                    System.Windows.Forms.SizeType.Absolute,
+                    280F));
 
             tblBottom.Size =
-                new System.Drawing.Size(1248, 405);
+                new System.Drawing.Size(1248, 1484);
 
             tblBottom.TabIndex =
                 1;
@@ -1048,6 +1205,30 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 chartStockMovements,
                 "Stok Giriş / Çıkış");
 
+            ConfigureChartPanel(
+                pnlChartInvoiceTypes,
+                lblChartInvoiceTypesTitle,
+                chartInvoiceTypes,
+                "Fatura Türü Dağılımı");
+
+            ConfigureChartPanel(
+                pnlChartMonthlyBalances,
+                lblChartMonthlyBalancesTitle,
+                chartMonthlyBalances,
+                "Aylık Alacak / Borç");
+
+            ConfigureChartPanel(
+                pnlChartCategoryStocks,
+                lblChartCategoryStocksTitle,
+                chartCategoryStocks,
+                "Kategori Bazında Stok Değeri");
+
+            ConfigureChartPanel(
+                pnlChartTopMovements,
+                lblChartTopMovementsTitle,
+                chartTopMovements,
+                "En Hareketli Ürünler");
+
             ClientSize =
                 new System.Drawing.Size(1280, 720);
 
@@ -1068,6 +1249,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             pnlHeader.ResumeLayout(false);
             pnlBody.ResumeLayout(false);
+            pnlScroll.ResumeLayout(false);
             tblLayout.ResumeLayout(false);
             tblKpi.ResumeLayout(false);
 
@@ -1130,6 +1312,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             pnlChartStockMovements.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)chartStockMovements).EndInit();
+
+            pnlChartInvoiceTypes.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartInvoiceTypes).EndInit();
+
+            pnlChartMonthlyBalances.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartMonthlyBalances).EndInit();
+
+            pnlChartCategoryStocks.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartCategoryStocks).EndInit();
+
+            pnlChartTopMovements.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartTopMovements).EndInit();
+
+            tblBottom.ResumeLayout(false);
 
             ResumeLayout(false);
         }

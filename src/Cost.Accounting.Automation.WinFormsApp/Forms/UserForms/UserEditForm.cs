@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Companies;
@@ -23,7 +23,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
     {
         private readonly UserDto? _editing;
         private List<RoleDto> _roles = [];
-        private readonly List<PhotoInput> _photos = [];
+        private PhotoInput? _avatar;
 
         public UserEditForm() : this(null)
         {
@@ -45,7 +45,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
             btnAddPhoto.Click += BtnAddPhoto_Click;
-            btnSetDefault.Click += BtnSetDefault_Click;
             btnRemovePhoto.Click += BtnRemovePhoto_Click;
             Load += UserEditForm_Load;
         }
@@ -67,7 +66,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
                 if (_editing is not null)
                 {
                     Populate(_editing);
-                    await LoadExistingPhotosAsync();
+                    if (!string.IsNullOrWhiteSpace(_editing.DefaultPhotoPath))
+                    {
+                        LoadAvatarFromPath(_editing.DefaultPhotoPath);
+                    }
                 }
             }
             catch (Exception ex)
@@ -81,28 +83,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             }
         }
 
-        private async Task LoadExistingPhotosAsync()
+        private void LoadAvatarFromPath(string relativePath)
         {
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-            var photos = await mediator.Send(new UserGetPhotosQuery(_editing!.Id), CancellationToken.None);
-            if (photos.Data is null)
+            string fullPath = StorageRoot.Resolve(relativePath);
+            if (!File.Exists(fullPath))
             {
                 return;
             }
 
-            foreach (PhotoDto photo in photos.Data)
-            {
-                string fullPath = StorageRoot.Resolve(photo.Path);
-                if (!File.Exists(fullPath))
-                {
-                    continue;
-                }
-
-                byte[] data = await File.ReadAllBytesAsync(fullPath);
-                _photos.Add(new PhotoInput(photo.FileName, photo.ContentType, data, photo.IsDefault));
-            }
-            RefreshPhotoList();
+            byte[] data = File.ReadAllBytes(fullPath);
+            string fileName = Path.GetFileName(relativePath);
+            string contentType = GetContentType(relativePath);
+            _avatar = new PhotoInput(Path.GetFileName(relativePath), contentType, data, true);
+            picPhoto.Image = Image.FromStream(new MemoryStream(_avatar.Data));
         }
 
         private async Task LoadLookupsAsync()
@@ -151,8 +144,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             using var dialog = new OpenFileDialog
             {
                 Filter = "Görseller (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif",
-                Multiselect = true,
-                Title = "Fotoğraf Seç",
+                Multiselect = false,
+                Title = "Avatar Seç",
             };
 
             if (dialog.ShowDialog() != DialogResult.OK)
@@ -160,97 +153,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
                 return;
             }
 
-            foreach (string file in dialog.FileNames)
-            {
-                byte[] data = File.ReadAllBytes(file);
-                string fileName = Path.GetFileName(file);
-                string contentType = GetContentType(fileName);
-                bool isDefault = _photos.Count == 0;
-                _photos.Add(new PhotoInput(fileName, contentType, data, isDefault));
-            }
+            string file = dialog.FileName;
+            byte[] data = File.ReadAllBytes(file);
+            string fileName = Path.GetFileName(file);
+            string contentType = GetContentType(fileName);
+            _avatar = new PhotoInput(fileName, contentType, data, true);
 
-            RefreshPhotoList();
-        }
-
-        private void BtnSetDefault_Click(object? sender, EventArgs e)
-        {
-            if (lstPhotos.SelectedIndex < 0)
-            {
-                ToastHelper.Show("Önce bir fotoğraf seçin", ToastType.Warning);
-                return;
-            }
-
-            for (int i = 0; i < _photos.Count; i++)
-            {
-                _photos[i] = _photos[i] with { IsDefault = i == lstPhotos.SelectedIndex };
-            }
-
-            RefreshPhotoList();
-            ToastHelper.Show("Varsayılan fotoğraf güncellendi", ToastType.Success, 2000);
+            using var ms = new MemoryStream(_avatar.Data);
+            picPhoto.Image = Image.FromStream(ms);
         }
 
         private void BtnRemovePhoto_Click(object? sender, EventArgs e)
         {
-            int index = lstPhotos.SelectedIndex;
-            if (index < 0)
+            if (_avatar is null)
             {
-                ToastHelper.Show("Önce bir fotoğraf seçin", ToastType.Warning);
+                ToastHelper.Show("Kaldırılacak avatar yok", ToastType.Warning);
                 return;
             }
 
-            _photos.RemoveAt(index);
-            if (_photos.Count > 0 && !_photos.Any(p => p.IsDefault))
-            {
-                _photos[0] = _photos[0] with { IsDefault = true };
-            }
-
-            RefreshPhotoList();
-        }
-
-        private void LstPhotos_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            UpdatePreview();
+            _avatar = null;
+            picPhoto.Image = null;
+            ToastHelper.Show("Avatar kaldırıldı", ToastType.Success, 2000);
         }
 
         private void RefreshPhotoList()
         {
-            int previous = lstPhotos.SelectedIndex;
-            lstPhotos.Items.Clear();
-            foreach (PhotoInput photo in _photos)
-            {
-                lstPhotos.Items.Add((photo.IsDefault ? "★ " : "") + photo.FileName);
-            }
-
-            if (_photos.Count == 0)
+            if (_avatar is null)
             {
                 picPhoto.Image = null;
                 return;
             }
 
-            lstPhotos.SelectedIndex = previous >= 0 && previous < lstPhotos.Items.Count ? previous : 0;
-            UpdatePreview();
-        }
-
-        private void UpdatePreview()
-        {
-            if (_photos.Count == 0)
-            {
-                picPhoto.Image = null;
-                return;
-            }
-
-            int index = lstPhotos.SelectedIndex;
-            if (index < 0 || index >= _photos.Count)
-            {
-                index = _photos.FindIndex(p => p.IsDefault);
-                if (index < 0)
-                {
-                    index = 0;
-                }
-            }
-
-            PhotoInput toShow = _photos[index];
-            using var ms = new MemoryStream(toShow.Data);
+            using var ms = new MemoryStream(_avatar.Data);
             picPhoto.Image = Image.FromStream(ms);
         }
 
@@ -277,7 +211,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             Guid? companyId = cmbCompany.EditValue as Guid?;
             Guid roleId = cmbRole.EditValue is Guid r ? r : Guid.Empty;
             bool isActive = chkActive.Checked;
-            List<PhotoInput> photos = _photos.ToList();
+            List<PhotoInput> photos = _avatar is not null ? [_avatar] : [];
 
             IRequest<Result<string>> command = _editing is null
                 ? new UserCreateCommand(firstName, lastName, email, userName, companyId, roleId, isActive, tcNo, photos)

@@ -118,17 +118,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
 
         public static async Task ShowAsync(MovableAssetTransactionSlipData data)
         {
-            WaitForm? waitForm = null;
             try
             {
                 MovableAssetTransactionSlipReport report = new(data);
 
-                waitForm = WaitFormHelper.Show<WaitForm>("Rapor hazırlanıyor...", "Lütfen bekleyin...");
-                await report.CreateDocumentAsync(CancellationToken.None);
-
-                waitForm.Close();
-                waitForm.Dispose();
-                waitForm = null;
+                // Yalnızca belge üretimi bekleme penceresinin kapsamında; önizleme
+                // penceresi modal olduğu için bekleme kapandıktan sonra açılır.
+                await LoadingHelper.RunAsync(
+                    () => report.CreateDocumentAsync(CancellationToken.None),
+                    caption: "Rapor hazırlanıyor...",
+                    description: "Lütfen bekleyin...");
 
                 using ReportPrintTool tool = new(report);
                 tool.PreviewRibbonForm.PrintControl.UseDirectXPaint = DefaultBoolean.True;
@@ -137,11 +136,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
             catch (Exception ex)
             {
                 ToastHelper.Show("Taşınır işlem fişi açılamadı: " + ex.Message, ToastType.Error, 6000);
-            }
-            finally
-            {
-                waitForm?.Close();
-                waitForm?.Dispose();
             }
         }
     }

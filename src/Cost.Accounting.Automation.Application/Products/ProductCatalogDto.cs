@@ -5,8 +5,9 @@ namespace Cost.Accounting.Automation.Application.Products;
 
 /// <summary>
 /// Ürün listeleme/katalog ekranları için hafif projeksiyon. <see cref="ProductDto"/>'nun aksine
-/// hareket (Movements) ve görsel (Images) verisini içermez; böylece yüzlerce ürünün tüm stok
-/// hareketleri her liste açılışında veritabanından çekilmez.
+/// görsel (Images) verisini içermez; <see cref="Movements"/> ise yalnızca
+/// <see cref="ProductCatalogGetAllQuery.IncludeMovements"/> isteğinde doldurulur, böylece her
+/// liste açılışında tüm stok hareketleri çekilmez.
 /// </summary>
 public sealed class ProductCatalogDto : EntityDto
 {
@@ -79,7 +80,16 @@ public sealed class ProductCatalogDto : EntityDto
     [Column("Stok", Order = 75, Width = 90, Format = "n2", Alignment = "Right")]
     public decimal StockQuantity { get; set; }
 
+    /// <summary>
+    /// Giriş stok hareketlerinin ağırlıklı ortalama birim maliyeti. Fiyat kaydı olmayan
+    /// ürünlerde (ör. 151/152 depoları) alış fiyatı yerine bu değer kullanılır.
+    /// </summary>
+    public decimal? CostPrice { get; set; }
+
     public List<ProductPriceDto> Prices { get; set; } = [];
+
+    /// <summary>Belge bilgisi çözülmüş stok hareketleri (detay satırı ve detay formu için).</summary>
+    public List<ProductStockMovementDetailDto> Movements { get; set; } = [];
 }
 
 public static class ProductCatalogExtensions
@@ -96,20 +106,22 @@ public static class ProductCatalogExtensions
                 QRCode = s.Entity.QRCode.Value,
                 MinimumProductLevel = s.Entity.MinimumProductLevel,
                 TaxRateId = s.Entity.TaxRateId,
-                TaxRateName = s.Entity.TaxRate!.Name.Value,
-                TaxRateRate = s.Entity.TaxRate!.Rate,
+                TaxRateName = s.Entity.TaxRate == null ? string.Empty : s.Entity.TaxRate.Name.Value,
+                TaxRateRate = s.Entity.TaxRate == null ? 0m : s.Entity.TaxRate.Rate,
 
                 WarehouseId = s.Entity.WarehouseId,
-                WarehouseCode = s.Entity.Warehouse!.Code.Value,
-                WarehouseName = s.Entity.Warehouse.Name.Value,
-                WarehouseGroup = $"{s.Entity.Warehouse.Code.Value} - {s.Entity.Warehouse.Name.Value}",
+                WarehouseCode = s.Entity.Warehouse == null ? string.Empty : s.Entity.Warehouse.Code.Value,
+                WarehouseName = s.Entity.Warehouse == null ? string.Empty : s.Entity.Warehouse.Name.Value,
+                WarehouseGroup = s.Entity.Warehouse == null
+                    ? string.Empty
+                    : $"{s.Entity.Warehouse.Code.Value} - {s.Entity.Warehouse.Name.Value}",
 
                 CategoryId = s.Entity.CategoryId,
-                CategoryCode = s.Entity.Category!.Code.Value,
-                CategoryName = s.Entity.Category.Name.Value,
+                CategoryCode = s.Entity.Category == null ? string.Empty : s.Entity.Category.Code.Value,
+                CategoryName = s.Entity.Category == null ? string.Empty : s.Entity.Category.Name.Value,
 
                 ProductUnitTypeId = s.Entity.ProductUnitTypeId,
-                ProductUnitTypeName = s.Entity.ProductUnitType!.Name.Value,
+                ProductUnitTypeName = s.Entity.ProductUnitType == null ? string.Empty : s.Entity.ProductUnitType.Name.Value,
 
                 ChartOfAccountId = s.Entity.ChartOfAccountId == null ? null : s.Entity.ChartOfAccountId.Value,
                 ChartOfAccountCode = s.Entity.ChartOfAccount == null ? null : s.Entity.ChartOfAccount.Code.Value,
@@ -120,6 +132,7 @@ public static class ProductCatalogExtensions
                 StockQuantity = 0,
 
                 Prices = new List<ProductPriceDto>(),
+                Movements = new List<ProductStockMovementDetailDto>(),
                 CreatedAt = s.Entity.CreatedAt,
                 CreatedBy = s.Entity.CreatedBy,
                 IsActive = s.Entity.IsActive,

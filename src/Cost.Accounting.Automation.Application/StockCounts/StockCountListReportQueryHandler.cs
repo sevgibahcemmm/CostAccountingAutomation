@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems;
 using Cost.Accounting.Automation.Domain.Products;
@@ -13,7 +14,8 @@ internal sealed class StockCountListReportQueryHandler(
     IProductRepository productRepository,
     IProductMovementRepository productMovementRepository,
     IStockIssueRepository stockIssueRepository,
-    ICostSlipRepository costSlipRepository)
+    ICostSlipRepository costSlipRepository,
+    IChartOfAccountRepository chartOfAccountRepository)
     : IRequestHandler<StockCountListReportQuery, List<StockCountReportRowDto>>
 {
     public async Task<List<StockCountReportRowDto>> Handle(
@@ -105,6 +107,9 @@ internal sealed class StockCountListReportQueryHandler(
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
+        (balances, Dictionary<IdentityId, string> accountNames) =
+            await KeepWorkshopAccountsAsync(balances, cancellationToken);
+
         if (balances.Count == 0)
         {
             return [];
@@ -118,14 +123,29 @@ internal sealed class StockCountListReportQueryHandler(
             .AsNoTracking()
             .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
             .Include(p => p.ProductUnitType)
+            .Include(p => p.Warehouse)
             .ToListAsync(cancellationToken);
+
+        // Atölye raporu atölyede fiziksel olarak bulunan ürünleri gösterir. Mamuller
+        // (152) üretim sonrası depoya çıkar; üretim pusulası onayı bakiyeye eklediği
+        // için 152'li satırlar atölye listelerine sızıyordu. Yarı mamul (151) ve
+        // malzeme depoları (150 / 150.98) atölyede kaldığı için listede tutulur.
+        products = products
+            .Where(p => p.Warehouse is null
+                || !p.Warehouse.Code.Value.StartsWith(FinishedGoodsWarehouseRoot, StringComparison.Ordinal))
+            .ToList();
 
         Dictionary<IdentityId, Product> productMap = products.ToDictionary(p => p.Id);
 
-        Dictionary<IdentityId, string> targetNameMap = transfers
-            .Where(t => t.TargetAccount is not null)
-            .GroupBy(t => t.TargetAccountId)
-            .ToDictionary(g => g.Key, g => g.First().TargetAccount!.Name.Value);
+        // Grup adı önce hesap planından gelir; yalnızca atölye üretim/tüketiminden gelen
+        // (transferi olmayan) atölyelerde listede görünen ad yedek olarak kullanılır.
+        Dictionary<IdentityId, string> targetNameMap = new(accountNames);
+        foreach (IGrouping<IdentityId, StockIssue> group in transfers
+                     .Where(t => t.TargetAccount is not null)
+                     .GroupBy(t => t.TargetAccountId))
+        {
+            targetNameMap.TryAdd(group.Key, group.First().TargetAccount!.Name.Value);
+        }
 
         List<StockCountReportRowDto> rows = balances
             .Where(kv => productMap.ContainsKey(kv.Key.ProductId))
@@ -151,6 +171,52 @@ internal sealed class StockCountListReportQueryHandler(
 
         rows = AssignRowNumbers(rows);
         return rows;
+    }
+
+    /// <summary>
+    /// Atölye bazında raporda gruplama yalnızca 150.55 kökü altındaki atölye hesapları
+    /// (yapraklar) üzerinden yapılır. Depo kökleri (150 / 150.98 / 151 / 152) ve tüketim
+    /// birimi hesapları atölye bakiyesi taşımadığı için gruba dönüşmez; aksi halde "tüm
+    /// atölyeler" seçiliyken 152 satırları da listeye sızıyordu.
+    /// </summary>
+    private const string WorkshopCodeRoot = "150.55";
+
+    /// <summary>Mamuller (bitmiş ürün) deposu kökü; atölye raporunda hariç tutulur.</summary>
+    private const string FinishedGoodsWarehouseRoot = "152";
+
+    private async Task<(
+        Dictionary<(IdentityId ProductId, IdentityId TargetId), decimal> Balances,
+        Dictionary<IdentityId, string> Names)> KeepWorkshopAccountsAsync(
+        Dictionary<(IdentityId ProductId, IdentityId TargetId), decimal> balances,
+        CancellationToken cancellationToken)
+    {
+        // IdentityId üzerinden karşılaştırma; Id.Value ile LINQ sorgusu SQL'e çevrilemiyor.
+        HashSet<IdentityId> groupIds = balances.Keys.Select(k => k.TargetId).ToHashSet();
+        if (groupIds.Count == 0)
+        {
+            return (balances, []);
+        }
+
+        List<ChartOfAccount> accounts = await chartOfAccountRepository.GetAll()
+            .AsNoTracking()
+            .Where(a => groupIds.Contains(a.Id) && !a.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        List<ChartOfAccount> workshops = accounts
+            .Where(a => a.Code.Value.StartsWith(WorkshopCodeRoot, StringComparison.Ordinal))
+            .ToList();
+
+        if (workshops.Count == 0)
+        {
+            return ([], []);
+        }
+
+        Dictionary<IdentityId, string> names = workshops.ToDictionary(a => a.Id, a => a.Name.Value);
+        HashSet<IdentityId> workshopIds = names.Keys.ToHashSet();
+
+        return (balances
+            .Where(kv => workshopIds.Contains(kv.Key.TargetId))
+            .ToDictionary(kv => kv.Key, kv => kv.Value), names);
     }
 
     private async Task<Dictionary<IdentityId, decimal>> LoadBalancesAsync(

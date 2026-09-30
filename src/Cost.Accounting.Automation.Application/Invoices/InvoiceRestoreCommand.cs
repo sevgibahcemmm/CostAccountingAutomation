@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
@@ -37,7 +38,7 @@ internal sealed class InvoiceRestoreCommandHandler(
             .GetAllWithAuditIncludingDeleted()
             .Where(m => m.Entity.InvoiceId == id && m.Entity.IsDeleted)
             .Select(m => m.Entity)
-            .ToListAsync(cancellationToken);
+            .ToListSafeAsync(cancellationToken);
 
         foreach (var movement in relatedStockMovements)
         {
@@ -52,7 +53,7 @@ internal sealed class InvoiceRestoreCommandHandler(
             .GetAllWithAuditIncludingDeleted()
             .Where(m => m.Entity.InvoiceId == id && m.Entity.IsDeleted)
             .Select(m => m.Entity)
-            .ToListAsync(cancellationToken);
+            .ToListSafeAsync(cancellationToken);
 
         foreach (var movement in relatedCurrentMovements)
         {

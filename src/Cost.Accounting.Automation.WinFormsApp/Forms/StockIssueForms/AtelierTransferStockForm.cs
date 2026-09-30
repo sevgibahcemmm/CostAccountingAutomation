@@ -109,6 +109,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
         private async Task LoadDataAsync()
         {
+            await LoadingHelper.RunAsync(
+                LoadDataCoreAsync,
+                caption: "Atölye transfer raporu yükleniyor...",
+                description: "Lütfen bekleyin...");
+        }
+
+        private async Task LoadDataCoreAsync()
+        {
             btnRefresh.Enabled = false;
             try
             {

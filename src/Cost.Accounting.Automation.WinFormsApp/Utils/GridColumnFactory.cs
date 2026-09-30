@@ -69,6 +69,7 @@ public static class GridColumnFactory
             {
                 Caption = attr.Title,
                 FieldName = property.Name,
+                ToolTip = attr.Tip,
                 Visible = true,
                 Width = attr.Width
             };

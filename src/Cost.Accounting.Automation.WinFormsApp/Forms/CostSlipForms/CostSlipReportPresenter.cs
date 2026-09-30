@@ -86,16 +86,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             decimal grandTotal = slip.CostSlipItems.Sum(i => i.TotalAmount);
             SetReportParam(report, "Toplam", Math.Round(grandTotal, 2));
 
-            WaitForm waitForm = WaitFormHelper.Show<WaitForm>("Pusula hazırlanıyor...", "Lütfen bekleyin...");
-            try
-            {
-                await report.CreateDocumentAsync(CancellationToken.None);
-            }
-            finally
-            {
-                waitForm.Close();
-                waitForm.Dispose();
-            }
+            // Yalnızca belge üretimi bekleme penceresinin kapsamında; önizleme
+            // penceresi modal olduğu için bekleme kapandıktan sonra açılır.
+            await LoadingHelper.RunAsync(
+                () => report.CreateDocumentAsync(CancellationToken.None),
+                caption: "Pusula hazırlanıyor...",
+                description: "Lütfen bekleyin...");
 
             ReportPrintTool tool = new(report);
             tool.ShowRibbonPreviewDialog();

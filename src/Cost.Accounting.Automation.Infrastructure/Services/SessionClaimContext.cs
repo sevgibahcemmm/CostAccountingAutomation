@@ -15,14 +15,16 @@ public sealed class SessionClaimContext : IClaimContext
     private Guid? _userId;
     private Guid? _companyId;
     private string? _roleName;
+    private string? _userFullName;
 
     public string? Token { get; private set; }
 
-    public void SetCurrentUser(Guid userId, Guid companyId, string roleName, string? token = null)
+    public void SetCurrentUser(Guid userId, Guid companyId, string roleName, string? userFullName, string? token = null)
     {
         _userId = userId;
         _companyId = companyId;
         _roleName = roleName;
+        _userFullName = userFullName;
         Token = token;
     }
 
@@ -31,6 +33,7 @@ public sealed class SessionClaimContext : IClaimContext
         _userId = null;
         _companyId = null;
         _roleName = null;
+        _userFullName = null;
     }
 
     public Guid GetUserId()
@@ -41,6 +44,9 @@ public sealed class SessionClaimContext : IClaimContext
 
     public string GetRoleName()
         => _roleName ?? throw new InvalidOperationException("Oturum açık değil: rol bilgisi bulunamadı");
+
+    public string? GetUserFullName()
+        => _userFullName ?? throw new InvalidOperationException("Oturum açık değil: kullanıcı adı bilgisi bulunamadı");
 
     public Guid? GetUserIdOrDefault() => _userId;
 }

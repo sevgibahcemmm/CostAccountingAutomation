@@ -49,6 +49,21 @@ InitializeComponent();
 
         protected DevExpress.XtraEditors.PanelControl ToolbarPanel => pnlToolbar;
 
+        /// <summary>Liste ekranının araç çubuğuna özel bir buton ekler.</summary>
+        protected void AddToolbarButton(DevExpress.XtraEditors.SimpleButton button, int? index = null)
+        {
+            button.Margin = new Padding(0, 0, 6, 0);
+            button.Height = 36;
+            button.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
+            button.Appearance.Options.UseFont = true;
+            flpToolbar.Controls.Add(button);
+
+            if (index is >= 0)
+            {
+                flpToolbar.Controls.SetChildIndex(button, index.Value);
+            }
+        }
+
         protected virtual SvgImage ModuleIcon => DxIcon.Module;
 
         protected virtual bool AllowCreate => true;
@@ -56,6 +71,24 @@ InitializeComponent();
         protected virtual bool AllowDelete => true;
 
         protected virtual bool AllowsEdit(TDto item) => true;
+
+        /// <summary>
+        /// Çift tıklamada düzenleme formu açılsın mı? <c>false</c> ise
+        /// <see cref="ShowItemDetailAsync"/> çağrılır (salt okunur detay ekranı olan listeler için).
+        /// </summary>
+        protected virtual bool DoubleClickOpensEditor => true;
+
+        /// <summary>Düzenleme/detay butonunun metni.</summary>
+        protected virtual string EditButtonCaption => "Düzenle";
+
+        /// <summary>Düzenleme/detay butonunun ikonu.</summary>
+        protected virtual SvgImage EditButtonIcon => DxIcon.Edit;
+
+        /// <summary>
+        /// <see cref="DoubleClickOpensEditor"/> <c>false</c> olduğunda çift tıklamada açılacak
+        /// açıklayıcı detay ekranı.
+        /// </summary>
+        protected virtual Task ShowItemDetailAsync(TDto item) => Task.CompletedTask;
 
         protected virtual bool AllowsDelete(TDto item) => true;
 
@@ -207,6 +240,12 @@ InitializeComponent();
                         return;
                     }
 
+                    if (!DoubleClickOpensEditor)
+                    {
+                        await ShowItemDetailAsync(dto);
+                        return;
+                    }
+
                     await RunEditorAsync(dto);
                 }
             };
@@ -242,7 +281,8 @@ gridView.OptionsBehavior.Editable = false;
         private void SetupButtonIcons()
         {
             SetButtonIcon(btnNew, DxIcon.Add, 18);
-            SetButtonIcon(btnEdit, DxIcon.Edit, 18);
+            SetButtonIcon(btnEdit, EditButtonIcon, 18);
+            btnEdit.Text = EditButtonCaption;
             SetButtonIcon(btnDelete, DxIcon.Delete, 18);
             SetButtonIcon(btnRefresh, DxIcon.Refresh, 18);
             SetButtonIcon(btnSlipPrint, DxIcon.Receipt, 18);
@@ -585,7 +625,20 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
             }
         }
 
-protected virtual async Task ReloadAsync()
+        /// <summary>
+        /// Listeyi bekleme penceresi eşliğinde yeniler. Tüm liste formları
+        /// verisini bu metottan yüklediği için bekleme davranışı tek yerden
+        /// yönetilir.
+        /// </summary>
+        protected virtual async Task ReloadAsync()
+        {
+            await LoadingHelper.RunAsync(
+                ReloadCoreAsync,
+                caption: "Kayıtlar yükleniyor...",
+                description: "Lütfen bekleyin...");
+        }
+
+        private async Task ReloadCoreAsync()
         {
             int version = ++_reloadVersion;
             try
@@ -769,6 +822,12 @@ using (form)
                 if (!AllowsEdit(dto))
                 {
                     ToastHelper.Show("Bu kayıt düzenlenemez.", ToastType.Warning);
+                    return;
+                }
+
+                if (!DoubleClickOpensEditor)
+                {
+                    await ShowItemDetailAsync(dto);
                     return;
                 }
 

@@ -43,7 +43,6 @@ public sealed class UserUpdateCommandValidator : AbstractValidator<UserUpdateCom
 
 internal sealed class UserUpdateCommandHandler(
     IUserRepository userRepository,
-    IPhotoRepository photoRepository,
     IFileStorageService fileStorage,
     IClaimContext claimContext,
     IDuplicateCheckService duplicateCheckService) : IRequestHandler<UserUpdateCommand, Result<string>>
@@ -100,37 +99,26 @@ internal sealed class UserUpdateCommandHandler(
         user.SetRoleId(roleId);
         user.SetStatus(request.IsActive);
         user.SetTRIdentityNumber(trIdentityNumber);
-        userRepository.Update(user);
 
-        List<Photo> existingPhotos = await photoRepository
-            .Where(p => p.UserId == user.Id)
-            .ToListAsync(cancellationToken);
-
-        List<string> removedPaths = [];
-        if (existingPhotos is { Count: > 0 })
-        {
-            removedPaths.AddRange(existingPhotos.Select(p => p.Path));
-            photoRepository.SoftDeleteRange(existingPhotos);
-        }
+        // Eski avatar yolu değişiklikten sonra silinecek.
+        string? previousAvatarPath = user.AvatarPath;
+        user.SetAvatarPath(null);
 
         if (request.Photos is { Count: > 0 })
         {
-            bool anyDefault = request.Photos.Any(p => p.IsDefault);
-            for (int i = 0; i < request.Photos.Count; i++)
-            {
-                var photo = request.Photos[i];
-                bool isDefault = photo.IsDefault || (!anyDefault && i == 0);
+            var avatar = UserCreateCommandHandler.ResolveAvatar(request.Photos);
 
-                string relativePath = await fileStorage.SaveAsync(
-                    photo.Data, photo.FileName, "UserImages", cancellationToken);
+            string relativePath = await fileStorage.SaveAsync(
+                avatar.Data, avatar.FileName, "UserImages", cancellationToken);
 
-                photoRepository.Add(new Photo(PhotoOwnerType.User, user.Id, photo.FileName, photo.ContentType, relativePath, isDefault));
-            }
+            user.SetAvatarPath(relativePath);
         }
 
-        foreach (string path in removedPaths)
+        userRepository.Update(user);
+
+        if (!string.IsNullOrWhiteSpace(previousAvatarPath) && previousAvatarPath != user.AvatarPath)
         {
-            await fileStorage.DeleteAsync(path, cancellationToken);
+            await fileStorage.DeleteAsync(previousAvatarPath, cancellationToken);
         }
 
         return "Kullanıcı başarıyla güncellendi";

@@ -1822,7 +1822,6 @@ string message = isEditingDraft
 
         private async void ShowPreviewAsync()
         {
-            WaitForm? waitForm = null;
             try
             {
                 bool isService = CurrentType == CostSlipType.Service;
@@ -1903,12 +1902,12 @@ string message = isEditingDraft
                 decimal grandTotal = _accountAmounts.Values.Sum();
                 SetReportParam(report, "Toplam", Math.Round(grandTotal, 2));
 
-                waitForm = WaitFormHelper.Show<WaitForm>("Pusula hazırlanıyor...", "Lütfen bekleyin...");
-                await report.CreateDocumentAsync(CancellationToken.None);
-
-                waitForm.Close();
-                waitForm.Dispose();
-                waitForm = null;
+                // Yalnızca belge üretimi bekleme penceresinin kapsamında; önizleme
+                // penceresi modal olduğu için bekleme kapandıktan sonra açılır.
+                await LoadingHelper.RunAsync(
+                    () => report.CreateDocumentAsync(CancellationToken.None),
+                    caption: "Pusula hazırlanıyor...",
+                    description: "Lütfen bekleyin...");
 
                 ReportPrintTool tool = new(report);
                 tool.ShowRibbonPreviewDialog();
@@ -1916,11 +1915,6 @@ string message = isEditingDraft
             catch (Exception ex)
             {
                 ToastHelper.Show("Maliyet pusulası açılamadı: " + ex.Message, ToastType.Error, 6000);
-            }
-            finally
-            {
-                waitForm?.Close();
-                waitForm?.Dispose();
             }
         }
 

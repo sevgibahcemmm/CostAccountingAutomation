@@ -1,6 +1,9 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.StockIssues;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using TS.MediatR;
@@ -15,13 +18,19 @@ namespace Cost.Accounting.Automation.Application.Products;
 [Permission("product:view")]
 public sealed record ProductCatalogGetAllQuery(
     Guid? WarehouseId = null,
-    bool OnlyDeleted = false) : IRequest<List<ProductCatalogDto>>
+    bool OnlyDeleted = false,
+    bool IncludeMovements = false,
+    int? MovementLimit = null) : IRequest<List<ProductCatalogDto>>
 {
-    public ProductCatalogGetAllQuery() : this(null, false) { }
+    public ProductCatalogGetAllQuery() : this(null, false, false, null) { }
 }
 
 internal sealed class ProductCatalogGetAllQueryHandler(
-    IProductRepository productRepository) : IRequestHandler<ProductCatalogGetAllQuery, List<ProductCatalogDto>>
+    IProductRepository productRepository,
+    IProductMovementRepository productMovementRepository,
+    IInvoiceRepository invoiceRepository,
+    IStockIssueRepository stockIssueRepository,
+    ICostSlipRepository costSlipRepository) : IRequestHandler<ProductCatalogGetAllQuery, List<ProductCatalogDto>>
 {
     public async Task<List<ProductCatalogDto>> Handle(ProductCatalogGetAllQuery request, CancellationToken cancellationToken)
     {
@@ -60,11 +69,32 @@ internal sealed class ProductCatalogGetAllQueryHandler(
         Dictionary<Guid, List<ProductPriceQueryResult>> pricesByProductId = await productRepository.GetPricesByProductIdsAsync(productIds, cancellationToken);
         long pricesMs = sw.ElapsedMilliseconds;
 
+        Dictionary<Guid, decimal> costByProductId = await productRepository.GetCostByProductIdsAsync(productIds, cancellationToken);
+
+        Dictionary<Guid, List<ProductStockMovementDetailDto>>? movementsByProductId = null;
+        if (request.IncludeMovements)
+        {
+            movementsByProductId = await ProductMovementDetailBuilder.BuildByProductAsync(
+                productIds,
+                productMovementRepository,
+                invoiceRepository,
+                stockIssueRepository,
+                costSlipRepository,
+                cancellationToken,
+                request.MovementLimit);
+        }
+        long movementsMs = sw.ElapsedMilliseconds;
+
         foreach (ProductCatalogDto item in items)
         {
             if (stockByProductId.TryGetValue(item.Id, out decimal stock))
             {
                 item.StockQuantity = stock;
+            }
+
+            if (costByProductId.TryGetValue(item.Id, out decimal cost))
+            {
+                item.CostPrice = cost;
             }
 
             if (pricesByProductId.TryGetValue(item.Id, out List<ProductPriceQueryResult>? priceResults))
@@ -78,9 +108,15 @@ internal sealed class ProductCatalogGetAllQueryHandler(
                     EndDate = p.EndDate
                 }).ToList();
             }
+
+            if (movementsByProductId is not null
+                && movementsByProductId.TryGetValue(item.Id, out List<ProductStockMovementDetailDto>? movementDetails))
+            {
+                item.Movements = movementDetails;
+            }
         }
 
-        Debug.WriteLine($"[CATALOG] base={baseMs}ms stock={stockMs - baseMs}ms prices={pricesMs - stockMs}ms total={sw.ElapsedMilliseconds}ms count={items.Count}");
+        Debug.WriteLine($"[CATALOG] base={baseMs}ms stock={stockMs - baseMs}ms prices={pricesMs - stockMs}ms movements={(request.IncludeMovements ? movementsMs - pricesMs : 0)}ms total={sw.ElapsedMilliseconds}ms count={items.Count}");
 
         return items;
     }

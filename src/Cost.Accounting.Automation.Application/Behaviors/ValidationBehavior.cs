@@ -37,10 +37,13 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
 
         if (errorDictionary.Any())
         {
+            // Key = özellik adı, Value = hata metni. ValidationFailure'da bu ikisi
+            // ters sırada atanırsa ErrorMessage boş kalır ve çağıran taraf
+            // kullanıcıya gösterilecek mesajı göremez.
             var errors = errorDictionary.Select(s => new ValidationFailure
             {
-                PropertyName = s.Value,
-                ErrorCode = s.Key
+                PropertyName = s.Key,
+                ErrorMessage = s.Value
             });
             throw new ValidationException(errors);
         }

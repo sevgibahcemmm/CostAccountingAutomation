@@ -1,8 +1,12 @@
+using Cost.Accounting.Automation.Application.AccountingYears;
 using Cost.Accounting.Automation.Application.Auth;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
+using DevExpress.Utils;
 using DevExpress.XtraEditors.Controls;
+using DevExpress.XtraGrid.Columns;
+using DevExpress.XtraGrid.Views.Grid;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Drawing.Drawing2D;
@@ -22,12 +26,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Color.FromArgb(30, 58, 138)
         };
 
+        private const string CompanyPlaceholder = "Kurum seçin";
+        private const string CompanyLoadingText = "Kurumlar yükleniyor...";
+        private const string YearPlaceholder = "Mali yıl seçin";
+
+        private readonly System.Windows.Forms.Timer _fadeTimer = new() { Interval = 15 };
+        private Bitmap? _leftBackground;
+        private Task? _initTask;
         private bool _passwordVisible;
         private Guid _captchaChallengeId;
+        private List<LoginScopeDto> _scopes = [];
 
         public XtraLoginForm()
         {
             InitializeComponent();
+
+            // Form, içindeki tüm kontroller çizilmeden ekranda görünmesin diye şeffaf açılır;
+            // OnShown içinde her şey çizildikten sonra yumuşakça belirir.
+            Opacity = 0;
+            DoubleBuffered = true;
+            EnableDoubleBuffering(
+                pnlLeft, pnlLeftBadge, pnlRight, pnlUserBadge,
+                pnlCompanyBox, pnlYearBox, pnlUserNameBox, pnlPasswordBox, pnlCaptchaResult);
+            _fadeTimer.Tick += FadeTimer_Tick;
+
+#if DEBUG
+            // Yalnızca geliştirme kolaylığı; Release derlemesinde alanlar boş gelir.
+            txtUserName.EditValue = "Admin";
+            txtPassword.EditValue = "1";
+#endif
 
             btnLogin.Appearance.Options.UseBackColor = false;
             btnLogin.Appearance.BackColor = Color.Transparent;
@@ -42,30 +69,177 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCaptchaResult.Paint += AuthFormStyles.RoundedField_Paint;
             txtCaptchaResult.Enter += AuthFormStyles.Field_Enter;
             txtCaptchaResult.Leave += AuthFormStyles.Field_Leave;
-            Load += async (s, e) => await InitAsync();
+            pnlCompanyBox.Paint += AuthFormStyles.RoundedField_Paint;
+            lookUpCompany.Enter += AuthFormStyles.Field_Enter;
+            lookUpCompany.Leave += AuthFormStyles.Field_Leave;
+            pnlYearBox.Paint += AuthFormStyles.RoundedField_Paint;
+            lookUpYear.Enter += AuthFormStyles.Field_Enter;
+            lookUpYear.Leave += AuthFormStyles.Field_Leave;
+
+            lookUpCompany.EditValueChanged += (_, _) => LoadYearsForSelectedCompany();
+            Load += (_, _) => _initTask = InitAsync();
             FormClosed += XtraLoginForm_FormClosed;
         }
 
         private void XtraLoginForm_FormClosed(object? sender, FormClosedEventArgs e)
         {
+            _fadeTimer.Stop();
+            _fadeTimer.Dispose();
+            _leftBackground?.Dispose();
             System.Windows.Forms.Application.Exit();
         }
 
-private async Task InitAsync()
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                // WS_EX_COMPOSITED: alt kontrollerin tamamı tek seferde, çift tamponlu çizilir.
+                // Ekranda hâlâ bozulma olursa bu satırı kaldırın.
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000;
+                return cp;
+            }
+        }
+
+        protected override async void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            // Kurum/yıl listeleri ve captcha yüklenene kadar (en fazla 2 sn) form şeffaf kalır;
+            // böylece açıldığında hiçbir şey sonradan değişmez, titreme olmaz.
+            if (_initTask is not null)
+            {
+                await Task.WhenAny(_initTask, Task.Delay(2000));
+            }
+
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            Refresh();
+            _fadeTimer.Start();
+        }
+
+        private void FadeTimer_Tick(object? sender, EventArgs e)
+        {
+            Opacity = Math.Min(1d, Opacity + 0.12d);
+            if (Opacity >= 1d)
+            {
+                _fadeTimer.Stop();
+            }
+        }
+
+        private static void EnableDoubleBuffering(params Control[] controls)
+        {
+            System.Reflection.PropertyInfo? property = typeof(Control).GetProperty(
+                "DoubleBuffered",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+            foreach (Control control in controls)
+            {
+                property?.SetValue(control, true);
+            }
+        }
+
+        private async Task InitAsync()
         {
             btnLogin.Enabled = false;
+            lookUpCompany.Properties.NullText = CompanyLoadingText;
             try
             {
+                await LoadScopeAsync();
                 await RecreateCaptchaAsync();
             }
-            catch
+            catch (Exception ex)
             {
-                ToastHelper.Show("Veritabanı başlatılırken bir hata oluştu. Lütfen uygulamayı yeniden başlatın.", ToastType.Error);
+                ToastHelper.Show("Veritabanı başlatılırken bir hata oluştu: " + ex.Message, ToastType.Error);
             }
             finally
             {
+                if (lookUpCompany.Properties.NullText == CompanyLoadingText)
+                {
+                    lookUpCompany.Properties.NullText = CompanyPlaceholder;
+                }
+
                 btnLogin.Enabled = true;
+
+                ActiveControl = lookUpCompany.EditValue is null
+                    ? lookUpCompany
+                    : string.IsNullOrEmpty(txtUserName.Text) ? txtUserName : txtPassword;
             }
+        }
+
+        /// <summary>
+        /// Kurum ve mali yıl listelerini master veritabanından doldurur.
+        /// Listeler yalnızca açık yılları içerir; kapalı yıl seçilemez.
+        /// </summary>
+        private async Task LoadScopeAsync()
+        {
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            var result = await mediator.Send(new LoginScopeGetQuery(), CancellationToken.None);
+
+            if (!result.IsSuccessful || result.Data is null)
+            {
+                ToastHelper.Show(
+                    AuthFormStyles.GetErrorText(result.ErrorMessages),
+                    ToastType.Error);
+                lookUpCompany.Properties.NullText = "Kurum listesi alınamadı";
+                return;
+            }
+
+            _scopes = result.Data;
+
+            lookUpCompany.Properties.DataSource = _scopes;
+            lookUpCompany.Properties.ValueMember = nameof(LoginScopeDto.CompanyId);
+            lookUpCompany.Properties.DisplayMember = nameof(LoginScopeDto.CompanyName);
+            lookUpCompany.Properties.BestFitMode = BestFitMode.BestFit;
+            lookUpCompanyView.OptionsBehavior.AutoPopulateColumns = false;
+            lookUpCompanyView.Columns.Clear();
+            GridColumn companyColumn = lookUpCompanyView.Columns.AddField(nameof(LoginScopeDto.CompanyName));
+            companyColumn.Caption = "Kurum";
+            companyColumn.VisibleIndex = 0;
+            lookUpCompanyView.BestFitColumns();
+
+            lookUpYear.Properties.ValueMember = nameof(LoginScopeYearDto.CompanyYearId);
+            lookUpYear.Properties.DisplayMember = nameof(LoginScopeYearDto.Year);
+            lookUpYear.Properties.BestFitMode = BestFitMode.BestFit;
+            lookUpYearView.OptionsBehavior.AutoPopulateColumns = false;
+            lookUpYearView.Columns.Clear();
+            GridColumn yearColumn = lookUpYearView.Columns.AddField(nameof(LoginScopeYearDto.Year));
+            yearColumn.Caption = "Mali Yıl";
+            yearColumn.VisibleIndex = 0;
+            lookUpYearView.Columns.AddField(nameof(LoginScopeYearDto.DatabaseName)).Caption = "Veritabanı";
+            lookUpYearView.BestFitColumns();
+
+            if (_scopes.Count == 1)
+            {
+                lookUpCompany.EditValue = _scopes[0].CompanyId;
+            }
+        }
+
+        private void LoadYearsForSelectedCompany()
+        {
+            if (lookUpCompany.EditValue is not Guid companyId)
+            {
+                lookUpYear.Properties.DataSource = null;
+                return;
+            }
+
+            LoginScopeDto? scope = _scopes.FirstOrDefault(s => s.CompanyId == companyId);
+            List<LoginScopeYearDto> openYears = scope?.Years
+                .Where(y => !y.IsClosed)
+                .OrderByDescending(y => y.Year)
+                .ToList() ?? [];
+
+            lookUpYear.Properties.DataSource = openYears;
+            lookUpYear.EditValue = openYears.Count > 0 ? openYears[0].CompanyYearId : null;
+
+            lookUpYear.Properties.NullText = openYears.Count == 0 && scope is not null
+                ? "Açık mali yıl yok"
+                : YearPlaceholder;
         }
 
         private async Task RecreateCaptchaAsync()
@@ -118,6 +292,21 @@ private async Task InitAsync()
         private async void btnLogin_Click(object sender, EventArgs e)
         {
             string userOrEmail = txtUserName.Text.Trim();
+
+            if (lookUpCompany.EditValue is not Guid companyId)
+            {
+                ToastHelper.Show("Kurum seçmelisiniz.", ToastType.Error);
+                lookUpCompany.Focus();
+                return;
+            }
+
+            if (lookUpYear.EditValue is not Guid companyYearId)
+            {
+                ToastHelper.Show("Mali yıl seçmelisiniz.", ToastType.Error);
+                lookUpYear.Focus();
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(userOrEmail) || string.IsNullOrEmpty(txtPassword.Text))
             {
                 ToastHelper.Show("Kullanıcı adı ve şifre boş olamaz.", ToastType.Error);
@@ -125,45 +314,88 @@ private async Task InitAsync()
             }
 
             btnLogin.Enabled = false;
-            WaitForm waitForm = CreateWaitForm();
             try
             {
-                using var scope = Program.Services.CreateScope();
-                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                string? token = null;
 
-                var captchaResult = await mediator.Send(
-                    new ValidateCaptchaCommand(_captchaChallengeId, txtCaptchaResult.Text),
-                    CancellationToken.None);
+                // Bekleme penceresi yalnızca doğrulama/giriş isteğini kapsar;
+                // ana sayfa bekleme kapandıktan sonra gösterilir.
+                await LoadingHelper.RunAsync(
+                    async () =>
+                    {
+                        using var scope = Program.Services.CreateScope();
+                        ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-                if (!captchaResult.IsSuccessful || captchaResult.Data != true)
+                        var captchaResult = await mediator.Send(
+                            new ValidateCaptchaCommand(_captchaChallengeId, txtCaptchaResult.Text),
+                            CancellationToken.None);
+
+                        if (!captchaResult.IsSuccessful || captchaResult.Data != true)
+                        {
+                            string msg = captchaResult.IsSuccessful
+                                ? "Matematik sorusu veya doğrulama kodu hatalı. Yeniden deneyin."
+                                : AuthFormStyles.GetErrorText(captchaResult.ErrorMessages);
+
+                            ToastHelper.Show(msg, ToastType.Error);
+                            await RecreateCaptchaAsync();
+                            return;
+                        }
+
+                        var loginResult = await mediator.Send(
+                            new LoginCommand(userOrEmail, txtPassword.Text, companyId),
+                            CancellationToken.None);
+
+                        if (!loginResult.IsSuccessful || loginResult.Data is null)
+                        {
+                            ToastHelper.Show(AuthFormStyles.GetErrorText(loginResult.ErrorMessages), ToastType.Error);
+                            return;
+                        }
+
+                        token = loginResult.Data.Token;
+                    },
+                    caption: "Giriş yapılıyor...",
+                    description: "Lütfen bekleyin...");
+
+                if (string.IsNullOrEmpty(token))
                 {
-                    string msg = captchaResult.IsSuccessful
-                        ? "Matematik sorusu veya doğrulama kodu hatalı. Yeniden deneyin."
-                        : AuthFormStyles.GetErrorText(captchaResult.ErrorMessages);
+                    ToastHelper.Show("Giriş işlemi tamamlanamadı.", ToastType.Error);
+                    return;
+                }
 
-                    ToastHelper.Show(msg, ToastType.Error);
+                // Yıl veritabanını aç ve iş bağlamını yıla yönlendir. Bu adım
+                // başarısız olursa ana pencere hiç açılmaz.
+                AccountingYearSelectResult? year = null;
+
+                await LoadingHelper.RunAsync(
+                    async () =>
+                    {
+                        using var scope = Program.Services.CreateScope();
+                        ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                        var yearResult = await mediator.Send(
+                            new AccountingYearSelectCommand(companyYearId),
+                            CancellationToken.None);
+
+                        if (!yearResult.IsSuccessful || yearResult.Data is null)
+                        {
+                            ToastHelper.Show(
+                                AuthFormStyles.GetErrorText(yearResult.ErrorMessages),
+                                ToastType.Error);
+                            return;
+                        }
+
+                        year = yearResult.Data;
+                    },
+                    caption: "Mali yıl hazırlanıyor...",
+                    description: "Veritabanı açılıyor, lütfen bekleyin...");
+
+                if (year is null)
+                {
                     await RecreateCaptchaAsync();
                     return;
                 }
 
-                var loginResult = await mediator.Send(
-                    new LoginCommand(userOrEmail, txtPassword.Text),
-                    CancellationToken.None);
-
-                if (!loginResult.IsSuccessful || loginResult.Data is null)
-                {
-                    ToastHelper.Show(AuthFormStyles.GetErrorText(loginResult.ErrorMessages), ToastType.Error);
-                    return;
-                }
-
-                if (!string.IsNullOrEmpty(loginResult.Data.Token))
-                {
-                    OpenMainPage(loginResult.Data.Token);
-                }
-                else
-                {
-                    ToastHelper.Show("Giriş işlemi tamamlanamadı.", ToastType.Error);
-                }
+                OpenMainPage(token, year);
             }
             catch (ValidationException ex)
             {
@@ -177,31 +409,29 @@ private async Task InitAsync()
             }
             finally
             {
-                waitForm.Close();
-                waitForm.Dispose();
                 btnLogin.Enabled = true;
             }
         }
 
-        private WaitForm CreateWaitForm()
+        private void OpenMainPage(string token, AccountingYearSelectResult year)
         {
-            return WaitFormHelper.Show<WaitForm>("Giriş yapılıyor...", "Lütfen bekleyin...");
-        }
-
-        private void OpenMainPage(string token)
-        {
-            var (userId, companyId, roleName) = DecodeToken(token);
+            var (userId, companyId, roleName, userFullName) = DecodeToken(token);
 
             SessionClaimContext session = Program.Services.GetRequiredService<SessionClaimContext>();
-            session.SetCurrentUser(userId, companyId, roleName, token);
+            session.SetCurrentUser(userId, companyId, roleName, userFullName, token);
 
             RibbonMainForm mainForm = Program.Services.GetRequiredService<RibbonMainForm>();
             Hide();
             mainForm.Show();
-            ToastHelper.Show("Giriş başarılı.", ToastType.Success);
+
+            string message = year.DatabaseCreated
+                ? $"{year.CompanyName} / {year.Year} mali yılı açıldı."
+                : $"{year.CompanyName} / {year.Year} mali yılı hazırlandı.";
+
+            ToastHelper.Show("Giriş başarılı. " + message, ToastType.Success);
         }
 
-        private static (Guid userId, Guid companyId, string roleName) DecodeToken(string token)
+        private static (Guid userId, Guid companyId, string roleName, string userFullName) DecodeToken(string token)
         {
             JwtSecurityTokenHandler handler = new();
             JwtSecurityToken jwt = handler.ReadJwtToken(token);
@@ -209,8 +439,9 @@ private async Task InitAsync()
             Guid userId = Guid.Parse(jwt.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
             Guid companyId = Guid.Parse(jwt.Claims.First(c => c.Type == "companyId").Value);
             string roleName = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value ?? string.Empty;
+            string userFullName = jwt.Claims.FirstOrDefault(c => c.Type == "fullName")?.Value ?? string.Empty;
 
-            return (userId, companyId, roleName);
+            return (userId, companyId, roleName, userFullName);
         }
 
         private void LnkForgot_Click(object? sender, EventArgs e)
@@ -235,46 +466,75 @@ private async Task InitAsync()
 
         private void pnlLeft_Paint(object sender, PaintEventArgs e)
         {
-            var g = e.Graphics;
+            Size size = pnlLeft.ClientSize;
+            if (size.Width <= 0 || size.Height <= 0)
+            {
+                return;
+            }
+
+            // Arka plan (gradyan, noktalar, yaylar, özellik listesi) yalnızca boyut
+            // değiştiğinde yeniden üretilir; her paint'te sadece bitmap kopyalanır.
+            if (_leftBackground is null || _leftBackground.Size != size)
+            {
+                _leftBackground?.Dispose();
+                _leftBackground = BuildLeftBackground(size, pnlLeft.DeviceDpi / 96f);
+            }
+
+            e.Graphics.DrawImageUnscaled(_leftBackground, 0, 0);
+        }
+
+        private static Bitmap BuildLeftBackground(Size size, float scale)
+        {
+            Bitmap bitmap = new(size.Width, size.Height);
+            using Graphics g = Graphics.FromImage(bitmap);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.CompositingQuality = CompositingQuality.HighQuality;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
-            var rect = ((Control)sender).ClientRectangle;
+            Rectangle rect = new(Point.Empty, size);
 
-            using var brush = new LinearGradientBrush(
-                rect,
-                LeftPanelGradient[0],
-                LeftPanelGradient[2],
-                35f);
-            var blend = new ColorBlend { Positions = new[] { 0f, 0.55f, 1f } };
-            blend.Colors = LeftPanelGradient;
-            brush.InterpolationColors = blend;
-            g.FillRectangle(brush, rect);
+            using (var brush = new LinearGradientBrush(rect, LeftPanelGradient[0], LeftPanelGradient[2], 35f))
+            {
+                var blend = new ColorBlend { Positions = new[] { 0f, 0.55f, 1f } };
+                blend.Colors = LeftPanelGradient;
+                brush.InterpolationColors = blend;
+                g.FillRectangle(brush, rect);
+            }
 
             DrawGlowCircle(g, rect.Width - 40, -90, 300, 96, 165, 250);
             DrawGlowCircle(g, -120, rect.Height - 200, 260, 139, 92, 246);
             DrawGlowCircle(g, rect.Width - 200, rect.Height - 140, 180, 56, 189, 248);
 
-            using var dotBrush = new SolidBrush(Color.FromArgb(14, 255, 255, 255));
-            int spacing = 40;
-            for (int x = 16; x < rect.Width; x += spacing)
+            using (var dotBrush = new SolidBrush(Color.FromArgb(14, 255, 255, 255)))
             {
-                for (int y = 16; y < rect.Height; y += spacing)
+                int spacing = 40;
+                for (int x = 16; x < rect.Width; x += spacing)
                 {
-                    g.FillEllipse(dotBrush, x, y, 2, 2);
+                    for (int y = 16; y < rect.Height; y += spacing)
+                    {
+                        g.FillEllipse(dotBrush, x, y, 2, 2);
+                    }
                 }
             }
 
-            using var thinGlowPen = new Pen(Color.FromArgb(70, Color.FromArgb(129, 140, 248)), 1.4f);
-            thinGlowPen.StartCap = LineCap.Round;
-            thinGlowPen.EndCap = LineCap.Round;
-            g.DrawArc(thinGlowPen, rect.Width - 240, -20, 300, 240, 200, 140);
-            g.DrawArc(thinGlowPen, -150, rect.Height - 200, 300, 240, 20, 130);
+            using (var thinGlowPen = new Pen(Color.FromArgb(70, Color.FromArgb(129, 140, 248)), 1.4f))
+            {
+                thinGlowPen.StartCap = LineCap.Round;
+                thinGlowPen.EndCap = LineCap.Round;
+                g.DrawArc(thinGlowPen, rect.Width - 240, -20, 300, 240, 200, 140);
+                g.DrawArc(thinGlowPen, -150, rect.Height - 200, 300, 240, 20, 130);
+            }
 
-            using var accentLinePen = new Pen(Color.FromArgb(90, Color.FromArgb(167, 139, 250)), 2.2f);
-            accentLinePen.StartCap = LineCap.Round;
-            accentLinePen.EndCap = LineCap.Round;
-            g.DrawLine(accentLinePen, rect.Width / 2 - 42, 302, rect.Width / 2 + 42, 302);
+            // Başlık bloğunun altındaki ince süsleme çizgisi.
+            using (var accentLinePen = new Pen(Color.FromArgb(120, Color.FromArgb(167, 139, 250)), 2.2f))
+            {
+                accentLinePen.StartCap = LineCap.Round;
+                accentLinePen.EndCap = LineCap.Round;
+                float lineY = 288 * scale;
+                g.DrawLine(accentLinePen, rect.Width / 2f - 42 * scale, lineY, rect.Width / 2f + 42 * scale, lineY);
+            }
+
+            return bitmap;
         }
 
         private void pnlLeftBadge_Paint(object sender, PaintEventArgs e)

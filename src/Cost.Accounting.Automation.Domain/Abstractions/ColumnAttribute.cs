@@ -10,6 +10,9 @@ public class ColumnAttribute : Attribute
     public int Order { get; set; } = 100;
     public bool IsVisible { get; set; } = true;
 
+    /// <summary>Kolon başlığının üzerine gelindiğinde gösterilen açıklama metni.</summary>
+    public string? Tip { get; set; }
+
     /// <summary>
     /// bool property'ler için: true değerinde gösterilecek metin (örn. "Aktif", "Evet").
     /// Null ise checkbox olarak gösterilmeye devam eder.

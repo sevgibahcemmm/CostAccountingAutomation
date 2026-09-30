@@ -1,5 +1,4 @@
 ﻿using Cost.Accounting.Automation.Domain.Abstractions;
-using Cost.Accounting.Automation.Domain.Photos;
 using Cost.Accounting.Automation.Domain.Shared;
 using Cost.Accounting.Automation.Domain.Users.ValueObjects;
 
@@ -45,7 +44,13 @@ public sealed class User : Entity
     public IdentityId CompanyId { get; private set; } = default!;
     public IdentityId RoleId { get; private set; } = default!;
     public TRIdentityNumber? TRIdentityNumber { get; private set; }
-    public ICollection<Photo> Photos { get; private set; } = new List<Photo>();
+
+    /// <summary>
+    /// Kullanıcı avatarının dosya depolama köküne göreli yolu.
+    /// Kullanıcı verileri master veritabanında tutulduğundan avatar da
+    /// <c>Photo</c> tablosunda değil, doğrudan bu alanda saklanır.
+    /// </summary>
+    public string? AvatarPath { get; private set; }
 
     public static string? BuildDuplicateKey(string userName)
         => DuplicateKeyRule.From(userName);
@@ -117,6 +122,11 @@ public sealed class User : Entity
     public void SetTRIdentityNumber(TRIdentityNumber? tRIdentityNumber)
     {
         TRIdentityNumber = tRIdentityNumber;
+    }
+
+    public void SetAvatarPath(string? avatarPath)
+    {
+        AvatarPath = avatarPath;
     }
     #endregion
 }

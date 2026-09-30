@@ -216,8 +216,6 @@ internal sealed class ProductCreateCommandHandler(
 
             productMamul.ReplaceImages(request.ImagePaths
                 .Select((path, index) => new Photo(
-                    PhotoOwnerType.Product,
-                    productMamul.Id,
                     System.IO.Path.GetFileName(path),
                     GetContentType(path),
                     path,
@@ -244,8 +242,6 @@ internal sealed class ProductCreateCommandHandler(
 
             productYarimamul.ReplaceImages(request.ImagePaths
                 .Select((path, index) => new Photo(
-                    PhotoOwnerType.Product,
-                    productYarimamul.Id,
                     System.IO.Path.GetFileName(path),
                     GetContentType(path),
                     path,
@@ -296,8 +292,6 @@ internal sealed class ProductCreateCommandHandler(
 
         product.ReplaceImages(request.ImagePaths
             .Select((path, index) => new Photo(
-                PhotoOwnerType.Product,
-                product.Id,
                 System.IO.Path.GetFileName(path),
                 GetContentType(path),
                 path,
