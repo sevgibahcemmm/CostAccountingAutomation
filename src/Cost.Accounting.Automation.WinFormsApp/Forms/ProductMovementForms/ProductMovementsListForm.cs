@@ -12,6 +12,7 @@ using Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListReports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
+using DevExpress.XtraEditors;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 using TS.Result;
@@ -52,11 +53,40 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             _ => DxIcon.StockMovements
         };
 
-        protected override bool AllowCreate => _targetType.HasValue;
+        /// <summary>
+        /// Stok hareketi bu ekrandan üretilmez; hareketler fatura, stok çıkışı
+        /// ve maliyet pusulası kayıtlarından doğar. Bu yüzden "Yeni" düğmesi
+        /// gösterilmez.
+        /// </summary>
+        protected override bool AllowCreate => false;
 
         protected override bool AllowDelete => false;
 
-        protected override bool AllowsEdit(ProductMovementListDto item) => false;
+        /// <summary>
+        /// Düzenleme yapılamaz; düğme "Detay" olarak görünür ve kaydı
+        /// salt okunur inceleme formunda açar.
+        /// </summary>
+        protected override string EditButtonCaption => "Detay";
+
+        protected override bool DoubleClickOpensEditor => false;
+
+        protected override Task ShowItemDetailAsync(ProductMovementListDto item)
+        {
+            // Kayıtla açılan form zaten salt okunur "İncele" modunda gelir
+            // (kaydet gizli, alanlar kilitli).
+            using XtraForm form = CreateEditEditor(item);
+            form.ShowDialog(this);
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Taban sınıf tek parametreyle <c>Activator.CreateInstance</c> çağırır;
+        /// bu formun kayıt ctor'u ikinci parametresi opsiyonel olsa da iki
+        /// parametreli olduğu için reflection eşleşmez. Doğrudan çağrılır.
+        /// </summary>
+        protected override ProductMovementEditForm CreateEditEditor(ProductMovementListDto item)
+            => new(item);
+
 
         protected override string[] SearchFieldNames =>
         [

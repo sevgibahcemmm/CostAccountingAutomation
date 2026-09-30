@@ -37,10 +37,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         private CostSlipListDto? _editing;
         private readonly BindingList<CostSlipItemEditDto> _lines = [];
         private List<ProductCatalogDto> _products = [];
+        private const int AccountRowHeight = 38;
+        private const int AccountsTitleHeight = 40;
+        private const int AccountsNoteHeight = 18;
+        private const int AccountsRowGap = 4;
+        private const int AccountsPanelGap = 8;
+        private const int AccountsBottomMargin = 10;
+        private const int MinItemsPanelHeight = 150;
+
         private readonly Dictionary<Guid, List<AtelierTransferProductDto>> _transferredByWorkshop = [];
         private Dictionary<Guid, WorkshopLink> _workshopLinks = [];
         private readonly Dictionary<ExpenseAccountType, decimal> _accountAmounts = [];
         private readonly Dictionary<ExpenseAccountType, TextEdit> _accountInputs = [];
+
+        /// <summary>Yarımamülün hesap bazlı gider katkıları (grid satırı değil).</summary>
+        private readonly Dictionary<ExpenseAccountType, decimal> _semiFinishedAmounts = [];
+
+        private readonly Dictionary<ExpenseAccountType, Label> _semiFinishedCaptions = [];
+        private Label lblSemiFinishedNote = default!;
         private readonly List<TextEdit> _accountInputList = [];
         private bool _syncingTotals;
         private decimal _grandTotal;
@@ -98,6 +112,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLines.DataSource = _lines;
             ConfigureGrid();
 
+            CreateSemiFinishedNote();
             RebuildAccountPanel();
 
             btnApprove.Visible = false;
@@ -388,6 +403,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 : SkinTheme.Warning;
 
             _lines.Clear();
+            _semiFinishedAmounts.Clear();
             foreach (var item in slip.CostSlipItems)
             {
                 if (item.ProductId is null)
@@ -408,7 +424,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
                     TotalAmount = item.TotalAmount,
-                    Description = item.Description
+                    Description = item.Description ?? string.Empty
                 });
             }
 
@@ -421,6 +437,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     .Sum(l => l.Quantity);
             }
 
+            UpdateSemiFinishedCaptions(null);
             RecalculateTotals();
         }
 
@@ -540,7 +557,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             if (answer == DialogResult.Yes)
             {
-                AddSemiFinishedLine(semiProductId, balance, balanceDto.UnitPrice);
+                ApplySemiFinishedAmounts(semiProductId, balanceDto);
                 lookUpProducedProduct.EditValue = productId;
             }
             else if (answer == DialogResult.No)
@@ -593,7 +610,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             if (answer == DialogResult.Yes)
             {
-                AddSemiFinishedLine(semiProductId, balance, balanceDto.UnitPrice);
+                ApplySemiFinishedAmounts(semiProductId, balanceDto);
             }
 
             RefreshAvailableQuantities();
@@ -601,27 +618,110 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             return true;
         }
 
-        private void AddSemiFinishedLine(Guid productId, decimal quantity, decimal unitPrice)
+        /// <summary>
+        /// Yarımamülü tek satır olarak malzeme listesine (grid) ekler; böylece
+        /// stoğu düşer (151 çıkış), 151'den gelen değer mamülün maliyetine
+        /// geçer ve yarımamül bakiyesi sıfırlanır.
+        ///
+        /// Yarımamülün 720/730 gider kırılımı GİDER olarak yazılmaz: o giderler
+        /// zaten yarımamül pusulasında giderleştirildi, tekrar yazılırsa aynı
+        /// maliyet iki defa gider olur. Kullanılan 151 tutarları tek satırda
+        /// toplandığı için hesap alanlarında asılı kalmaz (sıfırlanır); kırılım
+        /// satırın açıklamasında görünür.
+        /// </summary>
+        private void ApplySemiFinishedAmounts(Guid productId, CostSlipSemiFinishedBalanceDto balance)
         {
             ProductCatalogDto? prod = _products.FirstOrDefault(p => p.Id == productId);
 
-            _lines.Add(new CostSlipItemEditDto
-            {
-                ProductId = productId,
-                ProductName = prod?.Name ?? string.Empty,
-                ProductUnitTypeId = prod?.ProductUnitTypeId,
-                ProductUnitTypeName = prod?.ProductUnitTypeName ?? string.Empty,
-                ExpenseAccountType = ExpenseAccountType.Account710,
-                Quantity = quantity,
-                UnitPrice = unitPrice
-            });
-
             _semiFinishedProductId = productId;
-            _semiFinishedBalance = quantity;
-            UpdateMaterialProductDataSource();
+            _semiFinishedBalance = balance.Balance;
 
+            IReadOnlyList<CostSlipExpenseBreakdownDto> parts = balance.ExpenseBreakdown.Count > 0
+                ? balance.ExpenseBreakdown
+                : [new CostSlipExpenseBreakdownDto(ExpenseAccountType.Account710, balance.UnitPrice)];
+
+            string breakdown = string.Join(
+                " / ",
+                parts
+                    .Select(p => $"{ShortAccountName(p.AccountType)}: {Math.Round(balance.Balance * p.UnitPrice, 2):n2}")
+                    .Where(s => !s.EndsWith(": 0,00", StringComparison.Ordinal)));
+
+            if (!_lines.Any(l => l.ProductId == productId && l.Quantity > 0))
+            {
+                _lines.Add(new CostSlipItemEditDto
+                {
+                    ProductId = productId,
+                    ProductName = prod?.Name ?? string.Empty,
+                    ProductUnitTypeId = prod?.ProductUnitTypeId,
+                    ProductUnitTypeName = prod?.ProductUnitTypeName ?? string.Empty,
+                    ExpenseAccountType = DerivedAccount,
+                    Quantity = balance.Balance,
+                    UnitPrice = balance.UnitPrice,
+                    Description = string.IsNullOrEmpty(breakdown)
+                        ? "Yarımamül tüketimi"
+                        : $"Yarımamül tüketimi ({breakdown})"
+                });
+            }
+
+            // 151'den gelen tutarlar tek satırda toplandığı için hesap
+            // alanlarında bekleyen kırmızı tutar kalmaz.
+            _semiFinishedAmounts.Clear();
+            UpdateSemiFinishedCaptions(null);
+
+            UpdateMaterialProductDataSource();
             gridLinesView.RefreshData();
             RecalculateTotals();
+        }
+
+        private static string ShortAccountName(ExpenseAccountType account)
+            => AccountDisplayName(account).Split('-')[0].Trim();
+
+        /// <summary>
+        /// Yarımamülün giderlerinin nereye yazıldığını bildiren kırmızı not.
+        /// Tasarımcıya eklenmeden çalışma anında oluşturulur.
+        /// </summary>
+        private void CreateSemiFinishedNote()
+        {
+            lblSemiFinishedNote = new Label
+            {
+                AutoSize = false,
+                Dock = DockStyle.Bottom,
+                Height = AccountsNoteHeight,
+                ForeColor = Color.Firebrick,
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Visible = false
+            };
+
+            pnlAccounts.Controls.Add(lblSemiFinishedNote);
+            pnlAccounts.PerformLayout();
+        }
+
+        private void UpdateSemiFinishedCaptions(string? productName)
+        {
+            // Etkilenen kalemlerin girişleri GÜNCELLENMEZ: yarımamül giderleri
+            // bilgilendirme amaçlıdır, toplama eklenmez. Kırmızı etiket
+            // yarımamülün o kalemdeki payını gösterir.
+            foreach ((ExpenseAccountType account, Label caption) in _semiFinishedCaptions)
+            {
+                decimal amount = _semiFinishedAmounts.GetValueOrDefault(account);
+                bool hasAmount = amount != 0m;
+
+                caption.Visible = hasAmount;
+                caption.Text = hasAmount
+                    ? $"Yarımamül gideri: {amount:n2} ₺"
+                    : string.Empty;
+            }
+
+            string? header = _semiFinishedAmounts.Count == 0
+                ? null
+                : "Kırmızı değerler seçilen yarımamülün kendi gider kırılımıdır (bilgi amaçlı, gider olarak yazılmaz)"
+                  + (string.IsNullOrWhiteSpace(productName) ? string.Empty : $" - {productName}");
+
+            lblSemiFinishedNote.Visible = header is not null;
+            lblSemiFinishedNote.Text = header ?? string.Empty;
+
+            LayoutAccountsPanel();
         }
 
         private async Task<CostSlipSemiFinishedBalanceDto?> GetSemiFinishedBalanceAsync(Guid workshopId, Guid productId)
@@ -967,8 +1067,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             flpAccounts.Controls.Clear();
             _accountInputs.Clear();
             _accountInputList.Clear();
+            _semiFinishedCaptions.Clear();
+            flpAccounts.AutoSize = false;
+            flpAccounts.WrapContents = true;
+            flpAccounts.AutoScroll = false;
 
             CostSlipType type = CurrentType;
+
+            int rowWidth = CalculateAccountRowWidth();
+            int labelWidth = (int)(rowWidth * 0.66);
 
             foreach (ExpenseAccountType account in ExpenseAccountHelper.GetFilteredAccounts(type))
             {
@@ -977,14 +1084,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 bool isDerived = account == DerivedAccount;
                 string caption = AccountDisplayName(account) + (isDerived ? "  (Grid Toplamı)" : string.Empty);
 
-                int rowWidth = Math.Max(430, (flpAccounts.ClientSize.Width - 16) / 2);
-                int labelWidth = (int)(rowWidth * 0.66);
-
                 Panel row = new()
                 {
                     Width = rowWidth,
-                    Height = 26,
-                    Margin = new Padding(0, 1, 0, 1)
+                    Height = AccountRowHeight,
+                    Margin = new Padding(0, 2, 0, 2)
                 };
 
                 Label lbl = new()
@@ -1015,10 +1119,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
                 row.Controls.Add(lbl);
                 row.Controls.Add(input);
+
+                // Yarımamülün getirdiği gider tutarı, ilgili kalemin altında
+                // kırmızı olarak yazılır ve o kalemle toplanır.
+                Label semiCaption = new()
+                {
+                    Text = string.Empty,
+                    Location = new Point(labelWidth + 2, 25),
+                    Size = new Size(rowWidth - labelWidth - 4, 13),
+                    AutoSize = false,
+                    TextAlign = ContentAlignment.MiddleRight,
+                    Font = new Font("Segoe UI", 7.5F, FontStyle.Bold),
+                    ForeColor = Color.Firebrick,
+                    Visible = false
+                };
+
+                row.Controls.Add(semiCaption);
+
                 flpAccounts.Controls.Add(row);
 
                 _accountInputs[account] = input;
                 _accountInputList.Add(input);
+                _semiFinishedCaptions[account] = semiCaption;
 
                 ExpenseAccountType captured = account;
                 input.EditValueChanged += (_, _) =>
@@ -1032,6 +1154,85 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     RecalculateGrandTotal();
                 };
             }
+
+            LayoutAccountsPanel();
+        }
+
+        /// <summary>
+        /// Hesap alanı içeriğe göre büyür ve gövdenin altına yaslanır; arada
+        /// boşluk kalmaz. Tüm kalemler tek alanda görünür, kaydırma çubuğu
+        /// gerekmez. Form yetmezse kendini büyütür.
+        /// </summary>
+        private void LayoutAccountsPanel()
+        {
+            int rowWidth = CalculateAccountRowWidth();
+            if (rowWidth <= 0)
+            {
+                return;
+            }
+
+            int columns = Math.Max(1, flpAccounts.ClientSize.Width / rowWidth);
+            int rowCount = (int)Math.Ceiling(_accountInputs.Count / (double)columns);
+
+            int noteHeight = lblSemiFinishedNote is { Visible: true } ? AccountsNoteHeight : 0;
+            int accountsHeight = AccountsTitleHeight
+                + (rowCount * (AccountRowHeight + AccountsRowGap))
+                + noteHeight + 8;
+
+            int top = pnlItemsPanel.Top;
+
+            // Form yetmiyorsa büyütülür; böylece hiçbir kalem kırpılmaz.
+            int requiredClient = pnlHeader.Height
+                + top
+                + MinItemsPanelHeight
+                + AccountsPanelGap
+                + accountsHeight
+                + AccountsBottomMargin
+                + pnlFooter.Height;
+
+            if (requiredClient > ClientSize.Height)
+            {
+                ClientSize = new Size(ClientSize.Width, requiredClient);
+            }
+
+            int accountsTop = pnlBody.Height - accountsHeight - AccountsBottomMargin;
+            if (accountsTop < top + MinItemsPanelHeight)
+            {
+                accountsTop = top + MinItemsPanelHeight;
+            }
+
+            lblAccountsTitle.Visible = true;
+            lblAccountsTitle.BringToFront();
+
+            pnlAccounts.Top = accountsTop;
+            pnlAccounts.Height = accountsHeight;
+
+            pnlItemsPanel.Height = accountsTop - top - AccountsPanelGap;
+
+            flpAccounts.Location = new Point(flpAccounts.Left, AccountsTitleHeight);
+            flpAccounts.Size = new Size(
+                Math.Max(200, pnlAccounts.ClientSize.Width - 20),
+                accountsHeight - AccountsTitleHeight - noteHeight);
+            flpAccounts.AutoScroll = false;
+
+            pnlAccounts.PerformLayout();
+            flpAccounts.PerformLayout();
+        }
+
+        private int CalculateAccountRowWidth()
+        {
+            int flowWidth = flpAccounts.ClientSize.Width;
+            if (flowWidth <= 0)
+            {
+                flowWidth = pnlAccounts.ClientSize.Width - 20;
+            }
+
+            if (flowWidth <= 0)
+            {
+                return 0;
+            }
+
+            return Math.Max(430, (flowWidth - 16) / 2);
         }
 
         private void SyncAccountAmountsToInputs()
@@ -1214,14 +1415,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             decimal gridTotal = _lines.Sum(l => l.TotalAmount);
 
+            // Türetilmiş hesap (mamülde 710, hizmette 740-01) yalnızca grid
+            // toplamıdır. Yarımamülün giderleri bilgilendirme amaçlıdır, gider
+            // olarak toplama eklenmez; kendi pusulasında zaten yazılmıştır.
+            _accountAmounts[DerivedAccount] = Math.Round(gridTotal, 2);
+
             if (_accountInputs.TryGetValue(DerivedAccount, out TextEdit? derivedInput))
             {
-                _accountAmounts[DerivedAccount] = gridTotal;
-
                 _syncingTotals = true;
                 try
                 {
-                    derivedInput.EditValue = gridTotal;
+                    derivedInput.EditValue = _accountAmounts[DerivedAccount];
                 }
                 finally
                 {
@@ -1491,6 +1695,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             RecalculateTotals();
             ApplyRoundingAdjustmentToAccounts();
 
+            // Malzeme satırları türetilmiş hesaba (710) yazılır. Hesap bazlı
+            // giriş alanındaki tutarlar ürünsüz kalem olarak yazılır.
+            // Yarımamülün giderleri BİLGİLENDİRME amaçlıdır ve kalem olarak
+            // yazılmaz; kendi pusulasında zaten giderleştirilmiştir. Yazılsaydı
+            // aynı maliyet iki defa gider olurdu.
             List<CostSlipItemModel> itemModels = materialLines.Select(l => new CostSlipItemModel(
                 l.ProductId,
                 l.ProductUnitTypeId,
@@ -1808,6 +2017,15 @@ string message = isEditingDraft
 
             lblStatusValue.Text = approved ? "Durum: Onaylı" : "Durum: Taslak";
             lblStatusValue.Appearance.ForeColor = approved ? SkinTheme.Success : SkinTheme.Warning;
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            // Formun gerçek boyutu belliyken hesap alanı yeniden yerleştirilir;
+            // başlık görünür, tüm kalemler tek alanda sığar.
+            LayoutAccountsPanel();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

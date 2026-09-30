@@ -104,6 +104,12 @@ internal sealed class StockMovementsListReportQueryHandler(
             {
                 Product p = g.First().Product!;
 
+                // Bu rapor LOKASYON bazlıdır: atölye transferi girişi atölye
+                // konumunda gerçek bir giriştir, çıkışı depoda gerçek bir
+                // çıkıştır. Bu yüzden ikisi de sayılır; lokasyon bakiyeleri
+                // toplandığında ürünün gerçek stoğu çıkar. Ürün bazlı stok
+                // toplamlarındaki kural (ProductStockBalanceHelper) burada
+                // uygulanmaz.
                 decimal totalInQty = g.Where(m => m.MovementType == ProductMovementType.Input).Sum(m => m.Quantity);
                 decimal totalOutQty = g.Where(m => m.MovementType == ProductMovementType.Output).Sum(m => m.Quantity);
 

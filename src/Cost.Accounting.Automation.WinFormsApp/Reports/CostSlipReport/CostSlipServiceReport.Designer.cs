@@ -157,7 +157,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrLabel6,
             this.xrLabel2,
             this.xrLabel1});
-            this.TopMargin.HeightF = 259.0626F;
+            this.TopMargin.HeightF = 268.4376F;
             this.TopMargin.Name = "TopMargin";
             // 
             // xrLabel3
@@ -1261,7 +1261,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.objectDataSource1});
             this.DataSource = this.objectDataSource1;
             this.Font = new DevExpress.Drawing.DXFont("Arial", 9.75F);
-            this.Margins = new DevExpress.Drawing.DXMargins(77F, 36F, 259.0626F, 24.3749F);
+            this.Margins = new DevExpress.Drawing.DXMargins(77F, 36F, 268.4376F, 24.3749F);
             this.ParameterPanelLayoutItems.AddRange(new DevExpress.XtraReports.Parameters.ParameterPanelLayoutItem[] {
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M740, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M750, DevExpress.XtraReports.Parameters.Orientation.Horizontal),

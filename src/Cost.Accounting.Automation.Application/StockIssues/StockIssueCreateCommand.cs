@@ -134,6 +134,24 @@ internal sealed class StockIssueCreateCommandHandler(
 
         Dictionary<Guid, Product> productMap = products.ToDictionary(p => p.Id.Value);
 
+        // Aynı ürün aynı belgede birden fazla satırda kullanılamaz. Satırlar
+        // sessizce birleştirilmez; kullanıcı hatalı satırı düzeltsin.
+        List<IGrouping<Guid, StockIssueCreateLine>> duplicateLines = request.Lines
+            .GroupBy(l => l.ProductId)
+            .Where(g => g.Count() > 1)
+            .ToList();
+
+        if (duplicateLines.Count > 0)
+        {
+            string duplicateNames = string.Join(", ", duplicateLines.Select(g =>
+                productMap.TryGetValue(g.Key, out Product? dupProduct)
+                    ? $"'{dupProduct.Name.Value}'"
+                    : g.Key.ToString()));
+
+            return Result<string>.Failure(
+                $"Aynı ürün tek belgede yalnızca bir satırda kullanılabilir. Tekrarlanan ürünler: {duplicateNames}.");
+        }
+
         foreach (StockIssueCreateLine line in request.Lines)
         {
             if (!productMap.TryGetValue(line.ProductId, out Product? product))

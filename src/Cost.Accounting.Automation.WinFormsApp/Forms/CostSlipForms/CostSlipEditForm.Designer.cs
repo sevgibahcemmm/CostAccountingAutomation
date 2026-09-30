@@ -203,7 +203,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlBody.Location = new Point(0, 59);
             pnlBody.Name = "pnlBody";
             pnlBody.Padding = new Padding(17);
-            pnlBody.Size = new Size(1217, 625);
+            pnlBody.Size = new Size(1217, 698);
             pnlBody.TabIndex = 1;
             // 
             // pnlAccounts
@@ -213,7 +213,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlAccounts.Controls.Add(lblAccountsTitle);
             pnlAccounts.Location = new Point(17, 376);
             pnlAccounts.Name = "pnlAccounts";
-            pnlAccounts.Size = new Size(1183, 243);
+            pnlAccounts.Size = new Size(1183, 316);
             pnlAccounts.TabIndex = 0;
             // 
             // flpAccounts
@@ -222,7 +222,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             flpAccounts.AutoScroll = true;
             flpAccounts.Location = new Point(10, 40);
             flpAccounts.Name = "flpAccounts";
-            flpAccounts.Size = new Size(1155, 240);
+            flpAccounts.Size = new Size(1155, 257);
             flpAccounts.TabIndex = 1;
             // 
             // lblAccountsTitle
@@ -474,7 +474,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlFooter.Controls.Add(btnApprove);
             pnlFooter.Controls.Add(pnlFooterLine);
             pnlFooter.Dock = DockStyle.Bottom;
-            pnlFooter.Location = new Point(0, 684);
+            pnlFooter.Location = new Point(0, 757);
             pnlFooter.Name = "pnlFooter";
             pnlFooter.Size = new Size(1217, 60);
             pnlFooter.TabIndex = 2;
@@ -564,7 +564,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             // 
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1217, 744);
+            ClientSize = new Size(1217, 817);
             Controls.Add(pnlBody);
             Controls.Add(pnlFooter);
             Controls.Add(pnlHeader);

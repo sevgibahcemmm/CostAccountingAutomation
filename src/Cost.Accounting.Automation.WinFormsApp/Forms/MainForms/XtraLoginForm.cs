@@ -27,15 +27,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         };
 
         private const string CompanyPlaceholder = "Kurum seçin";
-        private const string CompanyLoadingText = "Kurumlar yükleniyor...";
         private const string YearPlaceholder = "Mali yıl seçin";
+        private const string ScopePendingText = "Kullanıcı adı girin";
+        private const string NoOpenYearText = "Açık mali yıl yok";
+
+        /// <summary>Aktif mali yıl: içinde bulunulan takvim yılı.</summary>
+        private static int ActiveYear => DateTime.Now.Year;
 
         private readonly System.Windows.Forms.Timer _fadeTimer = new() { Interval = 15 };
+        private readonly System.Windows.Forms.Timer _userNameTimer = new() { Interval = 400 };
         private Bitmap? _leftBackground;
         private Task? _initTask;
         private bool _passwordVisible;
         private Guid _captchaChallengeId;
-        private List<LoginScopeDto> _scopes = [];
+        private List<LoginScopeCompanyDto> _companies = [];
 
         public XtraLoginForm()
         {
@@ -49,15 +54,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 pnlLeft, pnlLeftBadge, pnlRight, pnlUserBadge,
                 pnlCompanyBox, pnlYearBox, pnlUserNameBox, pnlPasswordBox, pnlCaptchaResult);
             _fadeTimer.Tick += FadeTimer_Tick;
+            _userNameTimer.Tick += UserNameTimer_Tick;
 
-#if DEBUG
-            // Yalnızca geliştirme kolaylığı; Release derlemesinde alanlar boş gelir.
-            txtUserName.EditValue = "Admin";
-            txtPassword.EditValue = "1";
-#endif
-
-            btnLogin.Appearance.Options.UseBackColor = false;
-            btnLogin.Appearance.BackColor = Color.Transparent;
+            btnLogin.Appearance.Options.UseBackColor = true;
 
             lnkForgot.Click += LnkForgot_Click;
             pnlUserNameBox.Paint += AuthFormStyles.RoundedField_Paint;
@@ -77,14 +76,60 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lookUpYear.Leave += AuthFormStyles.Field_Leave;
 
             lookUpCompany.EditValueChanged += (_, _) => LoadYearsForSelectedCompany();
+
+            // Kurum ve yıl listeleri kullanıcı adına bağlıdır; kullanıcı adı
+            // değiştikçe kapsam yeniden çözülür. Aşağıdaki DEBUG bloğu bu
+            // bağlantıdan sonra çalışır ve ön dolgu için de tetikler.
+            txtUserName.TextChanged += (_, _) => QueueScopeResolve();
+            txtUserName.KeyDown += TxtUserName_KeyDown;
+            txtPassword.KeyDown += TxtPassword_KeyDown;
+
             Load += (_, _) => _initTask = InitAsync();
             FormClosed += XtraLoginForm_FormClosed;
+
+#if DEBUG
+            // Yalnızca geliştirme kolaylığı; Release derlemesinde alanlar boş gelir.
+            txtUserName.EditValue = "Admin";
+            txtPassword.EditValue = "1";
+#endif
+        }
+
+        private void QueueScopeResolve()
+        {
+            _userNameTimer.Stop();
+            _userNameTimer.Start();
+        }
+
+        /// <summary>Kullanıcı adı kutusunda Enter'a basılınca kapsam hemen çözülür.</summary>
+        private async void TxtUserName_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.SuppressKeyPress = true;
+            _userNameTimer.Stop();
+            await ResolveScopeAsync();
+            txtPassword.Focus();
+        }
+
+        /// <summary>Şifre kutusunda Enter'a basılınsa doğrudan giriş denenir.</summary>
+        private void TxtPassword_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter && btnLogin.Enabled)
+            {
+                e.SuppressKeyPress = true;
+                btnLogin.PerformClick();
+            }
         }
 
         private void XtraLoginForm_FormClosed(object? sender, FormClosedEventArgs e)
         {
             _fadeTimer.Stop();
             _fadeTimer.Dispose();
+            _userNameTimer.Stop();
+            _userNameTimer.Dispose();
             _leftBackground?.Dispose();
             System.Windows.Forms.Application.Exit();
         }
@@ -145,11 +190,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private async Task InitAsync()
         {
             btnLogin.Enabled = false;
-            lookUpCompany.Properties.NullText = CompanyLoadingText;
+            ResetScope();
             try
             {
-                await LoadScopeAsync();
                 await RecreateCaptchaAsync();
+
+                // Alan ön doluysa (ör. geliştirme modunda) TextChanged tetiklenmez;
+                // kapsam burada bir kez daha çözülür.
+                await ResolveScopeAsync();
             }
             catch (Exception ex)
             {
@@ -157,48 +205,78 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
             finally
             {
-                if (lookUpCompany.Properties.NullText == CompanyLoadingText)
-                {
-                    lookUpCompany.Properties.NullText = CompanyPlaceholder;
-                }
-
                 btnLogin.Enabled = true;
-
-                ActiveControl = lookUpCompany.EditValue is null
-                    ? lookUpCompany
-                    : string.IsNullOrEmpty(txtUserName.Text) ? txtUserName : txtPassword;
+                ActiveControl = txtUserName;
             }
         }
 
-        /// <summary>
-        /// Kurum ve mali yıl listelerini master veritabanından doldurur.
-        /// Listeler yalnızca açık yılları içerir; kapalı yıl seçilemez.
-        /// </summary>
-        private async Task LoadScopeAsync()
+        private void UserNameTimer_Tick(object? sender, EventArgs e)
         {
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            _userNameTimer.Stop();
+            _ = ResolveScopeAsync();
+        }
 
-            var result = await mediator.Send(new LoginScopeGetQuery(), CancellationToken.None);
+        /// <summary>
+        /// Kullanıcı adına karşılık gelen kurumu ve açık mali yılları çözer.
+        /// Kurum bilgisi her zaman görünür; yalnızca sys_admin listeden
+        /// değiştirebilir, diğer kullanıcılar kendi kurumuna kilitlidir.
+        /// </summary>
+        private async Task ResolveScopeAsync()
+        {
+            string userName = txtUserName.EditValue?.ToString()?.Trim() ?? string.Empty;
 
-            if (!result.IsSuccessful || result.Data is null)
+            if (userName.Length == 0)
             {
-                ToastHelper.Show(
-                    AuthFormStyles.GetErrorText(result.ErrorMessages),
-                    ToastType.Error);
-                lookUpCompany.Properties.NullText = "Kurum listesi alınamadı";
+                ResetScope();
                 return;
             }
 
-            _scopes = result.Data;
+            using var scope = Program.Services.CreateScope();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            lookUpCompany.Properties.DataSource = _scopes;
-            lookUpCompany.Properties.ValueMember = nameof(LoginScopeDto.CompanyId);
-            lookUpCompany.Properties.DisplayMember = nameof(LoginScopeDto.CompanyName);
+            var result = await mediator.Send(new LoginScopeGetQuery(userName), CancellationToken.None);
+
+            if (!result.IsSuccessful)
+            {
+                ResetScope();
+                lookUpYear.Properties.NullText = ScopePendingText;
+                return;
+            }
+
+            // Kullanıcı bulunamadıysa şifre doğrulanana kadar hiçbir bilgi verilmez.
+            if (result.Data is not { } userScope)
+            {
+                ResetScope();
+                return;
+            }
+
+            ApplyScope(userScope);
+        }
+
+        private void ResetScope()
+        {
+            _companies = [];
+            lookUpCompany.ReadOnly = false;
+            lookUpCompany.EditValue = null;
+            lookUpCompany.Properties.NullText = ScopePendingText;
+            lookUpCompany.Properties.DataSource = null;
+            lookUpYear.EditValue = null;
+            lookUpYear.Properties.DataSource = null;
+            lookUpYear.Properties.NullText = ScopePendingText;
+        }
+
+        private void ApplyScope(LoginScopeDto userScope)
+        {
+            _companies = userScope.Companies;
+
+            lookUpCompany.Properties.DataSource = _companies;
+            lookUpCompany.Properties.ValueMember = nameof(LoginScopeCompanyDto.CompanyId);
+            lookUpCompany.Properties.DisplayMember = nameof(LoginScopeCompanyDto.CompanyName);
             lookUpCompany.Properties.BestFitMode = BestFitMode.BestFit;
+            lookUpCompany.Properties.NullText = CompanyPlaceholder;
             lookUpCompanyView.OptionsBehavior.AutoPopulateColumns = false;
             lookUpCompanyView.Columns.Clear();
-            GridColumn companyColumn = lookUpCompanyView.Columns.AddField(nameof(LoginScopeDto.CompanyName));
+            GridColumn companyColumn = lookUpCompanyView.Columns.AddField(nameof(LoginScopeCompanyDto.CompanyName));
             companyColumn.Caption = "Kurum";
             companyColumn.VisibleIndex = 0;
             lookUpCompanyView.BestFitColumns();
@@ -206,6 +284,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lookUpYear.Properties.ValueMember = nameof(LoginScopeYearDto.CompanyYearId);
             lookUpYear.Properties.DisplayMember = nameof(LoginScopeYearDto.Year);
             lookUpYear.Properties.BestFitMode = BestFitMode.BestFit;
+            lookUpYear.Properties.NullText = YearPlaceholder;
             lookUpYearView.OptionsBehavior.AutoPopulateColumns = false;
             lookUpYearView.Columns.Clear();
             GridColumn yearColumn = lookUpYearView.Columns.AddField(nameof(LoginScopeYearDto.Year));
@@ -214,10 +293,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lookUpYearView.Columns.AddField(nameof(LoginScopeYearDto.DatabaseName)).Caption = "Veritabanı";
             lookUpYearView.BestFitColumns();
 
-            if (_scopes.Count == 1)
-            {
-                lookUpCompany.EditValue = _scopes[0].CompanyId;
-            }
+            // Normal kullanıcı listeden kurum seçemez; sys_admin seçebilir.
+            lookUpCompany.ReadOnly = !userScope.IsSysAdmin;
+
+            // Normal kullanıcının kurumu tekildir; sys_admin'de de kendi kurumu varsayılan gelir.
+            lookUpCompany.EditValue = userScope.CompanyId;
+            LoadYearsForSelectedCompany();
         }
 
         private void LoadYearsForSelectedCompany()
@@ -225,21 +306,32 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             if (lookUpCompany.EditValue is not Guid companyId)
             {
                 lookUpYear.Properties.DataSource = null;
+                lookUpYear.EditValue = null;
+                lookUpYear.Properties.NullText = _companies.Count == 0 ? ScopePendingText : NoOpenYearText;
                 return;
             }
 
-            LoginScopeDto? scope = _scopes.FirstOrDefault(s => s.CompanyId == companyId);
-            List<LoginScopeYearDto> openYears = scope?.Years
+            LoginScopeCompanyDto? company = _companies.FirstOrDefault(c => c.CompanyId == companyId);
+            List<LoginScopeYearDto> openYears = company?.Years
                 .Where(y => !y.IsClosed)
-                .OrderByDescending(y => y.Year)
+                .OrderByDescending(y => y.Year == ActiveYear)
+                .ThenByDescending(y => y.Year)
                 .ToList() ?? [];
 
             lookUpYear.Properties.DataSource = openYears;
-            lookUpYear.EditValue = openYears.Count > 0 ? openYears[0].CompanyYearId : null;
 
-            lookUpYear.Properties.NullText = openYears.Count == 0 && scope is not null
-                ? "Açık mali yıl yok"
-                : YearPlaceholder;
+            // Aktif mali yıl içinde bulunulan yıldır; tanımlıysa o seçilir.
+            LoginScopeYearDto? activeYear = openYears.FirstOrDefault(y => y.Year == ActiveYear)
+                ?? openYears.FirstOrDefault();
+            lookUpYear.EditValue = activeYear?.CompanyYearId;
+
+            lookUpYear.Properties.NullText = company is null
+                ? ScopePendingText
+                : openYears.Count == 0
+                    ? NoOpenYearText
+                    : openYears.Any(y => y.Year == ActiveYear)
+                        ? YearPlaceholder
+                        : $"{ActiveYear} yılı tanımlı değil";
         }
 
         private async Task RecreateCaptchaAsync()
@@ -293,6 +385,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             string userOrEmail = txtUserName.Text.Trim();
 
+            if (string.IsNullOrWhiteSpace(userOrEmail) || string.IsNullOrEmpty(txtPassword.Text))
+            {
+                ToastHelper.Show("Kullanıcı adı ve şifre boş olamaz.", ToastType.Error);
+                return;
+            }
+
+            // Kurum, kullanıcının kendi kaydından gelir; yalnızca sys_admin seçebilir.
+            if (_companies.Count == 0)
+            {
+                ToastHelper.Show("Kullanıcı bilgileri doğrulanamadı. Kullanıcı adını kontrol edin.", ToastType.Error);
+                txtUserName.Focus();
+                return;
+            }
+
             if (lookUpCompany.EditValue is not Guid companyId)
             {
                 ToastHelper.Show("Kurum seçmelisiniz.", ToastType.Error);
@@ -304,12 +410,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 ToastHelper.Show("Mali yıl seçmelisiniz.", ToastType.Error);
                 lookUpYear.Focus();
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(userOrEmail) || string.IsNullOrEmpty(txtPassword.Text))
-            {
-                ToastHelper.Show("Kullanıcı adı ve şifre boş olamaz.", ToastType.Error);
                 return;
             }
 
@@ -415,10 +515,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private void OpenMainPage(string token, AccountingYearSelectResult year)
         {
-            var (userId, companyId, roleName, userFullName) = DecodeToken(token);
+            var (userId, _, roleName, userFullName) = DecodeToken(token);
 
+            // Token kullanıcının kendi kurumunu taşır; sys_admin başka bir kurum
+            // seçtiyse oturum bağlamı seçilen kuruma yönlendirilir.
             SessionClaimContext session = Program.Services.GetRequiredService<SessionClaimContext>();
-            session.SetCurrentUser(userId, companyId, roleName, userFullName, token);
+            session.SetCurrentUser(userId, year.CompanyId, roleName, userFullName, token);
 
             RibbonMainForm mainForm = Program.Services.GetRequiredService<RibbonMainForm>();
             Hide();

@@ -43,8 +43,33 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
+            View.OptionsView.ColumnAutoWidth = false;
             View.Columns[nameof(CurrentAccountMovementDto.CurrentAccountTypeName)]!.Visible = !_accountType.HasValue;
             View.Columns[nameof(CurrentAccountMovementDto.DocumentNo)]!.Caption = "Belge / Fatura No";
+
+            // Taban sınıf yükleme sonrası BestFitColumns çağırıyor; bu değerler
+            // minimum genişlik olarak korunur, aksi halde kısa içerikli sütunlar
+            // (Cari Adı, Açıklama) okunamayacak kadar daralıyor.
+            SetColumnWidth(nameof(CurrentAccountMovementDto.Date), 95);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.CurrentAccountTypeName), 110);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.CurrentAccountName), 260);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.MovementTypeName), 150);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.DocumentNo), 140);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.Debit), 120);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.Credit), 120);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.Balance), 120);
+            SetColumnWidth(nameof(CurrentAccountMovementDto.Description), 260);
+        }
+
+        private void SetColumnWidth(string fieldName, int width)
+        {
+            if (View.Columns[fieldName] is not { } col)
+            {
+                return;
+            }
+
+            col.Width = width;
+            col.MinWidth = width;
         }
 
         protected override CurrentAccountMovementGetAllQuery BuildListQuery()

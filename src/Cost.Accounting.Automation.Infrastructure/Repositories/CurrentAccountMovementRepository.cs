@@ -10,4 +10,14 @@ internal sealed class CurrentAccountMovementRepository : AuditableRepository<Cur
     public CurrentAccountMovementRepository(ApplicationDbContext context, MasterDbContext masterContext) : base(context, masterContext)
     {
     }
+
+    /// <summary>
+    /// GetAllWithAudit sorgusu sonuçları belleğe materyalize ettiği için cari
+    /// adı için müşteri/tedarikçi navigasyonlarının <c>Include</c> ile
+    /// yüklenmesi gerekir; aksi halde "Cari Adı" sütunu boş gelir.
+    /// </summary>
+    protected override IQueryable<CurrentAccountMovement> ApplyDetailIncludes(IQueryable<CurrentAccountMovement> query)
+        => query
+            .Include(m => m.Customer)
+            .Include(m => m.Supplier);
 }

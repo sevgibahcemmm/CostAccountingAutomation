@@ -604,13 +604,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     System.Drawing.FontStyle.Bold);
 
             lblWelcome.Location =
-                new System.Drawing.Point(24, 14);
+                new System.Drawing.Point(24, 8);
 
             lblWelcome.Name =
                 "lblWelcome";
 
             lblWelcome.Size =
-                new System.Drawing.Size(650, 36);
+                new System.Drawing.Size(650, 44);
 
             lblWelcome.TabIndex =
                 0;
@@ -628,13 +628,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     System.Drawing.FontStyle.Regular);
 
             lblSub.Location =
-                new System.Drawing.Point(26, 56);
+                new System.Drawing.Point(26, 54);
 
             lblSub.Name =
                 "lblSub";
 
             lblSub.Size =
-                new System.Drawing.Size(760, 22);
+                new System.Drawing.Size(1010, 22);
 
             lblSub.TabIndex =
                 1;

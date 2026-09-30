@@ -13,7 +13,15 @@ namespace Cost.Accounting.Automation.Application.CostSlips;
 public sealed record CostSlipSemiFinishedBalanceDto(
     Guid? SemiProductId,
     decimal Balance,
-    decimal UnitPrice);
+    decimal UnitPrice,
+    IReadOnlyList<CostSlipExpenseBreakdownDto> ExpenseBreakdown);
+
+/// <summary>
+/// Yarımamülün birim maliyetinin gider hesabı (710 / 720 / 730 ...) bazında
+/// dağılımı. Mamül pusulasına yarımamül yansıtılırken her bileşen kendi
+/// hesabına yazılmalıdır; aksi halde 720/730 bileşenleri de 710'a yığılır.
+/// </summary>
+public sealed record CostSlipExpenseBreakdownDto(ExpenseAccountType AccountType, decimal UnitPrice);
 
 [Permission("costslip:view")]
 public sealed record CostSlipSemiFinishedBalanceQuery(Guid WorkshopId, Guid ProductId) : IRequest<Result<CostSlipSemiFinishedBalanceDto>>;
@@ -117,14 +125,56 @@ internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
         decimal balance = Math.Max(0m, produced - consumed);
 
         decimal unitPrice = 0m;
+        IReadOnlyList<CostSlipExpenseBreakdownDto> expenseBreakdown = [];
+
         if (semiProductId is IdentityId semiProductVal && produced > 0)
         {
-            decimal producedCost = approvedSlips
+            List<CostSlip> semiSlips = approvedSlips
                 .Where(s => s.CostSlipType == CostSlipType.SemiFinishedProduct
                     && s.ProducedProductId == semiProductVal)
-                .Sum(s => s.GrandTotal);
+                .ToList();
+
+            decimal producedCost = semiSlips.Sum(s => s.GrandTotal);
 
             unitPrice = Math.Round(producedCost / produced, 2);
+
+            // Gider hesabı bazında kırılım: her hesabın toplam maliyeti üretilen
+            // miktara bölünür. Kuruş yuvarlamasından doğan fark en büyük
+            // kaleme eklenir; böylece kalemler toplamı birim maliyete eşit olur.
+            List<(ExpenseAccountType Account, decimal Amount)> amounts = semiSlips
+                .SelectMany(s => s.CostSlipItems)
+                .GroupBy(i => i.ExpenseAccountType)
+                .Select(g => (Account: g.Key, Amount: g.Sum(i => i.TotalAmount)))
+                .Where(x => x.Amount != 0m)
+                .OrderByDescending(x => Math.Abs(x.Amount))
+                .ThenBy(x => x.Account)
+                .ToList();
+
+            if (amounts.Count == 0)
+            {
+                // Pusula kalemi yoksa mevcut davranış korunur: tek satır, 710.
+                expenseBreakdown = [new CostSlipExpenseBreakdownDto(ExpenseAccountType.Account710, unitPrice)];
+            }
+            else
+            {
+                List<CostSlipExpenseBreakdownDto> parts = amounts
+                    .Select(x => new CostSlipExpenseBreakdownDto(
+                        x.Account,
+                        Math.Round(x.Amount / produced, 2)))
+                    .ToList();
+
+                decimal partsSum = parts.Sum(p => p.UnitPrice);
+                decimal remainder = Math.Round(unitPrice - partsSum, 2);
+                if (remainder != 0m)
+                {
+                    parts[0] = parts[0] with { UnitPrice = Math.Round(parts[0].UnitPrice + remainder, 2) };
+                }
+
+                expenseBreakdown = parts
+                    .Where(p => p.UnitPrice != 0m)
+                    .OrderBy(p => p.AccountType)
+                    .ToList();
+            }
         }
         else if (semiProductId is null && productId.Value != Guid.Empty)
         {
@@ -139,6 +189,7 @@ internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
                 .FirstOrDefaultAsync(cancellationToken)) ?? new Price(0m);
 
             unitPrice = productPrice.Value;
+            expenseBreakdown = [new CostSlipExpenseBreakdownDto(ExpenseAccountType.Account710, unitPrice)];
         }
 
         System.Diagnostics.Debug.WriteLine($"[SEMI-DIAG] workshopIds={string.Join(",", workshopIds.Select(w => w.Value))} " +
@@ -148,6 +199,7 @@ internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
         return Result<CostSlipSemiFinishedBalanceDto>.Succeed(new CostSlipSemiFinishedBalanceDto(
             semiProductId?.Value,
             balance,
-            unitPrice));
+            unitPrice,
+            expenseBreakdown));
     }
 }

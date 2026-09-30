@@ -127,6 +127,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
         protected override StockIssueGetAllQuery BuildListQuery()
             => new(IssueType: _issueType, OnlyDeleted: ShowDeleted);
 
+        /// <summary>
+        /// Stok çıkışı/tüketim kaydı bu liste ekranından oluşturulmaz; belge
+        /// ilgili menüden açılır. Bu yüzden "Yeni" düğmesi gösterilmez.
+        /// </summary>
+        protected override bool AllowCreate => false;
+
+        /// <summary>Listedeki tek eylem seçili çıkışın detayını incelemektir.</summary>
+        protected override string EditButtonCaption => "Detay";
+
+        protected override bool DoubleClickOpensEditor => false;
+
+        protected override Task ShowItemDetailAsync(StockIssueListDto item)
+        {
+            // Kayıtla açılan form zaten salt okunur "İncele" modunda gelir
+            // (kaydet düğmesi gizli, alanlar kilitli).
+            using XtraForm form = CreateEditEditor(item);
+            form.ShowDialog(this);
+            return Task.CompletedTask;
+        }
+
         protected override IRequest<Result<string>> BuildDeleteCommand(StockIssueListDto item)
             => new StockIssueDeleteCommand(item.Id);
 

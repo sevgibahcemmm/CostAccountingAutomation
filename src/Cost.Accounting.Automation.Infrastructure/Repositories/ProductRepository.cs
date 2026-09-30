@@ -1,4 +1,5 @@
-﻿using Cost.Accounting.Automation.Domain.Abstractions;
+﻿using Cost.Accounting.Automation.Application.StockIssues;
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Infrastructure.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context;
@@ -64,6 +65,7 @@ internal sealed class ProductRepository : AuditableRepository<Product, Applicati
 
         var stock = await this.Context.Set<ProductMovement>()
             .AsNoTracking()
+            .WhereCountsAsProductStock()
             .Where(m => ids.Contains(m.ProductId))
             .GroupBy(m => m.ProductId)
             .Select(g => new
@@ -111,6 +113,7 @@ internal sealed class ProductRepository : AuditableRepository<Product, Applicati
 
         var costs = await this.Context.Set<ProductMovement>()
             .AsNoTracking()
+            .WhereCountsAsProductStock()
             .Where(m => ids.Contains(m.ProductId)
                 && m.MovementType == ProductMovementType.Input
                 && m.UnitPrice != null

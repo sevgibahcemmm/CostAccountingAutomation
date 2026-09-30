@@ -384,7 +384,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             }
         }
 
-        private bool TryMergeDuplicateProduct(int rowHandle, Guid productId)
+        /// <summary>
+        /// Aynı ürün aynı transfer belgesinde yalnızca bir satırda kullanılabilir.
+        /// Ürün zaten eklenmişse yeni seçim reddedilir, satır boşaltılır.
+        /// </summary>
+        private bool RejectDuplicateProduct(int rowHandle, Guid productId, BaseEdit? editor = null)
         {
             if (productId == Guid.Empty)
             {
@@ -398,42 +402,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                     continue;
                 }
 
-                LineRow target = _lines[i];
-                decimal mergedQuantity = target.Quantity + _lines[rowHandle].Quantity;
-                _lines.RemoveAt(rowHandle);
+                _lines[rowHandle].ProductId = Guid.Empty;
+                _lines[rowHandle].UnitCost = 0m;
+                _lines[rowHandle].AvailableStock = 0m;
 
-                int targetIndex = rowHandle < i ? i - 1 : i;
+                if (editor is not null)
+                {
+                    editor.EditValue = null;
+                }
+                else if (gridLinesView.Columns[nameof(LineRow.ProductId)] is { } productColumn)
+                {
+                    gridLinesView.SetRowCellValue(rowHandle, productColumn, null);
+                }
 
-                target.Quantity = mergedQuantity;
-                target.UnitCost = ResolveProductUnitPrice(productId);
-                target.AvailableStock = GetProductStockQuantity(productId);
-                UpdateAutoDescription(targetIndex);
-
-                gridLinesView.RefreshData();
-                gridLinesView.FocusedRowHandle = _lines.Count - 1 > targetIndex ? targetIndex : _lines.Count - 1;
-
+                gridLinesView.RefreshRow(rowHandle);
                 UpdateTotal();
-                UpdateGeneralDescription();
 
                 ToastHelper.Show(
-                    $"'{GetProductName(productId)}' zaten listede; miktarlar tek satırda birleştirildi (toplam {mergedQuantity:n2}).",
-                    ToastType.Info,
-                    4000);
+                    $"'{GetProductName(productId)}' bu belgede zaten eklenmiş. Aynı ürün yalnızca bir satırda kullanılabilir.",
+                    ToastType.Warning,
+                    4500);
 
                 return true;
             }
 
             return false;
-        }
-
-        private decimal GetProductStockQuantity(Guid productId)
-        {
-            if (productId == Guid.Empty)
-            {
-                return 0m;
-            }
-
-            return _filteredProductsById.GetValueOrDefault(productId)?.StockQuantity ?? 0m;
         }
 
         private void UpdateTotal()
@@ -453,7 +446,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
             if (e.Column.FieldName == nameof(LineRow.ProductId) && row.ProductId != Guid.Empty)
             {
-                if (TryMergeDuplicateProduct(e.RowHandle, row.ProductId))
+                if (RejectDuplicateProduct(
+                        e.RowHandle,
+                        row.ProductId,
+                        gridLinesView.ActiveEditor as BaseEdit))
                 {
                     return;
                 }
@@ -517,6 +513,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             if (product is null)
             {
                 WarnAndClearProductLine(rowHandle, edit, productId);
+                return;
+            }
+
+            if (RejectDuplicateProduct(rowHandle, product.Id, edit))
+            {
                 return;
             }
 

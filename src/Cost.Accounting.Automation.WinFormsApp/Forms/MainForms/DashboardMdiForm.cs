@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Dashboards;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
@@ -20,6 +21,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private const int DashboardAutoRefreshIntervalMs = 30_000;
 
         private readonly SessionClaimContext _session;
+        private readonly IAccountingDbSelector _dbSelector;
         private readonly ISender _sender;
         private readonly Dictionary<int, Label> _kpiValues = new();
         private readonly System.Windows.Forms.Timer _refreshTimer;
@@ -35,6 +37,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _session =
                 Program.Services
                     .GetRequiredService<SessionClaimContext>();
+
+            _dbSelector =
+                Program.Services
+                    .GetRequiredService<IAccountingDbSelector>();
 
             _sender =
                 Program.Services
@@ -188,8 +194,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     "-";
             }
 
+            int? activeYear = _dbSelector.Year?.Value;
+
             lblSub.Text =
-                $"Kurum: {companyName}     *   Kullanıcı: {userFullName}    *    Rolü : {roleName}";
+                $"Kurum: {companyName}  •  Kullanıcı: {userFullName}  •  Rol: {roleName}  •  Aktif Yıl: {activeYear?.ToString() ?? "-"}";
 
             lblDate.Text =
                 DateTime.Now.ToString(

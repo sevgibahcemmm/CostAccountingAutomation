@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Helpers;
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.Invoices;
@@ -108,15 +109,22 @@ internal sealed class ProductDetailQueryHandler(
             Movements = movements
         };
 
-        dto.TotalInQuantity = movements
+        // Atölye transferi girişi mülkiyet devridir, miktar yaratmaz; ürün
+        // stok toplamlarına dâhil edilmez (500 alınan / 20 transfer = 480 kalan).
+        List<ProductStockMovementDetailDto> stockMovements = movements
+            .Where(m => m.MovementType != ProductMovementType.Input
+                || !ProductStockBalanceHelper.IsAtelierTransferInputByDescription(m.Description))
+            .ToList();
+
+        dto.TotalInQuantity = stockMovements
             .Where(m => m.MovementType == ProductMovementType.Input)
             .Sum(m => m.Quantity);
-        dto.TotalOutQuantity = movements
+        dto.TotalOutQuantity = stockMovements
             .Where(m => m.MovementType == ProductMovementType.Output)
             .Sum(m => m.Quantity);
         dto.StockQuantity = dto.TotalInQuantity - dto.TotalOutQuantity;
 
-        List<ProductStockMovementDetailDto> inputs = movements
+        List<ProductStockMovementDetailDto> inputs = stockMovements
             .Where(m => m.MovementType == ProductMovementType.Input && m.UnitPrice is > 0)
             .ToList();
         decimal totalInputQuantity = inputs.Sum(m => m.Quantity);

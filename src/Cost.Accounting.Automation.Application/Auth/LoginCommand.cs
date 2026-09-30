@@ -50,14 +50,13 @@ public sealed class LoginCommandHandler(
             return Result<LoginCommandResponse>.Failure("Kullanıcı adı ya da şifre yanlış");
         }
 
-        // Giriş ekranında kurum seçimi zorunludur. sys_admin tüm kurumların
-        // verisine erişebilir; diğer kullanıcılar yalnızca kendi kurumunda
-        // oturum açabilir.
+        // Normal kullanıcılar yalnızca kendi kurumunda oturum açabilir; kurum
+        // seçimi yalnızca sys_admin'e sunulur.
         if (request.CompanyId is { } selectedCompanyId && user.CompanyId.Value != selectedCompanyId)
         {
             var role = await roleRepository.FirstOrDefaultAsync(r => r.Id == user.RoleId, cancellationToken);
 
-            if (role?.Name.Value != "sys_admin")
+            if (role?.Name.Value != SystemRoles.SysAdmin)
             {
                 return Result<LoginCommandResponse>.Failure(
                     "Bu kullanıcı seçilen kuruma ait değil. Kendi kurumunuzla giriş yapın.");

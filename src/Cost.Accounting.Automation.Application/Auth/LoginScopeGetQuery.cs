@@ -1,18 +1,39 @@
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.AccountingYears;
+using Cost.Accounting.Automation.Domain.Roles;
+using Cost.Accounting.Automation.Domain.Users;
 using TS.MediatR;
 using TS.Result;
 
 namespace Cost.Accounting.Automation.Application.Auth;
 
 /// <summary>
-/// Giriş ekranındaki kurum ve mali yıl seçim kutularını doldurur. Yalnızca
-/// master veritabanını okur; oturum açılmadan önce çalışabilir.
+/// Girilen kullanıcı adına (e-posta veya kullanıcı adı) karşılık gelen oturum
+/// kapsamını çözer. Kullanıcı normal bir roldeyse yalnızca kendi kurumunun
+/// açık yılları döner ve kurum seçimi sunulmaz; <c>sys_admin</c> ise tüm
+/// kurumların listesini seçebilir.
 /// </summary>
-public sealed record LoginScopeGetQuery : IRequest<Result<List<LoginScopeDto>>>;
+public sealed record LoginScopeGetQuery(
+    string UserName) : IRequest<Result<LoginScopeDto?>>;
 
 public sealed record LoginScopeDto
+{
+    /// <summary>Kullanıcının bağlı olduğu kurum.</summary>
+    public required Guid CompanyId { get; init; }
+
+    public required string CompanyName { get; init; }
+
+    public required bool IsSysAdmin { get; init; }
+
+    /// <summary>
+    /// Giriş ekranında kurum seçtirilecek kayıtlar. Normal kullanıcıda tek
+    /// elemanlıdır ve <see cref="IsSysAdmin"/> false ise formda gizlenir.
+    /// </summary>
+    public required List<LoginScopeCompanyDto> Companies { get; init; }
+}
+
+public sealed record LoginScopeCompanyDto
 {
     public required Guid CompanyId { get; init; }
     public required string CompanyName { get; init; }
@@ -28,22 +49,47 @@ public sealed record LoginScopeYearDto
 }
 
 internal sealed class LoginScopeGetQueryHandler(
+    IUserRepository userRepository,
+    IRoleRepository roleRepository,
     IMasterCompanyNameLookup companyNameLookup,
-    ICompanyYearRepository companyYearRepository) : IRequestHandler<LoginScopeGetQuery, Result<List<LoginScopeDto>>>
+    ICompanyYearRepository companyYearRepository) : IRequestHandler<LoginScopeGetQuery, Result<LoginScopeDto?>>
 {
-    public async Task<Result<List<LoginScopeDto>>> Handle(
+    public async Task<Result<LoginScopeDto?>> Handle(
         LoginScopeGetQuery request,
         CancellationToken cancellationToken)
     {
-        List<MasterCompanyInfo> companies = await companyNameLookup.GetAllAsync(cancellationToken);
+        string userName = request.UserName.Trim();
 
-        if (companies.Count == 0)
+        if (userName.Length == 0)
         {
-            return Result<List<LoginScopeDto>>.Failure("Tanımlı kurum bulunamadı.");
+            return Result<LoginScopeDto?>.Succeed(null);
         }
 
-        List<CompanyYear> years = await companyYearRepository.GetAllAsync(cancellationToken);
+        var user = await userRepository.FirstOrDefaultAsync(p =>
+            p.Email.Value == userName
+            || p.UserName.Value == userName,
+            cancellationToken);
 
+        if (user is null)
+        {
+            return Result<LoginScopeDto?>.Succeed(null);
+        }
+
+        var role = await roleRepository.FirstOrDefaultAsync(r => r.Id == user.RoleId, cancellationToken);
+        bool isSysAdmin = string.Equals(
+            role?.Name.Value,
+            SystemRoles.SysAdmin,
+            StringComparison.OrdinalIgnoreCase);
+
+        Guid ownCompanyId = user.CompanyId.Value;
+
+        Dictionary<Guid, string> companyNames = await companyNameLookup.GetNamesAsync(
+            [ownCompanyId],
+            cancellationToken);
+
+        string ownCompanyName = companyNames.GetValueOrDefault(ownCompanyId) ?? "Tanımsız kurum";
+
+        List<CompanyYear> years = await companyYearRepository.GetAllAsync(cancellationToken);
         Dictionary<Guid, List<LoginScopeYearDto>> yearsByCompany = years
             .GroupBy(cy => cy.CompanyId.Value)
             .ToDictionary(
@@ -59,16 +105,41 @@ internal sealed class LoginScopeGetQueryHandler(
                     })
                     .ToList());
 
-        List<LoginScopeDto> scopes = companies
-            .OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase)
-            .Select(company => new LoginScopeDto
-            {
-                CompanyId = company.Id,
-                CompanyName = company.Name,
-                Years = yearsByCompany.GetValueOrDefault(company.Id) ?? []
-            })
-            .ToList();
+        List<LoginScopeCompanyDto> companies;
 
-        return Result<List<LoginScopeDto>>.Succeed(scopes);
+        if (isSysAdmin)
+        {
+            List<MasterCompanyInfo> allCompanies = await companyNameLookup.GetAllAsync(cancellationToken);
+
+            companies = allCompanies
+                .OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase)
+                .Select(c => new LoginScopeCompanyDto
+                {
+                    CompanyId = c.Id,
+                    CompanyName = c.Name,
+                    Years = yearsByCompany.GetValueOrDefault(c.Id) ?? []
+                })
+                .ToList();
+        }
+        else
+        {
+            companies =
+            [
+                new LoginScopeCompanyDto
+                {
+                    CompanyId = ownCompanyId,
+                    CompanyName = ownCompanyName,
+                    Years = yearsByCompany.GetValueOrDefault(ownCompanyId) ?? []
+                }
+            ];
+        }
+
+        return Result<LoginScopeDto?>.Succeed(new LoginScopeDto
+        {
+            CompanyId = ownCompanyId,
+            CompanyName = ownCompanyName,
+            IsSysAdmin = isSysAdmin,
+            Companies = companies
+        });
     }
 }
