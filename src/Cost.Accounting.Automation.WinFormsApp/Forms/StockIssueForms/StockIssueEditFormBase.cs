@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Products;
@@ -11,6 +11,7 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
+using DevExpress.Data;
 using DevExpress.Utils;
 using DevExpress.XtraEditors;
 using DevExpress.XtraEditors.Controls;
@@ -66,15 +67,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
             if (_editing is not null)
             {
-                btnSave.Visible = false;
+                bool isDraft = _editing.Status == StockIssueStatus.Draft;
+
+                // Onaylı belge düzenlenemez. Onay giriş ekranından YAPILMAZ;
+                // liste ekranından (tekil veya toplu) yapılır.
+                btnSave.Enabled = isDraft;
                 dtDate.ReadOnly = true;
                 txtDocumentNumber.ReadOnly = true;
                 cmbCosting.ReadOnly = true;
                 lookUpTarget.ReadOnly = true;
                 memoDescription.ReadOnly = true;
-                btnAddLine.Enabled = false;
-                btnDeleteLine.Enabled = false;
-                gridLinesView.OptionsBehavior.Editable = false;
+                btnAddLine.Enabled = isDraft;
+                btnDeleteLine.Enabled = isDraft;
+                gridLinesView.OptionsBehavior.Editable = isDraft;
             }
 
             WireEvents();
@@ -177,12 +182,33 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 MinWidth = 200
             };
 
-            gridLinesView.Columns.AddRange([productColumn, quantityColumn, unitCostColumn, stockColumn, descriptionColumn]);
+            GridColumn totalColumn = new()
+            {
+                Caption = "Tutar",
+                FieldName = nameof(LineRow.TotalAmount),
+                ColumnEdit = riMoney,
+                Visible = true,
+                Width = 120,
+                OptionsColumn = { AllowEdit = false, ReadOnly = true },
+                AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } }
+            };
+
+            gridLinesView.Columns.AddRange(
+                [productColumn, quantityColumn, unitCostColumn, stockColumn, descriptionColumn, totalColumn]);
+            GridColumnFactory.RegisterManualNumericColumns(gridLinesView);
 
             foreach (GridColumn col in gridLinesView.Columns)
             {
                 col.AppearanceHeader.TextOptions.HAlignment = HorzAlignment.Center;
             }
+
+            // Alt toplam grid'in kendi footer'ında gösterilir; formun altındaki
+            // ayrı "Toplam Tutar" etiketleri kaldırıldı.
+            gridLinesView.OptionsView.ShowFooter = true;
+            quantityColumn.SummaryItem.SummaryType = SummaryItemType.Sum;
+            quantityColumn.SummaryItem.DisplayFormat = "{0:n2}";
+            totalColumn.SummaryItem.SummaryType = SummaryItemType.Sum;
+            totalColumn.SummaryItem.DisplayFormat = "{0:n2} ₺";
         }
 
         private void WireEvents()
@@ -429,10 +455,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             return false;
         }
 
+        /// <summary>
+        /// Kayıtlı satırlar için grid'i yeniler. Toplam artık grid footer'ında
+        /// otomatik hesaplandığı için ayrı hesaplama yapılmaz.
+        /// </summary>
         private void UpdateTotal()
         {
-            decimal total = _lines.Sum(l => l.Quantity * l.UnitCost);
-            lblTotalValue.Text = total.ToString("n2");
+            gridLinesControl.RefreshDataSource();
         }
 
         private void GridLinesView_CellValueChanged(object sender, CellValueChangedEventArgs e)
@@ -772,12 +801,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             btnSave.Enabled = false;
             try
             {
+                // Kaydetme TASLAK olarak yapar; stok hareketleri oluşmaz.
+                // Onay ayrı adımdır ve liste üzerinden yapılır.
                 bool ok = await CrudExecutor.ExecuteAsync(command);
                 if (ok)
                 {
                     _saved = true;
                     btnPrintSlip.Enabled = true;
-                    btnSave.Enabled = false;
                     btnAddLine.Enabled = false;
                     btnDeleteLine.Enabled = false;
                     dtDate.ReadOnly = true;
@@ -907,13 +937,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             return new CompanyDto();
         }
 
-        private sealed class LineRow
-        {
-            public Guid ProductId { get; set; }
-            public decimal Quantity { get; set; }
-            public decimal UnitCost { get; set; }
-            public decimal AvailableStock { get; set; }
-            public string Description { get; set; } = string.Empty;
-        }
+private sealed class LineRow
+            {
+                public Guid ProductId { get; set; }
+                public decimal Quantity { get; set; }
+                public decimal UnitCost { get; set; }
+                public decimal AvailableStock { get; set; }
+
+                /// <summary>Satır tutarı; grid footer toplamı bu sütundan okunur.</summary>
+                public decimal TotalAmount => Quantity * UnitCost;
+
+                public string Description { get; set; } = string.Empty;
+            }
     }
 }

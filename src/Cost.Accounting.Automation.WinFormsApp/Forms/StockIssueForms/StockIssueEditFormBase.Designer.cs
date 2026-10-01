@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.WinFormsApp.Utils;
+﻿using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
@@ -18,8 +18,6 @@ abstract partial class StockIssueEditFormBase
         private System.Windows.Forms.Label lblTarget;
         private System.Windows.Forms.Label lblDescription;
         private System.Windows.Forms.Label lblLines;
-        private System.Windows.Forms.Label lblTotalCaption;
-        private System.Windows.Forms.Label lblTotalValue;
         private DevExpress.XtraEditors.DateEdit dtDate;
         private DevExpress.XtraEditors.TextEdit txtDocumentNumber;
         private DevExpress.XtraEditors.TextEdit txtWarehouse;
@@ -66,8 +64,6 @@ abstract partial class StockIssueEditFormBase
             this.lblTarget = new System.Windows.Forms.Label();
             this.lblDescription = new System.Windows.Forms.Label();
             this.lblLines = new System.Windows.Forms.Label();
-            this.lblTotalCaption = new System.Windows.Forms.Label();
-            this.lblTotalValue = new System.Windows.Forms.Label();
             this.dtDate = new DevExpress.XtraEditors.DateEdit();
             this.txtDocumentNumber = new DevExpress.XtraEditors.TextEdit();
             this.txtWarehouse = new DevExpress.XtraEditors.TextEdit();
@@ -230,7 +226,7 @@ abstract partial class StockIssueEditFormBase
             this.gridLinesControl.Location = new System.Drawing.Point(24, 252);
             this.gridLinesControl.MainView = this.gridLinesView;
             this.gridLinesControl.Name = "gridLinesControl";
-            this.gridLinesControl.Size = new System.Drawing.Size(912, 300);
+            this.gridLinesControl.Size = new System.Drawing.Size(912, 348);
             this.gridLinesControl.TabIndex = 6;
             this.gridLinesControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { this.gridLinesView });
             // 
@@ -242,7 +238,7 @@ abstract partial class StockIssueEditFormBase
             // btnAddLine
             // 
             this.btnAddLine.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnAddLine.Location = new System.Drawing.Point(24, 562);
+            this.btnAddLine.Location = new System.Drawing.Point(24, 616);
             this.btnAddLine.Name = "btnAddLine";
             this.btnAddLine.Size = new System.Drawing.Size(110, 30);
             this.btnAddLine.TabIndex = 7;
@@ -254,7 +250,7 @@ abstract partial class StockIssueEditFormBase
             // btnDeleteLine
             // 
             this.btnDeleteLine.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnDeleteLine.Location = new System.Drawing.Point(142, 562);
+            this.btnDeleteLine.Location = new System.Drawing.Point(142, 616);
             this.btnDeleteLine.Name = "btnDeleteLine";
             this.btnDeleteLine.Size = new System.Drawing.Size(110, 30);
             this.btnDeleteLine.TabIndex = 8;
@@ -263,41 +259,20 @@ abstract partial class StockIssueEditFormBase
             this.btnDeleteLine.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             this.btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
-            // lblTotalCaption
             // 
-            this.lblTotalCaption.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblTotalCaption.AutoSize = true;
-            this.lblTotalCaption.Location = new System.Drawing.Point(640, 568);
-            this.lblTotalCaption.Name = "lblTotalCaption";
-            this.lblTotalCaption.Text = "Toplam Tutar:";
-            // 
-            // lblTotalValue
-            // 
-            this.lblTotalValue.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblTotalValue.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblTotalValue.Location = new System.Drawing.Point(740, 568);
-            this.lblTotalValue.Name = "lblTotalValue";
-            this.lblTotalValue.Size = new System.Drawing.Size(196, 20);
-            this.lblTotalValue.TabIndex = 9;
-            this.lblTotalValue.Text = "0,00";
-            this.lblTotalValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // btnSave
-            // 
-            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(744, 612);
+this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSave.Location = new System.Drawing.Point(716, 616);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(92, 32);
+            this.btnSave.Size = new System.Drawing.Size(124, 32);
             this.btnSave.TabIndex = 10;
-            this.btnSave.Text = "Kaydet";
-            this.btnSave.ImageOptions.SvgImage = DxIcon.Check;
+            this.btnSave.Text = "Taslak Kaydet";
+            this.btnSave.ImageOptions.SvgImage = DxIcon.Save;
             this.btnSave.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             this.btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            // 
-            // btnCancel
-            // 
+            //
+            //
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(844, 612);
+            this.btnCancel.Location = new System.Drawing.Point(844, 616);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(92, 32);
             this.btnCancel.TabIndex = 11;
@@ -305,12 +280,12 @@ abstract partial class StockIssueEditFormBase
             this.btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             this.btnCancel.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             this.btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            // 
+            //
             // btnPrintSlip
-            // 
+            //
             this.btnPrintSlip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnPrintSlip.Enabled = false;
-            this.btnPrintSlip.Location = new System.Drawing.Point(24, 612);
+            this.btnPrintSlip.Location = new System.Drawing.Point(262, 616);
             this.btnPrintSlip.Name = "btnPrintSlip";
             this.btnPrintSlip.Size = new System.Drawing.Size(180, 32);
             this.btnPrintSlip.TabIndex = 12;
@@ -321,15 +296,13 @@ abstract partial class StockIssueEditFormBase
             // 
             // StockIssueEditFormBase
             // 
-            this.ClientSize = new System.Drawing.Size(960, 660);
+            this.ClientSize = new System.Drawing.Size(960, 664);
             this.Controls.Add(this.lblLines);
             this.Controls.Add(this.lblSubtitle);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.btnPrintSlip);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnSave);
-            this.Controls.Add(this.lblTotalValue);
-            this.Controls.Add(this.lblTotalCaption);
             this.Controls.Add(this.btnDeleteLine);
             this.Controls.Add(this.btnAddLine);
             this.Controls.Add(this.gridLinesControl);

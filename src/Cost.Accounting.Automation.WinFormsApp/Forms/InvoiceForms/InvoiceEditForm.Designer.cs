@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.WinFormsApp.Utils;
+﻿using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 {
@@ -53,8 +53,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private DevExpress.XtraEditors.PanelControl pnlFooter;
         private DevExpress.XtraEditors.PanelControl pnlFooterLine;
         private DevExpress.XtraEditors.SimpleButton btnSaveDraft;
-        private DevExpress.XtraEditors.SimpleButton btnSave;
-        private DevExpress.XtraEditors.SimpleButton btnApprove;
         private DevExpress.XtraEditors.SimpleButton btnCancel;
         private DevExpress.XtraEditors.SimpleButton btnPrintSlip;
 
@@ -117,9 +115,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             pnlFooter = new DevExpress.XtraEditors.PanelControl();
             btnPrintSlip = new DevExpress.XtraEditors.SimpleButton();
             btnCancel = new DevExpress.XtraEditors.SimpleButton();
-            btnSave = new DevExpress.XtraEditors.SimpleButton();
             btnSaveDraft = new DevExpress.XtraEditors.SimpleButton();
-            btnApprove = new DevExpress.XtraEditors.SimpleButton();
             pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
             ((System.ComponentModel.ISupportInitialize)pnlHeader).BeginInit();
             pnlHeader.SuspendLayout();
@@ -228,8 +224,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             pnlBody.Dock = DockStyle.Fill;
             pnlBody.Location = new Point(0, 59);
             pnlBody.Name = "pnlBody";
-            pnlBody.Padding = new Padding(17, 17, 17, 17);
-            pnlBody.Size = new Size(1217, 513);
+            pnlBody.Padding = new Padding(17);
+            pnlBody.Size = new Size(1217, 616);
             pnlBody.TabIndex = 1;
             // 
             // pnlItemsPanel
@@ -240,9 +236,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             pnlItemsPanel.Controls.Add(pnlTotals);
             pnlItemsPanel.Controls.Add(gridLines);
             pnlItemsPanel.Controls.Add(pnlItemsHeader);
-            pnlItemsPanel.Location = new Point(463, 117);
+            pnlItemsPanel.Location = new Point(463, 97);
             pnlItemsPanel.Name = "pnlItemsPanel";
-            pnlItemsPanel.Size = new Size(737, 364);
+            pnlItemsPanel.Size = new Size(737, 513);
             pnlItemsPanel.TabIndex = 7;
             // 
             // pnlTotals
@@ -260,9 +256,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             pnlTotals.Controls.Add(lblDiscountTotalTitle);
             pnlTotals.Controls.Add(lblSubTotalValue);
             pnlTotals.Controls.Add(lblSubTotalTitle);
-            pnlTotals.Location = new Point(0, 260);
+            pnlTotals.Location = new Point(3, 389);
             pnlTotals.Name = "pnlTotals";
-            pnlTotals.Size = new Size(737, 104);
+            pnlTotals.Size = new Size(733, 104);
             pnlTotals.TabIndex = 0;
             // 
             // lblTaxBreakdown
@@ -387,7 +383,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             gridLines.Location = new Point(0, 35);
             gridLines.MainView = gridLinesView;
             gridLines.Name = "gridLines";
-            gridLines.Size = new Size(737, 217);
+            gridLines.Size = new Size(737, 348);
             gridLines.TabIndex = 4;
             gridLines.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridLinesView });
             // 
@@ -408,7 +404,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             pnlItemsHeader.Controls.Add(lblItemsTitle);
             pnlItemsHeader.Location = new Point(0, 0);
             pnlItemsHeader.Name = "pnlItemsHeader";
-            pnlItemsHeader.Size = new Size(737, 31);
+            pnlItemsHeader.Size = new Size(737, 29);
             pnlItemsHeader.TabIndex = 5;
             // 
             // btnDeleteLine
@@ -453,9 +449,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             pnlCatalog.Controls.Add(gridCatalog);
             pnlCatalog.Controls.Add(cmbCatalogWarehouse);
             pnlCatalog.Controls.Add(lblCatalogTitle);
-            pnlCatalog.Location = new Point(17, 117);
+            pnlCatalog.Location = new Point(17, 97);
             pnlCatalog.Name = "pnlCatalog";
-            pnlCatalog.Size = new Size(429, 329);
+            pnlCatalog.Size = new Size(429, 513);
             pnlCatalog.TabIndex = 5;
             // 
             // btnAddProduct
@@ -465,7 +461,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             btnAddProduct.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnAddProduct.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddProduct.ImageOptions.SvgImage");
             btnAddProduct.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnAddProduct.Location = new Point(4, 299);
+            btnAddProduct.Location = new Point(5, 462);
             btnAddProduct.Name = "btnAddProduct";
             btnAddProduct.Size = new Size(420, 26);
             btnAddProduct.TabIndex = 0;
@@ -484,7 +480,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             gridCatalog.Location = new Point(4, 80);
             gridCatalog.MainView = gridCatalogView;
             gridCatalog.Name = "gridCatalog";
-            gridCatalog.Size = new Size(420, 217);
+            gridCatalog.Size = new Size(420, 376);
             gridCatalog.TabIndex = 6;
             gridCatalog.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridCatalogView });
             // 
@@ -530,7 +526,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             // 
             // txtDescription
             // 
-            txtDescription.Location = new Point(17, 82);
+            txtDescription.Location = new Point(17, 71);
             txtDescription.Name = "txtDescription";
             txtDescription.Size = new Size(1183, 20);
             txtDescription.TabIndex = 8;
@@ -539,7 +535,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             // 
             lblDescLabel.Appearance.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblDescLabel.Appearance.Options.UseFont = true;
-            lblDescLabel.Location = new Point(17, 65);
+            lblDescLabel.Location = new Point(17, 54);
             lblDescLabel.Name = "lblDescLabel";
             lblDescLabel.Size = new Size(53, 15);
             lblDescLabel.TabIndex = 9;
@@ -562,7 +558,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lookUpAccount.Name = "lookUpAccount";
             lookUpAccount.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             lookUpAccount.Properties.PopupView = lookUpAccountView;
-            lookUpAccount.Size = new Size(326, 20);
+            lookUpAccount.Size = new Size(747, 20);
             lookUpAccount.TabIndex = 11;
             // 
             // lookUpAccountView
@@ -646,12 +642,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             pnlFooter.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlFooter.Controls.Add(btnPrintSlip);
             pnlFooter.Controls.Add(btnCancel);
-            pnlFooter.Controls.Add(btnSave);
             pnlFooter.Controls.Add(btnSaveDraft);
-            pnlFooter.Controls.Add(btnApprove);
             pnlFooter.Controls.Add(pnlFooterLine);
             pnlFooter.Dock = DockStyle.Bottom;
-            pnlFooter.Location = new Point(0, 572);
+            pnlFooter.Location = new Point(0, 675);
             pnlFooter.Name = "pnlFooter";
             pnlFooter.Size = new Size(1217, 52);
             pnlFooter.TabIndex = 2;
@@ -685,47 +679,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             btnCancel.TabIndex = 1;
             btnCancel.Text = "Vazgeç";
             // 
-            // btnSave
-            // 
-            btnSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnSave.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            btnSave.Appearance.Options.UseFont = true;
-            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnSave.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSave.ImageOptions.SvgImage");
-            btnSave.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnSave.Location = new Point(960, 12);
-            btnSave.Name = "btnSave";
-            btnSave.Size = new Size(150, 29);
-            btnSave.TabIndex = 2;
-            btnSave.Text = "Kaydet ve Onayla";
-            // 
             // btnSaveDraft
             // 
             btnSaveDraft.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnSaveDraft.Appearance.Font = new Font("Segoe UI", 9F);
+            btnSaveDraft.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnSaveDraft.Appearance.Options.UseFont = true;
             btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnSaveDraft.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSaveDraft.ImageOptions.SvgImage");
             btnSaveDraft.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnSaveDraft.Location = new Point(843, 12);
+            btnSaveDraft.Location = new Point(994, 12);
             btnSaveDraft.Name = "btnSaveDraft";
             btnSaveDraft.Size = new Size(111, 29);
             btnSaveDraft.TabIndex = 3;
             btnSaveDraft.Text = "Taslak Kaydet";
-            // 
-            // btnApprove
-            // 
-            btnApprove.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnApprove.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            btnApprove.Appearance.Options.UseFont = true;
-            btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnApprove.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnApprove.ImageOptions.SvgImage");
-            btnApprove.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnApprove.Location = new Point(999, 12);
-            btnApprove.Name = "btnApprove";
-            btnApprove.Size = new Size(111, 29);
-            btnApprove.TabIndex = 4;
-            btnApprove.Text = "Faturayı Onayla";
             // 
             // pnlFooterLine
             // 
@@ -742,7 +708,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             // 
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1217, 624);
+            ClientSize = new Size(1217, 727);
             Controls.Add(pnlBody);
             Controls.Add(pnlFooter);
             Controls.Add(pnlHeader);

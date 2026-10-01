@@ -106,15 +106,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             View.Columns[nameof(ProductCatalogDto.WarehouseName)]!.Visible = false;
             ConfigureWarehouseGrouping(nameof(ProductCatalogDto.WarehouseGroup));
 
-            // Modern grup satırı görünümü (renkler skin'e göre çözülür)
-            View.Appearance.GroupRow.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F);
-            View.Appearance.GroupRow.ForeColor = SkinTheme.Text;
-            View.Appearance.GroupRow.BackColor = SkinTheme.SurfaceMuted(SkinTheme.SurfaceOf(this));
-            View.Appearance.GroupRow.BackColor2 = SkinTheme.SurfaceMuted(SkinTheme.SurfaceOf(this));
-            View.Appearance.GroupRow.Options.UseFont = true;
-            View.Appearance.GroupRow.Options.UseForeColor = true;
-            View.Appearance.GroupRow.Options.UseBackColor = true;
-
             View.Columns[nameof(ProductCatalogDto.TaxRateRate)]!.Visible = false;
             View.Columns[nameof(ProductCatalogDto.ChartOfAccountCode)]!.Visible = false;
 
@@ -158,6 +149,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             purchasePrice.VisibleIndex = insertIndex;
             salePrice.VisibleIndex = insertIndex + 1;
             costPrice.VisibleIndex = insertIndex + 2;
+
+            // Elle eklenen unbound fiyat kolonları da 0,00 kuralına tabi olsun.
+            GridColumnFactory.RegisterManualNumericColumns(View);
 
             View.CustomUnboundColumnData += View_CustomUnboundColumnData;
             ConfigureMovementDetailView();
@@ -260,14 +254,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             {
                 case "PurchasePriceUnbound":
                     // Fiyat kartı girilmemişse (ör. 151/152) maliyet fiyatı gösterilir.
-                    e.Value = GetLatestPrice(product, ProductPriceType.Purchase) ?? product.CostPrice;
+                    // Maliyet de null ise hücre boş kalmasın diye 0'a düşülür.
+                    e.Value = GetLatestPrice(product, ProductPriceType.Purchase) ?? product.CostPrice ?? 0m;
                     break;
                 case "SalePriceUnbound":
                     // Fiyat kartı girilmemişse boş satır yerine 0,00 gösterilir.
                     e.Value = GetLatestPrice(product, ProductPriceType.Sale) ?? 0m;
                     break;
                 case "CostPriceUnbound":
-                    e.Value = product.CostPrice;
+                    // Maliyet hareketlerden hesaplanır; yoksa 0,00 gösterilir.
+                    e.Value = product.CostPrice ?? 0m;
                     break;
             }
         }
@@ -371,14 +367,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             AddToolbarButton(btnPrice, index: 2);
         }
 
-        /// <summary>Liste görünümünün renklerini aktif skine göre yeniler.</summary>
+        /// <summary>
+        /// Grup satırı renkleri paletten <c>CustomRowStyle</c> ile geldiği için
+        /// skin değişiminde yalnızca satırların yeniden boyanması gerekir.
+        /// </summary>
         private void ApplySkin()
         {
-            Color muted = SkinTheme.SurfaceMuted(SkinTheme.SurfaceOf(this));
-
-            View.Appearance.GroupRow.ForeColor = SkinTheme.Text;
-            View.Appearance.GroupRow.BackColor = muted;
-            View.Appearance.GroupRow.BackColor2 = muted;
             View.RefreshData();
         }
 

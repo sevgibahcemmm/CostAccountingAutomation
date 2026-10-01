@@ -129,7 +129,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
         /// <summary>
         /// Stok çıkışı/tüketim kaydı bu liste ekranından oluşturulmaz; belge
-        /// ilgili menüden açılır. Bu yüzden "Yeni" düğmesi gösterilmez.
+        /// ilgili menüden açılır. Bu yüzden "Yeni" düğmesi varsayılan olarak
+        /// gösterilmez. Menüde ayrı bir "yeni belge" girdisi bulunmayan belgeler
+        /// (örn. atölye transferi) bu davranışı kendi listesinde geçersiz kılar.
         /// </summary>
         protected override bool AllowCreate => false;
 
@@ -154,6 +156,37 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             => $"{item.DocumentNumber} - {item.TargetAccountName}";
 
         protected override bool SupportsRestore => false;
+
+        /// <summary>
+        /// Taslak transfer/tüketim belgeleri listeden onaylanabilir.
+        /// </summary>
+        protected override bool SupportsApprove => true;
+
+        protected override bool AllowsApprove(StockIssueListDto item)
+            => item.Status == StockIssueStatus.Draft;
+
+        protected override bool AllowsEdit(StockIssueListDto item)
+            => item.Status == StockIssueStatus.Draft;
+
+        protected override bool AllowsDelete(StockIssueListDto item)
+            => item.Status == StockIssueStatus.Draft;
+
+        protected override IRequest<Result<string>>? BuildApproveCommand(StockIssueListDto item)
+            => item.Status == StockIssueStatus.Draft ? new StockIssueApproveCommand(item.Id) : null;
+
+        /// <summary>
+        /// Seçili taslak belgeleri tek transaction'da toplu onaylar: aynı
+        /// malzemeyi kullanan belgelerde ya hep birlikte ya hiç onaylanır.
+        /// </summary>
+        protected override IRequest<Result<string>>? BuildBulkApproveCommand(IReadOnlyList<StockIssueListDto> items)
+        {
+            List<Guid> draftIds = items
+                .Where(i => i.Status == StockIssueStatus.Draft)
+                .Select(i => i.Id)
+                .ToList();
+
+            return draftIds.Count > 0 ? new BulkApproveStockIssuesCommand(draftIds) : null;
+        }
 
         protected override bool SupportsSlipPrint => true;
 

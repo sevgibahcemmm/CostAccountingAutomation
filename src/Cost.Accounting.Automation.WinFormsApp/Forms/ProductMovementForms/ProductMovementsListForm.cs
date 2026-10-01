@@ -106,15 +106,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
             View.Columns[nameof(ProductMovementListDto.WarehouseName)]!.Visible = false;
             ConfigureWarehouseGrouping(nameof(ProductMovementListDto.WarehouseGroup));
 
-            // Modern grup satırı görünümü
-            View.Appearance.GroupRow.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F);
-            View.Appearance.GroupRow.ForeColor = System.Drawing.Color.FromArgb(45, 52, 71);
-            View.Appearance.GroupRow.BackColor = System.Drawing.Color.FromArgb(235, 238, 245);
-            View.Appearance.GroupRow.BackColor2 = System.Drawing.Color.FromArgb(235, 238, 245);
-            View.Appearance.GroupRow.Options.UseFont = true;
-            View.Appearance.GroupRow.Options.UseForeColor = true;
-            View.Appearance.GroupRow.Options.UseBackColor = true;
-
             View.Columns[nameof(ProductMovementListDto.MovementTypeName)]!.Visible = !_targetType.HasValue;
         }
         protected override ProductMovementGetAllQuery BuildListQuery()

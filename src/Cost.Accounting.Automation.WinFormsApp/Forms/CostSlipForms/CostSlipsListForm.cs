@@ -148,8 +148,27 @@ protected override void ConfigureColumns()
 
         protected override bool AllowsDelete(CostSlipListDto item) => item.Status != CostSlipStatus.Approved;
 
-        protected override IRequest<Result<string>>? BuildApproveCommand(CostSlipListDto item)
+protected override IRequest<Result<string>>? BuildApproveCommand(CostSlipListDto item)
             => item.Status == CostSlipStatus.Draft ? new CostSlipApproveCommand(item.Id) : null;
+
+        /// <summary>
+        /// Seçili pusulaları tek transaction'da toplu onaylar. Aynı ambalaj
+        /// gibi malzeme birden çok pusulada kullanılıyorsa her tekil onay
+        /// stoğu sırayla düşürür ve sonrakiler reddedilirdi; toplu onay
+        /// kümülatif stoğu maliyet tarihine göre hesaplayarak ya hep birlikte
+        /// ya hiç onaylar.
+        /// </summary>
+        protected override IRequest<Result<string>>? BuildBulkApproveCommand(IReadOnlyList<CostSlipListDto> items)
+        {
+            List<Guid> draftIds = items
+                .Where(i => i.Status == CostSlipStatus.Draft)
+                .Select(i => i.Id)
+                .ToList();
+
+            return draftIds.Count > 0
+                ? new BulkApproveCostSlipsCommand(draftIds)
+                : null;
+        }
 
         protected override IRequest<Result<string>> BuildRestoreCommand(CostSlipListDto item)
             => new CostSlipRestoreCommand(item.Id);

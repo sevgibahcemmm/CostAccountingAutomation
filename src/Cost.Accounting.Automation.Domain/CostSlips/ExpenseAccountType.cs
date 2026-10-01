@@ -71,5 +71,14 @@ public enum ExpenseAccountType : byte
     Account770 = 21,
 
     [Display(Name = "780 - Finansman Giderleri", Description = "Ortak")]
-    Account780 = 22
+    Account780 = 22,
+
+    /// <summary>
+    /// Yarı mamul stoğundan (151) tüketilen malzemenin maliyetidir.
+    ///
+    /// GetFilteredAccounts bu hesabı slip tipinden bağımsız olarak HER
+    /// pusulaya ekler; bu yüzden Description değeri tip filtresinde kullanılmaz.
+    /// </summary>
+    [Display(Name = "151 - Yarı Mamul Stoktan Tüketilen Malzeme", Description = "Tüm")]
+    Account151_SemiFinished = 23
 }

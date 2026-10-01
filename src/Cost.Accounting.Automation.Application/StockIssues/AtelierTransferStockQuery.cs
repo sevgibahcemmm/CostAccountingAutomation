@@ -87,9 +87,27 @@ internal sealed class AtelierTransferStockQueryHandler(
             .GroupBy(x => (x.WorkshopId, x.ProductId))
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
+        // Bekleyen miktarın ikinci bileşeni: ONAYLANMAMIŞ transferler. Taslak
+        // transfer stok hareketi üretmediği için TransferredQuantity'ye
+        // sayılmaz; yalnızca "Taslak (Bekleyen)" olarak görünür.
+        foreach (StockIssue transfer in transfers.Where(t => t.Status == StockIssueStatus.Draft))
+        {
+            foreach (StockIssueLine line in transfer.Lines)
+            {
+                (Guid, Guid) key = (transfer.TargetAccountId.Value, line.ProductId.Value);
+                draftMap.TryGetValue(key, out decimal current);
+                draftMap[key] = current + line.Quantity;
+            }
+        }
+
+        // Gerçek stok yalnızca ONAYLI transferlerden gelir.
+        List<StockIssue> approvedTransfers = transfers
+            .Where(t => t.Status == StockIssueStatus.Approved)
+            .ToList();
+
         List<AtelierTransferWorkshopDto> result = [];
 
-        foreach (IGrouping<IdentityId, StockIssue> group in transfers.GroupBy(t => t.TargetAccountId))
+        foreach (IGrouping<IdentityId, StockIssue> group in approvedTransfers.GroupBy(t => t.TargetAccountId))
         {
             ChartOfAccount target = group.First().TargetAccount!;
             Guid workshopId = group.Key.Value;

@@ -18,6 +18,7 @@ internal sealed class StockIssueConfiguration : IEntityTypeConfiguration<StockIs
             .IsRequired();
 
         builder.Property(x => x.IssueType).IsRequired();
+        builder.Property(x => x.Status).IsRequired();
         builder.Property(x => x.CostingMethod).IsRequired();
 
         builder.OwnsOne(x => x.Description, desc =>

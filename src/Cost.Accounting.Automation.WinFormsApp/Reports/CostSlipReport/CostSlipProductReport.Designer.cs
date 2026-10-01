@@ -148,6 +148,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.Toplam = new DevExpress.XtraReports.Parameters.Parameter();
             this.Atolye = new DevExpress.XtraReports.Parameters.Parameter();
             this.M730 = new DevExpress.XtraReports.Parameters.Parameter();
+            this.M151 = new DevExpress.XtraReports.Parameters.Parameter();
             this.Donem = new DevExpress.XtraReports.Parameters.Parameter();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable1)).BeginInit();
@@ -1062,7 +1063,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell43.Name = "xrTableCell43";
             this.xrTableCell43.StylePriority.UseFont = false;
             this.xrTableCell43.StylePriority.UseTextAlignment = false;
-            this.xrTableCell43.Text = "Giderler Yekûnu...................";
+            this.xrTableCell43.Text = "Giderler Yekûnu.................................................................." +
+    ".............................";
             this.xrTableCell43.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell43.Weight = 5.9200854860550658D;
             // 
@@ -1073,7 +1075,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell44.Name = "xrTableCell44";
             this.xrTableCell44.StylePriority.UseBackColor = false;
             this.xrTableCell44.StylePriority.UseTextAlignment = false;
-            this.xrTableCell44.Text = "₺";
+            this.xrTableCell44.Text = "→";
             this.xrTableCell44.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell44.Weight = 1.522375948930466D;
             // 
@@ -1109,7 +1111,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell46.Name = "xrTableCell46";
             this.xrTableCell46.StylePriority.UseFont = false;
             this.xrTableCell46.StylePriority.UseTextAlignment = false;
-            this.xrTableCell46.Text = "Maliyet Bedeli (710+720+730+750+760+770+780)";
+            this.xrTableCell46.Text = "Maliyet Bedeli (710+720+730+750+760+770+780) + Yarımamül";
             this.xrTableCell46.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell46.Weight = 5.9200854860550658D;
             // 
@@ -1120,7 +1122,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell47.Name = "xrTableCell47";
             this.xrTableCell47.StylePriority.UseBackColor = false;
             this.xrTableCell47.StylePriority.UseTextAlignment = false;
-            this.xrTableCell47.Text = "₺";
+            this.xrTableCell47.Text = "→";
             this.xrTableCell47.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell47.Weight = 1.522375948930466D;
             // 
@@ -1128,7 +1130,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // 
             this.xrTableCell48.BackColor = System.Drawing.Color.Silver;
             this.xrTableCell48.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?M710+?M720+?M730+?M750+?M760+?M770+?M780\n")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?M710+?M720+?M730+?M750+?M760+?M770+?M780+?M151\n")});
             this.xrTableCell48.Font = new DevExpress.Drawing.DXFont("Arial", 9.75F, DevExpress.Drawing.DXFontStyle.Bold);
             this.xrTableCell48.Name = "xrTableCell48";
             this.xrTableCell48.StylePriority.UseBackColor = false;
@@ -1462,6 +1464,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.M730.ValueInfo = "0";
             this.M730.Visible = false;
             // 
+            // M151
+            // 
+            this.M151.Description = "M151";
+            this.M151.Name = "M151";
+            this.M151.Type = typeof(decimal);
+            this.M151.ValueInfo = "0";
+            this.M151.Visible = false;
+            // 
             // Donem
             // 
             this.Donem.Description = "Dönem";
@@ -1499,7 +1509,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Antet, DevExpress.XtraReports.Parameters.Orientation.Vertical),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Toplam, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Atolye, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
-            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M730, DevExpress.XtraReports.Parameters.Orientation.Horizontal)});
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M730, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M151, DevExpress.XtraReports.Parameters.Orientation.Horizontal)});
             this.Parameters.AddRange(new DevExpress.XtraReports.Parameters.Parameter[] {
             this.M710,
             this.M720,
@@ -1519,6 +1530,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.Toplam,
             this.Atolye,
             this.M730,
+            this.M151,
             this.Donem});
             this.Version = "25.2";
             ((System.ComponentModel.ISupportInitialize)(this.xrTable2)).EndInit();
@@ -1648,6 +1660,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
         private DevExpress.XtraReports.Parameters.Parameter Toplam;
         private DevExpress.XtraReports.Parameters.Parameter Atolye;
         private DevExpress.XtraReports.Parameters.Parameter M730;
+        private DevExpress.XtraReports.Parameters.Parameter M151;
         private DevExpress.XtraReports.UI.XRLabel xrLabel29;
         private DevExpress.XtraReports.Parameters.Parameter Donem;
     }

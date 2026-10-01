@@ -1160,14 +1160,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 lblTableCriticalStockTitle,
                 gridCriticalStock,
                 viewCriticalStock,
-                "Kritik Stok");
+                "Kritik Stok ve Kritiğe Yaklaşanlar");
 
             ConfigureTablePanel(
                 pnlTableProductStocks,
                 lblTableProductStocksTitle,
                 gridProductStocks,
                 viewProductStocks,
-                "Stok Hareketleri ve Maliyet");
+                "Son Hareketli ve Kritiğe Yaklaşan Ürünler");
 
             ConfigureChartPanel(
                 pnlChartReceivables,
@@ -1185,7 +1185,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 pnlChartCriticalStock,
                 lblChartCriticalStockTitle,
                 chartCriticalStock,
-                "Kritik Stok Kategorileri");
+                "Kritiğe Yaklaşan Ürün Kategorileri");
 
             ConfigureChartPanel(
                 pnlChartInvoiceStatus,
@@ -1227,7 +1227,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 pnlChartTopMovements,
                 lblChartTopMovementsTitle,
                 chartTopMovements,
-                "En Hareketli Ürünler");
+                "Son 7 Günde Hareket Eden Ürünler");
 
             ClientSize =
                 new System.Drawing.Size(1280, 720);

@@ -76,7 +76,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             SetReportParam(report, "SeriNo", slip.SlipNumber);
             SetReportParam(report, "SiparisNo", slip.SlipNumber);
 
-            string[] moneyParams = ["M710", "M720", "M730", "M740", "M750", "M760", "M770", "M780"];
+            string[] moneyParams = ["M710", "M720", "M730", "M740", "M750", "M760", "M770", "M780", "M151"];
             foreach (string param in moneyParams)
             {
                 decimal value = totals.TryGetValue(param, out decimal sum) ? Math.Round(sum, 2) : 0;
@@ -110,6 +110,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 20 => "M760",
                 21 => "M770",
                 22 => "M780",
+
+                // Yarı mamul (151) tüketimi kendi kovasına gider ve YALNIZCA
+                // "Maliyet Bedeli" satırına eklenir; 730/740 kovalarına ve
+                // ara toplamlara karışmaz. Kovaya karıştırılırsa (örn hep M730)
+                // ya 730 satırında yanlış görünür ya da hizmet raporunda M730
+                // parametresi olmadığı için hiç görünmez.
+                (byte)ExpenseAccountHelper.SemiFinishedAccount => "M151",
                 _ => string.Empty
             };
         }

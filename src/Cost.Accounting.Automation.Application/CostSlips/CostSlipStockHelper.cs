@@ -27,6 +27,43 @@ internal static class CostSlipStockHelper
         IProductRepository productRepository,
         CancellationToken cancellationToken)
     {
+        Result<CostSlipStockPlan> plan = await PlanStockEffectsAsync(
+            slip,
+            costingMethod,
+            productMovementRepository,
+            productRepository,
+            accumulatedMovements: null,
+            cancellationToken);
+
+        if (plan.Data is null)
+        {
+            return Result<string>.Failure(plan.ErrorMessages);
+        }
+
+        return await WritePlanAsync(plan.Data, productMovementRepository, ledgerPoster, cancellationToken);
+    }
+
+    /// <summary>
+    /// Bir maliyet pusulasının üreteceği stok/defter hareketlerini HESAPLAR ama
+    /// YAZMAZ.
+    ///
+    /// Toplu onayda belgeler kayıt tarihine göre sırayla planlanır ve
+    /// <paramref name="accumulatedMovements"/> içinde biriktirilir; böylece sonraki
+    /// pusula, öncekilerin tükettiği miktarı da hesaba katar. Validasyon
+    /// BAŞARISIZ olursa hiçbir hareket yazılmadığı için yarım kalmış onay oluşmaz.
+    /// </summary>
+    /// <param name="accumulatedMovements">
+    /// Toplu onayda önceki pusulaların planlanmış hareketleri. Stok
+    /// kontrolünde bunlar da hesaba katılır (null ise yalnızca kayıtlı hareketler).
+    /// </param>
+    public static async Task<Result<CostSlipStockPlan>> PlanStockEffectsAsync(
+        CostSlip slip,
+        StockCostingMethod costingMethod,
+        IProductMovementRepository productMovementRepository,
+        IProductRepository productRepository,
+        IReadOnlyCollection<ProductMovement>? accumulatedMovements,
+        CancellationToken cancellationToken)
+    {
         var materialLines = slip.CostSlipItems
             .Where(i => i.ProductId is not null)
             .ToList();
@@ -52,6 +89,13 @@ internal static class CostSlipStockHelper
             productMovementRepository,
             cancellationToken);
 
+        // Önceki pusulaların planlanmış hareketleri de hesaba katılır; sıralı
+        // işleme bu yüzden kayıt tarihine göre yapılmalıdır.
+        if (accumulatedMovements is { Count: > 0 })
+        {
+            movements.AddRange(accumulatedMovements.Where(m => productIds.Contains(m.ProductId)));
+        }
+
         foreach (KeyValuePair<IdentityId, decimal> requested in requestedQuantities)
         {
             decimal available = StockIssueCostingHelper.ComputeAvailableQuantity(
@@ -61,7 +105,7 @@ internal static class CostSlipStockHelper
 
             if (requested.Value > available)
             {
-                return Result<string>.Failure(
+                return Result<CostSlipStockPlan>.Failure(
                     $"'{requested.Key.Value}' için bu tarihe kadar yeterli stok yok. Mevcut: {available:n2}, istenen: {requested.Value:n2}.");
             }
         }
@@ -71,6 +115,9 @@ internal static class CostSlipStockHelper
             requestedQuantities,
             costingMethod,
             slip.CostDate);
+
+        List<ProductMovement> plannedMovements = [];
+        List<PlannedLedgerEntry> plannedLedger = [];
 
         foreach (var line in materialLines)
         {
@@ -86,7 +133,7 @@ internal static class CostSlipStockHelper
                 referenceNo: slip.SlipNumber,
                 description: new Description($"{ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix}{slip.SlipNumber}"));
 
-            await productMovementRepository.AddAsync(output, cancellationToken);
+            plannedMovements.Add(output);
 
             decimal amount = Math.Round(line.Quantity * unitCost, 2);
             if (amount > 0)
@@ -102,8 +149,8 @@ internal static class CostSlipStockHelper
                         ? productAccountId
                         : slip.WorkshopId;
 
-                await ledgerPoster.PostAsync(
-                    ledgerAccountId, 0, amount, LedgerSourceType, output.Id, cancellationToken);
+                plannedLedger.Add(new PlannedLedgerEntry(
+                    ledgerAccountId, 0, amount, LedgerSourceType, output.Id));
             }
         }
 
@@ -122,7 +169,33 @@ internal static class CostSlipStockHelper
                 referenceNo: slip.SlipNumber,
                 description: new Description($"{ProductStockBalanceHelper.ProductionInputDescriptionPrefix}{slip.SlipNumber} ({slip.SlipNumber})"));
 
-            await productMovementRepository.AddAsync(input, cancellationToken);
+            plannedMovements.Add(input);
+        }
+
+        return Result<CostSlipStockPlan>.Succeed(
+            new CostSlipStockPlan(plannedMovements, plannedLedger));
+    }
+
+    /// <summary>
+    /// Hesaplanmış planı yazar. Tüm yazmalar aynı DbContext'te birikir ve
+    /// TransactionBehavior tarafından TEK SaveChangesAsync ile tek transaction
+    /// içinde yazılır.
+    /// </summary>
+    private static async Task<Result<string>> WritePlanAsync(
+        CostSlipStockPlan plan,
+        IProductMovementRepository productMovementRepository,
+        IChartOfAccountLedgerPoster ledgerPoster,
+        CancellationToken cancellationToken)
+    {
+        foreach (ProductMovement movement in plan.Movements)
+        {
+            await productMovementRepository.AddAsync(movement, cancellationToken);
+        }
+
+        foreach (PlannedLedgerEntry entry in plan.LedgerEntries)
+        {
+            await ledgerPoster.PostAsync(
+                entry.AccountId, entry.Debit, entry.Credit, entry.SourceType, entry.SourceId, cancellationToken);
         }
 
         return Result<string>.Succeed(string.Empty);

@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.Application.ChartOfAccounts;
+﻿using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Customers;
 using Cost.Accounting.Automation.Application.Invoices;
@@ -215,7 +215,9 @@ catch (Exception ex)
             ConfigureGrid();
             ConfigureCatalogGrid();
 
-            btnApprove.Visible = false;
+            // Kaydetme her zaman TASLAK olarak yapar; onay giriş ekranından
+            // YAPILMAZ, liste ekranından yapılır. Böylece fatura girişi ile
+            // onayı ayrı adımlardır.
             btnPrintSlip.Visible = SelectedInvoiceType == InvoiceType.Purchase;
             lblStatusValue.Text = "";
 
@@ -223,9 +225,7 @@ catch (Exception ex)
             {
                 bool isDraft = _editing.Status == InvoiceStatus.Draft;
 
-                btnSave.Visible = false;
                 btnSaveDraft.Visible = isDraft;
-                btnApprove.Visible = isDraft;
                 btnAddLine.Enabled = isDraft;
                 btnDeleteLine.Enabled = isDraft;
                 btnAddProduct.Enabled = isDraft;
@@ -359,6 +359,8 @@ catch (Exception ex)
             }
 
             gridCatalogView.Columns.AddRange(columns);
+            // Elle kurulan kolonlar da 0,00 kuralına tabi olsun.
+            GridColumnFactory.RegisterManualNumericColumns(gridCatalogView);
             gridCatalogView.CustomUnboundColumnData += GridCatalogView_CustomUnboundColumnData;
             gridCatalogView.OptionsView.ColumnAutoWidth = false;
         }
@@ -393,9 +395,7 @@ catch (Exception ex)
             btnAddLine.Click += (_, _) => AddEmptyLine();
             btnDeleteLine.Click += (_, _) => DeleteSelectedLine();
             btnAddProduct.Click += (_, _) => AddSelectedCatalogProduct();
-            btnSave.Click += BtnSave_Click;
             btnSaveDraft.Click += BtnSaveDraft_Click;
-            btnApprove.Click += BtnApprove_Click;
             btnPrintSlip.Click += (_, _) => ShowSlipPreviewAsync();
             btnCancel.Click += (_, _) => Close();
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
@@ -1102,17 +1102,12 @@ private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
             gridLinesView.RefreshData();
         }
 
-        private async void BtnSave_Click(object? sender, EventArgs e)
-        {
-            await SaveAsync(approve: true);
-        }
-
         private async void BtnSaveDraft_Click(object? sender, EventArgs e)
         {
-            await SaveAsync(approve: false);
+            await SaveAsync();
         }
 
-        private async Task SaveAsync(bool approve)
+        private async Task SaveAsync()
         {
             string number = txtInvoiceNumber.Text.Trim();
             if (string.IsNullOrEmpty(number))
@@ -1150,31 +1145,6 @@ private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
             InvoiceType invoiceType = SelectedInvoiceType;
             DateOnly date = DateOnly.FromDateTime(dtDate.DateTime);
 
-            if (approve && (invoiceType == InvoiceType.Sales || invoiceType == InvoiceType.PurchaseReturn))
-            {
-                foreach (var line in validLines)
-                {
-                    if (!_productsById.TryGetValue(line.ProductId, out ProductCatalogDto? productCheck))
-                    {
-                        continue;
-                    }
-
-                    await LoadMovementsAsync(line.ProductId);
-
-                    decimal available = AvailableQuantity(line.ProductId, date);
-
-                    if (line.Quantity > available)
-                    {
-                        string invoiceKind = invoiceType == InvoiceType.Sales
-                            ? "Satış faturası"
-                            : "Alış iade faturası";
-                        ToastHelper.Show(
-                            $"'{productCheck.Name}' için yeterli stok yok. Mevcut: {available:n2}, istenen: {line.Quantity:n2}. {invoiceKind} onaylanamaz.",
-                            ToastType.Warning);
-                        return;
-                    }
-                }
-            }
 
             List<InvoiceCreateLineModel> lineModels = validLines.Select(l => new InvoiceCreateLineModel(
                 l.ProductId,
@@ -1183,8 +1153,6 @@ private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
                 l.TaxRateRate,
                 l.Description,
                 l.DiscountRate)).ToList();
-
-            btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
             try
             {
@@ -1211,7 +1179,7 @@ private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
                         SupplierId: invoiceType.IsPurchaseSide() ? accountId : null,
                         Description: txtDescription.Text.Trim(),
                         Lines: lineModels,
-                        IsApproved: approve);
+                        IsApproved: false);
 
                     ok = await CrudExecutor.ExecuteAsync(command);
                 }
@@ -1220,71 +1188,31 @@ private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
                 {
                     string message = _editing is { Status: InvoiceStatus.Draft }
                         ? "Fatura taslağı güncellendi."
-                        : approve
-                            ? "Fatura onaylandı; stok ve cari hareketleri oluşturuldu."
-                            : "Fatura taslak olarak kaydedildi.";
+                        : "Fatura taslak olarak kaydedildi. Onaylamak için listeden onaylayın.";
                     ToastHelper.Show(message, ToastType.Success);
 
-                    if (approve && invoiceType == InvoiceType.Purchase)
-                    {
-                        _saved = true;
-                        LockAfterApproval();
-                        return;
-                    }
-
-                    DialogResult = DialogResult.OK;
-                    Close();
+                    _saved = true;
+                    LockAfterSave();
+                    return;
                 }
             }
             finally
             {
                 if (!_saved)
                 {
-                    btnSave.Enabled = true;
                     btnSaveDraft.Enabled = true;
                 }
             }
         }
 
-        private async void BtnApprove_Click(object? sender, EventArgs e)
-        {
-            if (_editing is null)
-            {
-                return;
-            }
-
-            btnApprove.Enabled = false;
-            try
-            {
-                bool ok = await CrudExecutor.ExecuteAsync(new InvoiceApproveCommand(_editing.Id));
-                if (ok)
-                {
-                    ToastHelper.Show("Fatura onaylandı; stok ve cari hareketleri oluşturuldu.", ToastType.Success);
-
-                    if (_editing.InvoiceType == InvoiceType.Purchase)
-                    {
-                        _saved = true;
-                        LockAfterApproval();
-                        return;
-                    }
-
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-            }
-            finally
-            {
-                btnApprove.Enabled = true;
-            }
-        }
-
-        private void LockAfterApproval()
+        /// <summary>
+        /// Fatura kaydedildikten sonra formu düzenlenemez hale getirir.
+        /// Onay artık giriş ekranından YAPILMAZ; liste ekranından yapılır.
+        /// </summary>
+        private void LockAfterSave()
         {
             btnPrintSlip.Enabled = true;
-            btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
-            btnApprove.Enabled = false;
-            btnApprove.Visible = false;
             btnAddLine.Enabled = false;
             btnDeleteLine.Enabled = false;
             btnAddProduct.Enabled = false;

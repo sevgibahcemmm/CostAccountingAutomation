@@ -42,6 +42,22 @@ internal sealed class AtelierTransferProductsQueryHandler(
             .ThenBy(i => i.DocumentNumber)
             .ToListAsync(cancellationToken);
 
+        // Onaylı transferler stoğu GERÇEKTEN artırır; taslak transferler
+        // stok hareketi üretmediği için TransferredQuantity'ye sayılmaz, yalnızca
+        // "Taslak (Bekleyen)" olarak görünür. Böylece taslak transfer atölyeye
+        // malzeme getirmiş gibi davranılmaz.
+        List<StockIssue> approvedTransfers = transfers
+            .Where(i => i.Status == StockIssueStatus.Approved)
+            .ToList();
+
+        // Bekleyen miktar: onaylanmamış transferler (atölyeye gelen malzeme) ve
+        // maliyet pusulası taslaklarının tüketimi.
+        Dictionary<Guid, decimal> pendingTransferMap = transfers
+            .Where(i => i.Status == StockIssueStatus.Draft)
+            .SelectMany(i => i.Lines)
+            .GroupBy(l => l.ProductId.Value)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
         HashSet<Guid> productIds = transfers
             .SelectMany(t => t.Lines)
             .Where(l => l.Product is not null)
@@ -83,7 +99,7 @@ internal sealed class AtelierTransferProductsQueryHandler(
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
         }
 
-        var result = transfers
+        var result = approvedTransfers
             .SelectMany(t => t.Lines)
             .Where(l => l.Product is not null)
             .GroupBy(l => l.ProductId)
@@ -101,7 +117,9 @@ internal sealed class AtelierTransferProductsQueryHandler(
                     UnitPrice = latest.UnitCost.Value,
                     TransferredQuantity = g.Sum(l => l.Quantity),
                     ConsumedQuantity = consumedMap.TryGetValue(product.Id.Value, out decimal consumed) ? consumed : 0m,
-                    DraftQuantity = draftMap.TryGetValue(product.Id.Value, out decimal drafted) ? drafted : 0m
+                    // Bekleyen = onaylanmamış transfer + maliyet pusulası taslağı
+                    DraftQuantity = (pendingTransferMap.TryGetValue(product.Id.Value, out decimal pending) ? pending : 0m)
+                        + (draftMap.TryGetValue(product.Id.Value, out decimal drafted) ? drafted : 0m)
                 };
             })
             .OrderBy(p => p.ProductCode)

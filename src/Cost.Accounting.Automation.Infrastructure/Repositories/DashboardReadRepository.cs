@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.Application.Dashboards;
+﻿using Cost.Accounting.Automation.Application.Dashboards;
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
@@ -290,7 +290,9 @@ internal sealed class DashboardReadRepository(
                 p.Id,
                 p.ProductCode.Value,
                 p.Name.Value,
-                p.Category!.Name.Value))
+                p.Category!.Name.Value,
+                p.MinimumProductLevel,
+                p.Warehouse!.Code.Value))
             .ToListAsync(cancellationToken);
 
         return products
@@ -322,7 +324,9 @@ internal sealed class DashboardReadRepository(
                 p.Id,
                 p.ProductCode.Value,
                 p.Name.Value,
-                p.Category!.Name.Value))
+                p.Category!.Name.Value,
+                p.MinimumProductLevel,
+                p.Warehouse!.Code.Value))
             .ToListAsync(cancellationToken);
 
         return products
@@ -331,12 +335,18 @@ internal sealed class DashboardReadRepository(
             .Select(p =>
             {
                 ProductMovementAggregate aggregate = aggregatesByProduct[p.Id];
+                decimal balance = aggregate.InputQuantity - aggregate.OutputQuantity;
 
-                return new DashboardRankPoint(
+                return (Row: new DashboardRankPoint(
                     p.ProductName,
-                    aggregate.InputQuantity - aggregate.OutputQuantity,
-                    aggregate.InputCost - aggregate.OutputCost);
+                    balance,
+                    aggregate.InputCost - aggregate.OutputCost),
+                    // Bu grafik yalnizca hareket gormus urunleri zaten gosterir;
+                    // yarı mamül depoları (ara üretim) hariç tutulur.
+                    Keep: !DashboardProductStockFilter.IsSemiFinishedWarehousePublic(p.WarehouseCode));
             })
+            .Where(x => x.Keep)
+            .Select(x => x.Row)
             .OrderByDescending(x => x.Quantity)
             .ThenBy(x => x.Label)
             .Take(take)
@@ -357,8 +367,25 @@ internal sealed class DashboardReadRepository(
                 p.Id,
                 p.ProductCode.Value,
                 p.Name.Value,
-                p.Category!.Name.Value))
+                p.Category!.Name.Value,
+                p.MinimumProductLevel,
+                p.Warehouse!.Code.Value))
             .ToListAsync(cancellationToken);
+
+        // Kural: maliyet tablosunda TUM urunler yerine yalnizca su urunler
+        // listelenir:
+        //   1) son hafta icinde hareket gorulmus urunler, ya da
+        //   2) kritik seviyeye YAKLASAN urunler
+        //      (minimum seviye 5 ise 2 katindan az olanlar => esik 10).
+        DateOnly recentSince = DateOnly.FromDateTime(DateTime.Today)
+            .AddDays(-DashboardProductStockFilter.RecentDays);
+
+        HashSet<IdentityId> recentlyMovedIds = (await db.Set<ProductMovement>().AsNoTracking()
+                .Where(m => m.Date >= recentSince)
+                .Select(m => m.ProductId)
+                .Distinct()
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
 
         return products
             .Select(p =>
@@ -370,17 +397,26 @@ internal sealed class DashboardReadRepository(
                 decimal inputCost = aggregate?.InputCost ?? 0m;
                 decimal outputCost = aggregate?.OutputCost ?? 0m;
 
-                return new DashboardProductStockRow(
+                decimal balanceQuantity = inputQuantity - outputQuantity;
+
+                return (Row: new DashboardProductStockRow(
                     p.ProductCode,
                     p.ProductName,
                     p.CategoryName,
                     inputQuantity,
                     outputQuantity,
-                    inputQuantity - outputQuantity,
+                    balanceQuantity,
                     inputCost,
                     outputCost,
-                    inputCost - outputCost);
+                    inputCost - outputCost),
+                    Keep: DashboardProductStockFilter.ShouldInclude(
+                        recentlyMovedIds.Contains(p.Id),
+                        p.MinimumLevel,
+                        balanceQuantity,
+                        p.WarehouseCode));
             })
+            .Where(x => x.Keep)
+            .Select(x => x.Row)
             .OrderByDescending(x => x.BalanceCost)
             .ThenBy(x => x.ProductName)
             .Take(take)
@@ -430,7 +466,8 @@ internal sealed class DashboardReadRepository(
                 stockByProduct.TryGetValue(p.Id, out decimal stock) ? stock : 0m,
                 p.MinimumLevel))
             .Where(r => r.Stock <= 0
-                || (r.MinimumLevel != null && r.Stock <= r.MinimumLevel))
+                || (r.MinimumLevel != null
+                    && r.Stock <= r.MinimumLevel.Value * DashboardProductStockFilter.ApproachingFactor))
             .OrderBy(r => r.Stock)
             .ThenBy(r => r.ProductCode)
             .Take(take)
@@ -540,7 +577,9 @@ internal sealed class DashboardReadRepository(
         IdentityId Id,
         string ProductCode,
         string ProductName,
-        string CategoryName);
+        string CategoryName,
+        decimal? MinimumLevel,
+        string? WarehouseCode);
 
     private sealed record CriticalStockCandidate(
         IdentityId Id,

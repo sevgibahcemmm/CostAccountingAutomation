@@ -11,6 +11,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
         {
         }
 
+        /// <summary>
+        /// Tüketim belgesi de giriş ekranından oluşturulabilir. Taban sınıf
+        /// tüm stok çıkışı listelerinde "Yeni"yi kapalı veriyordu; sadece
+        /// Atölye Transferi override etmişti.
+        /// </summary>
+        protected override bool AllowCreate => true;
+
         protected override void ConfigureColumns()
         {
             base.ConfigureColumns();

@@ -60,8 +60,14 @@ public sealed class StockIssueListDto : EntityDto
     [Column("Açıklama", Order = 80, Width = 220)]
     public string Description { get; set; } = default!;
 
+    [Column("Durum", Order = 15, Width = 90, Alignment = "Center")]
+    public string StatusName => Status == StockIssueStatus.Approved ? "Onaylı" : "Taslak";
+
     [Column("Belge Türü", IsVisible = false)]
     public StockIssueType IssueType { get; set; }
+
+    [Column("Durum", IsVisible = false)]
+    public StockIssueStatus Status { get; set; }
 
     [Column("Depo Id", IsVisible = false)]
     public Guid SourceWarehouseId { get; set; }
@@ -78,6 +84,7 @@ public sealed class StockIssueDto : EntityDto
     public DateOnly Date { get; set; }
     public StockIssueType IssueType { get; set; }
     public StockCostingMethod CostingMethod { get; set; }
+    public StockIssueStatus Status { get; set; }
     public Guid SourceWarehouseId { get; set; }
     public string SourceWarehouseName { get; set; } = default!;
     public Guid TargetAccountId { get; set; }
@@ -98,6 +105,7 @@ public static class StockIssueExtensions
                 DocumentNumber = s.Entity.DocumentNumber,
                 Date = s.Entity.Date,
                 IssueType = s.Entity.IssueType,
+                Status = s.Entity.Status,
                 SourceWarehouseId = s.Entity.SourceWarehouseId,
                 SourceWarehouseName = s.Entity.SourceWarehouse == null ? string.Empty : s.Entity.SourceWarehouse.Name.Value,
                 TargetAccountId = s.Entity.TargetAccountId,
@@ -141,6 +149,7 @@ public static class StockIssueExtensions
             Date = issue.Date,
             IssueType = issue.IssueType,
             CostingMethod = issue.CostingMethod,
+            Status = issue.Status,
             SourceWarehouseId = issue.SourceWarehouseId,
             SourceWarehouseName = issue.SourceWarehouse?.Name.Value ?? string.Empty,
             TargetAccountId = issue.TargetAccountId,

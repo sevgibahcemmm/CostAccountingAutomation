@@ -114,6 +114,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.ReportFooter = new DevExpress.XtraReports.UI.ReportFooterBand();
             this.xrLabel28 = new DevExpress.XtraReports.UI.XRLabel();
             this.M740 = new DevExpress.XtraReports.Parameters.Parameter();
+            this.M151 = new DevExpress.XtraReports.Parameters.Parameter();
             this.M750 = new DevExpress.XtraReports.Parameters.Parameter();
             this.M760 = new DevExpress.XtraReports.Parameters.Parameter();
             this.M770 = new DevExpress.XtraReports.Parameters.Parameter();
@@ -871,7 +872,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell41.Name = "xrTableCell41";
             this.xrTableCell41.StylePriority.UseBackColor = false;
             this.xrTableCell41.StylePriority.UseTextAlignment = false;
-            this.xrTableCell41.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.xrTableCell41.Text = "→";
+            this.xrTableCell41.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell41.Weight = 1.522375948930466D;
             // 
             // xrTableCell42
@@ -906,7 +908,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell46.Name = "xrTableCell46";
             this.xrTableCell46.StylePriority.UseFont = false;
             this.xrTableCell46.StylePriority.UseTextAlignment = false;
-            this.xrTableCell46.Text = "Maliyet Bedeli (740+750+760+770+780)";
+            this.xrTableCell46.Text = "Maliyet Bedeli (740+750+760+770+780) + Yarımamül";
             this.xrTableCell46.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.xrTableCell46.Weight = 5.9200854860550658D;
             // 
@@ -917,7 +919,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.xrTableCell47.Name = "xrTableCell47";
             this.xrTableCell47.StylePriority.UseBackColor = false;
             this.xrTableCell47.StylePriority.UseTextAlignment = false;
-            this.xrTableCell47.Text = "₺";
+            this.xrTableCell47.Text = "→";
             this.xrTableCell47.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCell47.Weight = 1.522375948930466D;
             // 
@@ -925,7 +927,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // 
             this.xrTableCell48.BackColor = System.Drawing.Color.Silver;
             this.xrTableCell48.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?M740+?M750+?M760+?M770+?M780\n")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?M740+?M750+?M760+?M770+?M780+?M151\n")});
             this.xrTableCell48.Font = new DevExpress.Drawing.DXFont("Arial", 9.75F, DevExpress.Drawing.DXFontStyle.Bold);
             this.xrTableCell48.Name = "xrTableCell48";
             this.xrTableCell48.StylePriority.UseBackColor = false;
@@ -1138,6 +1140,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.M740.ValueInfo = "0";
             this.M740.Visible = false;
             // 
+            // M151
+            // 
+            this.M151.Description = "M151";
+            this.M151.Name = "M151";
+            this.M151.Type = typeof(decimal);
+            this.M151.ValueInfo = "0";
+            this.M151.Visible = false;
+            // 
             // M750
             // 
             this.M750.Description = "750";
@@ -1278,7 +1288,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Isyurdu, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Antet, DevExpress.XtraReports.Parameters.Orientation.Vertical),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Toplam, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
-            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Atolye, DevExpress.XtraReports.Parameters.Orientation.Horizontal)});
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Atolye, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M151, DevExpress.XtraReports.Parameters.Orientation.Horizontal)});
             this.Parameters.AddRange(new DevExpress.XtraReports.Parameters.Parameter[] {
             this.M740,
             this.M750,
@@ -1296,7 +1307,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.Antet,
             this.Toplam,
             this.Atolye,
-            this.Donem});
+            this.Donem,
+            this.M151});
             this.Version = "25.2";
             ((System.ComponentModel.ISupportInitialize)(this.xrTable2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.xrTable1)).EndInit();
@@ -1401,6 +1413,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
         private DevExpress.XtraReports.UI.XRLabel xrLabel28;
         private DevExpress.XtraReports.Parameters.Parameter Toplam;
         private DevExpress.XtraReports.Parameters.Parameter Atolye;
+        private DevExpress.XtraReports.Parameters.Parameter M151;
         private DevExpress.XtraReports.UI.XRLabel xrLabel5;
         private DevExpress.XtraReports.UI.XRLabel xrLabel4;
         private DevExpress.XtraReports.UI.XRLabel xrLabel22;

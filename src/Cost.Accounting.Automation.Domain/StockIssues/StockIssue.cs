@@ -11,6 +11,16 @@ public enum StockIssueType
     AtelierTransfer = 2
 }
 
+/// <summary>
+/// Stok çıkışı/tüketim belgesinin durumu. Belge her zaman TASLAK olarak
+/// kaydedilir; stok ve yevmiye hareketleri ancak ONAYDA oluşur.
+/// </summary>
+public enum StockIssueStatus : byte
+{
+    Draft = 1,
+    Approved = 2
+}
+
 public sealed class StockIssue : Entity, IHardDeletable
 {
     private readonly List<StockIssueLine> _lines = [];
@@ -48,6 +58,13 @@ public sealed class StockIssue : Entity, IHardDeletable
     public string DocumentNumber { get; private set; } = default!;
     public DateOnly Date { get; private set; }
 
+    /// <summary>
+    /// Taslak kaydedilen belge stoğu DÜŞÜRMEZ. Atölye transferi veya tüketim
+    /// onaylanana kadar ürün miktarı "bekleyen" olarak görünür, maliyet
+    /// pusulasında tüketilemez.
+    /// </summary>
+    public StockIssueStatus Status { get; private set; } = StockIssueStatus.Draft;
+
     public IdentityId SourceWarehouseId { get; private set; } = default!;
     public ChartOfAccount? SourceWarehouse { get; private set; }
 
@@ -63,7 +80,25 @@ public sealed class StockIssue : Entity, IHardDeletable
 
     public void ReplaceLines(IEnumerable<StockIssueLine> lines)
     {
+        if (Status == StockIssueStatus.Approved)
+        {
+            throw new InvalidOperationException("Onaylanmış belge satırları değiştirilemez.");
+        }
+
         _lines.Clear();
         _lines.AddRange(lines);
+    }
+
+    /// <summary>
+    /// Belgeyi onaylar ve stok/yevmiye hareketlerinin üretilmesini sağlar.
+    /// </summary>
+    public void Approve()
+    {
+        if (Status == StockIssueStatus.Approved)
+        {
+            throw new InvalidOperationException("Belge zaten onaylanmış durumda.");
+        }
+
+        Status = StockIssueStatus.Approved;
     }
 }

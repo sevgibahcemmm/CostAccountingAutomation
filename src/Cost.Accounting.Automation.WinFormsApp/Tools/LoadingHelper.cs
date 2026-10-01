@@ -11,11 +11,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
     /// </summary>
     public static class LoadingHelper
     {
-        private static readonly TimeSpan DefaultMinimumDuration =
-            TimeSpan.FromMilliseconds(400);
-
         private static readonly TimeSpan DefaultCompletionDuration =
             TimeSpan.FromMilliseconds(1200);
+
+        /// <summary>
+        /// Bekleme penceresinin gösterileceği asgari eşik. Daha hızlı biten
+        /// işlerde pencere hiç açılmaz; kullanıcı titreme görmez, veri de anında
+        /// görünür.
+        /// </summary>
+        private static readonly TimeSpan ShowThreshold = TimeSpan.FromMilliseconds(150);
 
         private static WaitForm? _current;
 
@@ -29,10 +33,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
         /// İşlem bittikten sonra "Tüm veriler yüklendi" onayının gösterilip
         /// gösterilmeyeceği.
         /// </param>
-        /// <param name="minimumDuration">
-        /// Bekleme penceresinin asgari görünür kalma süresi. Çok hızlı işlemlerde
-        /// pencerenin fark edilememesini önler.
-        /// </param>
         /// <param name="completionDuration">
         /// "Tüm veriler yüklendi" onayının ekranda kalma süresi.
         /// </param>
@@ -44,7 +44,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
             string caption = "Veriler yükleniyor...",
             string description = "Lütfen bekleyin...",
             bool showCompleted = false,
-            TimeSpan? minimumDuration = null,
             TimeSpan? completionDuration = null,
             Func<string>? completionSummary = null)
         {
@@ -57,22 +56,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
             // böylece ekranda üst üste binen pencereler oluşmaz.
             CloseCurrent();
 
-            WaitForm waitForm =
-                WaitFormHelper.Show<WaitForm>(caption, description);
+            // Hızlı biten işlerde (küçük listeler) bekleme penceresi hiç
+            // gösterilmez: kullanıcı ne titreme ne de gereksiz "bekleyin"
+            // görür, veri anında dolar. Pencere yalnızca iş eşiği aşarsa
+            // gösterilir; böylece gerçekten yavaş sorguların kullanıcısı nerede
+            // takıldığını görür.
+            Task actionTask = action();
+            WaitForm? waitForm = null;
 
-            _current = waitForm;
-            long shownAt = Environment.TickCount64;
+            if (!actionTask.IsCompleted)
+            {
+                Task finished = await Task.WhenAny(
+                    actionTask,
+                    Task.Delay(ShowThreshold));
+
+                if (finished != actionTask)
+                {
+                    waitForm = ShowWaitForm(caption, description);
+                }
+            }
 
             try
             {
-                await action();
-
-                // Bekleme penceresi çok hızlı biten işlemlerde fark edilemeyebilir;
-                // asgari görünürlük süresi her zaman uygulanır.
-                await EnsureMinimumVisibleAsync(
-                    waitForm,
-                    shownAt,
-                    minimumDuration ?? DefaultMinimumDuration);
+                await actionTask;
 
                 if (showCompleted)
                 {
@@ -81,6 +87,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     // akışı bozulmamalı ve pencere kapanmalıdır.
                     try
                     {
+                        waitForm ??= ShowWaitForm(caption, description);
                         waitForm.SetCompleted(
                             "Tüm veriler yüklendi",
                             GetSummary(completionSummary));
@@ -94,8 +101,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
             }
             finally
             {
-                Close(waitForm);
+                if (waitForm is not null)
+                {
+                    Close(waitForm);
+                }
             }
+        }
+
+        /// <summary>Bekleme penceresini açar ve aktif olarak işaretler.</summary>
+        private static WaitForm ShowWaitForm(string caption, string description)
+        {
+            WaitForm waitForm = WaitFormHelper.Show<WaitForm>(caption, description);
+            _current = waitForm;
+            return waitForm;
         }
 
         /// <summary>
@@ -112,7 +130,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
             string caption = "Veriler yükleniyor...",
             string description = "Lütfen bekleyin...",
             bool showCompleted = false,
-            TimeSpan? minimumDuration = null,
             TimeSpan? completionDuration = null,
             Func<string>? completionSummary = null)
         {
@@ -123,20 +140,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
 
             CloseCurrent();
 
-            WaitForm waitForm =
-                WaitFormHelper.Show<WaitForm>(caption, description);
+            Task<T> actionTask = action();
+            WaitForm? waitForm = null;
 
-            _current = waitForm;
-            long shownAt = Environment.TickCount64;
+            if (!actionTask.IsCompleted)
+            {
+                Task finished = await Task.WhenAny(
+                    actionTask,
+                    Task.Delay(ShowThreshold));
+
+                if (finished != actionTask)
+                {
+                    waitForm = ShowWaitForm(caption, description);
+                }
+            }
 
             try
             {
-                T result = await action();
-
-                await EnsureMinimumVisibleAsync(
-                    waitForm,
-                    shownAt,
-                    minimumDuration ?? DefaultMinimumDuration);
+                T result = await actionTask;
 
                 if (showCompleted)
                 {
@@ -145,6 +166,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     // akışı bozulmamalı ve pencere kapanmalıdır.
                     try
                     {
+                        waitForm ??= ShowWaitForm(caption, description);
                         waitForm.SetCompleted(
                             "Tüm veriler yüklendi",
                             GetSummary(completionSummary));
@@ -156,10 +178,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     await Task.Delay(completionDuration ?? DefaultCompletionDuration);
                 }
 
-                return result;            }
+                return result;
+            }
             finally
             {
-                Close(waitForm);
+                if (waitForm is not null)
+                {
+                    Close(waitForm);
+                }
             }
         }
 
@@ -172,23 +198,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
             }
 
             Close(_current);
-        }
-
-        /// <summary>
-        /// Bekleme penceresi asgari süre boyunca görünür kalır.
-        /// </summary>
-        private static async Task EnsureMinimumVisibleAsync(
-            WaitForm waitForm,
-            long shownAt,
-            TimeSpan minimumDuration)
-        {
-            long elapsed = Environment.TickCount64 - shownAt;
-
-            if (elapsed < minimumDuration.TotalMilliseconds)
-            {
-                await Task.Delay(
-                    (int)(minimumDuration.TotalMilliseconds - elapsed));
-            }
         }
 
         /// <summary>

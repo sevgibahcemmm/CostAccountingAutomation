@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.Application.Behaviors;
+﻿using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
@@ -61,7 +61,6 @@ internal sealed class StockIssueCreateCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository,
     IProductRepository productRepository,
     IProductMovementRepository productMovementRepository,
-    IChartOfAccountLedgerPoster ledgerPoster,
     IDuplicateCheckService duplicateCheckService) : IRequestHandler<StockIssueCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(StockIssueCreateCommand request, CancellationToken cancellationToken)
@@ -251,55 +250,10 @@ internal sealed class StockIssueCreateCommandHandler(
             await stockIssueRepository.AddAsync(issue, cancellationToken);
         }
 
-        string sourceType = isConsumption ? "StokTuketimi" : "AtolyeTransferi";
-        string movementPrefix = isConsumption ? "Tüketim" : "Atölye Transferi";
-
-        foreach (StockIssueLine line in lines)
-        {
-            decimal unitCost = line.UnitCost.Value;
-
-            ProductMovement output = new(
-                productId: line.ProductId,
-                movementType: ProductMovementType.Output,
-                quantity: line.Quantity,
-                unitPrice: new Price(unitCost),
-                date: issue.Date,
-                referenceNo: issue.DocumentNumber,
-                description: new Description($"{movementPrefix} - {issue.DocumentNumber}"),
-                stockIssueId: issue.Id);
-
-            await productMovementRepository.AddAsync(output, cancellationToken);
-
-            if (!isConsumption)
-            {
-                ProductMovement atelierInput = new(
-                    productId: line.ProductId,
-                    movementType: ProductMovementType.Input,
-                    quantity: line.Quantity,
-                    unitPrice: new Price(unitCost),
-                    date: issue.Date,
-                    referenceNo: issue.DocumentNumber,
-                    description: new Description($"{ProductStockBalanceHelper.AtelierTransferInputDescriptionPrefix}{target.Name.Value}"),
-                    stockIssueId: issue.Id);
-
-                await productMovementRepository.AddAsync(atelierInput, cancellationToken);
-            }
-
-            decimal amount = Math.Round(line.Quantity * unitCost, 2);
-            if (amount <= 0)
-            {
-                continue;
-            }
-
-            if (productMap.TryGetValue(line.ProductId.Value, out Product? product) && product.ChartOfAccountId is { } accountId)
-            {
-                await ledgerPoster.PostAsync(accountId, 0, amount, sourceType, output.Id, cancellationToken);
-            }
-
-            await ledgerPoster.PostAsync(issue.TargetAccountId, amount, 0, sourceType, output.Id, cancellationToken);
-        }
-
-        string actionName = isConsumption ? "Tüketim" : "Atölye transferi";
-        return Result<string>.Succeed($"{actionName} belgesi başarıyla kaydedildi.");
+        // Belge daima TASLAK olarak kaydedilir. Stok ve yevmiye hareketleri
+        // ONAYDA uretilir (StockIssueApproveCommand); boylece onaylanmamis bir
+        // transfer/tuketim stogu etkilemez ve maliyet pusulasinda tuketilemez.
+        string actionName = isConsumption ? "Tuketim" : "Atolye transferi";
+        return Result<string>.Succeed($"{actionName} belgesi taslak olarak kaydedildi.");
     }
 }

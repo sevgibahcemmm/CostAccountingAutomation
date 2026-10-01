@@ -25,6 +25,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
     {
 protected List<TDto> _allItems = [];
 
+        private GridColumn? _warehouseGroupColumn;
         private bool _showDeleted;
         private bool _isFilterSetting;
         private int _reloadVersion;
@@ -128,6 +129,17 @@ InitializeComponent();
         protected virtual IRequest<Result<string>>? BuildApproveCommand(TDto item) => null;
 
         /// <summary>
+        /// Seçili kayıtların HEPSİ için tek seferde çalışan toplu onay komutunu
+        /// üretir. Atomic olan komutlar stok/defter tutarlılığı için gereklidir:
+        /// kayıtlar tek tek onaylanırsa ilki onaylanan kayıtlar stoktan düşer,
+        /// sonrakiler stok yetersizliğiyle reddedilir ve sistemde YARIM onaylı
+        /// bir durum kalır. Tek komut ise ya hep birlikte ya hiç onaylar.
+        ///
+        /// null dönerse geriye dönük uyum için kayıtlar tek tek onaylanır.
+        /// </summary>
+        protected virtual IRequest<Result<string>>? BuildBulkApproveCommand(IReadOnlyList<TDto> items) => null;
+
+        /// <summary>
         /// Liste ekranında "TIF Yazdır" butonu ve sağ tık menüsünün gösterilip gösterilmeyeceği.
         /// </summary>
         protected virtual bool SupportsSlipPrint => false;
@@ -222,6 +234,11 @@ InitializeComponent();
             btnStockCountList.Visible = SupportsStockCountListReport;
             SetupSlipContextMenu();
             ConfigureColumns();
+
+            // Tüm listelerde sayısal kolonlar 0,00 biçiminde ve boş değerlerde de
+            // 0,00 görünür (kod içinde elle eklenen kolonlar dâhil).
+            GridColumnFactory.RegisterManualNumericColumns(View);
+
             _ = ReloadAsync();
         }
 
@@ -395,6 +412,22 @@ button.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
 protected void AddColumnsFromAttributes()
             => GridColumnFactory.ConfigureFromAttributes(View, typeof(TDto));
 
+        /// <summary>
+        /// Depo grupları için kullanılan canlı pastel zemin paleti. Her grup değeri
+        /// hash ile bu paletten bir renge sabitlenir; böylece aynı depo her
+        /// listelemede aynı rengi alır, sıralama değişse de karışmaz.
+        /// </summary>
+        private static readonly Color[] WarehouseGroupPalette =
+        [
+            Color.FromArgb(255, 224, 130),  // pastel sarı
+            Color.FromArgb(255, 183, 183),  // pastel kırmızı
+            Color.FromArgb(168, 208, 255),  // pastel mavi
+            Color.FromArgb(168, 235, 178),  // pastel yeşil
+            Color.FromArgb(214, 176, 255),  // pastel mor
+            Color.FromArgb(255, 197, 148),  // pastel turuncu
+            Color.FromArgb(150, 224, 224)   // pastel turkuaz
+        ];
+
         protected void ConfigureWarehouseGrouping(string fieldName)
         {
             GridColumn? warehouseColumn = View.Columns[fieldName];
@@ -407,9 +440,43 @@ protected void AddColumnsFromAttributes()
             View.OptionsView.ShowGroupPanelColumnsAsSingleRow = true;
             View.ClearGrouping();
             warehouseColumn.Group();
-            View.Appearance.GroupRow.BackColor = Color.FromArgb(232, 240, 254);
-            View.Appearance.GroupRow.ForeColor = Color.FromArgb(24, 70, 135);
-            View.Appearance.GroupRow.Font = new Font("Segoe UI", 10.5f, FontStyle.Bold);
+            _warehouseGroupColumn = warehouseColumn;
+
+            // Zemin rengi artık grup başına CustomRowStyle ile belirlendiği için
+            // Appearance yalnızca font ve varsayılan metin rengini taşır.
+            View.Appearance.GroupRow.Font = new Font("Segoe UI Semibold", 9.5F);
+            View.Appearance.GroupRow.Options.UseFont = true;
+            View.Appearance.GroupRow.ForeColor = Color.FromArgb(24, 30, 45);
+            View.Appearance.GroupRow.Options.UseForeColor = true;
+
+            gridView.RowStyle -= GridView_RowStyle;
+            gridView.RowStyle += GridView_RowStyle;
+        }
+
+        /// <summary>
+        /// Grup başlık satırlarını paletten bir renge boyar. Satır içi kayıtlar
+        /// dokunulmadan bırakılır; renk yalnızca depo grubu başlığında görünür.
+        /// </summary>
+        private void GridView_RowStyle(object? sender, RowStyleEventArgs e)
+        {
+            if (_warehouseGroupColumn is null || !View.IsGroupRow(e.RowHandle))
+            {
+                return;
+            }
+
+            object? groupValue = View.GetGroupRowValue(e.RowHandle, _warehouseGroupColumn);
+            if (groupValue is null)
+            {
+                return;
+            }
+
+            int hash = StringComparer.Ordinal.GetHashCode(groupValue.ToString() ?? string.Empty);
+            Color backColor = WarehouseGroupPalette[(hash & int.MaxValue) % WarehouseGroupPalette.Length];
+
+            e.Appearance.BackColor = backColor;
+            e.Appearance.BackColor2 = backColor;
+            e.Appearance.ForeColor = SkinTheme.GetContrastText(backColor);
+            e.Appearance.Font = new Font("Segoe UI Semibold", 9.5F);
         }
 
         private void GridView_SelectionChanged(object? sender, EventArgs e)
@@ -943,6 +1010,15 @@ if (selected.Any(item => !AllowsDelete(item)))
             btnApprove.Enabled = false;
             try
             {
+                // Öncelikli yol: atomik toplu onay. Tek komut tüm seçimi tek
+                // transaction'da onaylar; biri düşerse hiçbiri onaylanmaz.
+                if (BuildBulkApproveCommand(selected) is { } bulkCommand)
+                {
+                    await CrudExecutor.ExecuteAsync(bulkCommand);
+                    await ReloadAsync();
+                    return;
+                }
+
                 foreach (TDto item in selected)
                 {
                     IRequest<Result<string>>? command = BuildApproveCommand(item);

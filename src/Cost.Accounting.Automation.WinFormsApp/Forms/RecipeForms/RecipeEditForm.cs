@@ -219,8 +219,9 @@ public sealed partial class RecipeEditForm : XtraForm
             AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } }
         };
 
-        gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityColumn]);
-        gridLinesView.CustomUnboundColumnData += GridLinesView_CustomUnboundColumnData;
+gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityColumn]);
+            GridColumnFactory.RegisterManualNumericColumns(gridLinesView);
+            gridLinesView.CustomUnboundColumnData += GridLinesView_CustomUnboundColumnData;
 
         noColumn.SummaryItem.SummaryType = DevExpress.Data.SummaryItemType.Count;
         noColumn.SummaryItem.DisplayFormat = "Kalem: {0}";
