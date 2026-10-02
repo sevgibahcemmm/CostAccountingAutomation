@@ -86,7 +86,7 @@ btnReset.Paint += AuthFormStyles.Button_Paint;
                     new ResetPasswordCommand(
                         resetCode,
                         newPassword,
-                        chkLogoutAll.Checked),
+                        chkLogoutAll.IsOn),
                     CancellationToken.None);
 
                 if (!result.IsSuccessful)

@@ -24,7 +24,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
         private DevExpress.XtraEditors.TextEdit txtTaxOffice;
         private DevExpress.XtraEditors.LabelControl lblTaxNumber;
         private DevExpress.XtraEditors.TextEdit txtTaxNumber;
-        private DevExpress.XtraEditors.CheckEdit chkActive;
+        private DevExpress.XtraEditors.ToggleSwitch chkActive;
         private DevExpress.XtraEditors.LabelControl lblDescription;
         private DevExpress.XtraEditors.MemoEdit memoDescription;
 
@@ -82,7 +82,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             txtTaxOffice = new DevExpress.XtraEditors.TextEdit();
             lblTaxNumber = new DevExpress.XtraEditors.LabelControl();
             txtTaxNumber = new DevExpress.XtraEditors.TextEdit();
-            chkActive = new DevExpress.XtraEditors.CheckEdit();
+            chkActive = new DevExpress.XtraEditors.ToggleSwitch();
             lblDescription = new DevExpress.XtraEditors.LabelControl();
             memoDescription = new DevExpress.XtraEditors.MemoEdit();
 
@@ -306,7 +306,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms
             chkActive.Name = "chkActive";
             chkActive.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             chkActive.Properties.Appearance.Options.UseFont = true;
-            chkActive.Properties.Caption = "Aktif Tedarikçi";
+            chkActive.Properties.ShowText = true;
+            chkActive.Properties.OnText = "Aktif";
+            chkActive.Properties.OffText = "Pasif";
+            chkActive.ToolTip = "Aktif Tedarikçi";
             chkActive.Size = new Size(160, 21);
             chkActive.TabIndex = 6;
             //

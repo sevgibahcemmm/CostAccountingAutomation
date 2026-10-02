@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.WinFormsApp.Utils;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {

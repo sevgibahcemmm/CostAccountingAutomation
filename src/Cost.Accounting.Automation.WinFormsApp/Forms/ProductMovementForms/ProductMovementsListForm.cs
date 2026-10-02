@@ -196,7 +196,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
 
             var report = new StockMovementsListReport();
             report.SetData(dateForm.StartDate, dateForm.EndDate, rows, company.Letterhead);
-            report.PrintReport();
+            await ReportPreviewHelper.PrintAsync(
+                    report,
+                    caption: "Stok hareket listesi hazırlanıyor...",
+                    description: "Lütfen bekleyin...");
         }
 
         private static async Task<CompanyDto> LoadCompanyAsync()

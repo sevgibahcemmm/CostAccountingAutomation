@@ -1,4 +1,4 @@
-﻿namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListReports
+namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListReports
 {
     partial class StockMovementsListReport
     {

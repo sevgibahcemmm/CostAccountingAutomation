@@ -14,6 +14,7 @@ using DevExpress.XtraGrid;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.Extensions.DependencyInjection;
+using DevExpress.XtraReports.UI;
 using TS.MediatR;
 using TS.Result;
 
@@ -221,7 +222,15 @@ protected override IRequest<Result<string>>? BuildApproveCommand(CostSlipListDto
                 caption: "Rapor hazırlanıyor...",
                 description: "Lütfen bekleyin...");
 
-            report?.PrintReport();
+            if (report is null)
+            {
+                return;
+            }
+
+            await ReportPreviewHelper.PrintAsync(
+                (XtraReport)report,
+                caption: "Mamül maliyet pusulasi hazırlanıyor...",
+                description: "Lütfen bekleyin...");
         }
 
         protected override async Task ShowProductDeclarationReportAsync(CostSlipListDto? item)
@@ -283,7 +292,7 @@ protected override IRequest<Result<string>>? BuildApproveCommand(CostSlipListDto
 
             var report = new ProductDeclarationReport();
             report.SetData(dateForm.StartDate, dateForm.EndDate, rows, company.Letterhead);
-            report.PrintReport();
+            await ReportPreviewHelper.PrintAsync(report, caption: "Uretim beyanı hazırlanıyor...", description: "Lütfen bekleyin...");
         }
 
         private static async Task<CompanyDto> LoadCompanyAsync()

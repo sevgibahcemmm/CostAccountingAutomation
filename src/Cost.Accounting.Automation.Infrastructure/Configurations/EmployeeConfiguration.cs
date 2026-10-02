@@ -57,6 +57,37 @@ internal sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 }
 
 /// <summary>
+/// Yetkili görev tanımı. Görevler enum değil tablo olduğu için kullanıcı
+/// yeni bir imza görevi ekleyebilir; kayıtlar
+/// <see cref="YearDatabaseProvisioner"/> tarafından tohumlanır.
+/// </summary>
+internal sealed class EmployeeSigningRoleConfiguration : IEntityTypeConfiguration<EmployeeSigningRole>
+{
+    public void Configure(EntityTypeBuilder<EmployeeSigningRole> builder)
+    {
+        builder.ToTable("EmployeeSigningRoles");
+
+        builder.HasKey(r => r.Id);
+
+        builder.OwnsOne(r => r.Name, name =>
+            name.Property(x => x.Value).HasColumnName("Name").HasMaxLength(120).IsRequired());
+
+        builder.Property(r => r.Description)
+            .HasColumnName("Description")
+            .HasMaxLength(500)
+            .IsRequired();
+
+        builder.Property(r => r.RequiresWorkshop)
+            .HasColumnName("RequiresWorkshop")
+            .IsRequired();
+
+        builder.Property(r => r.SortOrder)
+            .HasColumnName("SortOrder")
+            .IsRequired();
+    }
+}
+
+/// <summary>
 /// Görevlendirme kaydı. Aynı personelin aynı görevi tekrar tanımlanmasını
 /// benzersiz indeks ile engeller.
 /// </summary>
@@ -68,16 +99,19 @@ internal sealed class EmployeeDutyConfiguration : IEntityTypeConfiguration<Emplo
 
         builder.HasKey(d => d.Id);
 
-        builder.Property(d => d.SigningRole).IsRequired();
-
-        // EmployeeId ve WorkshopId için EF Core foreign key başlığı üzerinde
-        // zaten indeks oluşturur; ayrıca HasIndex vermek aynı alanlarda ikinci
-        // bir indeks denemesine yol açar.
+        // EmployeeId ve SigningRoleId / WorkshopId için EF Core foreign key
+        // başlığı üzerinde zaten indeks oluşturur; ayrıca HasIndex vermek aynı
+        // alanlarda ikinci bir indeks denemesine yol açar.
 
         // DuplicateKey üzerine benzersiz indeks BURADA verilemez:
         // AuditedDbContext.ApplySharedModelConfiguration her entity için
         // DuplicateKey alanına zaten (benzersiz olmayan) bir indeks ekliyor.
         // Aynı görevin iki kez tanımlanması komut işleyicisinde engellenir.
+        builder.HasOne(d => d.SigningRole)
+            .WithMany()
+            .HasForeignKey(d => d.SigningRoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(d => d.Workshop)
             .WithMany()
             .HasForeignKey(d => d.WorkshopId)

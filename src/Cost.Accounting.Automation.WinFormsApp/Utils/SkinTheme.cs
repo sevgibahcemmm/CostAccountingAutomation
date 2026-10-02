@@ -195,6 +195,89 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static Color GetContrastText(Color background)
             => IsColorDark(background) ? Color.White : Color.FromArgb(17, 24, 39);
 
+        /// <summary>
+        /// WCAG karsilastirma orani (1:1 - 21:1).
+        /// </summary>
+        public static double ContrastRatio(Color first, Color second)
+        {
+            double l1 = RelativeLuminance(first);
+            double l2 = RelativeLuminance(second);
+
+            double lighter = Math.Max(l1, l2);
+            double darker = Math.Min(l1, l2);
+
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        /// <summary>
+        /// Bir rengi verilen zemin üzerinde okunabilir olana kadar koyultur
+        /// (<see cref="IsColorDark"/> zemin) veya açar (açık zemin).
+        ///
+        /// <para>
+        /// Tema vurgu renkleri, zemine belli oranda karıştırıldığında WCAG AA
+        /// (4.5:1) eşiğinin altına düşebilir; ölçüm yapılmadan kabul edilirse
+        /// metin soluk görünür. Burada renk gerçekten ölçülür ve gerekiyorsa
+        /// doğru yöne doğru kademeli olarak kaydırılır.
+        /// </para>
+        /// </summary>
+        /// <param name="color">İstenen renk (genellikle durum/vurgu rengi).</param>
+        /// <param name="background">Rencin üzerinde okunacağı zemin.</param>
+        /// <param name="minimumRatio">Hedef kontrast oranı.</param>
+        public static Color EnsureReadable(
+            Color color,
+            Color background,
+            double minimumRatio = 4.5)
+        {
+            if (ContrastRatio(color, background) >= minimumRatio)
+            {
+                return color;
+            }
+
+            bool lighten = IsColorDark(background);
+
+            const int Steps = 20;
+
+            Color result = color;
+
+            for (int step = 1; step <= Steps; step++)
+            {
+                float amount = (float)step / Steps;
+
+                result = lighten
+                    ? Color.FromArgb(
+                        Clamp255(color.R + (int)((255 - color.R) * amount)),
+                        Clamp255(color.G + (int)((255 - color.G) * amount)),
+                        Clamp255(color.B + (int)((255 - color.B) * amount)))
+                    : Color.FromArgb(
+                        Clamp255((int)(color.R * (1f - amount))),
+                        Clamp255((int)(color.G * (1f - amount))),
+                        Clamp255((int)(color.B * (1f - amount))));
+
+                if (ContrastRatio(result, background) >= minimumRatio)
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        private static double RelativeLuminance(Color color)
+        {
+            static double Channel(double value)
+            {
+                value /= 255.0;
+
+                return value <= 0.03928
+                    ? value / 12.92
+                    : Math.Pow((value + 0.055) / 1.055, 2.4);
+            }
+
+            return 0.2126 * Channel(color.R)
+                 + 0.7152 * Channel(color.G)
+                 + 0.0722 * Channel(color.B);
+        }
+
         private static bool ContainsInsensitive(string value, string search)
             => value.IndexOf(search, System.StringComparison.OrdinalIgnoreCase) >= 0;
 

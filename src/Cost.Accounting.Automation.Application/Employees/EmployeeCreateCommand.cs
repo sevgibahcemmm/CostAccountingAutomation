@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
@@ -18,8 +18,13 @@ public static class EmployeePhotos
 }
 
 /// <summary>Komut kayıtlarındaki görev satırı.</summary>
+/// <param name="SigningRoleId">
+/// Yetkili görev tanımının kimliği. Görevler veritabanında tanımlı olduğu için
+/// burada enum değil, <c>EmployeeSigningRoles</c> tablosunun birincil anahtarı
+/// taşınır; seçim kutusu bu listeyi doldurur.
+/// </param>
 public sealed record EmployeeDutyInput(
-    EmployeeSigningRole SigningRole,
+    Guid? SigningRoleId,
     Guid? WorkshopId,
     bool IsActive = true);
 
@@ -59,10 +64,12 @@ public sealed class EmployeeCreateCommandValidator : AbstractValidator<EmployeeC
             .NotEmpty().WithMessage("Soyadı giriniz")
             .MaximumLength(100).WithMessage("Soyad en fazla 100 karakter olabilir");
 
+        // Alan ekranda gruplu gösterildiği için doğrulama biçimi yok sayar.
+        // Yalnızca 11 hanelik rakam kuralı uygulanır; kontrol hanesi
+        // doğrulanmaz (bkz. EmployeeIdentityNumber).
         RuleFor(x => x.IdentityNumber)
-            .NotEmpty().WithMessage("TC kimlik numarasını giriniz")
-            .Must(EmployeeIdentityNumber.IsValid)
-            .WithMessage("TC kimlik numarası geçersizdir");
+            .Must(v => EmployeeIdentityNumber.Validate(v) is null)
+            .WithMessage(cmd => EmployeeIdentityNumber.Validate(cmd.IdentityNumber)!);
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Ünvanı giriniz")
@@ -87,17 +94,14 @@ public sealed class EmployeeCreateCommandValidator : AbstractValidator<EmployeeC
             .WithMessage(EmployeeMessages.DuplicateDuty);
 
         RuleFor(x => x.Duties)
-            .Must(d => !EmployeeDutyValidator.HasMissingWorkshop(d))
-            .WithMessage("Atölye Şefi görevi için atölye seçmelisiniz");
-
-        RuleFor(x => x.Duties)
             .Must(d => !EmployeeDutyValidator.HasUnselectedRole(d))
-            .WithMessage("Her görev satırı için yetkili görevi seçmelisiniz");
+            .WithMessage(EmployeeMessages.UnselectedRole);
     }
 }
 
 internal sealed class EmployeeCreateCommandHandler(
     IEmployeeRepository employeeRepository,
+    IEmployeeSigningRoleRepository signingRoleRepository,
     IChartOfAccountRepository chartOfAccountRepository,
     IDuplicateCheckService duplicateCheckService,
     IFileStorageService fileStorage) : IRequestHandler<EmployeeCreateCommand, Result<Guid>>
@@ -106,7 +110,8 @@ internal sealed class EmployeeCreateCommandHandler(
     {
         // Doğrulama katmanı atlanmış olabilir (toplu yükleme vb.); kurallar
         // burada da tekrarlanır çünkü görev benzersizliği veritabanında
-        // benzersiz indeksle korunamıyor.
+        // benzersiz indeksle korunamıyor ve atölye zorunluluğu görev
+        // tanımından okunuyor.
         if (request.Duties.Count == 0)
         {
             return Result<Guid>.Failure(EmployeeMessages.NoDuty);
@@ -117,14 +122,17 @@ internal sealed class EmployeeCreateCommandHandler(
             return Result<Guid>.Failure(EmployeeMessages.DuplicateDuty);
         }
 
-        if (EmployeeDutyValidator.HasMissingWorkshop(request.Duties))
-        {
-            return Result<Guid>.Failure("Atölye Şefi görevi için atölye seçmelisiniz.");
-        }
-
         if (EmployeeDutyValidator.HasUnselectedRole(request.Duties))
         {
             return Result<Guid>.Failure(EmployeeMessages.UnselectedRole);
+        }
+
+        string? roleProblem = await EmployeeDutyValidator.FindProblemAsync(
+            request.Duties, signingRoleRepository, cancellationToken);
+
+        if (roleProblem is not null)
+        {
+            return Result<Guid>.Failure(roleProblem);
         }
 
         if (!await EmployeeDutyValidator.WorkshopsExistAsync(
@@ -171,7 +179,7 @@ internal sealed class EmployeeCreateCommandHandler(
         employee.ReplaceDuties(
             request.Duties.Select(d => new EmployeeDuty(
                 employee.Id,
-                d.SigningRole,
+                new IdentityId(d.SigningRoleId!.Value),
                 d.WorkshopId is null ? null : new IdentityId(d.WorkshopId.Value),
                 d.IsActive)));
 

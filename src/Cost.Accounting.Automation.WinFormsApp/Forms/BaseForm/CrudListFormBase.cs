@@ -49,6 +49,14 @@ InitializeComponent();
         /// Başlık ve ayırıcı renkleri aktif skinden çözülür; böylece açık ve koyu
         /// temalarda başlık metni zeminin üzerinde okunur kalır. Butonlara renk
         /// atanmaz — onların görünümü tamamen DevExpress skin'ine bırakılır.
+        ///
+        /// <para>
+        /// Araç çubuğu paneli (<see cref="pnlToolbar"/>) bilerek şeffaftır: buton
+        /// bandının arkasında ayrı bir renk şeridi görünmesin, butonlar doğrudan
+        /// formun zemininde dursun. Bu yüzden panel zemin rengi formun kendi
+        /// zeminine bırakılır (<c>Color.Transparent</c>); arama kutusu gibi panel
+        /// içindeki düzenleyiciler kendi zeminlerini korur.
+        /// </para>
         /// </summary>
         private void ApplySkin()
         {
@@ -57,7 +65,7 @@ InitializeComponent();
             Color secondary = SkinTheme.Blend(primary, surface, 0.22F);
 
             pnlHeader.Appearance.BackColor = SkinTheme.SurfaceMuted(surface);
-            pnlToolbar.Appearance.BackColor = surface;
+            ApplyTransparentToolbar();
             headerAccent.Appearance.BackColor = SkinTheme.Primary;
             headerDivider.Appearance.BackColor = SkinTheme.BorderMuted(surface);
 
@@ -70,6 +78,19 @@ InitializeComponent();
             lblSub.Appearance.Options.UseForeColor = true;
             lblFilter.Appearance.ForeColor = secondary;
             lblFilter.Appearance.Options.UseForeColor = true;
+        }
+
+        /// <summary>
+        /// Araç çubuğu bandının zeminini kaldırır. Panel hem DevExpress
+        /// <c>Appearance</c> hem de WinForms <c>BackColor</c> değerinde şeffaf
+        /// yapılır: DevExpress panel boyama işlemi <c>Appearance</c> üzerinden
+        /// yürür, alt kontrollerin ise arka planı WinForms tarafında okunur.
+        /// </summary>
+        private void ApplyTransparentToolbar()
+        {
+            pnlToolbar.Appearance.BackColor = Color.Transparent;
+            pnlToolbar.Appearance.Options.UseBackColor = true;
+            pnlToolbar.BackColor = Color.Transparent;
         }
 
         protected GridView View => gridView;
@@ -896,7 +917,15 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
 
             try
             {
-                MovableAssetTransactionSlipData? data = await BuildSlipDataAsync(item);
+                // Fiş verisi hazırlanırken ekranın bir saniye boyunca
+                // donmaması için bekleme penceresiyle sarılır. Belge
+                // üretimi kendi penceresini açar; bu yüzden iki aşama
+                // ayrı ayrı gösterilir.
+                MovableAssetTransactionSlipData? data = await LoadingHelper.RunAsync(
+                    () => BuildSlipDataAsync(item),
+                    caption: "Fiş verileri hazırlanıyor...",
+                    description: "Lütfen bekleyin...");
+
                 if (data is null)
                 {
                     return;

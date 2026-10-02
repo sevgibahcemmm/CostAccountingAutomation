@@ -29,8 +29,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
 private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            DevExpress.XtraReports.UI.XRSummary xrSummary3 = new DevExpress.XtraReports.UI.XRSummary();
-            DevExpress.XtraReports.UI.XRSummary xrSummary4 = new DevExpress.XtraReports.UI.XRSummary();
+            DevExpress.XtraReports.UI.XRSummary xrSummary1 = new DevExpress.XtraReports.UI.XRSummary();
+            DevExpress.XtraReports.UI.XRSummary xrSummary2 = new DevExpress.XtraReports.UI.XRSummary();
             this.TopMargin = new DevExpress.XtraReports.UI.TopMarginBand();
             this.PageFooter = new DevExpress.XtraReports.UI.PageFooterBand();
             this.xrLine1 = new DevExpress.XtraReports.UI.XRLine();
@@ -1677,9 +1677,9 @@ private void InitializeComponent()
             this.cellGroupMiktar.StylePriority.UseFont = false;
             this.cellGroupMiktar.StylePriority.UsePadding = false;
             this.cellGroupMiktar.StylePriority.UseTextAlignment = false;
-            xrSummary3.FormatString = "{0:n2}";
-            xrSummary3.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
-            this.cellGroupMiktar.Summary = xrSummary3;
+            xrSummary1.FormatString = "{0:n2}";
+            xrSummary1.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
+            this.cellGroupMiktar.Summary = xrSummary1;
             this.cellGroupMiktar.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.cellGroupMiktar.TextFormatString = "{0:n2}";
             this.cellGroupMiktar.Weight = 1D;
@@ -1716,9 +1716,9 @@ private void InitializeComponent()
             this.cellGroupTotal.StylePriority.UseFont = false;
             this.cellGroupTotal.StylePriority.UsePadding = false;
             this.cellGroupTotal.StylePriority.UseTextAlignment = false;
-            xrSummary4.FormatString = "{0:n2}";
-            xrSummary4.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
-            this.cellGroupTotal.Summary = xrSummary4;
+            xrSummary2.FormatString = "{0:n2}";
+            xrSummary2.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
+            this.cellGroupTotal.Summary = xrSummary2;
             this.cellGroupTotal.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.cellGroupTotal.TextFormatString = "{0:n2}";
             this.cellGroupTotal.Weight = 1D;
@@ -1787,6 +1787,7 @@ private void InitializeComponent()
             // 
             // cellSig1Giris
             // 
+            this.cellSig1Giris.CanGrow = true;
             this.cellSig1Giris.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
@@ -1798,13 +1799,14 @@ private void InitializeComponent()
             this.cellSig1Giris.StylePriority.UseFont = false;
             this.cellSig1Giris.StylePriority.UsePadding = false;
             this.cellSig1Giris.StylePriority.UseTextAlignment = false;
-            this.cellSig1Giris.Text = "GİRİŞ KAYDI YAPILMIŞTIR\r\n\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
-    "anı :\r\nİmzası :\r\n\r\n\r\n";
+            this.cellSig1Giris.Text = "GİRİŞ KAYDI YAPILMIŞTIR\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
+    "anı     :\r\nTarih      :\r\nİmzası     :\r\n\r\n\r\n";
             this.cellSig1Giris.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             this.cellSig1Giris.Weight = 1.51D;
             // 
             // cellSig1Exit
             // 
+            this.cellSig1Exit.CanGrow = true;
             this.cellSig1Exit.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
@@ -1816,8 +1818,8 @@ private void InitializeComponent()
             this.cellSig1Exit.StylePriority.UseFont = false;
             this.cellSig1Exit.StylePriority.UsePadding = false;
             this.cellSig1Exit.StylePriority.UseTextAlignment = false;
-            this.cellSig1Exit.Text = "ÇIKIŞ KAYDI YAPILMIŞTIR\r\n\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
-    "anı :\r\nİmzası :\r\n\r\n\r\n";
+            this.cellSig1Exit.Text = "ÇIKIŞ KAYDI YAPILMIŞTIR\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
+    "anı     :\r\nTarih      :\r\nİmzası     :\r\n\r\n\r\n";
             this.cellSig1Exit.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             this.cellSig1Exit.Weight = 1.49D;
             // 
@@ -1831,6 +1833,7 @@ private void InitializeComponent()
             // 
             // cellSig2TeslimEden
             // 
+            this.cellSig2TeslimEden.CanGrow = true;
             this.cellSig2TeslimEden.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
@@ -1848,6 +1851,7 @@ private void InitializeComponent()
             // 
             // cellSig2TeslimAlan
             // 
+            this.cellSig2TeslimAlan.CanGrow = true;
             this.cellSig2TeslimAlan.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
@@ -2084,86 +2088,103 @@ private void InitializeComponent()
             // FisSiraNo
             // 
             this.FisSiraNo.Name = "FisSiraNo";
+            this.FisSiraNo.ValueInfo = "000001";
             this.FisSiraNo.Visible = false;
             // 
             // Tarih
             // 
             this.Tarih.Name = "Tarih";
+            this.Tarih.ValueInfo = "02.10.2026";
             this.Tarih.Visible = false;
             // 
             // ProvinceDistrictName
             // 
             this.ProvinceDistrictName.Name = "ProvinceDistrictName";
+            this.ProvinceDistrictName.ValueInfo = "DEMİRCİ";
             this.ProvinceDistrictName.Visible = false;
             // 
             // ProvinceDistrictCode
             // 
             this.ProvinceDistrictCode.Name = "ProvinceDistrictCode";
+            this.ProvinceDistrictCode.ValueInfo = "1603";
             this.ProvinceDistrictCode.Visible = false;
             // 
             // ExpenditureUnitName
             // 
             this.ExpenditureUnitName.Name = "ExpenditureUnitName";
+            this.ExpenditureUnitName.ValueInfo = "MERKEZ HARCAMA BİRİMİ";
             this.ExpenditureUnitName.Visible = false;
             // 
             // ExpenditureUnitCode
             // 
             this.ExpenditureUnitCode.Name = "ExpenditureUnitCode";
+            this.ExpenditureUnitCode.ValueInfo = "45.05";
             this.ExpenditureUnitCode.Visible = false;
             // 
             // StoreName
             // 
             this.StoreName.Name = "StoreName";
+            this.StoreName.ValueInfo = "MERKEZ AMBAR";
             this.StoreName.Visible = false;
             // 
             // StoreCode
             // 
             this.StoreCode.Name = "StoreCode";
+            this.StoreCode.ValueInfo = "45103";
             this.StoreCode.Visible = false;
             // 
             // AccountingUnitName
             // 
             this.AccountingUnitName.Name = "AccountingUnitName";
+            this.AccountingUnitName.ValueInfo = "DEMİRCİ MAL MÜDÜRLÜĞÜ";
             this.AccountingUnitName.Visible = false;
             // 
             // AccountingUnitCode
             // 
             this.AccountingUnitCode.Name = "AccountingUnitCode";
+            this.AccountingUnitCode.ValueInfo = "45103";
             this.AccountingUnitCode.Visible = false;
             // 
             // ReferenceDate
             // 
             this.ReferenceDate.Name = "ReferenceDate";
+            this.ReferenceDate.ValueInfo = "01.10.2026";
             this.ReferenceDate.Visible = false;
             // 
             // ReferenceCode
             // 
             this.ReferenceCode.Name = "ReferenceCode";
+            this.ReferenceCode.ValueInfo = "000042";
             this.ReferenceCode.Visible = false;
             // 
             // OperationType
             // 
             this.OperationType.Name = "OperationType";
+            this.OperationType.ValueInfo = "GİRİŞ";
             this.OperationType.Visible = false;
             // 
             // SourceParty
             // 
             this.SourceParty.Name = "SourceParty";
+            this.SourceParty.ValueInfo = "TAŞINIR AMBARI";
             this.SourceParty.Visible = false;
             // 
             // RecipientParty
             // 
             this.RecipientParty.Name = "RecipientParty";
+            this.RecipientParty.ValueInfo = "DEMİRCİ KURUMU";
             this.RecipientParty.Visible = false;
             // 
             // DestinationParty
             // 
             this.DestinationParty.Name = "DestinationParty";
+            this.DestinationParty.ValueInfo = "DEMİRCİ KURUMU";
             this.DestinationParty.Visible = false;
             // 
             // Ozet
             // 
             this.Ozet.Name = "Ozet";
+            this.Ozet.ValueInfo = "Yukarıda gösterilen 12 kalem, toplam 1.480 adet taşınırın";
             this.Ozet.Visible = false;
             // 
             // objectDataSource1

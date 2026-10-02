@@ -66,6 +66,65 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         public string AccountingUnitCode { get; set; } = string.Empty;
         public DateTime? ReferenceDate { get; set; }
         public string ReferenceCode { get; set; } = string.Empty;
+
+        /// <summary>
+        /// İmza bloğunda "Taşınır Kayıt ve Yetkilisi" satırına basılacak
+        /// personelin adı soyadı. Görev tanımı veritabanında olduğu için
+        /// personel listesinden çözülür; bulunamazsa boş kalır.
+        /// </summary>
+        public string SignatoryFullName { get; set; } = string.Empty;
+
+        /// <summary>İmza bloğunda gösterilecek personelin ünvanı.</summary>
+        public string SignatoryTitle { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Giriş kaydının imza kutusuna basılacak metin. Kutunun ilk satırı
+        /// ("GİRİŞ KAYDI YAPILMIŞTIR") şablonda hücrenin kendi metnidir; buraya
+        /// yalnızca yetkili satırları yazılır.
+        ///
+        /// <para>
+        /// Bu metin raporun kendisinde değil, belgenin verisiyle birlikte
+        /// hazırlanır. Böylece imza kutusunun satır dizilimi ve boşluk
+        /// doldurma kuralı tek yerde durur.
+        /// </para>
+        ///
+        /// <para>
+        /// İçinde <b>Tarih</b> satırı da bulunur: kayıt yetkilinin imza
+        /// tarihi belgenin kendi tarihidir; ayrı bir alan istenirse <see cref="Date"/>
+        /// değiştirilir.
+        /// </para>
+        ///
+        /// <para>
+        /// Satır sayısı, tarih satırı eklenmeden öncekiyle aynı tutulur.
+        /// İmza kutusunun yüksekliği şablonda sabit; fazladan bir satır
+        /// eklendiğinde kutu büyüyemediği için "İmzası" satırı taşıyordu.
+        /// </para>
+        ///
+        /// <para>
+        /// Yetkili bulunamazsa alan boş bırakılmaz; imza satırına noktalı
+        /// çizgi konur. Böylece "kim imzalayacak" sorusu belge üzerinde açık
+        /// kalır ve yanlış bir isim basılmaz.
+        /// </para>
+        /// </summary>
+        public string EntrySignatureBlock => ComposeSignatureBlock();
+
+        /// <summary>Çıkış kaydının imza kutusuna basılacak metin.</summary>
+        public string ExitSignatureBlock => ComposeSignatureBlock();
+
+        private string ComposeSignatureBlock() => string.Join(
+            "\r\n",
+            string.Empty,
+            "  Taşınır Kayıt ve Yetkilisinin",
+            string.Empty,
+            $"Adı Soyadı : {ValueOrBlank(SignatoryFullName)}",
+            $"Ünvanı     : {ValueOrBlank(SignatoryTitle)}",
+            $"Tarih      : {Date.ToString("dd.MM.yyyy")}",
+            "İmzası     :",
+            string.Empty,
+            string.Empty);
+
+        private static string ValueOrBlank(string? value)
+            => string.IsNullOrWhiteSpace(value) ? "..............................." : value;
         public List<MovableAssetTransactionSlipRow> Rows { get; set; } = [];
 
         /// <summary>

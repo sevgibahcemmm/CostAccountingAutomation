@@ -30,7 +30,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             lblSubtitle.Text = _editing is null
                 ? "Yeni şirket tanımlamak için bilgileri doldurun"
                 : "Şirket bilgilerini güncelleyin";
-            chkActive.Checked = _editing?.IsActive ?? true;
+            chkActive.IsOn = _editing?.IsActive ?? true;
 
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
@@ -85,7 +85,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             txtExpCode.Text = company.ExpenditureUnitCode;
             txtAccName.Text = company.AccountingUnitName;
             txtAccCode.Text = company.AccountingUnitCode;
-            chkActive.Checked = company.IsActive;
+            chkActive.IsOn = company.IsActive;
         }
 
         private async void BtnSave_Click(object? sender, EventArgs e)
@@ -111,7 +111,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             string expenditureCode = txtExpCode.Text.Trim();
             string accountingName = txtAccName.Text.Trim();
             string accountingCode = txtAccCode.Text.Trim();
-            bool isActive = chkActive.Checked;
+            bool isActive = chkActive.IsOn;
 
             IRequest<Result<string>> command = _editing is null
                 ? new CompanyCreateCommand(name, taxOffice, taxNumber, description, invoiceInformation,

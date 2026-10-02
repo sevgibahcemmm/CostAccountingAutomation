@@ -192,6 +192,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             // pnlToolbar
             // 
+            // Zemin bilerek şeffaf bırakılır: butonların arkasında ayrı bir renk
+            // şeridi görünmesin. Rengin skine göre tazelenmesi ApplySkin'de
+            // (CrudListFormBase) yapılır.
+            pnlToolbar.Appearance.Options.UseBackColor = true;
+            pnlToolbar.BackColor = System.Drawing.Color.Transparent;
+            pnlToolbar.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlToolbar.Controls.Add(txtSearch);
             pnlToolbar.Controls.Add(cmbFilter);
             pnlToolbar.Controls.Add(lblFilter);
@@ -379,6 +385,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             // flpToolbar
             // 
+            flpToolbar.BackColor = System.Drawing.Color.Transparent;
             flpToolbar.Controls.Add(btnNew);
             flpToolbar.Controls.Add(btnEdit);
             flpToolbar.Controls.Add(btnDelete);

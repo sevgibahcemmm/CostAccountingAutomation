@@ -47,8 +47,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
                 $"Yukarıda gösterilen {data.DetailLineCount} kalem, toplam {data.TotalQuantity:N0} adet taşınırın");
 
             BuildDepotTotals(data);
+            BuildSignatureBlocks(data);
 
             DataSource = data.Rows;
+        }
+
+        /// <summary>
+        /// Giriş ve çıkış kaydının imza kutularını hazırlar.
+        ///
+        /// <para>
+        /// Kutuların başlığı ("GİRİŞ/ÇIKIŞ KAYDI YAPILMIŞTIR") şablonda hücrenin
+        /// kendi metnidir; burada yalnızca yetkili satırları yazılır. Metnin
+        /// tamamı <see cref="MovableAssetTransactionSlipData.EntrySignatureBlock"/>
+        /// içinde hazırlanır — ayrı bir rapor parametresi açmaya gerek yoktur.
+        /// </para>
+        /// </summary>
+        private void BuildSignatureBlocks(MovableAssetTransactionSlipData data)
+        {
+            cellSig1Giris.Text = data.EntrySignatureBlock;
+            cellSig1Exit.Text = data.ExitSignatureBlock;
         }
 
         private void SetParameter(string name, string? value)

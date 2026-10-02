@@ -142,7 +142,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             cmbWarehouse.Properties.ReadOnly = true;
             cmbCategory.Properties.ReadOnly = true;
             memoDescription.Properties.ReadOnly = true;
-            chkActive.Properties.ReadOnly = true;
+            chkActive.ReadOnly = true;
             chkCreatePair.Visible = false;
             btnAddUnitType.Enabled = false;
 
@@ -243,7 +243,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 FieldName = nameof(ProductImageDto.IsPrimary),
                 Visible = true,
                 Width = 90,
-                ColumnEdit = riCheck
+                ColumnEdit = riToggle
             };
 
             gridImageView.Columns.AddRange([colImage, colPath, colIsPrimary]);
@@ -330,7 +330,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("151.") || wh.Code.StartsWith("152.")))
                         {
                             chkCreatePair.Visible = true;
-                            chkCreatePair.Checked = true;
+                            chkCreatePair.IsOn = true;
                         }
                         else
                         {
@@ -350,7 +350,7 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
                 }
                 else
                 {
-                    chkActive.Checked = true;
+                    chkActive.IsOn = true;
                 }
             }
             catch (Exception ex)
@@ -420,12 +420,12 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
                 if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("151.") || wh.Code.StartsWith("152.")))
                 {
                     chkCreatePair.Visible = true;
-                    chkCreatePair.Checked = true;
+                    chkCreatePair.IsOn = true;
                 }
                 else
                 {
                     chkCreatePair.Visible = false;
-                    chkCreatePair.Checked = false;
+                    chkCreatePair.IsOn = false;
                 }
             }
         }
@@ -521,7 +521,7 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
                 _isPopulating = false;
             }
             memoDescription.Text = full.Description;
-            chkActive.Checked = full.IsActive;
+            chkActive.IsOn = full.IsActive;
 
             _movements.AddRange(full.Movements);
             gridMovements.DataSource = _movements;
@@ -894,9 +894,9 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
             Guid? warehouseId = cmbWarehouse.EditValue as Guid?;
             Guid? categoryId = cmbCategory.EditValue as Guid?;
             Guid? unitTypeId = cmbUnitType.EditValue as Guid?;
-            bool createPair = _editing is null && chkCreatePair.Visible && chkCreatePair.Checked;
+            bool createPair = _editing is null && chkCreatePair.Visible && chkCreatePair.IsOn;
             Guid? semiFinishedProductId = _editing?.SemiFinishedProductId;
-            bool isActive = chkActive.Checked;
+            bool isActive = chkActive.IsOn;
 
             List<ProductPriceRow> priceRows = _prices.Select(p => new ProductPriceRow(
                 p.Id == Guid.Empty ? null : p.Id,

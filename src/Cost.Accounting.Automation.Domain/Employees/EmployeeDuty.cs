@@ -1,16 +1,9 @@
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Cost.Accounting.Automation.Domain.Shared;
 
 namespace Cost.Accounting.Automation.Domain.Employees;
 
-/// <summary>
-/// Bir personelin yetkili olduğu görev ve bu görevin bağlı olduğu atölye.
-///
-/// Görev ile atölye ayrı tutulur çünkü bazı görevler atölyeye bağlı değildir:
-/// "Kurum Müdürü", "Muhasebe Yetkilisi" ve "Taşınır Kayıt Yetkilisi" kurum
-/// genelinde geçerlidir (<see cref="WorkshopId"/> boştur), "Atölye Şefi" ise
-/// yalnızca belirli bir atölye için tanımlanabilir.
-/// </summary>
 public sealed class EmployeeDuty : Entity
 {
     private EmployeeDuty()
@@ -19,12 +12,12 @@ public sealed class EmployeeDuty : Entity
 
     public EmployeeDuty(
         IdentityId employeeId,
-        EmployeeSigningRole signingRole,
+        IdentityId signingRoleId,
         IdentityId? workshopId,
         bool isActive)
     {
         SetEmployee(employeeId);
-        SetSigningRole(signingRole);
+        SetSigningRole(signingRoleId);
         SetWorkshop(workshopId);
         SetStatus(isActive);
         ResolveDuplicateKey();
@@ -34,7 +27,9 @@ public sealed class EmployeeDuty : Entity
 
     public Employee? Employee { get; private set; }
 
-    public EmployeeSigningRole SigningRole { get; private set; }
+    public IdentityId SigningRoleId { get; private set; } = default!;
+
+    public EmployeeSigningRole? SigningRole { get; private set; }
 
     /// <summary>
     /// Görevin bağlı olduğu atölye (<see cref="ChartOfAccountType.Workshop"/>).
@@ -49,17 +44,36 @@ public sealed class EmployeeDuty : Entity
     /// atölyede) tanımlanmasını engeller. Atölye yoksa "-", "-1" gibi bir
     /// yer tutucu ile birleştirilir; iki farklı atölye farklı anahtar üretir.
     /// </summary>
-    public static string? BuildDuplicateKey(IdentityId employeeId, EmployeeSigningRole role, IdentityId? workshopId)
+    public static string? BuildDuplicateKey(
+        IdentityId employeeId,
+        IdentityId signingRoleId,
+        IdentityId? workshopId)
     {
         // Atölye yoksa null kutuya girer ve DuplicateKeyRule bunu "-"
         // olarak ayırır; iki farklı atölye farklı anahtar üretir.
-        object?[] parts = [employeeId.Value, (int)role, workshopId?.Value];
+        object?[] parts = [employeeId.Value, signingRoleId.Value, workshopId?.Value];
 
         return DuplicateKeyRule.From(parts);
     }
 
     public void ResolveDuplicateKey()
-        => SetDuplicateKey(BuildDuplicateKey(EmployeeId, SigningRole, WorkshopId));
+    {
+        // EF Core materyalizasyonda alanları sözleşme gereği sırayla
+        // doldurmaz. "SigningRoleId" (artık bir foreign key olduğu için
+        // yazıcısı SetSigningRole olan bir özellik) "EmployeeId"'den önce
+        // yazılırsa EmployeeId henüz null'dır ve erişim patlar.
+        //
+        // Bu yüzden anahtar üç parçanın tamamı mevcut olduğunda üretilir;
+        // eksikken mevcut değer korunur. Sıralama ne olursa olsun üçüncü ve
+        // son atanan alan anahtarı doğru şekilde hesaplar. Yeni kayıtlar
+        // kurucudan geçtiği için zaten eksiksizdir.
+        if (EmployeeId is null || SigningRoleId is null)
+        {
+            return;
+        }
+
+        SetDuplicateKey(BuildDuplicateKey(EmployeeId, SigningRoleId, WorkshopId));
+    }
 
     public void SetEmployee(IdentityId employeeId)
     {
@@ -67,9 +81,9 @@ public sealed class EmployeeDuty : Entity
         ResolveDuplicateKey();
     }
 
-    public void SetSigningRole(EmployeeSigningRole signingRole)
+    public void SetSigningRole(IdentityId signingRoleId)
     {
-        SigningRole = signingRole;
+        SigningRoleId = signingRoleId;
         ResolveDuplicateKey();
     }
 

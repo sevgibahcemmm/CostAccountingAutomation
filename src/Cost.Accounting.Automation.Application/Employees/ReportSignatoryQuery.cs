@@ -1,5 +1,4 @@
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Employees;
 using Microsoft.EntityFrameworkCore;
@@ -9,25 +8,25 @@ using TS.Result;
 namespace Cost.Accounting.Automation.Application.Employees;
 
 /// <summary>Rapor imza satırına basılacak yetkili.</summary>
+/// <param name="SigningRoleId">Görevin kimliği (<c>EmployeeSigningRoles</c>).</param>
 public sealed record ReportSignatory(
-    EmployeeSigningRole Role,
+    Guid SigningRoleId,
     string RoleName,
     string FullName,
     string Title,
     string? PhotoPath);
 
 /// <summary>Bir belgenin ihtiyaç duyduğu imza yuvası.</summary>
-/// <param name="Role">Yuvanın karşılığı olan görev.</param>
+/// <param name="SigningRoleId">Yuvanın karşılığı olan görev tanımının kimliği.</param>
 /// <param name="Caption">Raporda yuvanın üstünde yazacak satır başlığı.</param>
-public sealed record SignatorySlot(EmployeeSigningRole Role, string Caption);
+public sealed record SignatorySlot(Guid SigningRoleId, string Caption);
 
 /// <summary>
 /// Bir belge için imza yetkililerini çözer.
 ///
-/// Raporların imza blokları bugün tasarım dosyasında sabit metin taşıyor
-/// ("Adı Soyadı :", "© Yazılımcı Emrullah AKPINAR / Muhasebe Yetkilisi" gibi).
-/// Bu sorgu, belgenin atölyesine ve kurumuna göre doğru personeli bulup
-/// adı-soyadı ve ünvanıyla döndürür.
+/// Görev tanımları veritabanında tutulduğu için yuva bir enum değeri değil,
+/// <see cref="EmployeeSigningRole"/> kimliğiyle tanımlanır. Böylece kurum
+/// kendi imza görevini tanımlayıp rapor şablonuna ekleyebilir.
 ///
 /// <para>
 /// Görev çözümlemesi iki basamakta olur: <c>WorkshopId</c> verilmişse önce
@@ -39,49 +38,55 @@ public sealed record SignatorySlot(EmployeeSigningRole Role, string Caption);
 [Permission("employee:view")]
 public sealed record ReportSignatoryQuery(
     Guid? WorkshopId,
-    IReadOnlyList<SignatorySlot> Slots) : IRequest<Result<IReadOnlyDictionary<EmployeeSigningRole, ReportSignatory>>>;
+    IReadOnlyList<SignatorySlot> Slots) : IRequest<Result<IReadOnlyDictionary<Guid, ReportSignatory>>>;
 
 internal sealed class ReportSignatoryQueryHandler(
-    IEmployeeDutyRepository employeeDutyRepository) : IRequestHandler<ReportSignatoryQuery, Result<IReadOnlyDictionary<EmployeeSigningRole, ReportSignatory>>>
+    IEmployeeDutyRepository employeeDutyRepository) : IRequestHandler<ReportSignatoryQuery, Result<IReadOnlyDictionary<Guid, ReportSignatory>>>
 {
-    public Task<Result<IReadOnlyDictionary<EmployeeSigningRole, ReportSignatory>>> Handle(
+    public Task<Result<IReadOnlyDictionary<Guid, ReportSignatory>>> Handle(
         ReportSignatoryQuery request,
         CancellationToken cancellationToken)
     {
         if (request.Slots.Count == 0)
         {
             return Task.FromResult(
-                Result<IReadOnlyDictionary<EmployeeSigningRole, ReportSignatory>>.Succeed(
-                    new Dictionary<EmployeeSigningRole, ReportSignatory>()));
+                Result<IReadOnlyDictionary<Guid, ReportSignatory>>.Succeed(
+                    new Dictionary<Guid, ReportSignatory>()));
         }
 
-        List<EmployeeSigningRole> roles = [.. request.Slots.Select(s => s.Role)];
+        List<Guid> roles = [.. request.Slots.Select(s => s.SigningRoleId)];
 
         IdentityId? workshopId = request.WorkshopId is Guid id ? new IdentityId(id) : null;
+
+        // SigningRoleId bir value-converter alanıdır; sorgu `.Value` özelliğine
+        // değil nesnenin kendisine karşı yazılmalıdır, aksi hâlde LINQ ifadesi
+        // SQL'e çevrilemez. Bu yüzden liste Guid değil IdentityId tutar ve
+        // karşılaştırma alanın kendisiyle yapılır.
+        List<IdentityId?> roleIds = [.. roles.Select(r => new IdentityId(r))];
 
         List<EmployeeDuty> duties = employeeDutyRepository
             .GetAll()
             .Include(d => d.Employee)
-            .Where(d => roles.Contains(d.SigningRole)
+            .Where(d => roleIds.Contains(d.SigningRoleId)
                 && !d.IsDeleted
                 && d.Employee!.IsActive
                 && !d.Employee.IsDeleted)
             .ToList();
 
-        var result = new Dictionary<EmployeeSigningRole, ReportSignatory>();
+        var result = new Dictionary<Guid, ReportSignatory>();
 
         foreach (SignatorySlot slot in request.Slots)
         {
-            ReportSignatory? signatory = Resolve(duties, slot.Role, workshopId);
+            ReportSignatory? signatory = Resolve(duties, slot.SigningRoleId, workshopId);
 
             if (signatory is not null)
             {
-                result[slot.Role] = signatory;
+                result[slot.SigningRoleId] = signatory;
             }
         }
 
         return Task.FromResult(
-            Result<IReadOnlyDictionary<EmployeeSigningRole, ReportSignatory>>.Succeed(result));
+            Result<IReadOnlyDictionary<Guid, ReportSignatory>>.Succeed(result));
     }
 
     /// <summary>
@@ -92,19 +97,19 @@ internal sealed class ReportSignatoryQueryHandler(
     /// </summary>
     private static ReportSignatory? Resolve(
         List<EmployeeDuty> duties,
-        EmployeeSigningRole role,
+        Guid signingRoleId,
         IdentityId? workshopId)
     {
         EmployeeDuty? match = workshopId is null
             ? duties.FirstOrDefault(d =>
-                d.SigningRole == role && d.WorkshopId is null && d.IsActive)
+                d.SigningRoleId == new IdentityId(signingRoleId) && d.WorkshopId is null && d.IsActive)
             : duties.FirstOrDefault(d =>
-                d.SigningRole == role && d.IsActive
+                d.SigningRoleId == new IdentityId(signingRoleId) && d.IsActive
                 && (d.WorkshopId == workshopId
                     || (workshopId is IdentityId w && d.WorkshopId is not null && d.WorkshopId == w)));
 
         match ??= duties.FirstOrDefault(d =>
-            d.SigningRole == role && d.WorkshopId is null && d.IsActive);
+            d.SigningRoleId == new IdentityId(signingRoleId) && d.WorkshopId is null && d.IsActive);
 
         if (match?.Employee is null)
         {
@@ -112,8 +117,8 @@ internal sealed class ReportSignatoryQueryHandler(
         }
 
         return new ReportSignatory(
-            match.SigningRole,
-            EnumDisplay.GetDisplayName(match.SigningRole),
+            signingRoleId,
+            match.SigningRole?.Name.Value ?? string.Empty,
             match.Employee.FullName,
             match.Employee.Title.Value,
             match.Employee.PhotoPath);

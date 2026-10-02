@@ -37,11 +37,11 @@ private DevExpress.XtraEditors.LabelControl lblQrValue;
         private DevExpress.XtraEditors.LabelControl lblCategory;
 private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
         private DevExpress.XtraEditors.LabelControl lblUnitType;
-        private DevExpress.XtraEditors.CheckEdit chkCreatePair;
+        private DevExpress.XtraEditors.ToggleSwitch chkCreatePair;
         private DevExpress.XtraEditors.LabelControl lblCreatePair;
         private DevExpress.XtraEditors.MemoEdit memoDescription;
         private DevExpress.XtraEditors.LabelControl lblDescription;
-        private DevExpress.XtraEditors.CheckEdit chkActive;
+        private DevExpress.XtraEditors.ToggleSwitch chkActive;
         private DevExpress.XtraEditors.SimpleButton btnAddUnitType;
 
         private DevExpress.XtraEditors.PanelControl pnlPriceButtons;
@@ -68,7 +68,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
         private DevExpress.XtraEditors.Repository.RepositoryItemSpinEdit riSpin;
         private DevExpress.XtraEditors.Repository.RepositoryItemDateEdit riDate;
         private DevExpress.XtraEditors.Repository.RepositoryItemDateEdit riDateNull;
-        private DevExpress.XtraEditors.Repository.RepositoryItemCheckEdit riCheck;
+        private DevExpress.XtraEditors.Repository.RepositoryItemToggleSwitch riToggle;
 
         protected override void Dispose(bool disposing)
         {
@@ -93,9 +93,9 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             btnSave = new DevExpress.XtraEditors.SimpleButton();
             tabMain = new DevExpress.XtraTab.XtraTabControl();
             tabBasic = new DevExpress.XtraTab.XtraTabPage();
-            chkActive = new DevExpress.XtraEditors.CheckEdit();
+            chkActive = new DevExpress.XtraEditors.ToggleSwitch();
             lblCreatePair = new DevExpress.XtraEditors.LabelControl();
-            chkCreatePair = new DevExpress.XtraEditors.CheckEdit();
+            chkCreatePair = new DevExpress.XtraEditors.ToggleSwitch();
             lblDescription = new DevExpress.XtraEditors.LabelControl();
             memoDescription = new DevExpress.XtraEditors.MemoEdit();
             lblUnitType = new DevExpress.XtraEditors.LabelControl();
@@ -147,7 +147,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             gridImageView = new DevExpress.XtraGrid.Views.Grid.GridView();
             gridColumn11 = new DevExpress.XtraGrid.Columns.GridColumn();
             gridColumn12 = new DevExpress.XtraGrid.Columns.GridColumn();
-            riCheck = new DevExpress.XtraEditors.Repository.RepositoryItemCheckEdit();
+            riToggle = new DevExpress.XtraEditors.Repository.RepositoryItemToggleSwitch();
             pnlImageButtons = new DevExpress.XtraEditors.PanelControl();
             btnSetPrimary = new DevExpress.XtraEditors.SimpleButton();
             btnRemoveImage = new DevExpress.XtraEditors.SimpleButton();
@@ -189,7 +189,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             tabImages.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)gridImages).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridImageView).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)riCheck).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)riToggle).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pnlImageButtons).BeginInit();
             pnlImageButtons.SuspendLayout();
             SuspendLayout();
@@ -335,8 +335,11 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             chkActive.Location = new Point(28, 306);
             chkActive.Name = "chkActive";
-            chkActive.Properties.Caption = "Aktif";
-            chkActive.Size = new Size(64, 20);
+            chkActive.Properties.ShowText = true;
+            chkActive.Properties.OnText = "Aktif";
+            chkActive.Properties.OffText = "Pasif";
+            chkActive.ToolTip = "Aktif";
+            chkActive.Size = new Size(140, 24);
             chkActive.TabIndex = 21;
             // 
             // lblCreatePair
@@ -354,7 +357,10 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             chkCreatePair.Location = new Point(28, 178);
             chkCreatePair.Name = "chkCreatePair";
-            chkCreatePair.Properties.Caption = "Mamül ve Yarımamül kartını birlikte oluştur";
+            chkCreatePair.Properties.ShowText = true;
+            chkCreatePair.Properties.OnText = "Mamül + Yarı Mamül";
+            chkCreatePair.Properties.OffText = "Yalnız Mamül";
+            chkCreatePair.ToolTip = "Mamül ve Yarımamül kartını birlikte oluştur";
             chkCreatePair.Size = new Size(440, 20);
             chkCreatePair.TabIndex = 18;
             chkCreatePair.ToolTip = "152 deposunda MAMÜL, 151 deposunda YARIMAMÜL kartı aynı anda oluşturulur";
@@ -757,7 +763,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             gridImages.Location = new Point(0, 50);
             gridImages.MainView = gridImageView;
             gridImages.Name = "gridImages";
-            gridImages.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] { riCheck });
+            gridImages.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] { riToggle });
             gridImages.Size = new Size(751, 500);
             gridImages.TabIndex = 1;
             gridImages.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridImageView });
@@ -777,9 +783,9 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             // 
             gridColumn12.Name = "gridColumn12";
             // 
-            // riCheck
+            // riToggle
             // 
-            riCheck.Name = "riCheck";
+            riToggle.Name = "riToggle";
             // 
             // pnlImageButtons
             // 
@@ -886,7 +892,7 @@ private DevExpress.XtraEditors.SearchLookUpEdit cmbUnitType;
             tabImages.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)gridImages).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridImageView).EndInit();
-            ((System.ComponentModel.ISupportInitialize)riCheck).EndInit();
+            ((System.ComponentModel.ISupportInitialize)riToggle).EndInit();
             ((System.ComponentModel.ISupportInitialize)pnlImageButtons).EndInit();
             pnlImageButtons.ResumeLayout(false);
             ResumeLayout(false);

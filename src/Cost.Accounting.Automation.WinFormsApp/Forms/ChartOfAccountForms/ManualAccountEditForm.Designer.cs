@@ -17,7 +17,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
         private DevExpress.XtraEditors.LookUpEdit cmbParent;
         private DevExpress.XtraEditors.TextEdit txtCode;
         private DevExpress.XtraEditors.TextEdit txtName;
-        private DevExpress.XtraEditors.CheckEdit chkActive;
+        private DevExpress.XtraEditors.ToggleSwitch chkActive;
         private DevExpress.XtraEditors.SimpleButton btnSave;
         private DevExpress.XtraEditors.SimpleButton btnCancel;
 
@@ -51,7 +51,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
             this.cmbParent = new DevExpress.XtraEditors.LookUpEdit();
             this.txtCode = new DevExpress.XtraEditors.TextEdit();
             this.txtName = new DevExpress.XtraEditors.TextEdit();
-            this.chkActive = new DevExpress.XtraEditors.CheckEdit();
+            this.chkActive = new DevExpress.XtraEditors.ToggleSwitch();
             this.btnSave = new DevExpress.XtraEditors.SimpleButton();
             this.btnCancel = new DevExpress.XtraEditors.SimpleButton();
             ((System.ComponentModel.ISupportInitialize)this.cmbParent.Properties).BeginInit();
@@ -122,10 +122,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
             // 
             // chkActive
             // 
-            this.chkActive.Checked = true;
+            this.chkActive.IsOn = true;
             this.chkActive.Location = new System.Drawing.Point(120, 200);
             this.chkActive.Name = "chkActive";
-            this.chkActive.Properties.Caption = "Aktif";
+            chkActive.Properties.ShowText = true;
+            chkActive.Properties.OnText = "Aktif";
+            chkActive.Properties.OffText = "Pasif";
+            chkActive.ToolTip = "Aktif";
             this.chkActive.Size = new System.Drawing.Size(120, 24);
             this.chkActive.TabIndex = 3;
             // 

@@ -48,6 +48,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private readonly Dictionary<DatabaseProvisionStep, StepRow> _rows = [];
 
+        /// <summary>
+        /// Adım özetlerinin tamamını göstermek için ortak ipucu. Satır başına
+        /// ayrı <see cref="ToolTip"/> oluşturmak yerine tek bir örnek kullanılır.
+        /// </summary>
+        private readonly ToolTip _stepToolTip = new()
+        {
+            InitialDelay = 250,
+            ReshowDelay = 100
+        };
+
         private readonly Color _surface;
         private readonly Color _surfaceMuted;
         private readonly Color _text;
@@ -96,9 +106,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             int top = pnlSteps.Padding.Top;
 
+            int width = pnlSteps.ClientSize.Width - pnlSteps.Padding.Horizontal;
+
             foreach (DatabaseProvisionStep step in DatabaseInitializer.Steps)
             {
-                StepRow row = new(StepTitles[step], top, _mutedText, _mutedText);
+                StepRow row = new(
+                    StepTitles[step],
+                    top,
+                    width,
+                    _mutedText,
+                    _mutedText,
+                    _surface,
+                    _stepToolTip);
 
                 _rows[step] = row;
 
@@ -444,35 +463,71 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         }
 
         /// <summary>
-        /// Tek bir adım satırı: durum simgesi, başlık ve sağda özet metin.
+        /// Tek bir adım satırı: durum simgesi, başlık ve sağda özet rozet.
         ///
         /// <para>
-        /// Satır konumla yerleştirilir; içindeki üç etiket <c>Left</c> /
+        /// Satır konumla yerleştirilir; içindeki denetimler <c>Left</c> /
         /// <c>Fill</c> / <c>Right</c> olarak dock edilir. Etiketlerde
         /// <c>AutoSize</c> KAPALI olmalıdır: açık bırakıldığında denetim kendi
         /// metin genişliğine göre boyutlanır, <c>Dock</c> uygulanmaz ve sağdaki
         /// özet metni (adet, veritabanı adı) görünmez olur.
         /// </para>
+        ///
+        /// <para>
+        /// Özet, sabit genişlikte bir <see cref="Label"/> olarak tasarlanmıştı.
+        /// Veritabanı adları ("CAA_2026_DEMİRCİ AÇIK CEZA İNFAZ KURUMU
+        /// MÜDÜRLÜĞÜ") bu genişliğe sığmadığı için kırpılıyordu. Artık özet,
+        /// metnine göre ölçülüp büyüyen bir <b>rozet</b> (Panel + etiket)
+        /// olarak çizilir: tek satırda kalır, kalan genişliğe göre kırpılır ve
+        /// tam metin ipucunda gösterilir.
+        /// </para>
         /// </summary>
         private sealed class StepRow
         {
-            public const int Height = 32;
+            public const int Height = 34;
 
             private const int GlyphWidth = 30;
-            private const int DetailWidth = 190;
+
+            /// <summary>Rosetin iç boşluğu (sol + sağ).</summary>
+            private const int ChipPadding = 11;
+
+            /// <summary>Rozetin satır yüksekliği.</summary>
+            private const int ChipHeight = 22;
+
+            /// <summary>
+            /// Başlık için ayrılan en az genişlik. Rozet büyürken başlık
+            /// ancak bu kadarın altına düşerse kendi metnini kırpma yoluna
+            /// gider; özet okunabilir kalmaya devam eder.
+            /// </summary>
+            private const int TitleReserveWidth = 190;
+
+            private static readonly Font ChipFont = new("Segoe UI", 8.5F);
 
             private readonly string _caption;
+            private readonly Color _surface;
+            private readonly ToolTip _toolTip;
 
-            public StepRow(string caption, int top, Color textColor, Color detailColor)
+            private string _detail = string.Empty;
+
+            public StepRow(
+                string caption,
+                int top,
+                int containerWidth,
+                Color textColor,
+                Color detailColor,
+                Color surface,
+                ToolTip toolTip)
             {
                 _caption = caption;
+                _surface = surface;
+                _toolTip = toolTip;
 
                 Container = new Panel
                 {
                     Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                     BackColor = Color.Transparent,
                     Location = new Point(0, top),
-                    Size = new Size(600, Height)
+                    Size = new Size(containerWidth, Height)
                 };
 
                 Glyph = new Label
@@ -486,19 +541,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     TextAlign = ContentAlignment.MiddleCenter
                 };
 
+                // Rozet, metne göre büyür; bu yüzden kendi içinde "Fill" olan
+                // bir etiket ve dışında tam yükseklikte bir panel var.
                 Detail = new Label
                 {
                     AutoSize = false,
-                    Dock = DockStyle.Right,
-                    Font = new Font("Segoe UI", 9F),
+                    AutoEllipsis = true,
+                    Dock = DockStyle.Fill,
+                    Font = ChipFont,
                     ForeColor = detailColor,
-                    Size = new Size(DetailWidth, Height),
-                    TextAlign = ContentAlignment.MiddleRight
+                    TextAlign = ContentAlignment.MiddleCenter
                 };
+
+                DetailChip = new Panel
+                {
+                    Dock = DockStyle.Right,
+                    Height = ChipHeight,
+                    Padding = new Padding(ChipPadding, 0, ChipPadding, 0)
+                };
+
+                DetailChip.Controls.Add(Detail);
 
                 Title = new Label
                 {
                     AutoSize = false,
+                    AutoEllipsis = true,
                     Dock = DockStyle.Fill,
                     Font = new Font("Segoe UI", 10F),
                     ForeColor = textColor,
@@ -508,8 +575,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 // Dock sırası ters çalışır: en son eklenen ilk yerleşir.
                 Container.Controls.Add(Title);
-                Container.Controls.Add(Detail);
+                Container.Controls.Add(DetailChip);
                 Container.Controls.Add(Glyph);
+
+                // Pencere genişlediğinde rozet yeniden sığdırılır.
+                Container.Resize += (_, _) => ResizeChip();
             }
 
             public Panel Container { get; }
@@ -517,6 +587,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             public Label Glyph { get; }
 
             public Label Title { get; }
+
+            public Panel DetailChip { get; }
 
             public Label Detail { get; }
 
@@ -533,8 +605,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 Title.Text = _caption;
                 Title.ForeColor = mutedText;
 
-                Detail.Text = string.Empty;
-                Detail.ForeColor = mutedText;
+                SetDetail(string.Empty, mutedText);
             }
 
             public void ApplyRunning(Color text, Color accent, string? detail)
@@ -546,8 +617,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 Title.ForeColor = text;
 
-                Detail.ForeColor = accent;
-                Detail.Text = detail ?? "yürüyor...";
+                SetDetail(detail ?? "yürüyor...", accent);
             }
 
             public void ApplyDone(Color text, Color accent, string? detail)
@@ -559,8 +629,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 Title.ForeColor = text;
 
-                Detail.ForeColor = accent;
-                Detail.Text = detail ?? "tamamlandı";
+                SetDetail(detail ?? "tamamlandı", accent);
             }
 
             public void ApplySkipped(Color text, Color accent, string? detail)
@@ -572,8 +641,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 Title.ForeColor = text;
 
-                Detail.ForeColor = accent;
-                Detail.Text = detail ?? "atlandı";
+                SetDetail(detail ?? "atlandı", accent);
             }
 
             public void ApplyFailed(Color text, Color accent, string? detail)
@@ -585,8 +653,67 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 Title.ForeColor = text;
 
-                Detail.ForeColor = accent;
-                Detail.Text = detail ?? "başarısız";
+                SetDetail(detail ?? "başarısız", accent);
+            }
+
+            /// <summary>
+            /// Sağdaki özet rozetini günceller. Metin boşsa rozet gizlenir;
+            /// böylece henüz başlanmamış adımların satırı tertemiz görünür.
+            /// </summary>
+            private void SetDetail(string? text, Color accent)
+            {
+                _detail = text ?? string.Empty;
+
+                if (_detail.Length == 0)
+                {
+                    DetailChip.Visible = false;
+                    _toolTip.SetToolTip(Detail, string.Empty);
+
+                    return;
+                }
+
+                DetailChip.Visible = true;
+
+                // Rozetin zemini durum renginin çok seyrek karışımı; metin
+                // rengi ise ölçülerek okunabilirliğe getirilmiş durum rengi.
+                // Ham vurgu rengi, seyreltilmiş zeminde WCAG AA'nın altına
+                // düşüp soluk görünebiliyordu.
+                Color background = SkinTheme.Blend(
+                    _surface,
+                    accent,
+                    SkinTheme.IsDarkSkin ? 0.14F : 0.07F);
+
+                DetailChip.BackColor = background;
+                Detail.ForeColor = SkinTheme.EnsureReadable(accent, background);
+                Detail.Text = _detail;
+
+                ResizeChip();
+
+                // Kırpıldıysa tam metin ipucunda gösterilir.
+                _toolTip.SetToolTip(Detail, _detail);
+            }
+
+            /// <summary>
+            /// Rozet genişliğini metne göre hesaplar. Taşarsa kırpılır; kırpma
+            /// etiketin kendi <c>AutoEllipsis</c> davranışıyla görünür olur.
+            /// </summary>
+            private void ResizeChip()
+            {
+                if (_detail.Length == 0)
+                {
+                    return;
+                }
+
+                int textWidth = TextRenderer.MeasureText(_detail, ChipFont).Width;
+
+                // Rozet, başlığın hakkını bırakacak şekilde büyür: ne kadar
+                // uzunsa o kadar geniş olur, ama başlık için asgari yer kalır.
+                int ceiling = Container.ClientSize.Width - GlyphWidth - TitleReserveWidth;
+
+                int width = Math.Min(textWidth + ChipPadding * 2, Math.Max(ceiling, ChipHeight));
+
+                DetailChip.Width = Math.Max(width, ChipHeight);
+                DetailChip.Height = ChipHeight;
             }
         }
     }

@@ -38,7 +38,12 @@ public static class GridColumnFactory
 
     private sealed class ViewState
     {
-        public RepositoryItemCheckEdit? Check { get; set; }
+        /// <summary>
+        /// Metin karşılığı tanımlanmamış bool kolonlar için anahtar/kapama
+        /// görünümü. Hücre içeriği de <see cref="ToggleSwitch"/> ile aynı
+        /// görünümü verir.
+        /// </summary>
+        public RepositoryItemToggleSwitch? Toggle { get; set; }
         public RepositoryItemTextEdit? BoolText { get; set; }
         public Dictionary<string, ColumnAttribute> BoolTextColumns { get; } = [];
         public Dictionary<string, string> StringFormatColumns { get; } = [];
@@ -62,13 +67,13 @@ public static class GridColumnFactory
         view.Columns.Clear();
 
         ViewState state = EnsureDisplayTextHandler(view);
-        if (state.Check is null || state.BoolText is null)
+        if (state.Toggle is null || state.BoolText is null)
         {
-            state.Check = new RepositoryItemCheckEdit { ReadOnly = true };
+            state.Toggle = new RepositoryItemToggleSwitch { ReadOnly = true };
             state.BoolText = new RepositoryItemTextEdit { ReadOnly = true };
             if (view.GridControl is { } gridControl)
             {
-                gridControl.RepositoryItems.Add(state.Check);
+                gridControl.RepositoryItems.Add(state.Toggle);
                 gridControl.RepositoryItems.Add(state.BoolText);
             }
         }
@@ -102,7 +107,7 @@ public static class GridColumnFactory
             {
                 if (attr.TrueText is null && attr.FalseText is null)
                 {
-                    column.ColumnEdit = state.Check;
+                    column.ColumnEdit = state.Toggle;
                 }
                 else
                 {

@@ -35,7 +35,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         private DevExpress.XtraEditors.SearchLookUpEdit cmbCompany;
         private DevExpress.XtraEditors.LabelControl lblRole;
         private DevExpress.XtraEditors.SearchLookUpEdit cmbRole;
-        private DevExpress.XtraEditors.CheckEdit chkActive;
+        private DevExpress.XtraEditors.ToggleSwitch chkActive;
         private DevExpress.XtraEditors.LabelControl lblPasswordNote;
 
         // Sekme 3 - Avatar
@@ -95,7 +95,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             cmbCompany = new DevExpress.XtraEditors.SearchLookUpEdit();
             lblRole = new DevExpress.XtraEditors.LabelControl();
             cmbRole = new DevExpress.XtraEditors.SearchLookUpEdit();
-            chkActive = new DevExpress.XtraEditors.CheckEdit();
+            chkActive = new DevExpress.XtraEditors.ToggleSwitch();
             lblPasswordNote = new DevExpress.XtraEditors.LabelControl();
 
             picPhoto = new DevExpress.XtraEditors.PictureEdit();
@@ -434,7 +434,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             chkActive.Name = "chkActive";
             chkActive.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             chkActive.Properties.Appearance.Options.UseFont = true;
-            chkActive.Properties.Caption = "Aktif Kullanıcı";
+            chkActive.Properties.ShowText = true;
+            chkActive.Properties.OnText = "Aktif";
+            chkActive.Properties.OffText = "Pasif";
+            chkActive.ToolTip = "Aktif Kullanıcı";
             chkActive.Size = new Size(160, 21);
             chkActive.TabIndex = 6;
             //

@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using Cost.Accounting.Automation.Application.Employees;
@@ -66,11 +66,115 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
                 Width = 60
             };
 
-            View.Columns.Add(photoColumn);
+View.Columns.Add(photoColumn);
+
+            ConfigureDutyMasterDetail();
         }
 
-        private static readonly Dictionary<Guid, Image> _imageCache = [];
+        /// <summary>
+        /// Üst gridde seçili personelin görev-atölye eşleşmesini gösteren alt grid.
+        ///
+        /// <para>
+        /// Rapor imza bloklarındaki yetkiler liste ekranından okunduğu için
+        /// "hangi görev, hangi atölyede" bilgisi satır açılmadan görülemiyordu.
+        /// Görev kayıtları zaten <see cref="EmployeeDto.Duties"/> içinde geldiği
+        /// için ek sorgu yapılmaz; alt grid veriyi doğrudan üst satırdan alır.
+        /// </para>
+        ///
+        /// <para>
+        /// Bu DevExpress sürümünde master-detail <c>MasterDetails</c>
+        /// koleksiyonu yerine olaylarla kurulur: kaç alt görünüm olacağı, adı
+        /// ve satır içeriği ayrı ayrı bildirilir. Görevi olmayan personelde
+        /// ilişki sayısı sıfır döndürülür; böylece o satırda "+" düğmesi
+        /// hiç görünmez.
+        /// </para>
+        /// </summary>
+        private void ConfigureDutyMasterDetail()
+        {
+            View.OptionsDetail.AllowOnlyOneMasterRowExpanded = true;
+            View.OptionsDetail.SmartDetailExpandButtonMode = DetailExpandButtonMode.AlwaysEnabled;
+
+            View.MasterRowGetRelationCount += (_, e) =>
+                e.RelationCount = View.GetRow(e.RowHandle) is EmployeeDto { Duties.Count: > 0 }
+                    ? 1
+                    : 0;
+
+            View.MasterRowGetRelationName += (_, e) => e.RelationName = "Görevler";
+
+            View.MasterRowGetChildList += (_, e) =>
+            {
+                if (View.GetRow(e.RowHandle) is EmployeeDto employee)
+                {
+                    e.ChildList = new List<EmployeeDutyDto>(employee.Duties);
+                }
+            };
+
+            View.MasterRowExpanded += (_, e) => ConfigureDutyDetailView(e.RowHandle);
+        }
+
+        /// <summary>
+        /// Alt grid DevExpress tarafından ilk genişletmede üretilir; sütunlar
+        /// bir kez burada kurulur.
+        /// </summary>
+        private void ConfigureDutyDetailView(int rowHandle)
+        {
+            if (_dutyDetailView is not null
+                || View.GetVisibleDetailView(rowHandle) is not GridView detailView)
+            {
+                return;
+            }
+
+            _dutyDetailView = detailView;
+
+            detailView.OptionsBehavior.AutoPopulateColumns = false;
+            detailView.OptionsBehavior.Editable = false;
+            detailView.OptionsView.ShowGroupPanel = false;
+            detailView.OptionsView.ShowIndicator = false;
+            detailView.OptionsView.EnableAppearanceEvenRow = true;
+            detailView.OptionsView.EnableAppearanceOddRow = true;
+
+            detailView.Columns.Clear();
+
+            GridColumn roleColumn = detailView.Columns.AddField(nameof(EmployeeDutyDto.SigningRoleName));
+            roleColumn.Caption = "Görev";
+            roleColumn.Width = 260;
+
+            GridColumn workshopColumn = detailView.Columns.AddField(nameof(EmployeeDutyDto.WorkshopName));
+            workshopColumn.Caption = "Atölye";
+            workshopColumn.Width = 240;
+
+            GridColumn statusColumn = detailView.Columns.AddField(nameof(EmployeeDutyDto.IsActive));
+            statusColumn.Caption = "Durum";
+            statusColumn.Width = 90;
+
+            detailView.CustomUnboundColumnData += EmployeesListForm_CustomDutyStatusData;
+        }
+
+        /// <summary>
+        /// Alt gridde bool alanı checkbox olarak görünmesin diye metne çevirir.
+        /// </summary>
+        private void EmployeesListForm_CustomDutyStatusData(object? sender, CustomColumnDataEventArgs e)
+        {
+            if (e.Column.FieldName != nameof(EmployeeDutyDto.IsActive) || !e.IsGetData)
+            {
+                return;
+            }
+
+            if (sender is not GridView dutyGrid
+                || e.ListSourceRowIndex < 0
+                || dutyGrid.GetRow(e.ListSourceRowIndex) is not EmployeeDutyDto duty)
+            {
+                return;
+            }
+
+            e.Value = duty.IsActive ? "Aktif" : "Pasif";
+        }
+
+private static readonly Dictionary<Guid, Image> _imageCache = [];
         private static readonly object _imageCacheLock = new();
+
+        /// <summary>Alt gridin sütunları yalnızca bir kez kurulur.</summary>
+        private GridView? _dutyDetailView;
 
         private void EmployeesListForm_CustomUnboundColumnData(object? sender, CustomColumnDataEventArgs e)
         {

@@ -2,6 +2,7 @@ using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
 using Cost.Accounting.Automation.Domain.Customers;
+using Cost.Accounting.Automation.Domain.Employees;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using Cost.Accounting.Automation.Domain.Shared;
@@ -32,6 +33,36 @@ internal sealed class YearDatabaseProvisioner(
 
     private static readonly (string Name, decimal Rate)[] TaxRateSeeds =
         [("KDV % 00", 0m), ("KDV % 01", 0.01m), ("KDV % 10", 0.10m), ("KDV % 20", 0.20m)];
+
+    /// <summary>
+    /// Rapor imza bloklarında kullanılan standart yetkili görevler. Daha önce
+    /// enum olan görevler artık veritabanı kaydıdır; bu liste yeni yıl
+    /// veritabanlarında başlangıç değerlerini sağlar. Kullanıcı sonradan
+    /// istediği görevi "Yetkili Görevler" ekranından ekleyebilir.
+    ///
+    /// <para>
+    /// Sıra numarası, imza bloklarının okunması içindir: kurum müdürü en üstte,
+    /// sayım/kontrol görevleri en altta görünür.
+    /// </para>
+    /// </summary>
+    private static readonly SigningRoleSeed[] SigningRoleSeeds =
+    [
+        new("İşyurdu Müdürü", "Kurumun en üst yetkilisi; maliyet pusulası onay imzası", false, 10),
+        new("Atölye Şefi", "Üretimin yapıldığı atölyenin şefi; mamül beyanı ve maliyet pusulası imzası", true, 20),
+        new("Taşınır Kayıt Yetkilisi", "Taşınır işlem fişi giriş/çıkış kaydını yapan yetkili", false, 30),
+        new("Muhasebe Yetkilisi", "Mali kayıtları tutan ve onaylayan muhasebe yetkilisi", false, 40),
+        new("Harcama Yetkilisi", "Harcama onaylayan yetkili", false, 50),
+        new("Sabit Görevli", "Belgeyi düzenleyen ve teslim eden sabit kadro görevlisi", false, 60),
+        new("Sayım Yapan", "Stok sayımını fiilen gerçekleştiren personel", false, 70),
+        new("Kontrol Eden", "Sayım sonucunu kontrol edip onaylayan personel", false, 80)
+    ];
+
+    /// <summary>Yetkili görev tohum satırı.</summary>
+    private sealed record SigningRoleSeed(
+        string Name,
+        string Description,
+        bool RequiresWorkshop,
+        int SortOrder);
 
     public async Task<AccountingYearProvisionResult> EnsureDatabaseAsync(
         IdentityId companyId,
@@ -105,7 +136,8 @@ internal sealed class YearDatabaseProvisioner(
 
             int referenceCount =
                   await SeedProductUnitTypesAsync(context, progress, cancellationToken)
-                + await SeedTaxRatesAsync(context, progress, cancellationToken);
+                + await SeedTaxRatesAsync(context, progress, cancellationToken)
+                + await SeedSigningRolesAsync(context, progress, cancellationToken);
 
             int sampleRecordCount =
                 await SeedCustomersAndSuppliersAsync(context, progress, cancellationToken);
@@ -197,6 +229,69 @@ internal sealed class YearDatabaseProvisioner(
         await context.SaveChangesAsync(cancellationToken);
 
         return TaxRateSeeds.Length;
+    }
+
+    /// <summary>
+    /// Rapor imza bloklarının ihtiyaç duyduğu standart yetkili görevleri tohumlar.
+    ///
+    /// <para>
+    /// Tabloda hiç kayıt yoksa hepsi eklenir. Kayıt varsa dokunulmaz; sadece
+    /// <c>DuplicateKey</c> boş kalan görevler (enum'dan taşınan kayıtlar)
+    /// uygulama kuralıyla tamamlanır. Kullanıcının sildiği görev satırı silik
+    /// hâlde durduğu için yeniden eklenmez.
+    /// </para>
+    /// </summary>
+    private static async Task<int> SeedSigningRolesAsync(
+        ApplicationDbContext context,
+        IProgress<DatabaseProvisionProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        List<EmployeeSigningRole> existing = await context.Set<EmployeeSigningRole>()
+            .IgnoreQueryFilters()
+            .ToListAsync(cancellationToken);
+
+        // Aynı adı taşıyan kayıtlar teorik olarak olamaz (DuplicateKey kuralı);
+        // yine de ilk kayıt seçilerek ToDictionary hatası önlenir.
+        var byName = existing
+            .GroupBy(r => r.Name.Value, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        int added = 0;
+        bool updated = false;
+
+        foreach (SigningRoleSeed seed in SigningRoleSeeds)
+        {
+            if (byName.TryGetValue(seed.Name, out EmployeeSigningRole? role))
+            {
+                // DuplicateKey uygulama tarafından üretilir; migration bu alanı
+                // boş bırakır çünkü .NET'in büyük harf dönüşümü ile SQL
+                // UPPER() sonuçları Türkçe collation'da ayrışabilir.
+                if (string.IsNullOrWhiteSpace(role.DuplicateKey))
+                {
+                    role.SetName(new Name(role.Name.Value));
+                    context.Set<EmployeeSigningRole>().Update(role);
+                    updated = true;
+                }
+
+                continue;
+            }
+
+            context.Set<EmployeeSigningRole>().Add(
+                new EmployeeSigningRole(
+                    new Name(seed.Name),
+                    seed.Description,
+                    seed.RequiresWorkshop,
+                    seed.SortOrder));
+
+            added++;
+        }
+
+        if (added > 0 || updated)
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        return added;
     }
 
     private static async Task<int> SeedCustomersAndSuppliersAsync(

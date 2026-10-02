@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Companies;
@@ -40,7 +40,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
                 ? "Yeni kullanıcı oluşturmak için bilgileri doldurun"
                 : "Kullanıcı bilgilerini güncelleyin";
             lblPasswordNote.Visible = _editing is null;
-            chkActive.Checked = _editing?.IsActive ?? true;
+            chkActive.IsOn = _editing?.IsActive ?? true;
 
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
@@ -136,7 +136,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtTcNo.Text = user.TRIdentityNumber ?? string.Empty;
             cmbCompany.EditValue = user.CompanyId;
             cmbRole.EditValue = user.RoleId;
-            chkActive.Checked = user.IsActive;
+            chkActive.IsOn = user.IsActive;
         }
 
         private void BtnAddPhoto_Click(object? sender, EventArgs e)
@@ -210,7 +210,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             string tcNo = (txtTcNo.EditValue as string ?? txtTcNo.Text).Trim().Replace("-", "");
             Guid? companyId = cmbCompany.EditValue as Guid?;
             Guid roleId = cmbRole.EditValue is Guid r ? r : Guid.Empty;
-            bool isActive = chkActive.Checked;
+            bool isActive = chkActive.IsOn;
             List<PhotoInput> photos = _avatar is not null ? [_avatar] : [];
 
             IRequest<Result<string>> command = _editing is null

@@ -1,97 +1,90 @@
 namespace Cost.Accounting.Automation.Application.Employees;
 
 /// <summary>
-/// T.C. Kimlik Numarası doğrulaması.
-///
-/// Personel kaydında yanlış TC girilmesi, raporda resmî bir belgeye yanlış
-/// kişinin adının basılmasına yol açar; bu yüzden 11 haneli algoritma
-/// doğrulaması kayıt anında yapılır.
+/// T.C. Kimlik Numarası alanının <b>biçim</b> doğrulaması.
 ///
 /// <para>
-/// <b>Doğru algoritma (KTC):</b> ilk 9 hane tek ve çift sıralı toplanır,
-/// 10. hane <c>((tekToplam * 7) - çiftToplam) % 10</c>, 11. hane ise
-/// <c>(10. hane + ilk 10 hanenin toplamı) % 10</c> ile bulunur.
+/// Sistemde tutulan numaralar gerçek nüfus kaydı değildir; kurum tarafından
+/// üretilen/sanallaştırılan kimliklerdir. Bu yüzden KTC kontrol hanesi
+/// (10. ve 11. hane) algoritması <b>uygulanmaz</b>: gerçek bir kişiye ait
+/// olmayan bir numara kontrol hanesiyle eşleşmez ve doğrulama her kayıtta
+/// yanlış hata üretirdi.
+/// </para>
 ///
-/// <b>Dikkat:</b> "ilk 9 haneyi 1..9 ağırlığıyla toplayıp 11'e bölmek"
-/// yaklaşımı YANLIŞTIR ve gerçek kimlik numaralarını reddeder. Bu tuzağa
-/// düşülmemesi için testlerde geçerli numaralar bağımsız olarak üretilip
-/// doğrulanmalıdır.
+/// <para>
+/// Uygulanan tek kural biçimdir: numara 11 hane olmalı ve yalnızca rakamlardan
+/// oluşmalıdır. Ekranda gruplu gösterilir ("123 456 789 55"), kayıtta düz 11
+/// rakam saklanır; böylece arama ve rapor çıktıları biçimden etkilenmez.
 /// </para>
 /// </summary>
 public static class EmployeeIdentityNumber
 {
     /// <summary>
-    /// Numara 11 karakter, tamamı rakam, ilk hanesi sıfır değil ve kontrol
-    /// haneleri yukarıdaki algoritmayla eşleşiyor olmalıdır.
+    /// TC kimlik numarasının hane sayısı. Arayüzdeki alan bu sınırı aşan
+    /// girişleri reddeder.
     /// </summary>
-    public static bool IsValid(string? value)
+    public const int Length = 11;
+
+    /// <summary>
+    /// Metinden yalnızca rakamları alır ve <see cref="Length"/> haneye
+    /// indirger. Kullanıcının yapıştırdığı "123 456 789 01" gibi gruplu
+    /// değerlerin de kabul edilmesini sağlar.
+    /// </summary>
+    public static string Normalize(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrEmpty(value))
         {
-            return false;
+            return string.Empty;
         }
 
-        string trimmed = value.Trim();
+        var digits = new System.Text.StringBuilder(Length);
 
-        if (trimmed.Length != 11 || !trimmed.All(char.IsAsciiDigit))
+        foreach (char c in value)
         {
-            return false;
+            if (!char.IsAsciiDigit(c))
+            {
+                continue;
+            }
+
+            digits.Append(c);
+
+            if (digits.Length == Length)
+            {
+                break;
+            }
         }
 
-        if (trimmed[0] == '0')
-        {
-            return false;
-        }
-
-        int[] digits = [.. trimmed.Select(c => c - '0')];
-
-        // 1'den 9'a kadar numaralandırıldığında tek sıra 1-3-5-7-9,
-        // çift sıra 2-4-6-8 karşılık gelir (0 tabanlı dizide 0-2-4-6-8 / 1-3-5-7).
-        int oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
-        int evenSum = digits[1] + digits[3] + digits[5] + digits[7];
-
-        int tenth = Mod10((oddSum * 7) - evenSum);
-
-        if (tenth != digits[9])
-        {
-            return false;
-        }
-
-        int eleventh = Mod10(tenth + digits.Take(10).Sum());
-
-        return eleventh == digits[10];
+        return digits.ToString();
     }
 
     /// <summary>
-    /// C#'te negatif sayılarda <c>%</c> negatif sonuç verir; TC algoritmasında
-    /// sonuç her zaman 0-9 aralığında olmalıdır.
+    /// Numara yalnızca rakamlardan oluşan tam 11 hane ise geçerlidir. Gruplu
+    /// metin de (<c>"123 456 789 55"</c>) kabul edilir.
     /// </summary>
-    private static int Mod10(int value)
-        => ((value % 10) + 10) % 10;
+    public static bool IsValid(string? value)
+        => Validate(value) is null;
 
     /// <summary>
-    /// Verilen ilk 9 haneye göre geçerli 10. ve 11. haneleri üretir.
-    /// Arayüzde kullanıcıya örnek göstermek ve test verisi hazırlamak için
-    /// kullanılır; doğrulama yine <see cref="IsValid"/> ile yapılır.
+    /// Numarayı biçim açısından doğrular ve geçersizse nedenini döner.
     /// </summary>
-    public static string? Create(string firstNineDigits)
+    /// <returns>
+    /// Numara geçerliyse <c>null</c>; aksi hâlde kullanıcıya gösterilecek
+    /// açıklama.
+    /// </returns>
+    public static string? Validate(string? value)
     {
-        if (firstNineDigits.Length != 9
-            || !firstNineDigits.All(char.IsAsciiDigit)
-            || firstNineDigits[0] == '0')
+        string digits = Normalize(value);
+
+        if (digits.Length == 0)
         {
-            return null;
+            return "TC kimlik numarasını giriniz";
         }
 
-        int[] digits = [.. firstNineDigits.Select(c => c - '0')];
-
-        int oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
-        int evenSum = digits[1] + digits[3] + digits[5] + digits[7];
-
-        int tenth = Mod10((oddSum * 7) - evenSum);
-
-        int eleventh = Mod10(tenth + digits.Sum() + tenth);
-
-        return firstNineDigits + tenth.ToString() + eleventh.ToString();
+        // Yalnızca uzunluk kontrolü yapılır; kontrol hanesi doğrulanmaz
+        // (bkz. sınıf açıklaması).
+        return digits.Length == Length
+            ? null
+            : $"TC kimlik numarası {Length} haneli olmalı "
+                + $"(şu an {digits.Length} hane girdiniz)";
     }
 }

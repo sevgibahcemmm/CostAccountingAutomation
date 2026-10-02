@@ -1,37 +1,74 @@
-using System.ComponentModel.DataAnnotations;
+using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.Shared;
 
 namespace Cost.Accounting.Automation.Domain.Employees;
 
 /// <summary>
-/// Bir belgenin imza bölümünü dolduran yetkili görevi.
+/// Bir belgenin imza bölümünü dolduran yetkili görev tanımı.
 ///
-/// Raporların imza alanları bu değerlere göre çözülür: her görev için bir
-/// <see cref="EmployeeDuty"/> kaydı aranır ve o kaydın personeli imza satırına
-/// adı soyadı ve ünvanı ile basılır.
+/// Raporların imza alanları bu görevler üzerinden çözülür: her imza yuvası için
+/// bir <see cref="EmployeeDuty"/> kaydı aranır ve o kaydın personeli imza
+/// satırına adı soyadı ve ünvanı ile basılır.
+///
+/// <para>
+/// Görevler enum değil, veritabanı tablosudur. Böylece kurumun imza
+/// bloklarında ihtiyaç duyduğu yeni bir görev (örn. "Sayım Kontrol Sorumlusu")
+/// kod değiştirilmeden tanımlanabilir. Kayıt yıl veritabanında
+/// <c>EmployeeSigningRoles</c> tablosunda tutulur; görev geçmişi tutulmaz,
+/// çünkü raporlar yalnızca güncel yetkiliyi gösterir.
+/// </para>
 /// </summary>
-public enum EmployeeSigningRole : byte
+public sealed class EmployeeSigningRole : Entity
 {
-    [Display(Name = "Sabit Görevli", Description = "Belgeyi düzenleyen ve teslim eden sabit kadro görevlisi")]
-    PermanentOfficer = 1,
+    private EmployeeSigningRole()
+    {
+    }
 
-    [Display(Name = "Atölye Şefi", Description = "Üretimin yapıldığı atölyenin şefi; mamul beyanı ve maliyet pusulası imzası")]
-    WorkshopChief = 2,
+    public EmployeeSigningRole(
+        Name name,
+        string description,
+        bool requiresWorkshop,
+        int sortOrder)
+    {
+        SetName(name);
+        SetDescription(description);
+        SetRequiresWorkshop(requiresWorkshop);
+        SetSortOrder(sortOrder);
+        ResolveDuplicateKey();
+    }
 
-    [Display(Name = "Taşınır Kayıt Yetkilisi", Description = "Taşınır işlem fişi giriş/çıkış kaydını yapan yetkili")]
-    MovableAssetOfficer = 3,
+    /// <summary>Görevin seçim kutularında ve raporlarda görünen adı.</summary>
+    public Name Name { get; private set; } = default!;
 
-    [Display(Name = "İşyurdu Müdürü", Description = "Kurumun en üst yetkilisi; maliyet pusulası onay imzası")]
-    InstitutionDirector = 4,
+    /// <summary>Görevin ne anlama geldiğini anlatan açıklama.</summary>
+    public string Description { get; private set; } = string.Empty;
 
-    [Display(Name = "Muhasebe Yetkilisi", Description = "Mali kayıtları tutan ve onaylayan muhasebe yetkilisi")]
-    AccountingOfficer = 5,
+    /// <summary>
+    /// Bu görev bir atölyeye bağlı mı? <c>true</c> ise görevlendirme
+    /// kaydında atölye seçilmesi zorunludur ("Atölye Şefi" gibi).
+    /// Kurum geneli görevlerde <c>false</c>'tır ve atölye seçilmez.
+    /// </summary>
+    public bool RequiresWorkshop { get; private set; }
 
-    [Display(Name = "Harcama Yetkilisi", Description = "Harcama onaylayan yetkili")]
-    SpendingOfficer = 6,
+    /// <summary>Seçim kutusundaki sıra; rapor imza bloklarının okunabilirliği için.</summary>
+    public int SortOrder { get; private set; }
 
-    [Display(Name = "Sayım Yapan", Description = "Stok sayımını fiilen gerçekleştiren personel")]
-    Counter = 7,
+    public static string? BuildDuplicateKey(string name)
+        => DuplicateKeyRule.From(name);
 
-    [Display(Name = "Kontrol Eden", Description = "Sayım sonucunu kontrol edip onaylayan personel")]
-    Controller = 8
+    public void ResolveDuplicateKey()
+        => SetDuplicateKey(BuildDuplicateKey(Name.Value));
+
+    public void SetName(Name name)
+    {
+        Name = name;
+        ResolveDuplicateKey();
+    }
+
+    public void SetDescription(string description) => Description = description;
+
+    public void SetRequiresWorkshop(bool requiresWorkshop)
+        => RequiresWorkshop = requiresWorkshop;
+
+    public void SetSortOrder(int sortOrder) => SortOrder = sortOrder;
 }

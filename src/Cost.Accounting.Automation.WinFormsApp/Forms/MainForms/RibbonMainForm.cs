@@ -13,6 +13,7 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.SigningRoleForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.UserForms;
@@ -107,7 +108,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmCompanies"] = DxIcon.Company,               // bo_organization
             ["elmUsers"] = DxIcon.Users,                     // bo_user
             ["elmRoles"] = DxIcon.Roles,                      // bo_role
-            ["elmEmployees"] = DxIcon.Employees                 // bo_contact
+            ["elmEmployees"] = DxIcon.Employees,              // bo_contact
+            ["elmSigningRoles"] = DxIcon.IdCard              // security_personalid
         };
 
         public RibbonMainForm()
@@ -229,6 +231,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmUsers"] = () => MdiFormManager.Instance.OpenForm<UsersListForm>(this, "Kullanıcılar");
             _menuActions["elmRoles"] = () => MdiFormManager.Instance.OpenForm<RolesListForm>(this, "Roller ve Yetkiler");
             _menuActions["elmEmployees"] = () => MdiFormManager.Instance.OpenForm<EmployeeForms.EmployeesListForm>(this, "Personel");
+            _menuActions["elmSigningRoles"] = () => MdiFormManager.Instance.OpenForm<EmployeeSigningRolesListForm>(this, "Yetkili Görevler");
             _menuActions["elmCompanies"] = () => MdiFormManager.Instance.OpenForm<CompaniesListForm>(this, "Şirketler");
             _menuActions["elmCustomers"] = () => MdiFormManager.Instance.OpenForm<CustomersListForm>(this, "Müşteriler");
             _menuActions["elmSuppliers"] = () => MdiFormManager.Instance.OpenForm<SuppliersListForm>(this, "Tedarikçiler");

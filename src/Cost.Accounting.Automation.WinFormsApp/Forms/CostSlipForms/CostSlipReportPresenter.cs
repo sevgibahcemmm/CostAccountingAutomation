@@ -86,15 +86,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             decimal grandTotal = slip.CostSlipItems.Sum(i => i.TotalAmount);
             SetReportParam(report, "Toplam", Math.Round(grandTotal, 2));
 
-            // Yalnızca belge üretimi bekleme penceresinin kapsamında; önizleme
-            // penceresi modal olduğu için bekleme kapandıktan sonra açılır.
-            await LoadingHelper.RunAsync(
-                () => report.CreateDocumentAsync(CancellationToken.None),
+            // Belge üretimi arka plana alınır; bekleme penceresi yalnızca
+            // üretim sırasında görünür, önizleme modal olduğu için sonra açılır.
+            await ReportPreviewHelper.PrintAsync(
+                report,
                 caption: "Pusula hazırlanıyor...",
                 description: "Lütfen bekleyin...");
-
-            ReportPrintTool tool = new(report);
-            tool.ShowRibbonPreviewDialog();
         }
 
         private static string GetReportParam(ExpenseAccountType account)

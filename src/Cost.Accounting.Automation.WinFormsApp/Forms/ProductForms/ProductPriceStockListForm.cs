@@ -67,7 +67,10 @@ public ProductPriceStockListForm() : base("Fiyat & Stok Listesi")
 
             var report = new StockCountListReport();
             report.SetData(form.Mode, rows, company.Letterhead);
-            report.PrintReport();
+            await ReportPreviewHelper.PrintAsync(
+                report,
+                caption: "Fiyat stok listesi hazırlanıyor...",
+                description: "Lütfen bekleyin...");
         }
 
         private static async Task<CompanyDto> LoadCompanyAsync()

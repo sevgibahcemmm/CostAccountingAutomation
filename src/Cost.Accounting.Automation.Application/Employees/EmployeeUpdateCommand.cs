@@ -45,10 +45,12 @@ public sealed class EmployeeUpdateCommandValidator : AbstractValidator<EmployeeU
             .NotEmpty().WithMessage("Soyadı giriniz")
             .MaximumLength(100).WithMessage("Soyad en fazla 100 karakter olabilir");
 
+        // Alan ekranda gruplu gösterildiği için doğrulama biçimi yok sayar.
+        // Yalnızca 11 hanelik rakam kuralı uygulanır; kontrol hanesi
+        // doğrulanmaz (bkz. EmployeeIdentityNumber).
         RuleFor(x => x.IdentityNumber)
-            .NotEmpty().WithMessage("TC kimlik numarasını giriniz")
-            .Must(EmployeeIdentityNumber.IsValid)
-            .WithMessage("TC kimlik numarası geçersizdir");
+            .Must(v => EmployeeIdentityNumber.Validate(v) is null)
+            .WithMessage(cmd => EmployeeIdentityNumber.Validate(cmd.IdentityNumber)!);
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Ünvanı giriniz")
@@ -73,10 +75,6 @@ public sealed class EmployeeUpdateCommandValidator : AbstractValidator<EmployeeU
             .WithMessage(EmployeeMessages.DuplicateDuty);
 
         RuleFor(x => x.Duties)
-            .Must(d => !EmployeeDutyValidator.HasMissingWorkshop(d))
-            .WithMessage("Atölye Şefi görevi için atölye seçmelisiniz");
-
-        RuleFor(x => x.Duties)
             .Must(d => !EmployeeDutyValidator.HasUnselectedRole(d))
             .WithMessage(EmployeeMessages.UnselectedRole);
     }
@@ -84,6 +82,7 @@ public sealed class EmployeeUpdateCommandValidator : AbstractValidator<EmployeeU
 
 internal sealed class EmployeeUpdateCommandHandler(
     IEmployeeRepository employeeRepository,
+    IEmployeeSigningRoleRepository signingRoleRepository,
     IChartOfAccountRepository chartOfAccountRepository,
     IDuplicateCheckService duplicateCheckService,
     IFileStorageService fileStorage) : IRequestHandler<EmployeeUpdateCommand, Result<Guid>>
@@ -111,14 +110,17 @@ internal sealed class EmployeeUpdateCommandHandler(
             return Result<Guid>.Failure(EmployeeMessages.DuplicateDuty);
         }
 
-        if (EmployeeDutyValidator.HasMissingWorkshop(request.Duties))
-        {
-            return Result<Guid>.Failure("Atölye Şefi görevi için atölye seçmelisiniz.");
-        }
-
         if (EmployeeDutyValidator.HasUnselectedRole(request.Duties))
         {
             return Result<Guid>.Failure(EmployeeMessages.UnselectedRole);
+        }
+
+        string? roleProblem = await EmployeeDutyValidator.FindProblemAsync(
+            request.Duties, signingRoleRepository, cancellationToken);
+
+        if (roleProblem is not null)
+        {
+            return Result<Guid>.Failure(roleProblem);
         }
 
         if (!await EmployeeDutyValidator.WorkshopsExistAsync(
@@ -165,7 +167,7 @@ internal sealed class EmployeeUpdateCommandHandler(
         employee.ReplaceDuties(
             request.Duties.Select(d => new EmployeeDuty(
                 employee.Id,
-                d.SigningRole,
+                new IdentityId(d.SigningRoleId!.Value),
                 d.WorkshopId is null ? null : new IdentityId(d.WorkshopId.Value),
                 d.IsActive)));
 

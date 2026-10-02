@@ -25,4 +25,7 @@ public static class EmployeeMessages
 
     public const string UnselectedRole =
         "Bir görev satırında yetkili görev seçilmemiş. Tablodaki her satır için görev seçin.";
+
+    public const string UnknownRole =
+        "Seçilen yetkili görev bulunamadı. Görev tanımı silinmiş olabilir; görev listesini yenileyin.";
 }

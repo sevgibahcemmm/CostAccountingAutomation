@@ -29,7 +29,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             lblSubtitle.Text = _editing is null
                 ? "Ürünlerde kullanılacak yeni birim cinsini sisteme tanımlayın."
                 : "Mevcut birim cinsi bilgilerini güncelleyin.";
-            chkActive.Checked = _editing?.IsActive ?? true;
+            chkActive.IsOn = _editing?.IsActive ?? true;
 
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
@@ -57,7 +57,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private async void BtnSave_Click(object? sender, EventArgs e)
         {
             string name = txtName.Text.Trim();
-            bool isActive = chkActive.Checked;
+            bool isActive = chkActive.IsOn;
 
             IRequest<Result<string>> command = _editing is null
                 ? new ProductUnitTypeCreateCommand(name, isActive)

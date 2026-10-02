@@ -56,7 +56,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
             DevExpressLocalizers.Register();
 
             BonusSkins.Register();
-            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.Office2019Black);
+            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.DarkSide);
 
             ApplicationConfiguration.Initialize();
 
@@ -105,18 +105,32 @@ namespace Cost.Accounting.Automation.WinFormsApp
         /// <summary>
         /// Giriş ekranından önce veritabanının hazır olduğundan emin olur.
         ///
-        /// Açılış penceresi HER ZAMAN gösterilir ve tüm veritabanı işini kendi
-        /// içinde yapar: yoklama, ilk kurulum ve şema güncellemesi. Böylece
-        /// pencere açılmadan önce hiçbir ağ/sunucu beklemesi olmaz; kullanıcı
-        /// donmuş bir ekran görmez.
+        /// <para>
+        /// <b>Veritabanı oluşmuşsa kurulum penceresi hiç açılmaz.</b> Bekleyen
+        /// migration, tohumlama ve yıl veritabanı işlemleri
+        /// <see cref="DatabaseInitializer.InitializeAsync"/> tarafından sessizce
+        /// ve idempotent olarak yapılır; ekrana hiçbir şey çıkmaz. Kullanıcı
+        /// her açılışta kısa süreli bir kurulum penceresi görmez.
+        /// </para>
         ///
-        /// Veritabanı zaten güncelse pencere kısa süre sonra kendini kapatır ve
-        /// giriş ekranı açılır; yoksa adımlar tik işaretleriyle gösterilir.
+        /// <para>
+        /// Pencere yalnızca <b>ilk kurulumda</b> veya sunucuya ulaşılamadığında
+        /// gereklidir: veritabanı yoksa oluşturulması, sunucu kapalıysa hatanın
+        /// ve "Yeniden Dene" düğmesinin gösterilmesi ekran gerektirir. Bu
+        /// durumlarda pencere tüm veritabanı işini kendi içinde yapar.
+        /// </para>
         ///
         /// <c>true</c> dönerse giriş ekranı açılabilir.
         /// </summary>
         private static bool PrepareDatabaseBeforeLogin()
         {
+            if (TryPrepareExistingDatabaseSilently())
+            {
+                CrashLog.Write("Main", "Database exists and is ready; skipping setup form.");
+
+                return true;
+            }
+
             using var setupForm = new DatabaseSetupForm();
 
             System.Windows.Forms.Application.Run(setupForm);
@@ -131,6 +145,52 @@ namespace Cost.Accounting.Automation.WinFormsApp
             CrashLog.Write("Main", "Database ready; opening login.");
 
             return true;
+        }
+
+        /// <summary>
+        /// Veritabanı oluşmuşsa pencere açmadan hazırlar.
+        ///
+        /// <para>
+        /// <see cref="DatabaseInitializer.GetFirstRunStateAsync"/> yalnızca varlık
+        /// sorar ve kısa zaman aşımı kullanır; yoklama başarısız olursa ya da
+        /// veritabanı yoksa <c>false</c> döner ve kurulum penceresi devreye
+        /// girer. Veritabanı varsa <see cref="DatabaseInitializer.InitializeAsync"/>
+        /// çağrılır; bu metot zaten idempotenttir, veriler hazırsa hiçbir şey
+        /// yazmaz.
+        /// </para>
+        ///
+        /// <para>
+        /// Beklenmedik bir hata da <c>false</c> döner: sessizce geçip bozuk bir
+        /// şema üzerinde açmak yerine pencerenin hatayı göstermesi tercih edilir.
+        /// </para>
+        /// </summary>
+        private static bool TryPrepareExistingDatabaseSilently()
+        {
+            try
+            {
+                DatabaseFirstRunState state = DatabaseInitializer
+                    .GetFirstRunStateAsync(Services)
+                    .GetAwaiter()
+                    .GetResult();
+
+                if (state != DatabaseFirstRunState.Exists)
+                {
+                    return false;
+                }
+
+                DatabaseInitializer
+                    .InitializeAsync(Services)
+                    .GetAwaiter()
+                    .GetResult();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("Main.PrepareExistingDatabase", ex);
+
+                return false;
+            }
         }
     }
 }

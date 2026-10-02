@@ -21,7 +21,7 @@ public sealed partial class SalesPriceSuggestionForm : XtraForm
         }
     }
 
-    public bool SaveAsSalePrice => chkSaveAsSalePrice.Checked;
+    public bool SaveAsSalePrice => chkSaveAsSalePrice.IsOn;
 
     /// <summary>
     /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta ürün
@@ -58,7 +58,7 @@ public sealed partial class SalesPriceSuggestionForm : XtraForm
         lblTaxValue.Text = $"{displayRate:F0} %";
 
         spPrice.EditValue = SuggestedPrice;
-        chkSaveAsSalePrice.Checked = true;
+        chkSaveAsSalePrice.IsOn = true;
 
         btnUse.Click += (_, _) =>
         {

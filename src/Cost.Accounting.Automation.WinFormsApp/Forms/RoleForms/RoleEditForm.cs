@@ -61,7 +61,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
                     : "Rol bilgilerini güncelleyin";
             }
 
-            chkActive.Checked = _editing?.IsActive ?? true;
+            chkActive.IsOn = _editing?.IsActive ?? true;
 
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
@@ -85,7 +85,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
                     if (_editing is not null)
                     {
                         txtName.Text = _editing.Name;
-                        chkActive.Checked = _editing.IsActive;
+                        chkActive.IsOn = _editing.IsActive;
                         await CheckExistingPermissionsAsync(_editing.Id);
                     }
                 }
@@ -307,7 +307,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
         private async void BtnSave_Click(object? sender, EventArgs e)
         {
             string name = txtName.Text.Trim();
-            bool isActive = chkActive.Checked;
+            bool isActive = chkActive.IsOn;
             List<string> selectedPermissions = GetSelectedPermissions(trePermissions);
 
             IRequest<Result<string>> command = _editing is null

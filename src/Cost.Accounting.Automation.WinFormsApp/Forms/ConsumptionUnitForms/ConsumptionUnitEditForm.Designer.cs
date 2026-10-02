@@ -20,7 +20,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
         private DevExpress.XtraEditors.TextEdit txtCode;
         private DevExpress.XtraEditors.LabelControl lblNameLabel;
         private DevExpress.XtraEditors.TextEdit txtName;
-        private DevExpress.XtraEditors.CheckEdit chkActive;
+        private DevExpress.XtraEditors.ToggleSwitch chkActive;
         private DevExpress.XtraEditors.PanelControl pnlFooter;
         private DevExpress.XtraEditors.SimpleButton btnSave;
         private DevExpress.XtraEditors.SimpleButton btnCancel;
@@ -57,7 +57,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
             txtCode = new DevExpress.XtraEditors.TextEdit();
             lblNameLabel = new DevExpress.XtraEditors.LabelControl();
             txtName = new DevExpress.XtraEditors.TextEdit();
-            chkActive = new DevExpress.XtraEditors.CheckEdit();
+            chkActive = new DevExpress.XtraEditors.ToggleSwitch();
             pnlFooter = new DevExpress.XtraEditors.PanelControl();
             pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
             btnSave = new DevExpress.XtraEditors.SimpleButton();
@@ -213,7 +213,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
             chkActive.Properties.Appearance.ForeColor = System.Drawing.Color.FromArgb(55, 65, 81);
             chkActive.Properties.Appearance.Options.UseFont = true;
             chkActive.Properties.Appearance.Options.UseForeColor = true;
-            chkActive.Properties.Caption = "Kullanımda (Aktif)";
+            chkActive.Properties.ShowText = true;
+            chkActive.Properties.OnText = "Aktif";
+            chkActive.Properties.OffText = "Pasif";
+            chkActive.ToolTip = "Kullanımda (Aktif)";
             chkActive.Size = new System.Drawing.Size(160, 24);
             chkActive.TabIndex = 3;
 

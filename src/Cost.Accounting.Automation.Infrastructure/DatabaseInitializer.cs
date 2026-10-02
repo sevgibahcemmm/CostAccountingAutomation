@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.AccountingYears;
 using Cost.Accounting.Automation.Domain.AccountingYears.ValueObjects;
@@ -123,6 +123,11 @@ public static class DatabaseInitializer
         }
     }
 
+    /// <summary>
+    /// Veritabanını idempotent biçimde hazırlar: master migration'ları,
+    /// tohumlama ve içinde bulunulan yılın iş veritabanları. Veriler zaten
+    /// hazırsa hiçbir şey yazmaz; bu yüzden her açılışta çağrılabilir.
+    /// </summary>
     /// <param name="progress">
     /// Adım durumlarını arayüze iletir. Opsiyoneldir; verilmezse adımlar
     /// sessizce çalışır (normal açılışta kurulum sihirbazı gösterilmez).

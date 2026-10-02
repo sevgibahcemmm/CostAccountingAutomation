@@ -145,7 +145,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
                     parentId,
                     code,
                     name,
-                    chkActive.Checked));
+                    chkActive.IsOn));
 
                 if (ok)
                 {

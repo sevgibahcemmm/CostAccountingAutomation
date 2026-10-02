@@ -30,7 +30,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
             lblSubtitle.Text = _editing is null
                 ? "Yeni müşteri tanımlamak için bilgileri doldurun"
                 : "Müşteri bilgilerini güncelleyin";
-            chkActive.Checked = _editing?.IsActive ?? true;
+            chkActive.IsOn = _editing?.IsActive ?? true;
 
             btnSave.Click += BtnSave_Click;
             btnCancel.Click += (_, _) => Close();
@@ -78,7 +78,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
             txtPhone1.Text = customer.PhoneNumber1;
             txtPhone2.Text = customer.PhoneNumber2 ?? string.Empty;
             txtEmail.Text = customer.Email ?? string.Empty;
-            chkActive.Checked = customer.IsActive;
+            chkActive.IsOn = customer.IsActive;
         }
 
         private async void BtnSave_Click(object? sender, EventArgs e)
@@ -98,7 +98,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms
                 txtPhone2.Text.Trim(),
                 txtEmail.Text.Trim());
 
-            bool isActive = chkActive.Checked;
+            bool isActive = chkActive.IsOn;
 
             IRequest<Result<string>> command = _editing is null
                 ? new CustomerCreateCommand(name, taxOffice, taxNumber, address, contact, description, isActive)

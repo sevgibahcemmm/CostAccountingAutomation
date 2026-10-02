@@ -1,4 +1,4 @@
-﻿namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
+namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
     partial class ToastForm
     {

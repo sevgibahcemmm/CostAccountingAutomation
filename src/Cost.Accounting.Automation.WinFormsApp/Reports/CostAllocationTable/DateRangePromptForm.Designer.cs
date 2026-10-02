@@ -1,4 +1,4 @@
-﻿namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
+namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 {
     partial class DateRangePromptForm
     {

@@ -69,8 +69,19 @@ public sealed class Employee : Entity
 
     public IReadOnlyCollection<EmployeeDuty> Duties => _duties;
 
-    /// <summary>Rapor imza bloklarında "Adı Soyadı" satırına basılan tam ad.</summary>
-    public string FullName => $"{FirstName.Value} {LastName.Value}".Trim();
+    /// <summary>
+    /// Rapor imza bloklarında "Adı Soyadı" satırına basılan tam ad.
+    ///
+    /// <para>
+    /// Ad ve soyad <see cref="FirstName"/>/<see cref="LastName"/> değer
+    /// nesneleridir ve veritabanından okunurken owned navigasyon olarak
+    /// materyalize edilir. Kısmen yüklenmiş bir kayıtta (ör. yalnızca tek bir
+    /// alanla çağrılan bir kod yolu) bu nesneler null olabilir; imza satırını
+    /// basmaya çalışan bir ekranın bu yüzden çökmesi kabul edilemez. Bu
+    /// yüzden erişim null güvenlidir.
+    /// </para>
+    /// </summary>
+    public string FullName => $"{FirstName?.Value} {LastName?.Value}".Trim();
 
     /// <summary>
     /// Aynı TC ve aynı ünvan ikilisini iki kez kaydetmeyi engeller. Ünvan

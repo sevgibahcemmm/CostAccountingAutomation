@@ -618,8 +618,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<byte>("SigningRole")
-                        .HasColumnType("tinyint");
+                    b.Property<Guid>("SigningRoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -636,9 +636,65 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.HasIndex("EmployeeId");
 
+                    b.HasIndex("SigningRoleId");
+
                     b.HasIndex("WorkshopId");
 
                     b.ToTable("EmployeeDuties", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.EmployeeSigningRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(MAX)")
+                        .HasColumnName("Description");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresWorkshop")
+                        .HasColumnType("bit")
+                        .HasColumnName("RequiresWorkshop");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int")
+                        .HasColumnName("SortOrder");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.ToTable("EmployeeSigningRoles", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Invoices.Invoice", b =>
@@ -1836,6 +1892,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Cost.Accounting.Automation.Domain.Employees.EmployeeSigningRole", "SigningRole")
+                        .WithMany()
+                        .HasForeignKey("SigningRoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "Workshop")
                         .WithMany()
                         .HasForeignKey("WorkshopId")
@@ -1843,7 +1905,34 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Navigation("Employee");
 
+                    b.Navigation("SigningRole");
+
                     b.Navigation("Workshop");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.EmployeeSigningRole", b =>
+                {
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.Name", "Name", b1 =>
+                        {
+                            b1.Property<Guid>("EmployeeSigningRoleId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(120)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Name");
+
+                            b1.HasKey("EmployeeSigningRoleId");
+
+                            b1.ToTable("EmployeeSigningRoles");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmployeeSigningRoleId");
+                        });
+
+                    b.Navigation("Name")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Invoices.Invoice", b =>

@@ -21,7 +21,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private DevExpress.XtraEditors.LabelControl lblFormulaValue = default!;
         private DevExpress.XtraEditors.LabelControl lblPriceCaption = default!;
         private DevExpress.XtraEditors.SpinEdit spPrice = default!;
-        private DevExpress.XtraEditors.CheckEdit chkSaveAsSalePrice = default!;
+        private DevExpress.XtraEditors.ToggleSwitch chkSaveAsSalePrice = default!;
         private DevExpress.XtraEditors.LabelControl lblInfo = default!;
         private DevExpress.XtraEditors.PanelControl footerDivider = default!;
         private DevExpress.XtraEditors.SimpleButton btnUse = default!;
@@ -61,7 +61,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblCostCaption = new DevExpress.XtraEditors.LabelControl();
             lblPriceCaption = new DevExpress.XtraEditors.LabelControl();
             spPrice = new DevExpress.XtraEditors.SpinEdit();
-            chkSaveAsSalePrice = new DevExpress.XtraEditors.CheckEdit();
+            chkSaveAsSalePrice = new DevExpress.XtraEditors.ToggleSwitch();
             lblInfo = new DevExpress.XtraEditors.LabelControl();
             footerDivider = new DevExpress.XtraEditors.PanelControl();
             btnUse = new DevExpress.XtraEditors.SimpleButton();
@@ -287,7 +287,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             chkSaveAsSalePrice.Name = "chkSaveAsSalePrice";
             chkSaveAsSalePrice.Properties.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             chkSaveAsSalePrice.Properties.Appearance.Options.UseFont = true;
-            chkSaveAsSalePrice.Properties.Caption = "Bu fiyatı ürünün satış fiyatı olarak KAYDET";
+            chkSaveAsSalePrice.Properties.ShowText = true;
+            chkSaveAsSalePrice.Properties.OnText = "Kaydedilecek";
+            chkSaveAsSalePrice.Properties.OffText = "Kaydedilmeyecek";
+            chkSaveAsSalePrice.ToolTip = "Bu fiyatı ürünün satış fiyatı olarak KAYDET";
             chkSaveAsSalePrice.Size = new Size(468, 21);
             chkSaveAsSalePrice.TabIndex = 6;
             // 

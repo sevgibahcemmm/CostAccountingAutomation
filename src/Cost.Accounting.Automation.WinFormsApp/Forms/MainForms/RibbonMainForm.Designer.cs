@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -68,6 +68,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmUsers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmEmployees = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmSigningRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmExit = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             xtraTabbedMdiManager = new DevExpress.XtraTabbedMdi.XtraTabbedMdiManager(components);
             ((System.ComponentModel.ISupportInitialize)ribbon).BeginInit();
@@ -384,7 +385,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             //
             // grpSystem
             //
-            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, elmUsers, elmRoles, elmEmployees });
+            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, elmUsers, elmRoles, elmEmployees, elmSigningRoles });
             grpSystem.Name = "grpSystem";
             grpSystem.Tag = 8;
             grpSystem.Text = "Sistem Yönetimi";
@@ -409,13 +410,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmRoles.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmRoles.Tag = 8;
             elmRoles.Text = "Roller ve Yetkiler";
-            //
+            // 
             // elmEmployees
-            //
+            // 
             elmEmployees.Name = "elmEmployees";
             elmEmployees.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmEmployees.Tag = 8;
             elmEmployees.Text = "Personel";
+            // 
+            // elmSigningRoles
+            // 
+            elmSigningRoles.Name = "elmSigningRoles";
+            elmSigningRoles.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmSigningRoles.Tag = 8;
+            elmSigningRoles.Text = "Yetkili Görevler";
             //
             // elmExit
             //
@@ -514,6 +522,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmUsers;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmRoles;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmEmployees;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmSigningRoles;
 
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmExit;
 

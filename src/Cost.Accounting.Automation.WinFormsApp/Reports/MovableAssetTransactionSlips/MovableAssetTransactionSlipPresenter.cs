@@ -1,5 +1,7 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Companies;
+using Cost.Accounting.Automation.Application.Employees;
+using Cost.Accounting.Automation.Application.Employees.SigningRoles;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
@@ -14,6 +16,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
 {
     internal static class MovableAssetTransactionSlipPresenter
     {
+        /// <summary>
+        /// Fişin imza bloğunda imza alacak görev tanımının adı.
+        ///
+        /// <para>
+        /// Görev tanımları veritabanında tutulur ve kullanıcı tarafından
+        /// düzenlenebilir; bu yüzden kimlik (GUID) sabitlenmez, ad üzerinden
+        /// çözülür. Ad tanımı yoksa kurulum kaydına düşülür ve imza alanı boş
+        /// bırakılır — belge yine de basılır, çünkü eksik yetkili belgesi
+        /// hiçbasılmamış belgeden iyidir.
+        /// </para>
+        /// </summary>
+        private const string SignatoryRoleName = "Taşınır Kayıt Yetkilisi";
+
         public static async Task<CompanyDto> LoadCompanyAsync()
         {
             try
@@ -116,17 +131,81 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
             return fallbackCode;
         }
 
+        /// <summary>
+        /// İmza bloğundaki "Taşınır Kayıt ve Yetkilisi" satırını personel
+        /// kayıtlarından doldurur: görev tanımı bulunur, o görevi taşıyan
+        /// aktif personelin adı soyadı ve ünvanı yazılır.
+        /// </summary>
+        public static async Task ApplySignatoryAsync(MovableAssetTransactionSlipData data)
+        {
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                List<EmployeeSigningRoleOption> roles =
+                    (await mediator.Send(new EmployeeSigningRoleLookUpQuery(), CancellationToken.None))
+                    .ToList();
+
+                EmployeeSigningRoleOption? role = roles.FirstOrDefault(
+                    r => string.Equals(r.Name, SignatoryRoleName, StringComparison.OrdinalIgnoreCase));
+
+                if (role is null)
+                {
+                    CrashLog.Write(
+                        "SlipReport.Signatory",
+                        $"Görev tanımı bulunamadı: {SignatoryRoleName}");
+
+                    return;
+                }
+
+                // Taşınır fişi bir atölyeye ait değildir; görev kurum geneli
+                // tanımlandığı için atölye bilgisi verilmez.
+                var signatories = await mediator.Send(
+                    new ReportSignatoryQuery(
+                        WorkshopId: null,
+                        Slots: [new SignatorySlot(role.Id, "Taşınır Kayıt ve Yetkilisi")]),
+                    CancellationToken.None);
+
+                if (signatories.IsSuccessful
+                    && signatories.Data is not null
+                    && signatories.Data.TryGetValue(role.Id, out ReportSignatory? signatory))
+                {
+                    data.SignatoryFullName = signatory.FullName;
+                    data.SignatoryTitle = signatory.Title;
+                }
+                else
+                {
+                    CrashLog.Write(
+                        "SlipReport.Signatory",
+                        $"'{role.Name}' görevini taşıyan aktif personel bulunamadı.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // İmza bilgisi belgeyi bozmaz; yalnızca alan boş kalır.
+                CrashLog.WriteException("SlipReport.Signatory", ex);
+            }
+        }
+
         public static async Task ShowAsync(MovableAssetTransactionSlipData data)
         {
             try
             {
-                MovableAssetTransactionSlipReport report = new(data);
+                MovableAssetTransactionSlipReport report = new();
 
-                // Yalnızca belge üretimi bekleme penceresinin kapsamında; önizleme
-                // penceresi modal olduğu için bekleme kapandıktan sonra açılır.
+                // Yetkili çözümlemesi veritabanına gider ve belge üretimi
+                // eşzamanlıdır; ikisi de bekleme penceresinin kapsamında olmalı.
+                // Aksi hâlde ekran saniyelerce donup kullanıcı hiçbir geri
+                // bildirim almaz.
                 await LoadingHelper.RunAsync(
-                    () => report.CreateDocumentAsync(CancellationToken.None),
-                    caption: "Rapor hazırlanıyor...",
+                    async () =>
+                    {
+                        await ApplySignatoryAsync(data);
+                        report = new(data);
+                        await Task.Run(report.CreateDocument);
+                    },
+                    caption: "Fiş hazırlanıyor...",
                     description: "Lütfen bekleyin...");
 
                 using ReportPrintTool tool = new(report);

@@ -13,7 +13,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 
         private DevExpress.XtraEditors.LabelControl lblName;
         private DevExpress.XtraEditors.TextEdit txtName;
-        private DevExpress.XtraEditors.CheckEdit chkActive;
+        private DevExpress.XtraEditors.ToggleSwitch chkActive;
 
         private DevExpress.XtraEditors.LabelControl lblPermissions;
         private DevExpress.XtraEditors.SimpleButton btnGroupSelectAll;
@@ -46,7 +46,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             pnlHeaderLine = new DevExpress.XtraEditors.PanelControl();
             lblName = new DevExpress.XtraEditors.LabelControl();
             txtName = new DevExpress.XtraEditors.TextEdit();
-            chkActive = new DevExpress.XtraEditors.CheckEdit();
+            chkActive = new DevExpress.XtraEditors.ToggleSwitch();
             lblPermissions = new DevExpress.XtraEditors.LabelControl();
             btnGroupSelectAll = new DevExpress.XtraEditors.SimpleButton();
             btnGroupClear = new DevExpress.XtraEditors.SimpleButton();
@@ -158,7 +158,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             chkActive.Name = "chkActive";
             chkActive.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             chkActive.Properties.Appearance.Options.UseFont = true;
-            chkActive.Properties.Caption = "Aktif Rol";
+            chkActive.Properties.ShowText = true;
+            chkActive.Properties.OnText = "Aktif";
+            chkActive.Properties.OffText = "Pasif";
+            chkActive.ToolTip = "Aktif Rol";
             chkActive.Size = new Size(160, 21);
             chkActive.TabIndex = 2;
             // 

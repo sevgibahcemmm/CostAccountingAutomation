@@ -28,7 +28,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
             lblSubtitle.Text = _editing is null
                 ? "900 (Tüketimler) altında yeni bir tüketim birimi tanımlayın."
                 : "Mevcut tüketim birimi bilgilerini güncelleyin.";
-            chkActive.Checked = _editing?.IsActive ?? true;
+            chkActive.IsOn = _editing?.IsActive ?? true;
 
             WireEvents();
         }
@@ -46,7 +46,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
             {
                 txtCode.Text = _editing.Code;
                 txtName.Text = _editing.Name;
-                chkActive.Checked = _editing.IsActive;
+                chkActive.IsOn = _editing.IsActive;
                 txtCode.ReadOnly = true;
                 txtName.Focus();
                 txtName.SelectAll();
@@ -79,8 +79,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
             }
 
             IRequest<Result<string>> command = _editing is null
-                ? new ConsumptionUnitCreateCommand(name, txtCode.Text.Trim(), chkActive.Checked)
-                : new ConsumptionUnitUpdateCommand(_editing.Id, name, chkActive.Checked);
+                ? new ConsumptionUnitCreateCommand(name, txtCode.Text.Trim(), chkActive.IsOn)
+                : new ConsumptionUnitUpdateCommand(_editing.Id, name, chkActive.IsOn);
 
             btnSave.Enabled = false;
             try

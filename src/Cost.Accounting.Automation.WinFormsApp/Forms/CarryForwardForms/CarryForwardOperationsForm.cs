@@ -32,13 +32,13 @@ public sealed partial class CarryForwardOperationsForm : XtraFormMdiBase
 
         IconOptions.SvgImage = DxIcon.Restore;
 
-        chkAccounts.Checked = true;
-        chkTaxUnits.Checked = true;
-        chkCurrent.Checked = true;
-        chkProducts.Checked = true;
-        chkPrices.Checked = true;
-        chkRecipes.Checked = true;
-        chkChartBalances.Checked = true;
+        chkAccounts.IsOn = true;
+        chkTaxUnits.IsOn = true;
+        chkCurrent.IsOn = true;
+        chkProducts.IsOn = true;
+        chkPrices.IsOn = true;
+        chkRecipes.IsOn = true;
+        chkChartBalances.IsOn = true;
 
         btnClose.Click += (_, _) => Close();
         btnStart.Click += BtnStart_Click;
@@ -409,13 +409,13 @@ public sealed partial class CarryForwardOperationsForm : XtraFormMdiBase
 
     private CarryForwardOptions BuildOptions() => new()
     {
-        ChartOfAccounts = chkAccounts.Checked,
-        TaxRatesAndUnits = chkTaxUnits.Checked,
-        CurrentAccounts = chkCurrent.Checked,
-        Products = chkProducts.Checked,
-        ProductPrices = chkPrices.Checked,
-        Recipes = chkRecipes.Checked,
-        ChartBalances = chkChartBalances.Checked
+        ChartOfAccounts = chkAccounts.IsOn,
+        TaxRatesAndUnits = chkTaxUnits.IsOn,
+        CurrentAccounts = chkCurrent.IsOn,
+        Products = chkProducts.IsOn,
+        ProductPrices = chkPrices.IsOn,
+        Recipes = chkRecipes.IsOn,
+        ChartBalances = chkChartBalances.IsOn
     };
 
     /// <summary>

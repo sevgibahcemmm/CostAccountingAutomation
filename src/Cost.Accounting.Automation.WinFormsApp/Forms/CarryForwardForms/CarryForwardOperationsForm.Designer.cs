@@ -45,13 +45,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
         // Alt şerit: seçimler, düğmeler, durum
         private DevExpress.XtraEditors.GroupControl grpOptions;
         private System.Windows.Forms.FlowLayoutPanel flpOptions;
-        private DevExpress.XtraEditors.CheckEdit chkAccounts;
-        private DevExpress.XtraEditors.CheckEdit chkTaxUnits;
-        private DevExpress.XtraEditors.CheckEdit chkCurrent;
-        private DevExpress.XtraEditors.CheckEdit chkProducts;
-        private DevExpress.XtraEditors.CheckEdit chkPrices;
-        private DevExpress.XtraEditors.CheckEdit chkRecipes;
-        private DevExpress.XtraEditors.CheckEdit chkChartBalances;
+        private DevExpress.XtraEditors.LabelControl lblAccounts;
+        private DevExpress.XtraEditors.LabelControl lblTaxUnits;
+        private DevExpress.XtraEditors.LabelControl lblCurrent;
+        private DevExpress.XtraEditors.LabelControl lblProducts;
+        private DevExpress.XtraEditors.LabelControl lblPrices;
+        private DevExpress.XtraEditors.LabelControl lblRecipes;
+        private DevExpress.XtraEditors.LabelControl lblChartBalances;
+        private DevExpress.XtraEditors.ToggleSwitch chkAccounts;
+        private DevExpress.XtraEditors.ToggleSwitch chkTaxUnits;
+        private DevExpress.XtraEditors.ToggleSwitch chkCurrent;
+        private DevExpress.XtraEditors.ToggleSwitch chkProducts;
+        private DevExpress.XtraEditors.ToggleSwitch chkPrices;
+        private DevExpress.XtraEditors.ToggleSwitch chkRecipes;
+        private DevExpress.XtraEditors.ToggleSwitch chkChartBalances;
         private DevExpress.XtraEditors.SimpleButton btnStart;
         private DevExpress.XtraEditors.SimpleButton btnRefresh;
         private DevExpress.XtraEditors.PanelControl statusPanel;
@@ -122,13 +129,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
             this.panelFooter = new DevExpress.XtraEditors.PanelControl();
             this.grpOptions = new DevExpress.XtraEditors.GroupControl();
             this.flpOptions = new System.Windows.Forms.FlowLayoutPanel();
-            this.chkAccounts = new DevExpress.XtraEditors.CheckEdit();
-            this.chkTaxUnits = new DevExpress.XtraEditors.CheckEdit();
-            this.chkCurrent = new DevExpress.XtraEditors.CheckEdit();
-            this.chkProducts = new DevExpress.XtraEditors.CheckEdit();
-            this.chkPrices = new DevExpress.XtraEditors.CheckEdit();
-            this.chkRecipes = new DevExpress.XtraEditors.CheckEdit();
-            this.chkChartBalances = new DevExpress.XtraEditors.CheckEdit();
+            this.chkAccounts = new DevExpress.XtraEditors.ToggleSwitch();
+            this.chkTaxUnits = new DevExpress.XtraEditors.ToggleSwitch();
+            this.chkCurrent = new DevExpress.XtraEditors.ToggleSwitch();
+            this.chkProducts = new DevExpress.XtraEditors.ToggleSwitch();
+            this.chkPrices = new DevExpress.XtraEditors.ToggleSwitch();
+            this.chkRecipes = new DevExpress.XtraEditors.ToggleSwitch();
+            this.chkChartBalances = new DevExpress.XtraEditors.ToggleSwitch();
+            this.lblAccounts = new DevExpress.XtraEditors.LabelControl();
+            this.lblTaxUnits = new DevExpress.XtraEditors.LabelControl();
+            this.lblCurrent = new DevExpress.XtraEditors.LabelControl();
+            this.lblProducts = new DevExpress.XtraEditors.LabelControl();
+            this.lblPrices = new DevExpress.XtraEditors.LabelControl();
+            this.lblRecipes = new DevExpress.XtraEditors.LabelControl();
+            this.lblChartBalances = new DevExpress.XtraEditors.LabelControl();
             this.btnStart = new DevExpress.XtraEditors.SimpleButton();
             this.btnRefresh = new DevExpress.XtraEditors.SimpleButton();
             this.statusPanel = new DevExpress.XtraEditors.PanelControl();
@@ -603,12 +617,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
             // flpOptions
             //
             this.flpOptions.Controls.Add(this.chkAccounts);
+            this.flpOptions.Controls.Add(this.lblAccounts);
             this.flpOptions.Controls.Add(this.chkTaxUnits);
+            this.flpOptions.Controls.Add(this.lblTaxUnits);
             this.flpOptions.Controls.Add(this.chkCurrent);
+            this.flpOptions.Controls.Add(this.lblCurrent);
             this.flpOptions.Controls.Add(this.chkProducts);
+            this.flpOptions.Controls.Add(this.lblProducts);
             this.flpOptions.Controls.Add(this.chkPrices);
+            this.flpOptions.Controls.Add(this.lblPrices);
             this.flpOptions.Controls.Add(this.chkRecipes);
+            this.flpOptions.Controls.Add(this.lblRecipes);
             this.flpOptions.Controls.Add(this.chkChartBalances);
+            this.flpOptions.Controls.Add(this.lblChartBalances);
             this.flpOptions.Dock = System.Windows.Forms.DockStyle.Top;
             this.flpOptions.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flpOptions.Location = new System.Drawing.Point(0, 0);
@@ -624,63 +645,175 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
             this.chkAccounts.Location = new System.Drawing.Point(0, 2);
             this.chkAccounts.Margin = new System.Windows.Forms.Padding(0, 0, 24, 4);
             this.chkAccounts.Name = "chkAccounts";
-            this.chkAccounts.Properties.Caption = "Hesap planı (hesap kodu, ad, üst hesap)";
+            chkAccounts.Properties.ShowText = false;
+            chkAccounts.Properties.OnText = "Evet";
+            chkAccounts.Properties.OffText = "Hayır";
+            chkAccounts.ToolTip = "Hesap planı (hesap kodu, ad, üst hesap)";
             this.chkAccounts.Size = new System.Drawing.Size(344, 22);
             this.chkAccounts.TabIndex = 0;
+            //
+            // lblAccounts
+            //
+            this.chkAccounts.Size = new System.Drawing.Size(110, 22);
+            this.chkAccounts.Margin = new System.Windows.Forms.Padding(0, 0, 8, 4);
+            this.lblAccounts.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblAccounts.Appearance.Options.UseFont = true;
+            this.lblAccounts.Location = new System.Drawing.Point(118, 2);
+            this.lblAccounts.Margin = new System.Windows.Forms.Padding(0, 0, 20, 4);
+            this.lblAccounts.Name = "lblAccounts";
+            this.lblAccounts.Size = new System.Drawing.Size(230, 22);
+            this.lblAccounts.TabIndex = 7;
+            this.lblAccounts.Text = "Hesap planı (hesap kodu, ad, üst hesap)";
             //
             // chkTaxUnits
             //
             this.chkTaxUnits.Location = new System.Drawing.Point(368, 2);
             this.chkTaxUnits.Margin = new System.Windows.Forms.Padding(0, 0, 24, 4);
             this.chkTaxUnits.Name = "chkTaxUnits";
-            this.chkTaxUnits.Properties.Caption = "Birim cinsi ve KDV oranları";
+            chkTaxUnits.Properties.ShowText = false;
+            chkTaxUnits.Properties.OnText = "Evet";
+            chkTaxUnits.Properties.OffText = "Hayır";
+            chkTaxUnits.ToolTip = "Birim cinsi ve KDV oranları";
             this.chkTaxUnits.Size = new System.Drawing.Size(344, 22);
             this.chkTaxUnits.TabIndex = 1;
+            //
+            // lblTaxUnits
+            //
+            this.chkTaxUnits.Size = new System.Drawing.Size(110, 22);
+            this.chkTaxUnits.Margin = new System.Windows.Forms.Padding(0, 0, 8, 4);
+            this.lblTaxUnits.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblTaxUnits.Appearance.Options.UseFont = true;
+            this.lblTaxUnits.Location = new System.Drawing.Point(118, 2);
+            this.lblTaxUnits.Margin = new System.Windows.Forms.Padding(0, 0, 20, 4);
+            this.lblTaxUnits.Name = "lblTaxUnits";
+            this.lblTaxUnits.Size = new System.Drawing.Size(230, 22);
+            this.lblTaxUnits.TabIndex = 7;
+            this.lblTaxUnits.Text = "Birim cinsi ve KDV oranları";
             //
             // chkCurrent
             //
             this.chkCurrent.Location = new System.Drawing.Point(0, 28);
             this.chkCurrent.Margin = new System.Windows.Forms.Padding(0, 0, 24, 4);
             this.chkCurrent.Name = "chkCurrent";
-            this.chkCurrent.Properties.Caption = "Cari kartlar ve cari devir bakiyeleri (alacak / borç)";
+            chkCurrent.Properties.ShowText = false;
+            chkCurrent.Properties.OnText = "Evet";
+            chkCurrent.Properties.OffText = "Hayır";
+            chkCurrent.ToolTip = "Cari kartlar ve cari devir bakiyeleri (alacak / borç)";
             this.chkCurrent.Size = new System.Drawing.Size(344, 22);
             this.chkCurrent.TabIndex = 2;
+            //
+            // lblCurrent
+            //
+            this.chkCurrent.Size = new System.Drawing.Size(110, 22);
+            this.chkCurrent.Margin = new System.Windows.Forms.Padding(0, 0, 8, 4);
+            this.lblCurrent.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblCurrent.Appearance.Options.UseFont = true;
+            this.lblCurrent.Location = new System.Drawing.Point(118, 2);
+            this.lblCurrent.Margin = new System.Windows.Forms.Padding(0, 0, 20, 4);
+            this.lblCurrent.Name = "lblCurrent";
+            this.lblCurrent.Size = new System.Drawing.Size(230, 22);
+            this.lblCurrent.TabIndex = 7;
+            this.lblCurrent.Text = "Cari kartlar ve cari devir bakiyeleri (alacak / borç)";
             //
             // chkProducts
             //
             this.chkProducts.Location = new System.Drawing.Point(368, 28);
             this.chkProducts.Margin = new System.Windows.Forms.Padding(0, 0, 24, 4);
             this.chkProducts.Name = "chkProducts";
-            this.chkProducts.Properties.Caption = "Stok kartları ve stok devir miktarı / değeri";
+            chkProducts.Properties.ShowText = false;
+            chkProducts.Properties.OnText = "Evet";
+            chkProducts.Properties.OffText = "Hayır";
+            chkProducts.ToolTip = "Stok kartları ve stok devir miktarı / değeri";
             this.chkProducts.Size = new System.Drawing.Size(344, 22);
             this.chkProducts.TabIndex = 3;
+            //
+            // lblProducts
+            //
+            this.chkProducts.Size = new System.Drawing.Size(110, 22);
+            this.chkProducts.Margin = new System.Windows.Forms.Padding(0, 0, 8, 4);
+            this.lblProducts.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblProducts.Appearance.Options.UseFont = true;
+            this.lblProducts.Location = new System.Drawing.Point(118, 2);
+            this.lblProducts.Margin = new System.Windows.Forms.Padding(0, 0, 20, 4);
+            this.lblProducts.Name = "lblProducts";
+            this.lblProducts.Size = new System.Drawing.Size(230, 22);
+            this.lblProducts.TabIndex = 7;
+            this.lblProducts.Text = "Stok kartları ve stok devir miktarı / değeri";
             //
             // chkPrices
             //
             this.chkPrices.Location = new System.Drawing.Point(0, 54);
             this.chkPrices.Margin = new System.Windows.Forms.Padding(0, 0, 24, 4);
             this.chkPrices.Name = "chkPrices";
-            this.chkPrices.Properties.Caption = "Ürün fiyatları (FIFO/LIFO giriş katmanı)";
+            chkPrices.Properties.ShowText = false;
+            chkPrices.Properties.OnText = "Evet";
+            chkPrices.Properties.OffText = "Hayır";
+            chkPrices.ToolTip = "Ürün fiyatları (FIFO/LIFO giriş katmanı)";
             this.chkPrices.Size = new System.Drawing.Size(344, 22);
             this.chkPrices.TabIndex = 4;
+            //
+            // lblPrices
+            //
+            this.chkPrices.Size = new System.Drawing.Size(110, 22);
+            this.chkPrices.Margin = new System.Windows.Forms.Padding(0, 0, 8, 4);
+            this.lblPrices.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblPrices.Appearance.Options.UseFont = true;
+            this.lblPrices.Location = new System.Drawing.Point(118, 2);
+            this.lblPrices.Margin = new System.Windows.Forms.Padding(0, 0, 20, 4);
+            this.lblPrices.Name = "lblPrices";
+            this.lblPrices.Size = new System.Drawing.Size(230, 22);
+            this.lblPrices.TabIndex = 7;
+            this.lblPrices.Text = "Ürün fiyatları (FIFO/LIFO giriş katmanı)";
             //
             // chkRecipes
             //
             this.chkRecipes.Location = new System.Drawing.Point(368, 54);
             this.chkRecipes.Margin = new System.Windows.Forms.Padding(0, 0, 24, 4);
             this.chkRecipes.Name = "chkRecipes";
-            this.chkRecipes.Properties.Caption = "Reçeteler";
+            chkRecipes.Properties.ShowText = false;
+            chkRecipes.Properties.OnText = "Evet";
+            chkRecipes.Properties.OffText = "Hayır";
+            chkRecipes.ToolTip = "Reçeteler";
             this.chkRecipes.Size = new System.Drawing.Size(344, 22);
             this.chkRecipes.TabIndex = 5;
+            //
+            // lblRecipes
+            //
+            this.chkRecipes.Size = new System.Drawing.Size(110, 22);
+            this.chkRecipes.Margin = new System.Windows.Forms.Padding(0, 0, 8, 4);
+            this.lblRecipes.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblRecipes.Appearance.Options.UseFont = true;
+            this.lblRecipes.Location = new System.Drawing.Point(118, 2);
+            this.lblRecipes.Margin = new System.Windows.Forms.Padding(0, 0, 20, 4);
+            this.lblRecipes.Name = "lblRecipes";
+            this.lblRecipes.Size = new System.Drawing.Size(230, 22);
+            this.lblRecipes.TabIndex = 7;
+            this.lblRecipes.Text = "Reçeteler";
             //
             // chkChartBalances
             //
             this.chkChartBalances.Location = new System.Drawing.Point(0, 80);
             this.chkChartBalances.Margin = new System.Windows.Forms.Padding(0, 0, 24, 4);
             this.chkChartBalances.Name = "chkChartBalances";
-            this.chkChartBalances.Properties.Caption = "Hesap bakiyeleri (mizan açılışı)";
+            chkChartBalances.Properties.ShowText = false;
+            chkChartBalances.Properties.OnText = "Evet";
+            chkChartBalances.Properties.OffText = "Hayır";
+            chkChartBalances.ToolTip = "Hesap bakiyeleri (mizan açılışı)";
             this.chkChartBalances.Size = new System.Drawing.Size(344, 22);
             this.chkChartBalances.TabIndex = 6;
+            //
+            // lblChartBalances
+            //
+            this.chkChartBalances.Size = new System.Drawing.Size(110, 22);
+            this.chkChartBalances.Margin = new System.Windows.Forms.Padding(0, 0, 8, 4);
+            this.lblChartBalances.Appearance.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.lblChartBalances.Appearance.Options.UseFont = true;
+            this.lblChartBalances.Location = new System.Drawing.Point(118, 2);
+            this.lblChartBalances.Margin = new System.Windows.Forms.Padding(0, 0, 20, 4);
+            this.lblChartBalances.Name = "lblChartBalances";
+            this.lblChartBalances.Size = new System.Drawing.Size(230, 22);
+            this.lblChartBalances.TabIndex = 7;
+            this.lblChartBalances.Text = "Hesap bakiyeleri (mizan açılışı)";
             //
             // btnStart
             //

@@ -2183,13 +2183,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
                 // Yalnızca belge üretimi bekleme penceresinin kapsamında; önizleme
                 // penceresi modal olduğu için bekleme kapandıktan sonra açılır.
-                await LoadingHelper.RunAsync(
-                    () => report.CreateDocumentAsync(CancellationToken.None),
-                    caption: "Pusula hazırlanıyor...",
-                    description: "Lütfen bekleyin...");
-
-                ReportPrintTool tool = new(report);
-                tool.ShowRibbonPreviewDialog();
+await ReportPreviewHelper.PrintAsync(
+                report,
+                caption: "Pusula hazırlanıyor...",
+                description: "Lütfen bekleyin...");
             }
             catch (Exception ex)
             {

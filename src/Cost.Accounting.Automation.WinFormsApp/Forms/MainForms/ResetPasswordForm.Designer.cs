@@ -27,7 +27,7 @@ partial class ResetPasswordForm
             txtNewPassword = new DevExpress.XtraEditors.TextEdit();
             pnlConfirmBox = new DevExpress.XtraEditors.PanelControl();
             txtConfirmPassword = new DevExpress.XtraEditors.TextEdit();
-            chkLogoutAll = new DevExpress.XtraEditors.CheckEdit();
+            chkLogoutAll = new DevExpress.XtraEditors.ToggleSwitch();
             lblMessage = new DevExpress.XtraEditors.LabelControl();
             btnReset = new DevExpress.XtraEditors.SimpleButton();
             lnkBack = new DevExpress.XtraEditors.HyperlinkLabelControl();
@@ -162,8 +162,10 @@ partial class ResetPasswordForm
             chkLogoutAll.Properties.Appearance.ForeColor = Color.FromArgb(71, 85, 105);
             chkLogoutAll.Properties.Appearance.Options.UseFont = true;
             chkLogoutAll.Properties.Appearance.Options.UseForeColor = true;
-            chkLogoutAll.Properties.Caption = "Tüm cihazlarda oturumu kapat";
-            chkLogoutAll.Properties.GlyphAlignment = DevExpress.Utils.HorzAlignment.Near;
+            chkLogoutAll.Properties.ShowText = true;
+            chkLogoutAll.Properties.OnText = "Tüm Cihazlarda Kapat";
+            chkLogoutAll.Properties.OffText = "Yalnız Bu Cihazda Kal";
+            chkLogoutAll.ToolTip = "Tüm cihazlarda oturumu kapat";
             chkLogoutAll.Size = new Size(396, 26);
             chkLogoutAll.TabIndex = 5;
             //
@@ -278,7 +280,7 @@ partial class ResetPasswordForm
         private DevExpress.XtraEditors.TextEdit txtNewPassword;
         private DevExpress.XtraEditors.PanelControl pnlConfirmBox;
         private DevExpress.XtraEditors.TextEdit txtConfirmPassword;
-        private DevExpress.XtraEditors.CheckEdit chkLogoutAll;
+        private DevExpress.XtraEditors.ToggleSwitch chkLogoutAll;
         private DevExpress.XtraEditors.LabelControl lblMessage;
         private DevExpress.XtraEditors.SimpleButton btnReset;
         private DevExpress.XtraEditors.HyperlinkLabelControl lnkBack;
