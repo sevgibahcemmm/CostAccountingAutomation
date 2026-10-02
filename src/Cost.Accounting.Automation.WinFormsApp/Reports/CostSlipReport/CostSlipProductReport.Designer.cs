@@ -135,18 +135,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.M760 = new DevExpress.XtraReports.Parameters.Parameter();
             this.M770 = new DevExpress.XtraReports.Parameters.Parameter();
             this.M780 = new DevExpress.XtraReports.Parameters.Parameter();
-            this.MamulAdi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.Miktari = new DevExpress.XtraReports.Parameters.Parameter();
-            this.Musteri = new DevExpress.XtraReports.Parameters.Parameter();
+            this.ProductName = new DevExpress.XtraReports.Parameters.Parameter();
+            this.Quantity = new DevExpress.XtraReports.Parameters.Parameter();
+            this.Party = new DevExpress.XtraReports.Parameters.Parameter();
             this.Tarih = new DevExpress.XtraReports.Parameters.Parameter();
             this.CiltNo = new DevExpress.XtraReports.Parameters.Parameter();
-            this.SeriNo = new DevExpress.XtraReports.Parameters.Parameter();
+            this.SerialNo = new DevExpress.XtraReports.Parameters.Parameter();
             this.SiparisNo = new DevExpress.XtraReports.Parameters.Parameter();
             this.Isyurdu = new DevExpress.XtraReports.Parameters.Parameter();
             this.Antet = new DevExpress.XtraReports.Parameters.Parameter();
             this.objectDataSource1 = new DevExpress.DataAccess.ObjectBinding.ObjectDataSource(this.components);
             this.Toplam = new DevExpress.XtraReports.Parameters.Parameter();
-            this.Atolye = new DevExpress.XtraReports.Parameters.Parameter();
+            this.Workshop = new DevExpress.XtraReports.Parameters.Parameter();
             this.M730 = new DevExpress.XtraReports.Parameters.Parameter();
             this.M151 = new DevExpress.XtraReports.Parameters.Parameter();
             this.Donem = new DevExpress.XtraReports.Parameters.Parameter();
@@ -197,7 +197,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // xrLabel25
             // 
             this.xrLabel25.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?Musteri")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?Party")});
             this.xrLabel25.LocationFloat = new DevExpress.Utils.PointFloat(180.8333F, 157.625F);
             this.xrLabel25.Multiline = true;
             this.xrLabel25.Name = "xrLabel25";
@@ -210,7 +210,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // xrLabel26
             // 
             this.xrLabel26.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MamulAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ProductName")});
             this.xrLabel26.LocationFloat = new DevExpress.Utils.PointFloat(180.8333F, 172.3646F);
             this.xrLabel26.Multiline = true;
             this.xrLabel26.Name = "xrLabel26";
@@ -223,7 +223,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // xrLabel27
             // 
             this.xrLabel27.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?Miktari")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?Quantity")});
             this.xrLabel27.LocationFloat = new DevExpress.Utils.PointFloat(180.8333F, 187.1042F);
             this.xrLabel27.Multiline = true;
             this.xrLabel27.Name = "xrLabel27";
@@ -251,7 +251,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             // xrLabel23
             // 
             this.xrLabel23.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?SeriNo")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?SerialNo")});
             this.xrLabel23.Font = new DevExpress.Drawing.DXFont("Arial", 9F);
             this.xrLabel23.LocationFloat = new DevExpress.Utils.PointFloat(609.2913F, 47.39585F);
             this.xrLabel23.Multiline = true;
@@ -1383,23 +1383,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.M780.ValueInfo = "0";
             this.M780.Visible = false;
             // 
-            // MamulAdi
+            // ProductName
             // 
-            this.MamulAdi.Description = "Mamül Adı";
-            this.MamulAdi.Name = "MamulAdi";
+            this.ProductName.Description = "Mamül Adı";
+            this.ProductName.Name = "ProductName";
             // 
-            // Miktari
+            // Quantity
             // 
-            this.Miktari.Description = "Mamül Miktarı";
-            this.Miktari.Name = "Miktari";
-            this.Miktari.Type = typeof(int);
-            this.Miktari.ValueInfo = "1";
+            this.Quantity.Description = "Mamül Miktarı";
+            this.Quantity.Name = "Quantity";
+            this.Quantity.Type = typeof(int);
+            this.Quantity.ValueInfo = "1";
             // 
-            // Musteri
+            // Party
             // 
-            this.Musteri.Description = "Müşteri";
-            this.Musteri.Name = "Musteri";
-            this.Musteri.Visible = false;
+            this.Party.Description = "Müşteri";
+            this.Party.Name = "Party";
+            this.Party.Visible = false;
             // 
             // Tarih
             // 
@@ -1415,11 +1415,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.CiltNo.Name = "CiltNo";
             this.CiltNo.Visible = false;
             // 
-            // SeriNo
+            // SerialNo
             // 
-            this.SeriNo.Description = "Seri No";
-            this.SeriNo.Name = "SeriNo";
-            this.SeriNo.Visible = false;
+            this.SerialNo.Description = "Seri No";
+            this.SerialNo.Name = "SerialNo";
+            this.SerialNo.Visible = false;
             // 
             // SiparisNo
             // 
@@ -1450,11 +1450,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.Toplam.ValueInfo = "0";
             this.Toplam.Visible = false;
             // 
-            // Atolye
+            // Workshop
             // 
-            this.Atolye.Description = "Atölye";
-            this.Atolye.Name = "Atolye";
-            this.Atolye.Visible = false;
+            this.Workshop.Description = "Atölye";
+            this.Workshop.Name = "Workshop";
+            this.Workshop.Visible = false;
             // 
             // M730
             // 
@@ -1498,17 +1498,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M760, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M770, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M780, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
-            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.MamulAdi, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
-            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Miktari, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
-            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Musteri, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.ProductName, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Quantity, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Party, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Tarih, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.CiltNo, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
-            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.SeriNo, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.SerialNo, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.SiparisNo, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Isyurdu, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Antet, DevExpress.XtraReports.Parameters.Orientation.Vertical),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Toplam, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
-            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Atolye, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
+            new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.Workshop, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M730, DevExpress.XtraReports.Parameters.Orientation.Horizontal),
             new DevExpress.XtraReports.Parameters.ParameterLayoutItem(this.M151, DevExpress.XtraReports.Parameters.Orientation.Horizontal)});
             this.Parameters.AddRange(new DevExpress.XtraReports.Parameters.Parameter[] {
@@ -1518,17 +1518,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
             this.M760,
             this.M770,
             this.M780,
-            this.MamulAdi,
-            this.Miktari,
-            this.Musteri,
+            this.ProductName,
+            this.Quantity,
+            this.Party,
             this.Tarih,
             this.CiltNo,
-            this.SeriNo,
+            this.SerialNo,
             this.SiparisNo,
             this.Isyurdu,
             this.Antet,
             this.Toplam,
-            this.Atolye,
+            this.Workshop,
             this.M730,
             this.M151,
             this.Donem});
@@ -1637,14 +1637,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
         private DevExpress.XtraReports.Parameters.Parameter M760;
         private DevExpress.XtraReports.Parameters.Parameter M770;
         private DevExpress.XtraReports.Parameters.Parameter M780;
-        private DevExpress.XtraReports.Parameters.Parameter MamulAdi;
+        private DevExpress.XtraReports.Parameters.Parameter ProductName;
         private DevExpress.XtraReports.UI.XRLabel xrLabel20;
         private DevExpress.XtraReports.UI.XRLabel xrLabel19;
-        private DevExpress.XtraReports.Parameters.Parameter Miktari;
-        private DevExpress.XtraReports.Parameters.Parameter Musteri;
+        private DevExpress.XtraReports.Parameters.Parameter Quantity;
+        private DevExpress.XtraReports.Parameters.Parameter Party;
         private DevExpress.XtraReports.Parameters.Parameter Tarih;
         private DevExpress.XtraReports.Parameters.Parameter CiltNo;
-        private DevExpress.XtraReports.Parameters.Parameter SeriNo;
+        private DevExpress.XtraReports.Parameters.Parameter SerialNo;
         private DevExpress.XtraReports.Parameters.Parameter SiparisNo;
         private DevExpress.XtraReports.Parameters.Parameter Isyurdu;
         private DevExpress.XtraReports.Parameters.Parameter Antet;
@@ -1658,7 +1658,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips
         private DevExpress.XtraReports.UI.XRLabel xrLabel27;
         private DevExpress.XtraReports.UI.XRLabel xrLabel28;
         private DevExpress.XtraReports.Parameters.Parameter Toplam;
-        private DevExpress.XtraReports.Parameters.Parameter Atolye;
+        private DevExpress.XtraReports.Parameters.Parameter Workshop;
         private DevExpress.XtraReports.Parameters.Parameter M730;
         private DevExpress.XtraReports.Parameters.Parameter M151;
         private DevExpress.XtraReports.UI.XRLabel xrLabel29;

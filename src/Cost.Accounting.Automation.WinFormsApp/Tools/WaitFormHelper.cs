@@ -18,6 +18,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                 waitForm.SetDescription(description);
             }
 
+AttachOwner(form);
             form.Show();
             form.BringToFront();
 
@@ -28,6 +29,45 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
             FlushPaintQueue(form);
 
             return form;
+        }
+
+        /// <summary>
+        /// Bekleme penceresini sahipli pencereye bağlayıp z-sırasını güvenceye alır.
+        ///
+        /// Sorun: pencere sahipsiz (<c>Show()</c> ile açılıyordu) açıldığı için
+        /// ana pencere etkin olduğunda arkada kalabiliyordu. Kullanıcı "Lütfen
+        /// Bekleyin" penceresini düğmenin arkasında görüyor, işlemin nerede
+        /// takıldığını anlayamıyordu.
+        ///
+        /// <c>TopMost</c> yerine DevExpress'in <c>ShowOnTopMode</c> kullanılır;
+        /// <c>TopMost</c> bu sürümde kullanımdan kaldırılmıştır ve tüm
+        /// pencerelerin üstüne çıktığı için zaten fazla güçlüdür.
+        ///
+        /// Sahip seçilirken MDI alt pencereleri dışlanır (bunlar sahiplik
+        /// alamaz); sahip bulunamazsa pencere yine de ekranın üstünde kalır.
+        /// </summary>
+        private static void AttachOwner(Form form)
+        {
+            if (form is not WaitForm waitForm)
+            {
+                return;
+            }
+
+            Form? owner = Form.ActiveForm;
+
+            bool canOwn = owner is not null
+                && !ReferenceEquals(owner, form)
+                && owner is { TopLevel: true, Visible: true };
+
+            if (canOwn)
+            {
+                waitForm.Owner = owner!;
+                waitForm.ShowOnTopMode = DevExpress.XtraWaitForm.ShowFormOnTopMode.AboveParent;
+            }
+            else
+            {
+                waitForm.ShowOnTopMode = DevExpress.XtraWaitForm.ShowFormOnTopMode.AboveAll;
+            }
         }
 
         /// <summary>

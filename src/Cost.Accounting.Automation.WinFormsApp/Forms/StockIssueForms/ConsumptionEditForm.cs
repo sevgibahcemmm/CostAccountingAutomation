@@ -3,7 +3,7 @@ using Cost.Accounting.Automation.Domain.StockIssues;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    public sealed class ConsumptionEditForm : StockIssueEditFormBase
+    public sealed partial class ConsumptionEditForm : StockIssueEditFormBase
     {
         public ConsumptionEditForm() : base(StockIssueType.Consumption, null)
         {

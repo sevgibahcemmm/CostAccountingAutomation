@@ -29,6 +29,33 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static DialogResult Confirm(string message, string title = "Onay")
             => Confirm(null, message, title);
 
+        /// <summary>
+        /// Yalnızca bilgi veren pencere. Onay bekleyen kayıt gibi "farkında olun"
+        /// mesajları için kullanılır; Evet/Hayır sormaz.
+        /// </summary>
+        public static void Notice(IWin32Window? owner, string message, string title = "Bilgi")
+        {
+            XtraMessageBoxArgs args = new()
+            {
+                Owner = owner,
+                Caption = title,
+                Text = message,
+                Buttons = new DialogResult[] { DialogResult.OK },
+                Icon = SystemIcons.Information
+            };
+
+            args.Showing += (s, e) =>
+            {
+                e.Buttons[DialogResult.OK].Text = "Tamam";
+                ForceTopMost(e.Form);
+            };
+
+            XtraMessageBox.Show(args);
+        }
+
+        public static void Notice(string message, string title = "Bilgi")
+            => Notice(null, message, title);
+
         private static void ForceTopMost(Form? form)
         {
             if (form is null)

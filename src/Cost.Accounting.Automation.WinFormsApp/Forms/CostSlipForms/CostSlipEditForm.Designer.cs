@@ -40,9 +40,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
         private System.Windows.Forms.FlowLayoutPanel flpAccounts;
         private DevExpress.XtraEditors.PanelControl pnlFooter;
         private DevExpress.XtraEditors.PanelControl pnlFooterLine;
-        private DevExpress.XtraEditors.SimpleButton btnSaveDraft;
-        private DevExpress.XtraEditors.SimpleButton btnSave;
-        private DevExpress.XtraEditors.SimpleButton btnApprove;
+private DevExpress.XtraEditors.SimpleButton btnSaveDraft;
         private DevExpress.XtraEditors.SimpleButton btnCancel;
         private DevExpress.XtraEditors.SimpleButton btnPrintSlip;
 
@@ -94,9 +92,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlFooter = new DevExpress.XtraEditors.PanelControl();
             btnPrintSlip = new DevExpress.XtraEditors.SimpleButton();
             btnCancel = new DevExpress.XtraEditors.SimpleButton();
-            btnSave = new DevExpress.XtraEditors.SimpleButton();
             btnSaveDraft = new DevExpress.XtraEditors.SimpleButton();
-            btnApprove = new DevExpress.XtraEditors.SimpleButton();
             pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
             ((System.ComponentModel.ISupportInitialize)pnlHeader).BeginInit();
             pnlHeader.SuspendLayout();
@@ -132,6 +128,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(lblHeaderIcon);
             pnlHeader.Controls.Add(pnlHeaderLine);
+            pnlHeader.Controls.Add(lblStatusValue);
             pnlHeader.Dock = DockStyle.Top;
             pnlHeader.Location = new Point(0, 0);
             pnlHeader.Name = "pnlHeader";
@@ -190,7 +187,6 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlBody.Controls.Add(lblQuantityLabel);
             pnlBody.Controls.Add(lookUpProducedProduct);
             pnlBody.Controls.Add(lblProductLabel);
-            pnlBody.Controls.Add(lblStatusValue);
             pnlBody.Controls.Add(lookUpWorkshop);
             pnlBody.Controls.Add(lblWorkshopLabel);
             pnlBody.Controls.Add(dtCostDate);
@@ -281,10 +277,10 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             btnDeleteLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnDeleteLine.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnDeleteLine.ImageOptions.SvgImage");
             btnDeleteLine.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnDeleteLine.Location = new Point(1093, 3);
+            btnDeleteLine.Location = new Point(1084, 3);
             btnDeleteLine.Name = "btnDeleteLine";
             btnDeleteLine.Size = new Size(90, 24);
-            btnDeleteLine.TabIndex = 0;
+            btnDeleteLine.TabIndex = 1;
             btnDeleteLine.Text = "- Satır Sil";
             // 
             // btnAddLine
@@ -292,10 +288,10 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             btnAddLine.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnAddLine.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnAddLine.ImageOptions.SvgImage");
             btnAddLine.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnAddLine.Location = new Point(994, 3);
+            btnAddLine.Location = new Point(985, 3);
             btnAddLine.Name = "btnAddLine";
             btnAddLine.Size = new Size(90, 24);
-            btnAddLine.TabIndex = 1;
+            btnAddLine.TabIndex = 0;
             btnAddLine.Text = "+ Satır Ekle";
             // 
             // lblItemsTitle
@@ -376,9 +372,9 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             lblStatusValue.Appearance.ForeColor = Color.FromArgb(78, 109, 156);
             lblStatusValue.Appearance.Options.UseFont = true;
             lblStatusValue.Appearance.Options.UseForeColor = true;
-            lblStatusValue.Location = new Point(900, 33);
+            lblStatusValue.Location = new Point(877, 20);
             lblStatusValue.Name = "lblStatusValue";
-            lblStatusValue.Size = new Size(0, 15);
+            lblStatusValue.Size = new Size(240, 18);
             lblStatusValue.TabIndex = 14;
             // 
             // lookUpWorkshop
@@ -469,9 +465,7 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             pnlFooter.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             pnlFooter.Controls.Add(btnPrintSlip);
             pnlFooter.Controls.Add(btnCancel);
-            pnlFooter.Controls.Add(btnSave);
             pnlFooter.Controls.Add(btnSaveDraft);
-            pnlFooter.Controls.Add(btnApprove);
             pnlFooter.Controls.Add(pnlFooterLine);
             pnlFooter.Dock = DockStyle.Bottom;
             pnlFooter.Location = new Point(0, 757);
@@ -502,25 +496,11 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             btnCancel.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnCancel.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnCancel.ImageOptions.SvgImage");
             btnCancel.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnCancel.Location = new Point(1111, 12);
+            btnCancel.Location = new Point(1123, 12);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(81, 29);
-            btnCancel.TabIndex = 1;
+            btnCancel.TabIndex = 2;
             btnCancel.Text = "Vazgeç";
-            // 
-            // btnSave
-            // 
-            btnSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnSave.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            btnSave.Appearance.Options.UseFont = true;
-            btnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnSave.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSave.ImageOptions.SvgImage");
-            btnSave.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnSave.Location = new Point(964, 12);
-            btnSave.Name = "btnSave";
-            btnSave.Size = new Size(140, 29);
-            btnSave.TabIndex = 2;
-            btnSave.Text = "Kaydet ve Onayla";
             // 
             // btnSaveDraft
             // 
@@ -530,26 +510,11 @@ private DevExpress.XtraEditors.PanelControl pnlAccounts;
             btnSaveDraft.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             btnSaveDraft.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnSaveDraft.ImageOptions.SvgImage");
             btnSaveDraft.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnSaveDraft.Location = new Point(847, 12);
+            btnSaveDraft.Location = new Point(1004, 12);
             btnSaveDraft.Name = "btnSaveDraft";
             btnSaveDraft.Size = new Size(111, 29);
-            btnSaveDraft.TabIndex = 3;
+            btnSaveDraft.TabIndex = 1;
             btnSaveDraft.Text = "Taslak Kaydet";
-            // 
-            // btnApprove
-            // 
-            btnApprove.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnApprove.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            btnApprove.Appearance.Options.UseFont = true;
-            btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnApprove.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnApprove.ImageOptions.SvgImage");
-            btnApprove.ImageOptions.SvgImageSize = new Size(18, 18);
-            btnApprove.Location = new Point(984, 12);
-            btnApprove.Name = "btnApprove";
-            btnApprove.Size = new Size(120, 29);
-            btnApprove.TabIndex = 4;
-            btnApprove.Text = "Yazdır";
-            btnApprove.Visible = false;
             // 
             // pnlFooterLine
             // 

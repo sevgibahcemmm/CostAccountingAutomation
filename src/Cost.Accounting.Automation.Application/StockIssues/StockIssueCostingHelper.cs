@@ -56,36 +56,70 @@ internal static class StockIssueCostingHelper
     {
         Dictionary<IdentityId, decimal> result = [];
 
-        foreach (IGrouping<IdentityId, ProductMovement> product in movements.GroupBy(m => m.ProductId))
+        foreach (KeyValuePair<IdentityId, decimal> requested in quantities)
         {
-            decimal quantity = quantities.TryGetValue(product.Key, out decimal q) ? q : 0m;
+            decimal quantity = requested.Value;
+
             if (quantity <= 0)
             {
                 continue;
             }
 
-            List<(decimal Quantity, decimal UnitPrice)> layers = [];
+            decimal totalCost = BuildConsumptionLayers(
+                    movements, requested.Key, quantity, costingMethod, asOfDate)
+                .Sum(layer => layer.Quantity * layer.UnitPrice);
 
-            foreach (ProductMovement input in product.Where(m =>
-                         m.MovementType == ProductMovementType.Input && m.Date <= asOfDate))
-            {
-                if (input.UnitPrice is { } price)
-                {
-                    layers.Add((input.Quantity, price.Value));
-                }
-            }
-
-            decimal priorOutputs = product
-                .Where(m => m.MovementType == ProductMovementType.Output && m.Date <= asOfDate)
-                .Sum(m => m.Quantity);
-
-            ConsumeLayers(layers, priorOutputs, costingMethod);
-
-            decimal totalCost = ConsumeLayerCost(layers, quantity, costingMethod);
-            result[product.Key] = totalCost / quantity;
+            result[requested.Key] = totalCost / quantity;
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// FIFO/LIFO sırasına göre bir ürünün tüketilecek miktarını giriş katmanlarına
+    /// böler ve her katmandan ne kadar alındığını döner.
+    ///
+    /// FIFO'da en eski giriş TAMAMEN tüketilir, kalan miktar bir sonraki girişten
+    /// alınır; katman bitmeden diğerine geçilmez. LIFO'da sıra ters çevrilir.
+    /// Önceki çıkışlar önceden tüketilmiş sayılır, yalnızca kalan katmanlar kullanılır.
+    ///
+    /// Katman kırılımı döndürüldüğü için çağıran, tüketilen miktarı giriş
+    /// fiyatlarıyla eşleşen AYRI çıkış hareketleri olarak yazabilir. Tek bir
+    /// ortalama fiyatlı satır yazılsaydı o fiyat hiçbir girişe uymaz ve
+    /// fiyat bazlı gruplayan stok raporunda bakiyesi eksi satırlar doğardı.
+    /// </summary>
+    public static List<(decimal Quantity, decimal UnitPrice)> BuildConsumptionLayers(
+        List<ProductMovement> movements,
+        IdentityId productId,
+        decimal quantity,
+        StockCostingMethod costingMethod,
+        DateOnly asOfDate)
+    {
+        // Katman sırası hareket sırasıdır (LoadMovementsAsync tarih, sonra id'ye
+        // göre sıralar); FIFO ilk katmandan, LIFO son katmandan başlar.
+        List<(decimal Quantity, decimal UnitPrice)> remaining = [];
+
+        foreach (ProductMovement input in movements
+                     .Where(m => m.ProductId == productId
+                         && m.MovementType == ProductMovementType.Input
+                         && m.Date <= asOfDate))
+        {
+            if (input.UnitPrice is { } price)
+            {
+                remaining.Add((input.Quantity, price.Value));
+            }
+        }
+
+        ConsumeLayers(
+            remaining,
+            movements
+                .Where(m => m.ProductId == productId
+                    && m.MovementType == ProductMovementType.Output
+                    && m.Date <= asOfDate)
+                .Sum(m => m.Quantity),
+            costingMethod);
+
+        return TakeLayers(remaining, quantity, costingMethod);
     }
 
     private static void ConsumeLayers(
@@ -113,13 +147,17 @@ internal static class StockIssueCostingHelper
         }
     }
 
-    private static decimal ConsumeLayerCost(
+    /// <summary>
+    /// Katmanlardan <paramref name="quantity"/> kadar alır ve hangi katmandan
+    /// ne kadar alındığını SIRAYLA döner. Katman bitmeden diğerine geçilmez.
+    /// </summary>
+    private static List<(decimal Quantity, decimal UnitPrice)> TakeLayers(
         List<(decimal Quantity, decimal UnitPrice)> layers,
         decimal quantity,
         StockCostingMethod method)
     {
+        List<(decimal Quantity, decimal UnitPrice)> taken = [];
         decimal remaining = quantity;
-        decimal totalCost = 0m;
 
         while (remaining > 0 && layers.Count > 0)
         {
@@ -127,7 +165,7 @@ internal static class StockIssueCostingHelper
             (decimal layerQuantity, decimal unitPrice) = layers[index];
             decimal consumed = Math.Min(layerQuantity, remaining);
 
-            totalCost += consumed * unitPrice;
+            taken.Add((consumed, unitPrice));
             remaining -= consumed;
 
             if (layerQuantity - consumed <= 0)
@@ -140,6 +178,15 @@ internal static class StockIssueCostingHelper
             }
         }
 
-        return totalCost;
+        // Fiyatı olmayan girişler katman listesine hiç girmez. Böyle bir
+        // durumda miktarın karşılanamayan kısmı, maliyeti bilinmeyen çıkış
+        // olarak sıfır birim maliyetle kaydedilir; miktar ASLA düşürülmez,
+        // aksi hâlde stok miktarı eksik düşerdi.
+        if (remaining > 0)
+        {
+            taken.Add((remaining, 0m));
+        }
+
+        return taken;
     }
 }

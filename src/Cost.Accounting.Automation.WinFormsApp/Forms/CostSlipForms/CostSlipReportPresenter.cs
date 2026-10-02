@@ -62,18 +62,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             CompanyDto company = await LoadCompanyAsync();
 
-            SetReportParam(report, "MamulAdi", slip.ProducedProductName);
-            SetReportParam(report, "Miktari", slip.Quantity);
+            SetReportParam(report, "ProductName", slip.ProducedProductName);
+            SetReportParam(report, "Quantity", slip.Quantity);
             SetReportParam(report, "Tarih", slip.CostDate);
             SetReportParam(report, "Donem", slip.CostDate.ToString(
                 "MM'. Ay - 'MMMM'-'yyyy",
                 System.Globalization.CultureInfo.GetCultureInfo("tr-TR")));
             SetReportParam(report, "Isyurdu", company.Name);
-            SetReportParam(report, "Atolye", slip.WorkshopName);
+            SetReportParam(report, "Workshop", slip.WorkshopName);
             SetReportParam(report, "Antet", company.Name);
 
             SetReportParam(report, "CiltNo", slip.CostDate.Year);
-            SetReportParam(report, "SeriNo", slip.SlipNumber);
+            SetReportParam(report, "SerialNo", slip.SlipNumber);
             SetReportParam(report, "SiparisNo", slip.SlipNumber);
 
             string[] moneyParams = ["M710", "M720", "M730", "M740", "M750", "M760", "M770", "M780", "M151"];

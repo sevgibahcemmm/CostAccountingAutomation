@@ -425,7 +425,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.ToTable("Customers", (string)null);
                 });
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Devirs.DevirLog", b =>
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CarryForwards.CarryForwardLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");

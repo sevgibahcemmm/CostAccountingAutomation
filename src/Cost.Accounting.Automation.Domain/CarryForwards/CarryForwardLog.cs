@@ -1,6 +1,6 @@
 using Cost.Accounting.Automation.Domain.Abstractions;
 
-namespace Cost.Accounting.Automation.Domain.Devirs;
+namespace Cost.Accounting.Automation.Domain.CarryForwards;
 
 // Bir mali yıl veritabanına devir yapıldığını kalıcı olarak işaretler.
 //
@@ -12,13 +12,13 @@ namespace Cost.Accounting.Automation.Domain.Devirs;
 // Kaynak yılda bakiye yoksa devir hiçbir hareket satırı yazmaz ve hedef yıl
 // boş görünmeye devam eder; bu tablodaki kayıt olmadan ikinci bir devir
 // çalıştırılabilir ve kullanıcı "devir yapıldı mı?" sorusunu cevaplayamaz.
-public sealed class DevirLog : Entity
+public sealed class CarryForwardLog : Entity
 {
-    private DevirLog()
+    private CarryForwardLog()
     {
     }
 
-    public DevirLog(int sourceYear, int targetYear, string sourceDatabaseName, string targetDatabaseName)
+    public CarryForwardLog(int sourceYear, int targetYear, string sourceDatabaseName, string targetDatabaseName)
     {
         if (sourceYear <= 0)
         {

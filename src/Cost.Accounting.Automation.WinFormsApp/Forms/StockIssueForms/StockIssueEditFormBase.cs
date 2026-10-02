@@ -873,20 +873,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             {
                 DocumentNumber = txtDocumentNumber.Text.Trim(),
                 Date = dtDate.DateTime,
-                IslemCesidi = IsConsumption ? "Tüketim" : "Atölye Transferi",
-                NeredenGeldigi = warehouseName,
-                KimeVerildigi = targetName,
-                NereyeVerildigi = string.IsNullOrWhiteSpace(targetCode) ? targetName : $"{targetCode} - {targetName}",
-                IlIlceAdi = ilIlce,
-                IlIlceKodu = string.Empty,
-                HarcamaBirimiAdi = company.ExpenditureUnitName ?? string.Empty,
-                HarcamaBirimiKodu = company.ExpenditureUnitCode ?? string.Empty,
-                AmbarAdi = warehouseName,
-                AmbarKodu = warehouseCode,
-                MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
-                MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
-                DayanakTarihi = dtDate.DateTime,
-                DayanakKodu = txtDocumentNumber.Text.Trim(),
+                OperationType = IsConsumption ? "Tüketim" : "Atölye Transferi",
+                SourceParty = warehouseName,
+                RecipientParty = targetName,
+                DestinationParty = string.IsNullOrWhiteSpace(targetCode) ? targetName : $"{targetCode} - {targetName}",
+                ProvinceDistrictName = ilIlce,
+                ProvinceDistrictCode = string.Empty,
+                ExpenditureUnitName = company.ExpenditureUnitName ?? string.Empty,
+                ExpenditureUnitCode = company.ExpenditureUnitCode ?? string.Empty,
+                StoreName = warehouseName,
+                StoreCode = warehouseCode,
+                AccountingUnitName = company.AccountingUnitName ?? string.Empty,
+                AccountingUnitCode = company.AccountingUnitCode ?? string.Empty,
+                ReferenceDate = dtDate.DateTime,
+                ReferenceCode = txtDocumentNumber.Text.Trim(),
                 AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(_accounts)
             };
 
@@ -897,16 +897,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 order++;
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
-                    SiraNo = order,
-                    Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, string.Empty),
-                    DepoKodu = product?.WarehouseCode ?? string.Empty,
-                    DepoAdi = product?.WarehouseName ?? string.Empty,
-                    BarkodNo = product?.Barcode ?? string.Empty,
+                    RowNumber = order,
+                    Code = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, string.Empty),
+                    WarehouseCode = product?.WarehouseCode ?? string.Empty,
+                    WarehouseName = product?.WarehouseName ?? string.Empty,
+                    Barcode = product?.Barcode ?? string.Empty,
                     Adi = product?.Name ?? string.Empty,
-                    OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
-                    Miktari = line.Quantity,
-                    BirimFiyati = line.UnitCost,
-                    Tutari = line.Quantity * line.UnitCost
+                    UnitOfMeasure = product?.ProductUnitTypeName ?? string.Empty,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitCost,
+                    Amount = line.Quantity * line.UnitCost
                 });
             }
 

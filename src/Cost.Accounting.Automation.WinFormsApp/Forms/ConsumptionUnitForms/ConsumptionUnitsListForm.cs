@@ -9,7 +9,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms
 {
-    public sealed class ConsumptionUnitsListForm : CrudListFormBase<ConsumptionUnitGetAllQuery, ConsumptionUnitDto, ConsumptionUnitEditForm>
+    public sealed partial class ConsumptionUnitsListForm : CrudListFormBase<ConsumptionUnitGetAllQuery, ConsumptionUnitDto, ConsumptionUnitEditForm>
     {
         public ConsumptionUnitsListForm() : base("Tüketim Birimleri")
         {

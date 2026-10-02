@@ -34,9 +34,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             this.xrTableDetail = new DevExpress.XtraReports.UI.XRTable();
             this.xrTableRowDetail = new DevExpress.XtraReports.UI.XRTableRow();
             this.dcSira = new DevExpress.XtraReports.UI.XRTableCell();
-            this.dcKod = new DevExpress.XtraReports.UI.XRTableCell();
+            this.dcCode = new DevExpress.XtraReports.UI.XRTableCell();
             this.dcAd = new DevExpress.XtraReports.UI.XRTableCell();
-            this.dcBirim = new DevExpress.XtraReports.UI.XRTableCell();
+            this.dcUnit = new DevExpress.XtraReports.UI.XRTableCell();
             this.dcSistem = new DevExpress.XtraReports.UI.XRTableCell();
             this.dcSayilan = new DevExpress.XtraReports.UI.XRTableCell();
             this.dcFark = new DevExpress.XtraReports.UI.XRTableCell();
@@ -45,9 +45,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             this.xrTableHeader = new DevExpress.XtraReports.UI.XRTable();
             this.xrTableRowHeader = new DevExpress.XtraReports.UI.XRTableRow();
             this.hdSira = new DevExpress.XtraReports.UI.XRTableCell();
-            this.hdKod = new DevExpress.XtraReports.UI.XRTableCell();
+            this.hdCode = new DevExpress.XtraReports.UI.XRTableCell();
             this.hdAd = new DevExpress.XtraReports.UI.XRTableCell();
-            this.hdBirim = new DevExpress.XtraReports.UI.XRTableCell();
+            this.hdUnit = new DevExpress.XtraReports.UI.XRTableCell();
             this.hdSistem = new DevExpress.XtraReports.UI.XRTableCell();
             this.hdSayilan = new DevExpress.XtraReports.UI.XRTableCell();
             this.hdFark = new DevExpress.XtraReports.UI.XRTableCell();
@@ -116,9 +116,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             // 
             this.xrTableRowDetail.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
             this.dcSira,
-            this.dcKod,
+            this.dcCode,
             this.dcAd,
-            this.dcBirim,
+            this.dcUnit,
             this.dcSistem,
             this.dcSayilan,
             this.dcFark});
@@ -135,14 +135,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             this.dcSira.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.dcSira.Weight = 0.8D;
             // 
-            // dcKod
+            // dcCode
             // 
-            this.dcKod.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            this.dcCode.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
             new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[ProductCode]")});
-            this.dcKod.Multiline = true;
-            this.dcKod.Name = "dcKod";
-            this.dcKod.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.dcKod.Weight = 1.3D;
+            this.dcCode.Multiline = true;
+            this.dcCode.Name = "dcCode";
+            this.dcCode.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.dcCode.Weight = 1.3D;
             // 
             // dcAd
             // 
@@ -154,14 +154,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             this.dcAd.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             this.dcAd.Weight = 3.8D;
             // 
-            // dcBirim
+            // dcUnit
             // 
-            this.dcBirim.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            this.dcUnit.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
             new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[UnitTypeName]")});
-            this.dcBirim.Multiline = true;
-            this.dcBirim.Name = "dcBirim";
-            this.dcBirim.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.dcBirim.Weight = 0.7D;
+            this.dcUnit.Multiline = true;
+            this.dcUnit.Name = "dcUnit";
+            this.dcUnit.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.dcUnit.Weight = 0.7D;
             // 
             // dcSistem
             // 
@@ -241,9 +241,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             // 
             this.xrTableRowHeader.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
             this.hdSira,
-            this.hdKod,
+            this.hdCode,
             this.hdAd,
-            this.hdBirim,
+            this.hdUnit,
             this.hdSistem,
             this.hdSayilan,
             this.hdFark});
@@ -257,12 +257,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             this.hdSira.Text = "Sıra No";
             this.hdSira.Weight = 0.8D;
             // 
-            // hdKod
+            // hdCode
             // 
-            this.hdKod.Multiline = true;
-            this.hdKod.Name = "hdKod";
-            this.hdKod.Text = "Ürün Kodu";
-            this.hdKod.Weight = 1.3D;
+            this.hdCode.Multiline = true;
+            this.hdCode.Name = "hdCode";
+            this.hdCode.Text = "Ürün Kodu";
+            this.hdCode.Weight = 1.3D;
             // 
             // hdAd
             // 
@@ -271,12 +271,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             this.hdAd.Text = "Ürün Adı";
             this.hdAd.Weight = 3.8D;
             // 
-            // hdBirim
+            // hdUnit
             // 
-            this.hdBirim.Multiline = true;
-            this.hdBirim.Name = "hdBirim";
-            this.hdBirim.Text = "Birim";
-            this.hdBirim.Weight = 0.7D;
+            this.hdUnit.Multiline = true;
+            this.hdUnit.Name = "hdUnit";
+            this.hdUnit.Text = "Birim";
+            this.hdUnit.Weight = 0.7D;
             // 
             // hdSistem
             // 
@@ -558,18 +558,18 @@ private DevExpress.XtraReports.UI.ReportHeaderBand ReportHeader;
         private DevExpress.XtraReports.UI.XRTable xrTableDetail;
         private DevExpress.XtraReports.UI.XRTableRow xrTableRowDetail;
         private DevExpress.XtraReports.UI.XRTableCell dcSira;
-        private DevExpress.XtraReports.UI.XRTableCell dcKod;
+        private DevExpress.XtraReports.UI.XRTableCell dcCode;
         private DevExpress.XtraReports.UI.XRTableCell dcAd;
-        private DevExpress.XtraReports.UI.XRTableCell dcBirim;
+        private DevExpress.XtraReports.UI.XRTableCell dcUnit;
         private DevExpress.XtraReports.UI.XRTableCell dcSistem;
         private DevExpress.XtraReports.UI.XRTableCell dcSayilan;
         private DevExpress.XtraReports.UI.XRTableCell dcFark;
         private DevExpress.XtraReports.UI.XRTable xrTableHeader;
         private DevExpress.XtraReports.UI.XRTableRow xrTableRowHeader;
         private DevExpress.XtraReports.UI.XRTableCell hdSira;
-        private DevExpress.XtraReports.UI.XRTableCell hdKod;
+        private DevExpress.XtraReports.UI.XRTableCell hdCode;
         private DevExpress.XtraReports.UI.XRTableCell hdAd;
-        private DevExpress.XtraReports.UI.XRTableCell hdBirim;
+        private DevExpress.XtraReports.UI.XRTableCell hdUnit;
         private DevExpress.XtraReports.UI.XRTableCell hdSistem;
         private DevExpress.XtraReports.UI.XRTableCell hdSayilan;
         private DevExpress.XtraReports.UI.XRTableCell hdFark;

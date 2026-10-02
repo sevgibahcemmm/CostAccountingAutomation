@@ -45,6 +45,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SalesPriceSuggestionForm));
             accentBar = new DevExpress.XtraEditors.PanelControl();
             headerPanel = new DevExpress.XtraEditors.PanelControl();
             lblHeaderSub = new DevExpress.XtraEditors.LabelControl();
@@ -108,13 +109,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblHeaderSub.Appearance.ForeColor = Color.FromArgb(100, 106, 116);
             lblHeaderSub.Appearance.Options.UseFont = true;
             lblHeaderSub.Appearance.Options.UseForeColor = true;
+            lblHeaderSub.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             lblHeaderSub.Location = new Point(66, 39);
             lblHeaderSub.Margin = new Padding(3, 2, 3, 2);
             lblHeaderSub.Name = "lblHeaderSub";
             lblHeaderSub.Size = new Size(400, 15);
             lblHeaderSub.TabIndex = 2;
             lblHeaderSub.Text = "-";
-            lblHeaderSub.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             // 
             // lblHeaderTitle
             // 
@@ -123,12 +124,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblHeaderTitle.Location = new Point(66, 10);
             lblHeaderTitle.Margin = new Padding(3, 2, 3, 2);
             lblHeaderTitle.Name = "lblHeaderTitle";
-            lblHeaderTitle.Size = new Size(300, 28);
+            lblHeaderTitle.Size = new Size(199, 28);
             lblHeaderTitle.TabIndex = 1;
             lblHeaderTitle.Text = "Satış Fiyatı Belirleme";
             // 
             // picHeader
             // 
+            picHeader.EditValue = resources.GetObject("picHeader.EditValue");
             picHeader.Location = new Point(20, 15);
             picHeader.Margin = new Padding(3, 2, 3, 2);
             picHeader.Name = "picHeader";
@@ -137,7 +139,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             picHeader.Properties.SizeMode = DevExpress.XtraEditors.Controls.PictureSizeMode.Zoom;
             picHeader.Size = new Size(34, 34);
             picHeader.TabIndex = 0;
-            picHeader.SvgImage = DxIcon.PriceStock;
             // 
             // headerDivider
             // 
@@ -179,7 +180,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblFormulaValue.Location = new Point(120, 98);
             lblFormulaValue.Margin = new Padding(3, 2, 3, 2);
             lblFormulaValue.Name = "lblFormulaValue";
-            lblFormulaValue.Size = new Size(320, 13);
+            lblFormulaValue.Size = new Size(186, 13);
             lblFormulaValue.TabIndex = 5;
             lblFormulaValue.Text = "(Maliyet + KDV) -> %10 Kâr -> + KDV";
             // 
@@ -192,7 +193,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblFormulaCaption.Location = new Point(24, 98);
             lblFormulaCaption.Margin = new Padding(3, 2, 3, 2);
             lblFormulaCaption.Name = "lblFormulaCaption";
-            lblFormulaCaption.Size = new Size(88, 13);
+            lblFormulaCaption.Size = new Size(38, 13);
             lblFormulaCaption.TabIndex = 4;
             lblFormulaCaption.Text = "HESAP:";
             // 
@@ -200,11 +201,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             // 
             lblTaxValue.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             lblTaxValue.Appearance.Options.UseFont = true;
+            lblTaxValue.Appearance.Options.UseTextOptions = true;
             lblTaxValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
             lblTaxValue.Location = new Point(228, 62);
             lblTaxValue.Margin = new Padding(3, 2, 3, 2);
             lblTaxValue.Name = "lblTaxValue";
-            lblTaxValue.Size = new Size(212, 16);
+            lblTaxValue.Size = new Size(11, 17);
             lblTaxValue.TabIndex = 3;
             lblTaxValue.Text = "%";
             // 
@@ -217,7 +219,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblTaxCaption.Location = new Point(24, 62);
             lblTaxCaption.Margin = new Padding(3, 2, 3, 2);
             lblTaxCaption.Name = "lblTaxCaption";
-            lblTaxCaption.Size = new Size(180, 16);
+            lblTaxCaption.Size = new Size(61, 17);
             lblTaxCaption.TabIndex = 2;
             lblTaxCaption.Text = "KDV Oranı";
             // 
@@ -225,11 +227,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             // 
             lblCostValue.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             lblCostValue.Appearance.Options.UseFont = true;
+            lblCostValue.Appearance.Options.UseTextOptions = true;
             lblCostValue.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
             lblCostValue.Location = new Point(228, 32);
             lblCostValue.Margin = new Padding(3, 2, 3, 2);
             lblCostValue.Name = "lblCostValue";
-            lblCostValue.Size = new Size(212, 16);
+            lblCostValue.Size = new Size(37, 17);
             lblCostValue.TabIndex = 1;
             lblCostValue.Text = "0,00 ₺";
             // 
@@ -242,7 +245,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblCostCaption.Location = new Point(24, 32);
             lblCostCaption.Margin = new Padding(3, 2, 3, 2);
             lblCostCaption.Name = "lblCostCaption";
-            lblCostCaption.Size = new Size(180, 16);
+            lblCostCaption.Size = new Size(75, 17);
             lblCostCaption.TabIndex = 0;
             lblCostCaption.Text = "Maliyet Fiyatı";
             // 
@@ -255,7 +258,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblPriceCaption.Location = new Point(24, 232);
             lblPriceCaption.Margin = new Padding(3, 2, 3, 2);
             lblPriceCaption.Name = "lblPriceCaption";
-            lblPriceCaption.Size = new Size(220, 18);
+            lblPriceCaption.Size = new Size(149, 17);
             lblPriceCaption.TabIndex = 4;
             lblPriceCaption.Text = "Önerilen Satış Fiyatı (₺):";
             // 
@@ -265,8 +268,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             spPrice.Location = new Point(196, 228);
             spPrice.Margin = new Padding(3, 2, 3, 2);
             spPrice.Name = "spPrice";
-            spPrice.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
-            new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
+            spPrice.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             spPrice.Properties.DisplayFormat.FormatString = "n2";
             spPrice.Properties.DisplayFormat.FormatType = DevExpress.Utils.FormatType.Numeric;
             spPrice.Properties.EditFormat.FormatString = "n2";
@@ -274,18 +276,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             spPrice.Properties.Increment = new decimal(new int[] { 10, 0, 0, 0 });
             spPrice.Properties.MaxValue = new decimal(new int[] { 999999999, 0, 0, 0 });
             spPrice.Properties.MinValue = new decimal(new int[] { 1, 0, 0, 0 });
-            spPrice.Size = new Size(296, 26);
+            spPrice.Size = new Size(296, 20);
             spPrice.TabIndex = 5;
             // 
             // chkSaveAsSalePrice
             // 
+            chkSaveAsSalePrice.EditValue = true;
             chkSaveAsSalePrice.Location = new Point(24, 282);
             chkSaveAsSalePrice.Margin = new Padding(3, 2, 3, 2);
             chkSaveAsSalePrice.Name = "chkSaveAsSalePrice";
             chkSaveAsSalePrice.Properties.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             chkSaveAsSalePrice.Properties.Appearance.Options.UseFont = true;
             chkSaveAsSalePrice.Properties.Caption = "Bu fiyatı ürünün satış fiyatı olarak KAYDET";
-            chkSaveAsSalePrice.Size = new Size(468, 26);
+            chkSaveAsSalePrice.Size = new Size(468, 21);
             chkSaveAsSalePrice.TabIndex = 6;
             // 
             // lblInfo
@@ -297,7 +300,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             lblInfo.Location = new Point(24, 314);
             lblInfo.Margin = new Padding(3, 2, 3, 2);
             lblInfo.Name = "lblInfo";
-            lblInfo.Size = new Size(468, 30);
+            lblInfo.Size = new Size(340, 13);
             lblInfo.TabIndex = 7;
             lblInfo.Text = "Kaydedilirse sonraki satış faturalarında bu fiyat otomatik kullanılır.";
             // 
@@ -324,13 +327,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             btnUse.AppearanceHovered.ForeColor = Color.White;
             btnUse.AppearanceHovered.Options.UseBackColor = true;
             btnUse.AppearanceHovered.Options.UseForeColor = true;
+            btnUse.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnUse.ImageOptions.SvgImage");
             btnUse.Location = new Point(328, 430);
             btnUse.Margin = new Padding(3, 2, 3, 2);
             btnUse.Name = "btnUse";
             btnUse.Size = new Size(164, 36);
             btnUse.TabIndex = 10;
             btnUse.Text = "Fiyatı Kullan";
-            btnUse.ImageOptions.SvgImage = DxIcon.Check;
             // 
             // btnCancel
             // 
@@ -340,13 +343,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             btnCancel.Appearance.Options.UseForeColor = true;
             btnCancel.AppearanceHovered.BackColor = Color.FromArgb(244, 245, 247);
             btnCancel.AppearanceHovered.Options.UseBackColor = true;
+            btnCancel.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnCancel.ImageOptions.SvgImage");
             btnCancel.Location = new Point(224, 430);
             btnCancel.Margin = new Padding(3, 2, 3, 2);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(96, 36);
             btnCancel.TabIndex = 9;
             btnCancel.Text = "Vazgeç";
-            btnCancel.ImageOptions.SvgImage = DxIcon.Close;
             // 
             // SalesPriceSuggestionForm
             // 

@@ -21,7 +21,7 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    public abstract class StockIssueListFormBase<TEditForm> : CrudListFormBase<StockIssueGetAllQuery, StockIssueListDto, TEditForm>
+    public abstract partial class StockIssueListFormBase<TEditForm> : CrudListFormBase<StockIssueGetAllQuery, StockIssueListDto, TEditForm>
         where TEditForm : XtraForm
     {
         private readonly StockIssueType _issueType;
@@ -165,6 +165,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
         protected override bool AllowsApprove(StockIssueListDto item)
             => item.Status == StockIssueStatus.Draft;
 
+        /// <summary>Stok belgesi listesi onaylı kayıtları da içerir.</summary>
+        protected override string PendingItemLabel => "stok belgesi";
+
+        protected override bool IsPendingApproval(StockIssueListDto item)
+            => item.Status == StockIssueStatus.Draft;
+
+        /// <summary>Stok belgesi onayı ayrı bir ekranda değil, bu listede yapılır.</summary>
+        protected override Type? PendingApprovalFormType => null;
+
         protected override bool AllowsEdit(StockIssueListDto item)
             => item.Status == StockIssueStatus.Draft;
 
@@ -234,22 +243,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             {
                 DocumentNumber = issue.DocumentNumber,
                 Date = date,
-                IslemCesidi = issue.IssueType == StockIssueType.Consumption ? "Tüketim" : "Atölye Transferi",
-                NeredenGeldigi = warehouseName,
-                KimeVerildigi = issue.TargetAccountName,
-                NereyeVerildigi = string.IsNullOrWhiteSpace(issue.TargetAccountCode)
+                OperationType = issue.IssueType == StockIssueType.Consumption ? "Tüketim" : "Atölye Transferi",
+                SourceParty = warehouseName,
+                RecipientParty = issue.TargetAccountName,
+                DestinationParty = string.IsNullOrWhiteSpace(issue.TargetAccountCode)
                     ? issue.TargetAccountName
                     : $"{issue.TargetAccountCode} - {issue.TargetAccountName}",
-                IlIlceAdi = ilIlce,
-                IlIlceKodu = string.Empty,
-                HarcamaBirimiAdi = company.ExpenditureUnitName ?? string.Empty,
-                HarcamaBirimiKodu = company.ExpenditureUnitCode ?? string.Empty,
-                AmbarAdi = warehouseName,
-                AmbarKodu = warehouseCode,
-                MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
-                MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
-                DayanakTarihi = date,
-                DayanakKodu = issue.DocumentNumber,
+                ProvinceDistrictName = ilIlce,
+                ProvinceDistrictCode = string.Empty,
+                ExpenditureUnitName = company.ExpenditureUnitName ?? string.Empty,
+                ExpenditureUnitCode = company.ExpenditureUnitCode ?? string.Empty,
+                StoreName = warehouseName,
+                StoreCode = warehouseCode,
+                AccountingUnitName = company.AccountingUnitName ?? string.Empty,
+                AccountingUnitCode = company.AccountingUnitCode ?? string.Empty,
+                ReferenceDate = date,
+                ReferenceCode = issue.DocumentNumber,
                 AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(accounts)
             };
 
@@ -258,15 +267,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 ProductCatalogDto? product = productsById.GetValueOrDefault(line.ProductId);
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
-                    Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
-                    DepoKodu = product?.WarehouseCode ?? string.Empty,
-                    DepoAdi = product?.WarehouseName ?? string.Empty,
-                    BarkodNo = product?.Barcode ?? string.Empty,
+                    Code = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
+                    WarehouseCode = product?.WarehouseCode ?? string.Empty,
+                    WarehouseName = product?.WarehouseName ?? string.Empty,
+                    Barcode = product?.Barcode ?? string.Empty,
                     Adi = product?.Name ?? line.ProductName,
-                    OlcuBirimi = product?.ProductUnitTypeName ?? line.UnitTypeName,
-                    Miktari = line.Quantity,
-                    BirimFiyati = line.UnitCost,
-                    Tutari = line.Quantity * line.UnitCost
+                    UnitOfMeasure = product?.ProductUnitTypeName ?? line.UnitTypeName,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitCost,
+                    Amount = line.Quantity * line.UnitCost
                 });
             }
 

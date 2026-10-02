@@ -144,6 +144,14 @@ protected override void ConfigureColumns()
 
         protected override bool AllowsApprove(CostSlipListDto item) => item.Status == CostSlipStatus.Draft;
 
+        /// <summary>Maliyet pusulası listesi onaylı kayıtları da içerir.</summary>
+        protected override string PendingItemLabel => "maliyet pusulası";
+
+        protected override bool IsPendingApproval(CostSlipListDto item) => item.Status == CostSlipStatus.Draft;
+
+        /// <summary>Maliyet pusulası onayı ayrı bir ekranda değil, bu listede yapılır.</summary>
+        protected override Type? PendingApprovalFormType => null;
+
         protected override bool AllowsEdit(CostSlipListDto item) => item.Status != CostSlipStatus.Approved;
 
         protected override bool AllowsDelete(CostSlipListDto item) => item.Status != CostSlipStatus.Approved;
@@ -192,8 +200,8 @@ protected override IRequest<Result<string>>? BuildApproveCommand(CostSlipListDto
                     using var scope = Program.Services.CreateScope();
                     ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-                    GiderDagilimReportResult result = await mediator.Send(
-                        new GiderDagilimReportQuery(dateForm.StartDate, dateForm.EndDate, dateForm.CostSlipType));
+                    ExpenseDistributionReportResult result = await mediator.Send(
+                        new ExpenseDistributionReportQuery(dateForm.StartDate, dateForm.EndDate, dateForm.CostSlipType));
 
                     if (result.Rows.Count == 0)
                     {

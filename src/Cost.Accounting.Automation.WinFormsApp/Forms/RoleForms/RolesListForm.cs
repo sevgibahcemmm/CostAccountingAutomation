@@ -13,8 +13,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
 {
     public sealed partial class RolesListForm : CrudListFormBase<RoleGetAllQuery, RoleDto, RoleEditForm>
     {
-        public RolesListForm() : base("Roller ve Yetkiler")
+public RolesListForm() : base("Roller ve Yetkiler")
         {
+            InitializeComponent();
             InitializeDetailView();
         }
 
@@ -25,21 +26,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
             nameof(RoleDto.Name)
         ];
 
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-
-            foreach (Control ctrl in Controls)
-            {
-                if (ctrl is Panel panel && panel.Dock == DockStyle.Top)
-                {
-                    panel.Height = 100;
-                    break;
-                }
-            }
-        }
-
-        protected override void ConfigureColumns()
+protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
 

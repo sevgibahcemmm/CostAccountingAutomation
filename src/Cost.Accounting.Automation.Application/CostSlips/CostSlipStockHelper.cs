@@ -14,6 +14,45 @@ internal static class CostSlipStockHelper
     private const string LedgerSourceType = "MaliyetTuketimi";
 
     /// <summary>
+    /// Stok yetersizliği hatasında gösterilecek ürün tanımını kurar.
+    /// Ürün kodu varsa "KOD - Ad", adı yoksa sadece kod.
+    /// </summary>
+    private static string BuildProductLabel(Product product)
+    {
+        string code = product.ProductCode.Value;
+        string name = product.Name.Value;
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return name;
+        }
+
+        return string.IsNullOrWhiteSpace(name) ? code : $"{code} - {name}";
+    }
+
+    /// <summary>
+    /// Tüketimin alacak yazılacağı hesabı çözer.
+    ///
+    /// Yarı mamul tüketendiğinde değer yarı mamulün kendi hesabında
+    /// (151.10.xx) taşınır; bu yüzden düşüm oraya alacak yazılmalıdır.
+    /// Atölyeye transfer edilmiş normal malzemelerde ise atölye hesabına
+    /// alacak yazılır (değer zaten transfer ile atölyede toplanmıştır).
+    /// </summary>
+    private static IdentityId ResolveConsumptionAccount(
+        Dictionary<IdentityId, Product> productMap,
+        IdentityId productId,
+        IdentityId workshopId)
+    {
+        Product? product = productMap.TryGetValue(productId, out Product? p) ? p : null;
+
+        return product is not null
+            && product.SemiFinishedProductId is not null
+            && product.ChartOfAccountId is IdentityId productAccountId
+                ? productAccountId
+                : workshopId;
+    }
+
+    /// <summary>
     /// Maliyet pusulası onaylandığında stok yan etkilerini üretir:
     /// - Malzeme kalemleri için atölyedeki stoklardan FIFO/LIFO birim maliyetle ÇIKIŞ hareketi
     ///   ve karşılığında yevmiye kaydı: atölye hesabı ALACAK (malzeme tutarı atölye bakiyesinden düşülür).
@@ -105,52 +144,68 @@ internal static class CostSlipStockHelper
 
             if (requested.Value > available)
             {
+                // Kullanıcıya ham GUID gösterilemez; ekranda neyin yetmediğini
+                // ürün kodu ve adıyla söylemek gerekir.
+                string label = productMap.TryGetValue(requested.Key, out Product? product)
+                    ? BuildProductLabel(product)
+                    : requested.Key.Value.ToString();
+
                 return Result<CostSlipStockPlan>.Failure(
-                    $"'{requested.Key.Value}' için bu tarihe kadar yeterli stok yok. Mevcut: {available:n2}, istenen: {requested.Value:n2}.");
+                    $"'{label}' için {slip.CostDate:dd.MM.yyyy} tarihine kadar yeterli stok yok. "
+                    + $"Mevcut: {available:n2}, istenen: {requested.Value:n2}.");
             }
         }
-
-        Dictionary<IdentityId, decimal> costMap = StockIssueCostingHelper.BuildUnitCostMap(
-            movements,
-            requestedQuantities,
-            costingMethod,
-            slip.CostDate);
 
         List<ProductMovement> plannedMovements = [];
         List<PlannedLedgerEntry> plannedLedger = [];
 
-        foreach (var line in materialLines)
+        // Tüketim ÜRÜN bazında planlanır, satır bazında değil. Aynı ürün
+        // pusulada birden fazla satırda geçse bile katmanlar TEK SEFER tüketilir;
+        // satır bazında planlansaydı her satır ilk girişten bağımsız olarak
+        // düşer ve ilk giriş aşılırdı.
+        foreach (KeyValuePair<IdentityId, decimal> requested in requestedQuantities)
         {
-            IdentityId productId = line.ProductId!;
-            decimal unitCost = costMap.TryGetValue(productId, out decimal cost) ? cost : 0m;
+            IdentityId productId = requested.Key;
+            decimal quantity = requested.Value;
 
-            ProductMovement output = new(
-                productId: productId,
-                movementType: ProductMovementType.Output,
-                quantity: line.Quantity,
-                unitPrice: new Price(unitCost),
-                date: slip.CostDate,
-                referenceNo: slip.SlipNumber,
-                description: new Description($"{ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix}{slip.SlipNumber}"));
-
-            plannedMovements.Add(output);
-
-            decimal amount = Math.Round(line.Quantity * unitCost, 2);
-            if (amount > 0)
+            if (quantity <= 0)
             {
-                // Yarı mamul tüketendiğinde değer yarı mamulün kendi hesabında
-                // (151.10.xx) taşınır; bu yüzden düşüm oraya alacak yazılmalıdır.
-                // Atölyeye transfer edilmiş normal malzemelerde ise atölye hesabına
-                // alacak yazılır (değer zaten transfer ile atölyede toplanmıştır).
-                Product? product = productMap.TryGetValue(productId, out Product? p) ? p : null;
-                IdentityId ledgerAccountId = product is not null
-                    && product.SemiFinishedProductId is not null
-                    && product.ChartOfAccountId is IdentityId productAccountId
-                        ? productAccountId
-                        : slip.WorkshopId;
+                continue;
+            }
 
-                plannedLedger.Add(new PlannedLedgerEntry(
-                    ledgerAccountId, 0, amount, LedgerSourceType, output.Id));
+            // FIFO/LIFO kırılımı: ilk giriş tamamen tüketilir, kalan miktar bir
+            // sonraki girişten alınır.
+            List<(decimal Quantity, decimal UnitPrice)> layers =
+                StockIssueCostingHelper.BuildConsumptionLayers(
+                    movements, productId, quantity, costingMethod, slip.CostDate);
+
+            IdentityId ledgerAccountId =
+                ResolveConsumptionAccount(productMap, productId, slip.WorkshopId);
+
+            // Her katman için AYRI çıkış hareketi yazılır. Tek bir ortalama
+            // fiyatlı satır yazılsaydı o fiyat hiçbir giriş kaydına uymaz ve
+            // stok hareketi raporunda (fiyat grup anahtarı) girişi olmayan,
+            // bakiyesi eksi satırlar oluşurdu.
+            foreach ((decimal layerQuantity, decimal layerUnitPrice) in layers)
+            {
+                ProductMovement output = new(
+                    productId: productId,
+                    movementType: ProductMovementType.Output,
+                    quantity: layerQuantity,
+                    unitPrice: new Price(layerUnitPrice),
+                    date: slip.CostDate,
+                    referenceNo: slip.SlipNumber,
+                    description: new Description($"{ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix}{slip.SlipNumber}"));
+
+                plannedMovements.Add(output);
+
+                decimal amount = Math.Round(layerQuantity * layerUnitPrice, 2);
+
+                if (amount > 0)
+                {
+                    plannedLedger.Add(new PlannedLedgerEntry(
+                        ledgerAccountId, 0, amount, LedgerSourceType, output.Id));
+                }
             }
         }
 

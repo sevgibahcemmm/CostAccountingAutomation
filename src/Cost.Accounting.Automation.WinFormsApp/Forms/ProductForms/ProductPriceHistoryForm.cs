@@ -8,8 +8,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
     /// <summary>Ürün detay formundan açılan salt okunur fiyat geçmişi penceresi.</summary>
     public sealed partial class ProductPriceHistoryForm : XtraForm
     {
-        private readonly ProductDetailDto _detail;
+        /// <summary>
+        /// Tasarım yüzeyi yapıcısında doldurulmaz; gerçek açılışta verilen <c>detail</c> atanır.
+        /// </summary>
+        private readonly ProductDetailDto _detail = default!;
         private readonly IDisposable? skinBinding;
+
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta
+        /// <see cref="ProductPriceHistoryForm(ProductDetailDto)"/> kullanılır.
+        /// </summary>
+        public ProductPriceHistoryForm()
+        {
+            InitializeComponent();
+            ApplyLayout();
+            DesignTime.Guard(typeof(ProductPriceHistoryForm));
+        }
 
         public ProductPriceHistoryForm(ProductDetailDto detail)
         {

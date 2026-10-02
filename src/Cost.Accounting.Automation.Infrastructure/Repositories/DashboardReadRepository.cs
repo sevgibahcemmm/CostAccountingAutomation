@@ -1,6 +1,7 @@
 ﻿using Cost.Accounting.Automation.Application.Dashboards;
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Customers;
 using Cost.Accounting.Automation.Domain.Invoices;
@@ -47,6 +48,16 @@ internal sealed class DashboardReadRepository(
             .CountAsync(i => i.Status == InvoiceStatus.Approved, cancellationToken);
         int draftInvoices = await db.Set<Invoice>().AsNoTracking()
             .CountAsync(i => i.Status == InvoiceStatus.Draft, cancellationToken);
+
+        // Onay bekleyen kayıt kuralı liste ekranlarıyla birebir aynıdır:
+        // fatura, maliyet pusulası ve stok belgesi listelerinde de onay
+        // yalnızca Draft durumundaki kayıtlar için verilebilir.
+        int draftCostSlips = await db.Set<CostSlip>().AsNoTracking()
+            .CountAsync(c => c.Status == CostSlipStatus.Draft, cancellationToken);
+        int draftStockIssues = await db.Set<StockIssue>().AsNoTracking()
+            .CountAsync(s => s.Status == StockIssueStatus.Draft, cancellationToken);
+        int pendingApprovals = draftInvoices + draftCostSlips + draftStockIssues;
+
         int stockIssues = await db.Set<StockIssue>().AsNoTracking().CountAsync(cancellationToken);
         int totalProducts = await db.Set<Product>().AsNoTracking().CountAsync(cancellationToken);
 
@@ -100,7 +111,8 @@ internal sealed class DashboardReadRepository(
             SemiFinishedProducts: semiFinishedProducts,
             FinishedProducts: finishedProducts,
             TotalStockQuantity: stockSummary?.TotalQuantity ?? 0m,
-            TotalStockValue: stockSummary?.TotalValue ?? 0m);
+            TotalStockValue: stockSummary?.TotalValue ?? 0m,
+            PendingApprovals: pendingApprovals);
     }
 
     public async Task<DashboardBalanceTotals> GetBalanceTotalsAsync(

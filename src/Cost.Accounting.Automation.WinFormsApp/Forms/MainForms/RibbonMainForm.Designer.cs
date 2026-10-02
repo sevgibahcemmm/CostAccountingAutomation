@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -12,6 +12,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -31,46 +32,51 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ribbon = new DevExpress.XtraBars.Ribbon.RibbonControl();
             skinRibbonGalleryBarItem1 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
             accordionControl = new DevExpress.XtraBars.Navigation.AccordionControl();
-            elmAnaSayfa = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            grpStok = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmUrunler = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmBirimCinsleri = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmKdvOranlari = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmStokGirisi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmStokCikisi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmStokHareketleri = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmFiyatStokListesi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmTuketim = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmAtolyeTransferi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmAtolyeStokRaporu = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmTuketimBirimleri = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            grpFaturalar = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmFaturalar = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmFaturaOnaylama = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            grpCari = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmMusteriler = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmTedarikciler = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmCariHareketler = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmCariBorcAlacakOzeti = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            grpMuhasebe = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmHesapPlani = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmOdemeTahsilat = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmDevirIslemleri = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmMaliyetPusulasi = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmRecete = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            grpSistem = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmSirketAyarlari = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmKullanicilar = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmRoller = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmCikis = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmHome = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpStockMaster = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmProducts = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmUnitTypes = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmTaxRates = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmConsumptionUnits = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpStockOperations = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmStockInput = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmStockOutput = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmConsumption = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmWorkshopTransfer = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpInvoices = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmInvoices = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmInvoiceApproval = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpCurrentAccounts = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmCustomers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmSuppliers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmCurrentAccountMovements = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmPayments = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmCurrentAccountBalance = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpCosting = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmCostSlips = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmRecipes = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmWorkshopAnalysis = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpAccounting = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmChartOfAccounts = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmCarryForwardOperations = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpReports = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmStockMovements = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmPriceStockList = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmWorkshopStockReport = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpSystem = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmCompanies = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmUsers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmEmployees = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmExit = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             xtraTabbedMdiManager = new DevExpress.XtraTabbedMdi.XtraTabbedMdiManager(components);
             ((System.ComponentModel.ISupportInitialize)ribbon).BeginInit();
             ((System.ComponentModel.ISupportInitialize)accordionControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)xtraTabbedMdiManager).BeginInit();
             SuspendLayout();
-            // 
+            //
             // ribbonStatusBar
-            // 
+            //
             ribbonStatusBar.ItemLinks.Add(barButtonItemCompanyName);
             ribbonStatusBar.ItemLinks.Add(barButtonItemUserName);
             ribbonStatusBar.ItemLinks.Add(barButtonItemRoleName);
@@ -82,48 +88,48 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ribbonStatusBar.Name = "ribbonStatusBar";
             ribbonStatusBar.Ribbon = ribbon;
             ribbonStatusBar.Size = new Size(1411, 24);
-            // 
+            //
             // barButtonItemCompanyName
-            // 
+            //
             barButtonItemCompanyName.Caption = " ";
             barButtonItemCompanyName.Id = 1;
             barButtonItemCompanyName.Name = "barButtonItemCompanyName";
-            // 
+            //
             // barButtonItemUserName
-            // 
+            //
             barButtonItemUserName.Caption = " ";
             barButtonItemUserName.Id = 2;
             barButtonItemUserName.Name = "barButtonItemUserName";
-            // 
+            //
             // barButtonItemRoleName
-            // 
+            //
             barButtonItemRoleName.Caption = " ";
             barButtonItemRoleName.Id = 3;
             barButtonItemRoleName.Name = "barButtonItemRoleName";
-            // 
+            //
             // barButtonItemLongDate
-            // 
+            //
             barButtonItemLongDate.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
             barButtonItemLongDate.Caption = " ";
             barButtonItemLongDate.Id = 4;
             barButtonItemLongDate.Name = "barButtonItemLongDate";
-            // 
+            //
             // barButtonItemTime
-            // 
+            //
             barButtonItemTime.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
             barButtonItemTime.Caption = " ";
             barButtonItemTime.Id = 5;
             barButtonItemTime.Name = "barButtonItemTime";
-            // 
+            //
             // barButtonItemExpTime
-            // 
+            //
             barButtonItemExpTime.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
             barButtonItemExpTime.Caption = " ";
             barButtonItemExpTime.Id = 6;
             barButtonItemExpTime.Name = "barButtonItemExpTime";
-            // 
+            //
             // ribbon
-            // 
+            //
             ribbon.ApplicationButtonImageOptions.Image = (Image)resources.GetObject("ribbon.ApplicationButtonImageOptions.Image");
             ribbon.CaptionBarItemLinks.Add(skinRibbonGalleryBarItem1);
             ribbon.EmptyAreaImageOptions.ImagePadding = new Padding(26, 24, 26, 24);
@@ -139,253 +145,287 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ribbon.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonControlStyle.Office2007;
             ribbon.Size = new Size(1411, 58);
             ribbon.StatusBar = ribbonStatusBar;
-            // 
+            //
             // skinRibbonGalleryBarItem1
-            // 
+            //
             skinRibbonGalleryBarItem1.Caption = "Tema";
             skinRibbonGalleryBarItem1.Description = "Tema";
             skinRibbonGalleryBarItem1.Id = 7;
             skinRibbonGalleryBarItem1.Name = "skinRibbonGalleryBarItem1";
-            // 
+            //
             // accordionControl
-            // 
+            //
             accordionControl.Dock = DockStyle.Left;
-            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmAnaSayfa, grpStok, grpFaturalar, grpCari, grpMuhasebe, grpSistem, elmCikis });
+            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHome, grpStockMaster, grpStockOperations, grpInvoices, grpCurrentAccounts, grpCosting, grpAccounting, grpReports, grpSystem, elmExit });
             accordionControl.Location = new Point(0, 58);
             accordionControl.Margin = new Padding(3, 2, 3, 2);
             accordionControl.Name = "accordionControl";
             accordionControl.Size = new Size(260, 676);
             accordionControl.TabIndex = 2;
             accordionControl.ViewType = DevExpress.XtraBars.Navigation.AccordionControlViewType.HamburgerMenu;
-            // 
-            // elmAnaSayfa
-            // 
-            elmAnaSayfa.Expanded = true;
-            elmAnaSayfa.Name = "elmAnaSayfa";
-            elmAnaSayfa.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmAnaSayfa.Tag = 0;
-            elmAnaSayfa.Text = "Ana Sayfa";
-            // 
-            // grpStok
-            // 
-            grpStok.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmUrunler, elmBirimCinsleri, elmKdvOranlari, elmStokGirisi, elmStokCikisi, elmStokHareketleri, elmFiyatStokListesi, elmTuketim, elmAtolyeTransferi, elmAtolyeStokRaporu, elmTuketimBirimleri });
-            grpStok.Name = "grpStok";
-            grpStok.Tag = 2;
-            grpStok.Text = "Stok Yönetimi";
-            // 
-            // elmUrunler
-            // 
-            elmUrunler.Name = "elmUrunler";
-            elmUrunler.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmUrunler.Tag = 2;
-            elmUrunler.Text = "Ürünler";
-            // 
-            // elmBirimCinsleri
-            // 
-            elmBirimCinsleri.Name = "elmBirimCinsleri";
-            elmBirimCinsleri.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmBirimCinsleri.Tag = 2;
-            elmBirimCinsleri.Text = "Birim Cinsleri";
-            // 
-            // elmKdvOranlari
-            // 
-            elmKdvOranlari.Name = "elmKdvOranlari";
-            elmKdvOranlari.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmKdvOranlari.Tag = 2;
-            elmKdvOranlari.Text = "KDV Oranları";
-            // 
-            // elmStokGirisi
-            // 
-            elmStokGirisi.Name = "elmStokGirisi";
-            elmStokGirisi.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmStokGirisi.Tag = 2;
-            elmStokGirisi.Text = "Stok Girişi";
-            // 
-            // elmStokCikisi
-            // 
-            elmStokCikisi.Name = "elmStokCikisi";
-            elmStokCikisi.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmStokCikisi.Tag = 2;
-            elmStokCikisi.Text = "Stok Çıkışı";
-            // 
-            // elmStokHareketleri
-            // 
-            elmStokHareketleri.Name = "elmStokHareketleri";
-            elmStokHareketleri.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmStokHareketleri.Tag = 2;
-            elmStokHareketleri.Text = "Stok Hareketleri";
-            // 
-            // elmFiyatStokListesi
-            // 
-            elmFiyatStokListesi.Name = "elmFiyatStokListesi";
-            elmFiyatStokListesi.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmFiyatStokListesi.Tag = 2;
-            elmFiyatStokListesi.Text = "Fiyat & Stok Listesi";
-            // 
-            // elmTuketim
-            // 
-            elmTuketim.Name = "elmTuketim";
-            elmTuketim.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmTuketim.Tag = 2;
-            elmTuketim.Text = "Tüketim";
-            // 
-            // elmAtolyeTransferi
-            // 
-            elmAtolyeTransferi.Name = "elmAtolyeTransferi";
-            elmAtolyeTransferi.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmAtolyeTransferi.Tag = 2;
-            elmAtolyeTransferi.Text = "Atölye Transferi";
-            // 
-            // elmAtolyeStokRaporu
-            // 
-            elmAtolyeStokRaporu.Name = "elmAtolyeStokRaporu";
-            elmAtolyeStokRaporu.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmAtolyeStokRaporu.Tag = 2;
-            elmAtolyeStokRaporu.Text = "Atölye Stok Raporu";
-            // 
-            // elmTuketimBirimleri
-            // 
-            elmTuketimBirimleri.Name = "elmTuketimBirimleri";
-            elmTuketimBirimleri.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmTuketimBirimleri.Tag = 2;
-            elmTuketimBirimleri.Text = "Tüketim Birimleri";
-            // 
-            // grpFaturalar
-            // 
-            grpFaturalar.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmFaturalar, elmFaturaOnaylama });
-            grpFaturalar.Name = "grpFaturalar";
-            grpFaturalar.Tag = 3;
-            grpFaturalar.Text = "Faturalar";
-            // 
-            // elmFaturalar
-            // 
-            elmFaturalar.Name = "elmFaturalar";
-            elmFaturalar.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmFaturalar.Tag = 3;
-            elmFaturalar.Text = "Faturalar (Tümü)";
-            // 
-            // elmFaturaOnaylama
-            // 
-            elmFaturaOnaylama.Name = "elmFaturaOnaylama";
-            elmFaturaOnaylama.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmFaturaOnaylama.Tag = 3;
-            elmFaturaOnaylama.Text = "Fatura Onaylama";
-            // 
-            // grpCari
-            // 
-            grpCari.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmMusteriler, elmTedarikciler, elmCariHareketler, elmCariBorcAlacakOzeti });
-            grpCari.Name = "grpCari";
-            grpCari.Tag = 5;
-            grpCari.Text = "Cari Yönetimi";
-            // 
-            // elmMusteriler
-            // 
-            elmMusteriler.Name = "elmMusteriler";
-            elmMusteriler.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmMusteriler.Tag = 5;
-            elmMusteriler.Text = "Müşteriler";
-            // 
-            // elmTedarikciler
-            // 
-            elmTedarikciler.Name = "elmTedarikciler";
-            elmTedarikciler.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmTedarikciler.Tag = 5;
-            elmTedarikciler.Text = "Tedarikçiler";
-            // 
-            // elmCariHareketler
-            // 
-            elmCariHareketler.Name = "elmCariHareketler";
-            elmCariHareketler.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmCariHareketler.Tag = 5;
-            elmCariHareketler.Text = "Cari Hareketler";
-            // 
-            // elmCariBorcAlacakOzeti
-            // 
-            elmCariBorcAlacakOzeti.Name = "elmCariBorcAlacakOzeti";
-            elmCariBorcAlacakOzeti.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmCariBorcAlacakOzeti.Tag = 5;
-            elmCariBorcAlacakOzeti.Text = "Cari Borç/Alacak Özeti";
-            // 
-            // grpMuhasebe
-            // 
-            grpMuhasebe.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHesapPlani, elmDevirIslemleri, elmOdemeTahsilat, elmMaliyetPusulasi, elmRecete });
-            grpMuhasebe.Expanded = true;
-            grpMuhasebe.Name = "grpMuhasebe";
-            grpMuhasebe.Tag = 6;
-            grpMuhasebe.Text = "Muhasebe Yönetimi";
-            // 
-            // elmHesapPlani
-            // 
-            elmHesapPlani.Name = "elmHesapPlani";
-            elmHesapPlani.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmHesapPlani.Tag = 6;
-            elmHesapPlani.Text = "Hesap Planı";
-            // 
-            // elmOdemeTahsilat
-            // 
-            elmOdemeTahsilat.Name = "elmOdemeTahsilat";
-            elmOdemeTahsilat.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmOdemeTahsilat.Tag = 6;
-            elmOdemeTahsilat.Text = "Ödeme / Tahsilat";
-            // 
-            // elmDevirIslemleri
-            // 
-            elmDevirIslemleri.Name = "elmDevirIslemleri";
-            elmDevirIslemleri.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmDevirIslemleri.Tag = 6;
-            elmDevirIslemleri.Text = "Devir İşlemleri";
-            // 
-            // elmMaliyetPusulasi
-            // 
-            elmMaliyetPusulasi.Name = "elmMaliyetPusulasi";
-            elmMaliyetPusulasi.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmMaliyetPusulasi.Tag = 6;
-            elmMaliyetPusulasi.Text = "Maliyet Pusulası";
-            // 
-            // elmRecete
-            // 
-            elmRecete.Name = "elmRecete";
-            elmRecete.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmRecete.Tag = 6;
-            elmRecete.Text = "Reçeteler";
-            // 
-            // grpSistem
-            // 
-            grpSistem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmSirketAyarlari, elmKullanicilar, elmRoller });
-            grpSistem.Name = "grpSistem";
-            grpSistem.Tag = 8;
-            grpSistem.Text = "Sistem Yönetimi";
-            // 
-            // elmSirketAyarlari
-            // 
-            elmSirketAyarlari.Name = "elmSirketAyarlari";
-            elmSirketAyarlari.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmSirketAyarlari.Tag = 8;
-            elmSirketAyarlari.Text = "Şirket Ayarları";
-            // 
-            // elmKullanicilar
-            // 
-            elmKullanicilar.Name = "elmKullanicilar";
-            elmKullanicilar.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmKullanicilar.Tag = 8;
-            elmKullanicilar.Text = "Kullanıcılar";
-            // 
-            // elmRoller
-            // 
-            elmRoller.Name = "elmRoller";
-            elmRoller.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmRoller.Tag = 8;
-            elmRoller.Text = "Roller ve Yetkiler";
-            // 
-            // elmCikis
-            // 
-            elmCikis.Name = "elmCikis";
-            elmCikis.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmCikis.Tag = 99;
-            elmCikis.Text = "Çıkış";
-            // 
+            //
+            // elmHome
+            //
+            elmHome.Expanded = true;
+            elmHome.Name = "elmHome";
+            elmHome.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmHome.Tag = 0;
+            elmHome.Text = "Ana Sayfa";
+            //
+            // grpStockMaster
+            //
+            grpStockMaster.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmProducts, elmUnitTypes, elmTaxRates, elmConsumptionUnits });
+            grpStockMaster.Name = "grpStockMaster";
+            grpStockMaster.Tag = 1;
+            grpStockMaster.Text = "Stok Yönetimi";
+            //
+            // elmProducts
+            //
+            elmProducts.Name = "elmProducts";
+            elmProducts.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmProducts.Tag = 1;
+            elmProducts.Text = "Ürünler";
+            //
+            // elmUnitTypes
+            //
+            elmUnitTypes.Name = "elmUnitTypes";
+            elmUnitTypes.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmUnitTypes.Tag = 1;
+            elmUnitTypes.Text = "Birim Cinsleri";
+            //
+            // elmTaxRates
+            //
+            elmTaxRates.Name = "elmTaxRates";
+            elmTaxRates.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmTaxRates.Tag = 1;
+            elmTaxRates.Text = "KDV Oranları";
+            //
+            // elmConsumptionUnits
+            //
+            elmConsumptionUnits.Name = "elmConsumptionUnits";
+            elmConsumptionUnits.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmConsumptionUnits.Tag = 1;
+            elmConsumptionUnits.Text = "Tüketim Birimleri";
+            //
+            // grpStockOperations
+            //
+            grpStockOperations.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmStockInput, elmStockOutput, elmConsumption, elmWorkshopTransfer });
+            grpStockOperations.Name = "grpStockOperations";
+            grpStockOperations.Tag = 2;
+            grpStockOperations.Text = "Stok İşlemleri";
+            //
+            // elmStockInput
+            //
+            elmStockInput.Name = "elmStockInput";
+            elmStockInput.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmStockInput.Tag = 2;
+            elmStockInput.Text = "Stok Girişi";
+            //
+            // elmStockOutput
+            //
+            elmStockOutput.Name = "elmStockOutput";
+            elmStockOutput.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmStockOutput.Tag = 2;
+            elmStockOutput.Text = "Stok Çıkışı";
+            //
+            // elmConsumption
+            //
+            elmConsumption.Name = "elmConsumption";
+            elmConsumption.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmConsumption.Tag = 2;
+            elmConsumption.Text = "Tüketim";
+            //
+            // elmWorkshopTransfer
+            //
+            elmWorkshopTransfer.Name = "elmWorkshopTransfer";
+            elmWorkshopTransfer.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmWorkshopTransfer.Tag = 2;
+            elmWorkshopTransfer.Text = "Atölye Transferi";
+            //
+            // grpInvoices
+            //
+            grpInvoices.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmInvoices, elmInvoiceApproval });
+            grpInvoices.Name = "grpInvoices";
+            grpInvoices.Tag = 3;
+            grpInvoices.Text = "Faturalar";
+            //
+            // elmInvoices
+            //
+            elmInvoices.Name = "elmInvoices";
+            elmInvoices.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmInvoices.Tag = 3;
+            elmInvoices.Text = "Faturalar (Tümü)";
+            //
+            // elmInvoiceApproval
+            //
+            elmInvoiceApproval.Name = "elmInvoiceApproval";
+            elmInvoiceApproval.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmInvoiceApproval.Tag = 3;
+            elmInvoiceApproval.Text = "Fatura Onaylama";
+            //
+            // grpCurrentAccounts
+            //
+            grpCurrentAccounts.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCustomers, elmSuppliers, elmCurrentAccountMovements, elmPayments, elmCurrentAccountBalance });
+            grpCurrentAccounts.Name = "grpCurrentAccounts";
+            grpCurrentAccounts.Tag = 4;
+            grpCurrentAccounts.Text = "Cari Yönetimi";
+            //
+            // elmCustomers
+            //
+            elmCustomers.Name = "elmCustomers";
+            elmCustomers.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCustomers.Tag = 4;
+            elmCustomers.Text = "Müşteriler";
+            //
+            // elmSuppliers
+            //
+            elmSuppliers.Name = "elmSuppliers";
+            elmSuppliers.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmSuppliers.Tag = 4;
+            elmSuppliers.Text = "Tedarikçiler";
+            //
+            // elmCurrentAccountMovements
+            //
+            elmCurrentAccountMovements.Name = "elmCurrentAccountMovements";
+            elmCurrentAccountMovements.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCurrentAccountMovements.Tag = 4;
+            elmCurrentAccountMovements.Text = "Cari Hareketler";
+            //
+            // elmPayments
+            //
+            elmPayments.Name = "elmPayments";
+            elmPayments.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmPayments.Tag = 4;
+            elmPayments.Text = "Ödeme / Tahsilat";
+            //
+            // elmCurrentAccountBalance
+            //
+            elmCurrentAccountBalance.Name = "elmCurrentAccountBalance";
+            elmCurrentAccountBalance.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCurrentAccountBalance.Tag = 4;
+            elmCurrentAccountBalance.Text = "Cari Borç/Alacak Özeti";
+            //
+            // grpCosting
+            //
+            grpCosting.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCostSlips, elmRecipes, elmWorkshopAnalysis });
+            grpCosting.Name = "grpCosting";
+            grpCosting.Tag = 5;
+            grpCosting.Text = "Maliyet & Üretim";
+            //
+            // elmCostSlips
+            //
+            elmCostSlips.Name = "elmCostSlips";
+            elmCostSlips.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCostSlips.Tag = 5;
+            elmCostSlips.Text = "Maliyet Pusulası";
+            //
+            // elmRecipes
+            //
+            elmRecipes.Name = "elmRecipes";
+            elmRecipes.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmRecipes.Tag = 5;
+            elmRecipes.Text = "Reçeteler";
+            //
+            // elmWorkshopAnalysis
+            //
+            elmWorkshopAnalysis.Name = "elmWorkshopAnalysis";
+            elmWorkshopAnalysis.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmWorkshopAnalysis.Tag = 5;
+            elmWorkshopAnalysis.Text = "Atölye Gelir/Gider Analizi";
+            //
+            // grpAccounting
+            //
+            grpAccounting.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmChartOfAccounts, elmCarryForwardOperations });
+            grpAccounting.Name = "grpAccounting";
+            grpAccounting.Tag = 6;
+            grpAccounting.Text = "Muhasebe";
+            //
+            // elmChartOfAccounts
+            //
+            elmChartOfAccounts.Name = "elmChartOfAccounts";
+            elmChartOfAccounts.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmChartOfAccounts.Tag = 6;
+            elmChartOfAccounts.Text = "Hesap Planı";
+            //
+            // elmCarryForwardOperations
+            //
+            elmCarryForwardOperations.Name = "elmCarryForwardOperations";
+            elmCarryForwardOperations.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCarryForwardOperations.Tag = 6;
+            elmCarryForwardOperations.Text = "Devir İşlemleri";
+            //
+            // grpReports
+            //
+            grpReports.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmStockMovements, elmPriceStockList, elmWorkshopStockReport });
+            grpReports.Name = "grpReports";
+            grpReports.Tag = 7;
+            grpReports.Text = "Raporlar";
+            //
+            // elmStockMovements
+            //
+            elmStockMovements.Name = "elmStockMovements";
+            elmStockMovements.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmStockMovements.Tag = 7;
+            elmStockMovements.Text = "Stok Hareketleri";
+            //
+            // elmPriceStockList
+            //
+            elmPriceStockList.Name = "elmPriceStockList";
+            elmPriceStockList.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmPriceStockList.Tag = 7;
+            elmPriceStockList.Text = "Fiyat & Stok Listesi";
+            //
+            // elmWorkshopStockReport
+            //
+            elmWorkshopStockReport.Name = "elmWorkshopStockReport";
+            elmWorkshopStockReport.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmWorkshopStockReport.Tag = 7;
+            elmWorkshopStockReport.Text = "Atölye Stok Raporu";
+            //
+            // grpSystem
+            //
+            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, elmUsers, elmRoles, elmEmployees });
+            grpSystem.Name = "grpSystem";
+            grpSystem.Tag = 8;
+            grpSystem.Text = "Sistem Yönetimi";
+            //
+            // elmCompanies
+            //
+            elmCompanies.Name = "elmCompanies";
+            elmCompanies.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCompanies.Tag = 8;
+            elmCompanies.Text = "Şirket Ayarları";
+            //
+            // elmUsers
+            //
+            elmUsers.Name = "elmUsers";
+            elmUsers.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmUsers.Tag = 8;
+            elmUsers.Text = "Kullanıcılar";
+            //
+            // elmRoles
+            //
+            elmRoles.Name = "elmRoles";
+            elmRoles.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmRoles.Tag = 8;
+            elmRoles.Text = "Roller ve Yetkiler";
+            //
+            // elmEmployees
+            //
+            elmEmployees.Name = "elmEmployees";
+            elmEmployees.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmEmployees.Tag = 8;
+            elmEmployees.Text = "Personel";
+            //
+            // elmExit
+            //
+            elmExit.Name = "elmExit";
+            elmExit.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmExit.Tag = 99;
+            elmExit.Text = "Çıkış";
+            //
             // RibbonMainForm
-            // 
+            //
             AllowFormGlass = DevExpress.Utils.DefaultBoolean.False;
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -410,39 +450,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         #endregion
 
         private DevExpress.XtraBars.Ribbon.RibbonStatusBar ribbonStatusBar;
-        private DevExpress.XtraBars.Navigation.AccordionControl accordionControl;
-private DevExpress.XtraBars.Navigation.AccordionControlElement elmAnaSayfa;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement grpStok;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmUrunler;
-private DevExpress.XtraBars.Navigation.AccordionControlElement elmBirimCinsleri;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmKdvOranlari;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmStokGirisi;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmStokCikisi;
-private DevExpress.XtraBars.Navigation.AccordionControlElement elmStokHareketleri;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmFiyatStokListesi;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmTuketim;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmAtolyeTransferi;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmAtolyeStokRaporu;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmTuketimBirimleri;
-private DevExpress.XtraBars.Navigation.AccordionControlElement grpFaturalar;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmFaturalar;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmFaturaOnaylama;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement grpCari;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmMusteriler;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmTedarikciler;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCariHareketler;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCariBorcAlacakOzeti;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement grpMuhasebe;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmHesapPlani;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmOdemeTahsilat;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmDevirIslemleri;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmMaliyetPusulasi;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmRecete = null!;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement grpSistem;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmSirketAyarlari;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmKullanicilar;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmRoller;
-        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCikis;
         private DevExpress.XtraBars.Ribbon.RibbonControl ribbon;
         private DevExpress.XtraBars.SkinRibbonGalleryBarItem skinRibbonGalleryBarItem1;
         private DevExpress.XtraBars.BarButtonItem barButtonItemCompanyName;
@@ -451,6 +458,65 @@ private DevExpress.XtraBars.Navigation.AccordionControlElement grpFaturalar;
         private DevExpress.XtraBars.BarButtonItem barButtonItemLongDate;
         private DevExpress.XtraBars.BarButtonItem barButtonItemTime;
         private DevExpress.XtraBars.BarButtonItem barButtonItemExpTime;
+
+        private DevExpress.XtraBars.Navigation.AccordionControl accordionControl;
+
+        // Ana Sayfa
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmHome;
+
+        // Stok Yönetimi (tanımlar)
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpStockMaster;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmProducts;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmUnitTypes;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmTaxRates;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmConsumptionUnits;
+
+        // Stok İşlemleri
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpStockOperations;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmStockInput;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmStockOutput;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmConsumption;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmWorkshopTransfer;
+
+        // Faturalar
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpInvoices;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmInvoices;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmInvoiceApproval;
+
+        // Cari Yönetimi
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpCurrentAccounts;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCustomers;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmSuppliers;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCurrentAccountMovements;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmPayments;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCurrentAccountBalance;
+
+        // Maliyet & Üretim
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpCosting;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCostSlips;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmRecipes;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmWorkshopAnalysis;
+
+        // Muhasebe
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpAccounting;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmChartOfAccounts;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCarryForwardOperations;
+
+        // Raporlar
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpReports;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmStockMovements;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmPriceStockList;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmWorkshopStockReport;
+
+        // Sistem Yönetimi
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpSystem;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCompanies;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmUsers;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmRoles;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmEmployees;
+
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmExit;
+
         private DevExpress.XtraTabbedMdi.XtraTabbedMdiManager xtraTabbedMdiManager;
     }
 }

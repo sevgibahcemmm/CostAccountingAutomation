@@ -15,8 +15,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 /// </summary>
 internal static class DashboardChartLoader
 {
-    private const string CurrencyFormat = "n0";
-    private const string QuantityFormat = "n0";
+    private const string CurrencyFormat = "n2";
+    private const string QuantityFormat = "n2";
 
     // ------------------------------------------------------------------ bar
 
@@ -51,6 +51,20 @@ internal static class DashboardChartLoader
         ChartControl chart,
         IReadOnlyList<DashboardBalancePoint> data,
         Color color)
+        => LoadHorizontalBarValues(
+            chart,
+            [.. data.Select(d => (d.Label, d.Amount))],
+            color);
+
+    /// <summary>
+    /// Değer listesi için yatay bar. Farklı raporların kendi DTO'ları olsa da
+    /// grafik stilleri tek yerden yönetilebilsin diye değerler tuple olarak
+    /// verilir.
+    /// </summary>
+    public static void LoadHorizontalBarValues(
+        ChartControl chart,
+        IReadOnlyList<(string Label, decimal Value)> data,
+        Color color)
     {
         Render(chart, "Tutar", series =>
         {
@@ -60,10 +74,149 @@ internal static class DashboardChartLoader
 
             series.Points.AddRange(
                 data
-                    .Select(d => new SeriesPoint(d.Label, (double)d.Amount))
+                    .Select(d => new SeriesPoint(d.Label, (double)d.Value))
                     .ToArray());
         }, horizontal: true, valueFormat: CurrencyFormat);
     }
+
+    /// <summary>Her çubuğu ayrı renklendiren yatay bar (sıralama listeleri).</summary>
+    public static void LoadRankedBarValues(
+        ChartControl chart,
+        IReadOnlyList<(string Label, decimal Value)> data)
+    {
+        Render(chart, "Değer", series =>
+        {
+            ApplyBarFill(
+                (BarSeriesView)series.View,
+                DashboardChartPalette.Primary);
+
+            series.Points.AddRange(
+                data
+                    .Select(d => new SeriesPoint(d.Label, (double)d.Value))
+                    .ToArray());
+
+            Color[] palette = DashboardChartPalette.Categorical(data.Count);
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                series.Points[i].Color = palette[i];
+            }
+        }, horizontal: true, valueFormat: CurrencyFormat);
+    }
+
+    /// <summary>
+    /// İki serili alan trendi. Kullanıcı adı verilen iki değerli seriler için
+    /// grafik biçimi (eğri kalınlığı, saydamlık, eksen biçimi) dashboard ile
+    /// birebir aynıdır.
+    /// </summary>
+    public static void LoadDualAreaValues(
+        ChartControl chart,
+        IReadOnlyList<(string Label, decimal First, decimal Second)> data,
+        string firstCaption,
+        string secondCaption,
+        Color firstColor,
+        Color secondColor)
+    {
+        chart.BeginInit();
+
+        try
+        {
+            chart.Series.Clear();
+
+            if (data.Count == 0)
+            {
+                chart.Legend.Visibility = DefaultBoolean.False;
+                return;
+            }
+
+            // Seriler bellekteki listeden beslenir; değer çiftleri okunabilir
+            // kalsın diye anonymous tip yerine açık isimli kayıt kullanılır.
+            chart.Series.Add(CreateAreaSeries<SeriesSource>(
+                chart,
+                data.Select(d => new SeriesSource(d.Label, d.First)).ToList(),
+                firstCaption,
+                firstColor));
+
+            chart.Series.Add(CreateAreaSeries<SeriesSource>(
+                chart,
+                data.Select(d => new SeriesSource(d.Label, d.Second)).ToList(),
+                secondCaption,
+                secondColor));
+
+            ConfigureLegend(chart);
+            ConfigureAxes(chart, horizontal: false, valueFormat: CurrencyFormat);
+        }
+        finally
+        {
+            chart.EndInit();
+        }
+    }
+
+    /// <summary>Dağılım grafiği: her dilim ayrı renk alır.</summary>
+    public static void LoadDoughnut(
+        ChartControl chart,
+        IReadOnlyList<DashboardChartPoint> data)
+        => LoadDoughnutValues(
+            chart,
+            [.. data.Select(d => (d.Label, (decimal)d.Count))]);
+
+    /// <summary>Tutar bazlı dağılım (pasta) grafiği.</summary>
+    public static void LoadDoughnutValues(
+        ChartControl chart,
+        IReadOnlyList<(string Label, decimal Value)> data)
+    {
+        chart.BeginInit();
+
+        try
+        {
+            chart.Series.Clear();
+
+            if (data.Count == 0)
+            {
+                chart.Legend.Visibility = DefaultBoolean.False;
+                return;
+            }
+
+            Series series =
+                new("Dağılım", ViewType.Doughnut)
+                {
+                    LabelsVisibility = DefaultBoolean.True
+                };
+
+            series.Label.TextPattern = "{A}: {V}";
+
+            if (series.View is DoughnutSeriesView view)
+            {
+                view.HoleRadiusPercent = 58;
+                view.Border.Visibility = DefaultBoolean.True;
+                view.Border.Color = Color.White;
+                view.Border.Thickness = 1;
+            }
+
+            Color[] palette = DashboardChartPalette.Categorical(data.Count);
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                int pointIndex =
+                    series.Points.Add(
+                        new SeriesPoint(
+                            data[i].Label,
+                            (double)data[i].Value));
+
+                series.Points[pointIndex].Color = palette[i];
+            }
+
+            chart.Series.Add(series);
+            ConfigureLegend(chart);
+        }
+        finally
+        {
+            chart.EndInit();
+        }
+    }
+
+    /// <summary>İki serili alan serisi için ortak kayıt.</summary>
+    private sealed record SeriesSource(string Label, decimal Value);
 
     /// <summary>İki serili gruplu bar (giriş/çıkış).</summary>
     public static void LoadGroupedBar(
@@ -131,17 +284,17 @@ internal static class DashboardChartLoader
             }
 
             chart.Series.Add(
-                CreateAreaSeries(
-                    data,
+                CreateAreaSeries<SeriesSource>(
+                    chart,
+                    [.. data.Select(d => new SeriesSource(d.Label, d.First))],
                     firstCaption,
-                    nameof(DashboardDualPoint.First),
                     firstColor));
 
             chart.Series.Add(
-                CreateAreaSeries(
-                    data,
+                CreateAreaSeries<SeriesSource>(
+                    chart,
+                    [.. data.Select(d => new SeriesSource(d.Label, d.Second))],
                     secondCaption,
-                    nameof(DashboardDualPoint.Second),
                     secondColor));
 
             ConfigureLegend(chart);
@@ -171,62 +324,6 @@ internal static class DashboardChartLoader
         }, horizontal: false, valueFormat: CurrencyFormat, viewType: ViewType.Area);
     }
 
-    // ------------------------------------------------------------------ doughnut
-
-    /// <summary>Dağılım grafiği: her dilim ayrı renk alır.</summary>
-    public static void LoadDoughnut(
-        ChartControl chart,
-        IReadOnlyList<DashboardChartPoint> data)
-    {
-        chart.BeginInit();
-
-        try
-        {
-            chart.Series.Clear();
-
-            if (data.Count == 0)
-            {
-                chart.Legend.Visibility = DefaultBoolean.False;
-                return;
-            }
-
-            Series series =
-                new("Dağılım", ViewType.Doughnut)
-                {
-                    LabelsVisibility = DefaultBoolean.True
-                };
-
-            series.Label.TextPattern = "{A}: {V}";
-
-            if (series.View is DoughnutSeriesView view)
-            {
-                view.HoleRadiusPercent = 58;
-                view.Border.Visibility = DefaultBoolean.True;
-                view.Border.Color = Color.White;
-                view.Border.Thickness = 1;
-            }
-
-            Color[] palette = DashboardChartPalette.Categorical(data.Count);
-
-            for (int i = 0; i < data.Count; i++)
-            {
-                int pointIndex =
-                    series.Points.Add(
-                        new SeriesPoint(
-                            data[i].Label,
-                            data[i].Count));
-
-                series.Points[pointIndex].Color = palette[i];
-            }
-
-            chart.Series.Add(series);
-            ConfigureLegend(chart);
-        }
-        finally
-        {
-            chart.EndInit();
-        }
-    }
 
     // ------------------------------------------------------------------ yardımcılar
 
@@ -288,36 +385,37 @@ internal static class DashboardChartLoader
         return series;
     }
 
-    private static Series CreateAreaSeries(
-        IReadOnlyList<DashboardDualPoint> data,
-        string caption,
-        string valueMember,
-        Color color)
-    {
-        Series series =
-            new(caption, ViewType.Area)
-            {
-                DataSource = data,
-                ArgumentDataMember = nameof(DashboardDualPoint.Label),
-                LabelsVisibility = DefaultBoolean.False
-            };
-
-        series.ValueDataMembers.AddRange(valueMember);
-
-        if (series.View is AreaSeriesView view)
+private static Series CreateAreaSeries<T>(
+            ChartControl chart,
+            IReadOnlyList<T> data,
+            string caption,
+            Color color)
+            where T : class
         {
-            ApplyAreaFill(
-                view,
-                color);
+            Series series =
+                new(caption, ViewType.Area)
+                {
+                    DataSource = data,
+                    ArgumentDataMember = nameof(SeriesSource.Label),
+                    LabelsVisibility = DefaultBoolean.False
+                };
 
-            // Alan serisinin üst kenarını kalınlaştırıp veri okunurluğu artırıyoruz.
-            view.Border.Visibility = DefaultBoolean.True;
-            view.Border.Color = color;
-            view.Border.Thickness = 2;
+            series.ValueDataMembers.AddRange(nameof(SeriesSource.Value));
+
+            if (series.View is AreaSeriesView view)
+            {
+                ApplyAreaFill(
+                    view,
+                    color);
+
+                // Alan serisinin üst kenarını kalınlaştırıp veri okunurluğu artırıyoruz.
+                view.Border.Visibility = DefaultBoolean.True;
+                view.Border.Color = color;
+                view.Border.Thickness = 2;
+            }
+
+            return series;
         }
-
-        return series;
-    }
 
     /// <summary>
     /// Yatay çubuk dolgusu.

@@ -23,8 +23,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 {
     public sealed partial class ProductPriceStockListForm : CrudListFormBase<ProductCatalogListQuery, ProductCatalogDto, ProductEditForm>
     {
-        public ProductPriceStockListForm() : base("Fiyat & Stok Listesi")
+public ProductPriceStockListForm() : base("Fiyat & Stok Listesi")
         {
+            InitializeComponent();
+            RegisterDerivedToolbarButtons();
         }
 
         protected override SvgImage ModuleIcon => DxIcon.PriceStock;
@@ -342,6 +344,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         }
 
         /// <summary>
+        /// Tasarım dosyasında tanımlanan "Satış Fiyatı / Fotoğraf" butonunu hazırlar ve
+        /// araç çubuğunda taban butonlarının hemen ardına yerleştirir.
+        /// </summary>
+        protected override void RegisterDerivedToolbarButtons()
+        {
+            base.RegisterDerivedToolbarButtons();
+
+            MoveToolbarButton(btnPrice, 2);
+            btnPrice.Click += BtnPrice_Click;
+        }
+
+        /// <summary>
         /// Stok kartı bu listeden yalnızca satış fiyatı ve fotoğraf için açılır; ürün künyesi
         /// (ad, depo, kategori, birim, KDV, açıklama) kilitlidir.
         /// </summary>
@@ -351,20 +365,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
             Text = $"{Text} — {ProductDetailForm.BuildStamp()}";
             skinBinding = SkinTheme.Bind(ApplySkin);
-
-            var btnPrice = new SimpleButton
-            {
-                Text = "Satış Fiyatı / Fotoğraf",
-                Width = 190,
-                ImageOptions =
-                {
-                    SvgImage = DxIcon.Tag,
-                    SvgImageSize = new Size(18, 18),
-                    ImageToTextAlignment = ImageAlignToText.LeftCenter
-                }
-            };
-            btnPrice.Click += BtnPrice_Click;
-            AddToolbarButton(btnPrice, index: 2);
         }
 
         /// <summary>

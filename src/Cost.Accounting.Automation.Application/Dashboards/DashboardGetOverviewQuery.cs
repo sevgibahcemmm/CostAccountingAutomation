@@ -43,7 +43,7 @@ internal sealed class DashboardGetOverviewQueryHandler(
     // Alt sorgu hata verirse kullanılacak boş değerler; dashboard'un tamamının
     // boş dönmesi yerine yalnızca ilgili bölüm boş kalır.
     private static readonly DashboardCounters EmptyCounters =
-        new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0m, 0m);
+        new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0m, 0m, 0);
 
     private static readonly DashboardBalanceTotals EmptyBalanceTotals =
         new([], [], 0m, 0m);
@@ -151,6 +151,7 @@ internal sealed class DashboardGetOverviewQueryHandler(
             SemiFinishedProductCount = counters.SemiFinishedProducts,
             TotalProductCount = counters.TotalProducts,
             StockIssueCount = counters.StockIssues,
+            PendingApprovalCount = counters.PendingApprovals,
 
             TotalReceivables = balances.TotalReceivables,
             TotalPayables = balances.TotalPayables,

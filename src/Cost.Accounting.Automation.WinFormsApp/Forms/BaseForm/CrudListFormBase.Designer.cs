@@ -1,3 +1,5 @@
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 {
     public abstract partial class CrudListFormBase<TListQuery, TDto, TEditForm>
@@ -5,11 +7,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private System.ComponentModel.IContainer components = null;
 
         private DevExpress.XtraEditors.PanelControl pnlHeader;
+        private DevExpress.XtraEditors.PanelControl headerAccent;
+        private DevExpress.XtraEditors.PanelControl headerDivider;
         private DevExpress.XtraEditors.LabelControl lblTitle;
         private DevExpress.XtraEditors.LabelControl lblSub;
         private DevExpress.XtraEditors.SimpleButton btnClosePage;
         private DevExpress.XtraEditors.PanelControl pnlToolbar;
-        private System.Windows.Forms.FlowLayoutPanel flpToolbar;
+        /// <summary>Türetilmiş formların kendi butonlarını ekleyebilmesi için korunur.</summary>
+        protected System.Windows.Forms.FlowLayoutPanel flpToolbar;
         private DevExpress.XtraEditors.SimpleButton btnNew;
         private DevExpress.XtraEditors.SimpleButton btnEdit;
         private DevExpress.XtraEditors.SimpleButton btnDelete;
@@ -35,6 +40,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                _skinBinding?.Dispose();
+            }
+
             if (disposing && (components != null))
             {
                 components.Dispose();
@@ -46,6 +56,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         {
             components = new System.ComponentModel.Container();
             pnlHeader = new DevExpress.XtraEditors.PanelControl();
+            headerAccent = new DevExpress.XtraEditors.PanelControl();
+            headerDivider = new DevExpress.XtraEditors.PanelControl();
             lblTitle = new DevExpress.XtraEditors.LabelControl();
             lblSub = new DevExpress.XtraEditors.LabelControl();
             btnClosePage = new DevExpress.XtraEditors.SimpleButton();
@@ -91,11 +103,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             pnlHeader.Controls.Add(lblSub);
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(picModuleIcon);
+            pnlHeader.Controls.Add(headerDivider);
+            pnlHeader.Controls.Add(headerAccent);
             pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             pnlHeader.Location = new System.Drawing.Point(0, 0);
             pnlHeader.Name = "pnlHeader";
             pnlHeader.Size = new System.Drawing.Size(1280, 110);
             pnlHeader.TabIndex = 0;
+            // 
+            // headerAccent
+            // 
+            headerAccent.Appearance.Options.UseBackColor = true;
+            headerAccent.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            headerAccent.Dock = System.Windows.Forms.DockStyle.Top;
+            headerAccent.Location = new System.Drawing.Point(0, 0);
+            headerAccent.Margin = new System.Windows.Forms.Padding(0);
+            headerAccent.Name = "headerAccent";
+            headerAccent.Size = new System.Drawing.Size(1280, 4);
+            headerAccent.TabIndex = 4;
+            // 
+            // headerDivider
+            // 
+            headerDivider.Appearance.Options.UseBackColor = true;
+            headerDivider.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+            headerDivider.Dock = System.Windows.Forms.DockStyle.Bottom;
+            headerDivider.Location = new System.Drawing.Point(0, 109);
+            headerDivider.Margin = new System.Windows.Forms.Padding(0);
+            headerDivider.Name = "headerDivider";
+            headerDivider.Size = new System.Drawing.Size(1280, 1);
+            headerDivider.TabIndex = 5;
             // 
             // lblTitle
             // 
@@ -145,6 +181,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnClosePage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             btnClosePage.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             btnClosePage.Appearance.Options.UseFont = true;
+            btnClosePage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnClosePage.ImageOptions.SvgImage = DxIcon.Close;
+            btnClosePage.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             btnClosePage.Location = new System.Drawing.Point(1170, 37);
             btnClosePage.Name = "btnClosePage";
             btnClosePage.Size = new System.Drawing.Size(94, 36);
@@ -168,6 +207,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnNew.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             btnNew.Appearance.Options.UseFont = true;
+            btnNew.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnNew.ImageOptions.SvgImage = DxIcon.Add;
+            btnNew.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnNew.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnNew.Name = "btnNew";
             btnNew.Size = new System.Drawing.Size(84, 36);
@@ -178,6 +220,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnEdit.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnEdit.Appearance.Options.UseFont = true;
+            btnEdit.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnEdit.ImageOptions.SvgImage = DxIcon.Edit;
+            btnEdit.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnEdit.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnEdit.Name = "btnEdit";
             btnEdit.Size = new System.Drawing.Size(104, 36);
@@ -188,6 +233,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnDelete.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnDelete.Appearance.Options.UseFont = true;
+            btnDelete.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnDelete.ImageOptions.SvgImage = DxIcon.Delete;
+            btnDelete.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnDelete.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new System.Drawing.Size(74, 36);
@@ -198,6 +246,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnRefresh.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnRefresh.Appearance.Options.UseFont = true;
+            btnRefresh.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnRefresh.ImageOptions.SvgImage = DxIcon.Refresh;
+            btnRefresh.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnRefresh.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnRefresh.Name = "btnRefresh";
             btnRefresh.Size = new System.Drawing.Size(40, 36);
@@ -208,6 +259,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnSlipPrint.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnSlipPrint.Appearance.Options.UseFont = true;
+            btnSlipPrint.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSlipPrint.ImageOptions.SvgImage = DxIcon.Receipt;
+            btnSlipPrint.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnSlipPrint.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnSlipPrint.Name = "btnSlipPrint";
             btnSlipPrint.Size = new System.Drawing.Size(118, 36);
@@ -218,6 +272,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnSlipReport.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnSlipReport.Appearance.Options.UseFont = true;
+            btnSlipReport.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnSlipReport.ImageOptions.SvgImage = DxIcon.Receipt;
+            btnSlipReport.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnSlipReport.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnSlipReport.Name = "btnSlipReport";
             btnSlipReport.Size = new System.Drawing.Size(200, 36);
@@ -229,6 +286,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnDistributionReport.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnDistributionReport.Appearance.Options.UseFont = true;
+            btnDistributionReport.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnDistributionReport.ImageOptions.SvgImage = DxIcon.Receipt;
+            btnDistributionReport.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnDistributionReport.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDistributionReport.Name = "btnDistributionReport";
             btnDistributionReport.Size = new System.Drawing.Size(235, 36);
@@ -240,6 +300,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnProductDeclaration.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnProductDeclaration.Appearance.Options.UseFont = true;
+            btnProductDeclaration.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnProductDeclaration.ImageOptions.SvgImage = DxIcon.Receipt;
+            btnProductDeclaration.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnProductDeclaration.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnProductDeclaration.Name = "btnProductDeclaration";
             btnProductDeclaration.Size = new System.Drawing.Size(200, 36);
@@ -251,6 +314,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnStockMovementsList.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnStockMovementsList.Appearance.Options.UseFont = true;
+            btnStockMovementsList.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnStockMovementsList.ImageOptions.SvgImage = DxIcon.Receipt;
+            btnStockMovementsList.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnStockMovementsList.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnStockMovementsList.Name = "btnStockMovementsList";
             btnStockMovementsList.Size = new System.Drawing.Size(215, 36);
@@ -262,6 +328,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnStockCountList.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnStockCountList.Appearance.Options.UseFont = true;
+            btnStockCountList.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnStockCountList.ImageOptions.SvgImage = DxIcon.StockBox;
+            btnStockCountList.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnStockCountList.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnStockCountList.Name = "btnStockCountList";
             btnStockCountList.Size = new System.Drawing.Size(205, 36);
@@ -273,6 +342,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnApprove.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnApprove.Appearance.Options.UseFont = true;
+            btnApprove.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnApprove.ImageOptions.SvgImage = DxIcon.Check;
+            btnApprove.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnApprove.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnApprove.Name = "btnApprove";
             btnApprove.Size = new System.Drawing.Size(84, 36);
@@ -283,6 +355,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnDeleted.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnDeleted.Appearance.Options.UseFont = true;
+            btnDeleted.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnDeleted.ImageOptions.SvgImage = DxIcon.Delete;
+            btnDeleted.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnDeleted.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDeleted.Name = "btnDeleted";
             btnDeleted.Size = new System.Drawing.Size(94, 36);
@@ -293,6 +368,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             btnRestore.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnRestore.Appearance.Options.UseFont = true;
+            btnRestore.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
+            btnRestore.ImageOptions.SvgImage = DxIcon.Restore;
+            btnRestore.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnRestore.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnRestore.Name = "btnRestore";
             btnRestore.Size = new System.Drawing.Size(90, 36);

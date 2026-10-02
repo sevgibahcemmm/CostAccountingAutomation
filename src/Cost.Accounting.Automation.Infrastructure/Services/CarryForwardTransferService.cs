@@ -1,4 +1,4 @@
-using Cost.Accounting.Automation.Application.Devirs;
+using Cost.Accounting.Automation.Application.CarryForwards;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.AccountingYears;
@@ -8,7 +8,7 @@ using Cost.Accounting.Automation.Domain.Companies.ValueObjects;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using Cost.Accounting.Automation.Domain.Customers;
-using Cost.Accounting.Automation.Domain.Devirs;
+using Cost.Accounting.Automation.Domain.CarryForwards;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Photos;
 using Cost.Accounting.Automation.Domain.Products;
@@ -38,36 +38,36 @@ namespace Cost.Accounting.Automation.Infrastructure.Services;
 /// kaynak kimlik → hedef kimlik eşlemesi kurulur. Böylece hedefte zaten var
 /// olan kayıtlar yeniden kullanılabilir ve yabancı anahtar (FK) ihlali yaşanmaz.
 /// </summary>
-internal sealed class DevirTransferService(
+internal sealed class CarryForwardTransferService(
     ApplicationDbContext targetContext,
     MasterDbContext masterContext,
     IAccountingDbSelector dbSelector,
-    IClaimContext claimContext) : IDevirTransferService
+    IClaimContext claimContext) : ICarryForwardTransferService
 {
     /// <summary>Devirden gelen yevmiye satırlarının kaynak tipi.</summary>
-    private const string DevirSourceType = "Devir";
+    private const string CarryForwardSourceType = "Devir";
 
     private const decimal StockTolerance = 0.0001m;
     private const decimal MoneyTolerance = 0.005m;
 
-    public async Task<DevirPreviewResult> BuildPreviewAsync(CancellationToken cancellationToken = default)
+    public async Task<CarryForwardPreviewResult> BuildPreviewAsync(CancellationToken cancellationToken = default)
     {
         TargetSelection target = RequireTargetSelection();
         int targetAccountCount = await targetContext.Set<ChartOfAccount>().CountAsync(cancellationToken);
         string? blocking = await FindTargetBlockingReasonAsync(cancellationToken);
-        DevirLogInfo? previous = await ReadDevirLogAsync(target.Year, cancellationToken);
+        CarryForwardLogInfo? previous = await ReadCarryForwardLogAsync(target.Year, cancellationToken);
 
         SourceYearRef? source = await FindPreviousYearAsync(target, cancellationToken);
 
         if (source is null)
         {
-            return new DevirPreviewResult
+            return new CarryForwardPreviewResult
             {
                 TargetYear = target.Year,
                 TargetDatabaseName = RequireTargetSelection().DatabaseName,
                 HasSource = false,
                 TargetChartOfAccountCount = targetAccountCount,
-                PreviousDevir = previous,
+                PreviousCarryForward = previous,
                 BlockingReason = blocking
             };
         }
@@ -76,7 +76,7 @@ internal sealed class DevirTransferService(
 
         if (!await sourceContext.Database.CanConnectAsync(cancellationToken))
         {
-            return new DevirPreviewResult
+            return new CarryForwardPreviewResult
             {
                 TargetYear = target.Year,
                 TargetDatabaseName = RequireTargetSelection().DatabaseName,
@@ -84,7 +84,7 @@ internal sealed class DevirTransferService(
                 SourceYear = source.Year,
                 SourceDatabaseName = source.DatabaseName,
                 TargetChartOfAccountCount = targetAccountCount,
-                PreviousDevir = previous,
+                PreviousCarryForward = previous,
                 BlockingReason = blocking
                     ?? $"Kaynak yıl veritabanına bağlanılamadı: {source.DatabaseName}"
             };
@@ -101,7 +101,7 @@ internal sealed class DevirTransferService(
         List<ChartAggregate> chartBalanced =
             [.. chart.Where(r => r.Debit > MoneyTolerance || r.Credit > MoneyTolerance)];
 
-        return new DevirPreviewResult
+        return new CarryForwardPreviewResult
         {
             TargetYear = target.Year,
             TargetDatabaseName = RequireTargetSelection().DatabaseName,
@@ -109,7 +109,7 @@ internal sealed class DevirTransferService(
             SourceYear = source.Year,
             SourceDatabaseName = source.DatabaseName,
             BlockingReason = blocking,
-            PreviousDevir = previous,
+            PreviousCarryForward = previous,
             SourceChartOfAccountCount = await sourceContext.Set<ChartOfAccount>().CountAsync(cancellationToken),
             TargetChartOfAccountCount = targetAccountCount,
             SourceCustomerCount = await sourceContext.Set<Customer>().CountAsync(cancellationToken),
@@ -117,7 +117,11 @@ internal sealed class DevirTransferService(
             SourceProductCount = await sourceContext.Set<Product>().CountAsync(cancellationToken),
             SourcePriceCount = await sourceContext.Set<ProductPrice>().CountAsync(cancellationToken),
             SourceRecipeCount = await sourceContext.Set<Recipe>().CountAsync(cancellationToken),
-            SourceCurrentAccountBalanceCount = cariBalanced.Count,
+SourceCurrentAccountBalanceCount = cariBalanced.Count,
+            SourceReceivableTotal = NetOf(cariBalanced, CurrentAccountType.Customer),
+            SourcePayableTotal = NetOf(cariBalanced, CurrentAccountType.Supplier),
+            SourceReceivableCount = cariBalanced.Count(r => Net(r) > MoneyTolerance),
+            SourcePayableCount = cariBalanced.Count(r => Net(r) < -MoneyTolerance),
             SourceCurrentAccountDebit = cariBalanced.Sum(r => r.Debit),
             SourceCurrentAccountCredit = cariBalanced.Sum(r => r.Credit),
             SourceStockBalanceCount = stockBalanced.Count,
@@ -129,8 +133,8 @@ internal sealed class DevirTransferService(
         };
     }
 
-    public async Task<DevirTransferResult> TransferAsync(
-        DevirOptions options,
+    public async Task<CarryForwardTransferResult> TransferAsync(
+        CarryForwardOptions options,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -142,7 +146,7 @@ internal sealed class DevirTransferService(
         await using ApplicationDbContext sourceContext = OpenYearContext(source.DatabaseName);
 
         DateOnly openingDate = await ResolveOpeningDateAsync(target, cancellationToken);
-        string documentNo = BuildDevirDocumentNo(source.Year);
+        string documentNo = BuildCarryForwardDocumentNo(source.Year);
 
         // Devir hedef yılı kalıcı olarak değiştirir. Ön önizleme ile başlatma
         // arasında hedefe hareket yazılmış olabilir; bu yüzden boşluk şartı
@@ -154,9 +158,9 @@ internal sealed class DevirTransferService(
         }
 
         // Kaynak yılda hiç bakiye yoksa devir hiçbir hareket satırı yazmaz ve
-        // "hedef yıl boş" kuralı ikinci devri engellemez. DevirLog bu yılın
+        // "hedef yıl boş" kuralı ikinci devri engellemez. CarryForwardLog bu yılın
         // zaten devredildiğini kalıcı olarak bildirir.
-        DevirLogInfo? existingLog = await ReadDevirLogAsync(target.Year, cancellationToken);
+        CarryForwardLogInfo? existingLog = await ReadCarryForwardLogAsync(target.Year, cancellationToken);
         if (existingLog is not null)
         {
             throw new InvalidOperationException(
@@ -175,7 +179,7 @@ internal sealed class DevirTransferService(
         // çalıştırılır ve her denemede değişiklik izleri temizlenir.
         IExecutionStrategy strategy = targetContext.Database.CreateExecutionStrategy();
 
-        return await strategy.ExecuteAsync<DevirTransferResult>(
+        return await strategy.ExecuteAsync<CarryForwardTransferResult>(
             async ct =>
             {
                 targetContext.ChangeTracker.Clear();
@@ -184,7 +188,7 @@ internal sealed class DevirTransferService(
 
                 try
                 {
-                    DevirTransferResult result = await TransferCoreAsync(
+                    CarryForwardTransferResult result = await TransferCoreAsync(
                         options, source, sourceContext, openingDate, documentNo, ct);
 
                     await transaction.CommitAsync(ct);
@@ -199,8 +203,8 @@ internal sealed class DevirTransferService(
             cancellationToken);
     }
 
-    private async Task<DevirTransferResult> TransferCoreAsync(
-        DevirOptions options,
+    private async Task<CarryForwardTransferResult> TransferCoreAsync(
+        CarryForwardOptions options,
         SourceYearRef source,
         ApplicationDbContext sourceContext,
         DateOnly openingDate,
@@ -312,7 +316,7 @@ internal sealed class DevirTransferService(
 
         await targetContext.SaveChangesAsync(cancellationToken);
 
-        var result = new DevirTransferResult
+        var result = new CarryForwardTransferResult
         {
             SourceYear = source.Year,
             SourceDatabaseName = source.DatabaseName,
@@ -337,7 +341,7 @@ internal sealed class DevirTransferService(
         // Devir kaydı transaction'ın içinde yazılır: devir başarısız olursa
         // işaret de geri alınır, "bu yıl devredildi" bilgisi yalnızca gerçekten
         // tamamlanmış devirleri gösterir.
-        var log = new DevirLog(
+        var log = new CarryForwardLog(
             source.Year, RequireTargetSelection().Year, source.DatabaseName,
             RequireTargetSelection().DatabaseName);
 
@@ -345,7 +349,7 @@ internal sealed class DevirTransferService(
             accounts, accountsSkipped, customers, suppliers, products,
             prices, photos, recipes, cariBalances, stockBalances, chartBalances);
 
-        targetContext.Set<DevirLog>().Add(log);
+        targetContext.Set<CarryForwardLog>().Add(log);
         await targetContext.SaveChangesAsync(cancellationToken);
 
         return result;
@@ -354,14 +358,14 @@ internal sealed class DevirTransferService(
     /// <summary>
     /// Hedef yıl için daha önce yazılmış devir kaydını okur.
     /// </summary>
-    private async Task<DevirLogInfo?> ReadDevirLogAsync(int targetYear, CancellationToken cancellationToken)
+    private async Task<CarryForwardLogInfo?> ReadCarryForwardLogAsync(int targetYear, CancellationToken cancellationToken)
     {
-        List<DevirLog> logs = await targetContext.Set<DevirLog>()
+        List<CarryForwardLog> logs = await targetContext.Set<CarryForwardLog>()
             .AsNoTrackingWithIdentityResolution()
             .Where(l => l.TargetYear == targetYear)
             .ToListAsync(cancellationToken);
 
-        DevirLog? log = logs
+        CarryForwardLog? log = logs
             .OrderByDescending(l => l.CreatedAt)
             .FirstOrDefault();
 
@@ -378,7 +382,7 @@ internal sealed class DevirTransferService(
                 .Select(u => u.FullName.Value)
                 .FirstOrDefaultAsync(cancellationToken);
 
-        return new DevirLogInfo
+        return new CarryForwardLogInfo
         {
             SourceYear = log.SourceYear,
             TargetYear = log.TargetYear,
@@ -476,7 +480,7 @@ internal sealed class DevirTransferService(
         return DateOnly.FromDateTime(opening.LocalDateTime);
     }
 
-    private static string BuildDevirDocumentNo(int sourceYear) => $"DEVIR-{sourceYear}";
+    private static string BuildCarryForwardDocumentNo(int sourceYear) => $"DEVIR-{sourceYear}";
 
     // ------------------------------------------------------------ kaynak okuma
 
@@ -1227,7 +1231,7 @@ internal sealed class DevirTransferService(
                 new IdentityId(targetId),
                 debit,
                 credit,
-                DevirSourceType,
+                CarryForwardSourceType,
                 null));
 
             added++;
@@ -1310,6 +1314,19 @@ internal sealed class DevirTransferService(
     private sealed record TargetSelection(IdentityId CompanyId, int Year, string DatabaseName);
 
     private sealed record SourceYearRef(int Year, string DatabaseName);
+
+    /// <summary>
+    /// Cari hesabın net bakiyesi. Müşteri tarafında borç fazlası <b>alacak</b>,
+    /// tedarikçi tarafında alacak fazlası <b>borç</b> anlamına gelir.
+    /// </summary>
+    private static decimal Net(CurrentAccountAggregate row)
+        => row.Type == CurrentAccountType.Customer
+            ? row.Debit - row.Credit
+            : row.Credit - row.Debit;
+
+    /// <summary>Verilen cari tarafının net toplam bakiyesi (alacak veya borç).</summary>
+    private static decimal NetOf(List<CurrentAccountAggregate> rows, CurrentAccountType type)
+        => rows.Where(r => r.Type == type).Sum(Net);
 
     private sealed record CurrentAccountAggregate(
         CurrentAccountType Type,

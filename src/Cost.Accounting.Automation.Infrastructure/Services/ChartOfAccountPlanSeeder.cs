@@ -22,7 +22,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Services;
 internal static class ChartOfAccountPlanSeeder
 {
     private const string ResourceName =
-        "Cost.Accounting.Automation.Infrastructure.Resources.HesapPlani.xlsx";
+        "Cost.Accounting.Automation.Infrastructure.Resources.ChartOfAccounts.xlsx";
 
     /// <summary>Depo kökleri; bunların altındaki yapraklar kategori olur.</summary>
     private static readonly HashSet<string> WarehouseCodes =

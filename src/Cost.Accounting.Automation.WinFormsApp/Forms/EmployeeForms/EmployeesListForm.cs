@@ -1,0 +1,213 @@
+﻿using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
+using Cost.Accounting.Automation.Application.Employees;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+using DevExpress.Data;
+using DevExpress.Utils;
+using DevExpress.Utils.Svg;
+using DevExpress.XtraEditors.Controls;
+using DevExpress.XtraEditors.Repository;
+using DevExpress.XtraGrid.Columns;
+using DevExpress.XtraGrid.Views.Base;
+using DevExpress.XtraGrid.Views.Grid;
+using TS.MediatR;
+using TS.Result;
+
+namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
+{
+    /// <summary>
+    /// Personel listesi. Rapor imza bloklarındaki yetkiler buradan belirlendiği
+    /// için "Görevleri" ve "Atölyeler" sütunları liste ekranında görünür durumdadır.
+    /// </summary>
+    public sealed partial class EmployeesListForm : CrudListFormBase<EmployeeGetAllQuery, EmployeeDto, EmployeeEditForm>
+    {
+        public EmployeesListForm() : base("Personel")
+        {
+            InitializeComponent();
+            View.CustomUnboundColumnData += EmployeesListForm_CustomUnboundColumnData;
+        }
+
+        protected override SvgImage ModuleIcon => DxIcon.Employees;
+
+        protected override string[] SearchFieldNames =>
+        [
+            nameof(EmployeeDto.IdentityNumber),
+            nameof(EmployeeDto.FullName),
+            nameof(EmployeeDto.Title),
+            nameof(EmployeeDto.SigningRoles),
+            nameof(EmployeeDto.Workshops),
+            nameof(EmployeeDto.PhoneNumber1),
+            nameof(EmployeeDto.Email)
+        ];
+
+        protected override void ConfigureColumns()
+        {
+            View.Columns.Clear();
+            AddColumnsFromAttributes();
+
+            // Fotoğraf sütunu, listede avatar olarak gösterilir. Dosya yolu
+            // değil, yüklenmiş görsel nesnesi gerektiği için unbound kolon
+            // ve CustomUnboundColumnData kullanılır.
+            GridColumn photoColumn = new()
+            {
+                Caption = "Foto",
+                ColumnEdit = new RepositoryItemPictureEdit
+                {
+                    SizeMode = PictureSizeMode.Zoom
+                },
+                FieldName = "PhotoPreview",
+                OptionsColumn = { FixedWidth = true },
+                UnboundType = UnboundColumnType.Object,
+                Visible = true,
+                VisibleIndex = 0,
+                Width = 60
+            };
+
+            View.Columns.Add(photoColumn);
+        }
+
+        private static readonly Dictionary<Guid, Image> _imageCache = [];
+        private static readonly object _imageCacheLock = new();
+
+        private void EmployeesListForm_CustomUnboundColumnData(object? sender, CustomColumnDataEventArgs e)
+        {
+            if (e.Column.FieldName != "PhotoPreview" || !e.IsGetData)
+            {
+                return;
+            }
+
+            if (e.ListSourceRowIndex < 0 || View.GetRow(e.ListSourceRowIndex) is not EmployeeDto employee)
+            {
+                return;
+            }
+
+            e.Value = BuildEmployeeImage(employee);
+        }
+
+        private static Image BuildEmployeeImage(EmployeeDto employee)
+        {
+            lock (_imageCacheLock)
+            {
+                if (_imageCache.TryGetValue(employee.Id, out Image? cached))
+                {
+                    return cached;
+                }
+
+                Image image = TryLoadPhoto(employee.PhotoPath) ?? CreateAvatar(employee);
+                _imageCache[employee.Id] = image;
+
+                return image;
+            }
+        }
+
+        private static Image? TryLoadPhoto(string? relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                string fullPath = StorageRoot.Resolve(relativePath);
+
+                if (!File.Exists(fullPath))
+                {
+                    return null;
+                }
+
+                using var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+                using var memory = new MemoryStream();
+                stream.CopyTo(memory);
+
+                return new Bitmap(memory);
+            }
+            catch
+            {
+                // Bozuk veya erişilemeyen görsel listede bozuk görünmemeli.
+                return null;
+            }
+        }
+
+        /// <summary>Fotoğrafı olmayan personel için baş harflerden avatar üretir.</summary>
+        private static Bitmap CreateAvatar(EmployeeDto employee)
+        {
+            string initials = GetInitials(employee);
+
+            Bitmap bitmap = new(60, 60);
+
+            using (Graphics graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+                using var brush = new SolidBrush(SkinTheme.Primary);
+                graphics.FillEllipse(brush, 0, 0, 60, 60);
+
+                using var textBrush = new SolidBrush(SkinTheme.GetContrastText(SkinTheme.Primary));
+                using var font = new Font("Segoe UI", 20, FontStyle.Bold);
+
+                SizeF size = graphics.MeasureString(initials, font);
+                graphics.DrawString(initials, font, textBrush, (60 - size.Width) / 2, (60 - size.Height) / 2);
+            }
+
+            return bitmap;
+        }
+
+        private static string GetInitials(EmployeeDto employee)
+        {
+            string first = employee.FirstName.Length > 0 ? employee.FirstName[..1].ToUpperInvariant() : string.Empty;
+            string last = employee.LastName.Length > 0 ? employee.LastName[..1].ToUpperInvariant() : string.Empty;
+
+            string initials = first + last;
+
+            return initials.Length > 0 ? initials : "?";
+        }
+
+        protected override IRequest<Result<string>> BuildDeleteCommand(EmployeeDto item)
+            => new EmployeeDeleteCommand(item.Id);
+
+        protected override string GetDeleteSummary(EmployeeDto item)
+            => $"{item.FullName} ({item.IdentityNumber})";
+
+        protected override bool SupportsRestore => true;
+
+        protected override EmployeeGetAllQuery BuildListQuery()
+            => new(OnlyDeleted: ShowDeleted);
+
+        protected override IRequest<Result<string>> BuildRestoreCommand(EmployeeDto item)
+            => new EmployeeRestoreCommand(item.Id);
+
+        /// <summary>
+        /// Fotoğraf nesneleri hemen serbest bırakılmaz; grid satırları yeniden
+        /// boyanırken kullanılıyor olabilir. Bu yüzden liste her yenilendiğinde
+        /// önbellek temizlenir ve form kapanırken de serbest bırakılır.
+        /// </summary>
+        protected override async Task ReloadAsync()
+        {
+            ClearImageCache();
+            await base.ReloadAsync();
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            ClearImageCache();
+            base.OnFormClosed(e);
+        }
+
+        private static void ClearImageCache()
+        {
+            lock (_imageCacheLock)
+            {
+                foreach (Image image in _imageCache.Values)
+                {
+                    image.Dispose();
+                }
+
+                _imageCache.Clear();
+            }
+        }
+    }
+}

@@ -19,9 +19,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.AccountingYearForms
     /// </summary>
     public sealed partial class AccountingYearCreateForm : XtraForm
     {
-        private readonly Guid _companyId;
+        private Guid _companyId;
         private bool _nameEditedByUser;
         private bool _previewInProgress;
+
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta
+        /// <see cref="AccountingYearCreateForm(CompanyDto)"/> kullanılır.
+        /// </summary>
+        public AccountingYearCreateForm()
+        {
+            InitializeComponent();
+            DesignTime.Guard(typeof(AccountingYearCreateForm));
+        }
 
         public AccountingYearCreateForm(CompanyDto company)
         {

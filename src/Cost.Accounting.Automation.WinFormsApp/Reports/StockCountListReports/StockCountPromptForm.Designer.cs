@@ -19,8 +19,10 @@ public sealed partial class StockCountPromptForm
         private DevExpress.XtraEditors.RadioGroup radioGroup;
         private DevExpress.XtraEditors.CheckedListBoxControl checkedWorkshops;
         private DevExpress.XtraEditors.CheckedListBoxControl checkedWarehouses;
-        private DevExpress.XtraEditors.SimpleButton btnSelectAll;
+private DevExpress.XtraEditors.SimpleButton btnSelectAll;
         private DevExpress.XtraEditors.SimpleButton btnClear;
+        private DevExpress.XtraEditors.LabelControl lblDate;
+        private DevExpress.XtraEditors.DateEdit dateEdit;
         private DevExpress.XtraEditors.PanelControl badge;
         private DevExpress.XtraEditors.LabelControl lblBadge;
         private DevExpress.XtraEditors.PanelControl badgeAccentStrip;
@@ -64,6 +66,8 @@ public sealed partial class StockCountPromptForm
             checkedWarehouses = new DevExpress.XtraEditors.CheckedListBoxControl();
             btnSelectAll = new DevExpress.XtraEditors.SimpleButton();
             btnClear = new DevExpress.XtraEditors.SimpleButton();
+            lblDate = new DevExpress.XtraEditors.LabelControl();
+            dateEdit = new DevExpress.XtraEditors.DateEdit();
             badge = new DevExpress.XtraEditors.PanelControl();
             lblBadge = new DevExpress.XtraEditors.LabelControl();
             badgeAccentStrip = new DevExpress.XtraEditors.PanelControl();
@@ -79,6 +83,7 @@ public sealed partial class StockCountPromptForm
             ((System.ComponentModel.ISupportInitialize)radioGroup.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)checkedWorkshops).BeginInit();
             ((System.ComponentModel.ISupportInitialize)checkedWarehouses).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dateEdit.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)badge).BeginInit();
             badge.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)badgeAccentStrip).BeginInit();
@@ -229,6 +234,34 @@ public sealed partial class StockCountPromptForm
             btnClear.Text = "Temizle";
             btnClear.ImageOptions.SvgImage = DxIcon.Uncheck;
             // 
+            // lblDate
+            // 
+            lblDate.Appearance.Font = new Font("Segoe UI", 9.5F);
+            lblDate.Appearance.Options.UseFont = true;
+            lblDate.Appearance.Options.UseTextOptions = true;
+            lblDate.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
+            lblDate.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblDate.Location = new Point(24, 376);
+            lblDate.Margin = new Padding(3, 2, 3, 2);
+            lblDate.Name = "lblDate";
+            lblDate.Size = new Size(100, 24);
+            lblDate.TabIndex = 16;
+            lblDate.Text = "Sayım Tarihi:";
+            // 
+            // dateEdit
+            // 
+            dateEdit.Location = new Point(130, 373);
+            dateEdit.Margin = new Padding(3, 2, 3, 2);
+            dateEdit.Name = "dateEdit";
+            dateEdit.Properties.CalendarTimeEditing = DevExpress.Utils.DefaultBoolean.False;
+            dateEdit.Properties.DisplayFormat.FormatString = "dd.MM.yyyy";
+            dateEdit.Properties.DisplayFormat.FormatType = DevExpress.Utils.FormatType.DateTime;
+            dateEdit.Properties.EditFormat.FormatString = "dd.MM.yyyy";
+            dateEdit.Properties.EditFormat.FormatType = DevExpress.Utils.FormatType.DateTime;
+            dateEdit.Properties.UseMaskAsDisplayFormat = true;
+            dateEdit.Size = new Size(160, 28);
+            dateEdit.TabIndex = 17;
+            // 
             // badge
             // 
             badge.Appearance.BackColor = Color.FromArgb(235, 242, 250);
@@ -236,7 +269,7 @@ public sealed partial class StockCountPromptForm
             badge.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             badge.Controls.Add(lblBadge);
             badge.Controls.Add(badgeAccentStrip);
-            badge.Location = new Point(24, 376);
+            badge.Location = new Point(24, 410);
             badge.Margin = new Padding(0);
             badge.Name = "badge";
             badge.Size = new Size(432, 44);
@@ -273,10 +306,10 @@ public sealed partial class StockCountPromptForm
             lblInfo.Appearance.ForeColor = Color.FromArgb(130, 136, 146);
             lblInfo.Appearance.Options.UseFont = true;
             lblInfo.Appearance.Options.UseForeColor = true;
-            lblInfo.Location = new Point(24, 428);
+            lblInfo.Location = new Point(24, 462);
             lblInfo.Margin = new Padding(3, 2, 3, 2);
             lblInfo.Name = "lblInfo";
-            lblInfo.Size = new Size(408, 13);
+            lblInfo.Size = new Size(432, 13);
             lblInfo.TabIndex = 8;
             lblInfo.Text = "Her atölye / depo için ayrı sayfa hazırlanır; Sayılan ve Fark sütunları boş bırakılır.";
             // 
@@ -285,7 +318,7 @@ public sealed partial class StockCountPromptForm
             footerDivider.Appearance.BackColor = Color.FromArgb(230, 232, 236);
             footerDivider.Appearance.Options.UseBackColor = true;
             footerDivider.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            footerDivider.Location = new Point(24, 458);
+            footerDivider.Location = new Point(24, 492);
             footerDivider.Margin = new Padding(0);
             footerDivider.Name = "footerDivider";
             footerDivider.Size = new Size(392, 1);
@@ -304,7 +337,7 @@ public sealed partial class StockCountPromptForm
             btnOk.AppearanceHovered.Options.UseBackColor = true;
             btnOk.AppearanceHovered.Options.UseForeColor = true;
             btnOk.ImageOptions.Image = (Image)resources.GetObject("btnOk.ImageOptions.Image");
-            btnOk.Location = new Point(296, 480);
+            btnOk.Location = new Point(296, 514);
             btnOk.Margin = new Padding(3, 2, 3, 2);
             btnOk.Name = "btnOk";
             btnOk.Size = new Size(160, 34);
@@ -321,7 +354,7 @@ public sealed partial class StockCountPromptForm
             btnCancel.AppearanceHovered.BackColor = Color.FromArgb(244, 245, 247);
             btnCancel.AppearanceHovered.Options.UseBackColor = true;
             btnCancel.ImageOptions.Image = (Image)resources.GetObject("btnCancel.ImageOptions.Image");
-            btnCancel.Location = new Point(191, 480);
+            btnCancel.Location = new Point(191, 514);
             btnCancel.Margin = new Padding(3, 2, 3, 2);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(96, 34);
@@ -335,12 +368,14 @@ public sealed partial class StockCountPromptForm
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
             CancelButton = btnCancel;
-            ClientSize = new Size(470, 532);
+            ClientSize = new Size(470, 566);
             Controls.Add(btnCancel);
             Controls.Add(btnOk);
             Controls.Add(footerDivider);
             Controls.Add(lblInfo);
             Controls.Add(badge);
+            Controls.Add(dateEdit);
+            Controls.Add(lblDate);
             Controls.Add(btnClear);
             Controls.Add(btnSelectAll);
             Controls.Add(checkedWarehouses);
@@ -367,6 +402,7 @@ public sealed partial class StockCountPromptForm
             ((System.ComponentModel.ISupportInitialize)radioGroup.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)checkedWorkshops).EndInit();
             ((System.ComponentModel.ISupportInitialize)checkedWarehouses).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dateEdit.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)badge).EndInit();
             badge.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)badgeAccentStrip).EndInit();

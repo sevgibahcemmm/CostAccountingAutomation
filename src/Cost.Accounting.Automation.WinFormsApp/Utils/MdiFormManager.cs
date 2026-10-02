@@ -73,22 +73,70 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
             return form;
         }
 
-        public TForm OpenForm<TForm>(XtraForm parentForm, Func<TForm>? factory = null)
+public TForm OpenForm<TForm>(XtraForm parentForm, Func<TForm>? factory = null)
             where TForm : XtraForm
         {
-            return OpenForm(parentForm, null, factory);
+            return OpenForm<TForm>(parentForm, null, factory);
+        }
+
+        /// <summary>
+        /// Onay ekranı gibi yalnızca çalışma zamanında bilinen form türlerini açmak
+        /// için kullanılır. Aynı pencere zaten açıksa yenisi oluşturulmaz, mevcut
+        /// sekme öne getirilir.
+        /// </summary>
+        public XtraForm OpenForm(XtraForm mdiContainer, Type formType, string? formTitle = null)
+        {
+            ArgumentNullException.ThrowIfNull(formType);
+
+            if (!typeof(XtraForm).IsAssignableFrom(formType))
+            {
+                throw new ArgumentException($"{formType.Name} bir XtraForm türü olmalıdır.", nameof(formType));
+            }
+
+            if (_mdiManager is null)
+            {
+                throw new InvalidOperationException("MdiFormManager.Initialize çağrılmadı.");
+            }
+
+            string key = formTitle ?? GetDefaultTitle(formType);
+
+            XtraForm? existing = mdiContainer.MdiChildren
+                .OfType<XtraForm>()
+                .FirstOrDefault(f => !f.IsDisposed
+                    && f.GetType() == formType
+                    && string.Equals(f.Text, key, StringComparison.Ordinal));
+            if (existing is not null)
+            {
+                ActivateForm(existing);
+                return existing;
+            }
+
+            XtraForm form = (XtraForm)Activator.CreateInstance(formType)!;
+            ApplyMdiMetadata(form);
+
+            // MDI çocuk form başka bir MDI çocuğu doğuramaz; bu yüzden daima asıl
+            // MDI kapsayıcı hedeflenir.
+            form.MdiParent = mdiContainer;
+            form.Show();
+
+            return form;
         }
 
         private static string GetDefaultTitle<TForm>() where TForm : XtraForm
         {
+            return GetDefaultTitle(typeof(TForm));
+        }
+
+        private static string GetDefaultTitle(Type formType)
+        {
             try
             {
-                using TForm temp = Activator.CreateInstance<TForm>()!;
-                return string.IsNullOrEmpty(temp.Text) ? typeof(TForm).Name : temp.Text;
+                using var temp = (XtraForm)Activator.CreateInstance(formType)!;
+                return string.IsNullOrEmpty(temp.Text) ? formType.Name : temp.Text;
             }
             catch
             {
-                return typeof(TForm).Name;
+                return formType.Name;
             }
         }
 

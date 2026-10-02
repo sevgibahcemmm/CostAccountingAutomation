@@ -2,7 +2,7 @@ using Cost.Accounting.Automation.Application.Behaviors;
 using TS.MediatR;
 using TS.Result;
 
-namespace Cost.Accounting.Automation.Application.Devirs;
+namespace Cost.Accounting.Automation.Application.CarryForwards;
 
 /// <summary>
 /// Seçili mali yıl için devir ön izlemesini hazırlar: kaynak yıl, aktarılacak
@@ -10,17 +10,17 @@ namespace Cost.Accounting.Automation.Application.Devirs;
 /// Hiçbir değişiklik yazmaz.
 /// </summary>
 [Permission("devir:view")]
-public sealed record DevirPreviewQuery : IRequest<Result<DevirPreviewResult>>;
+public sealed record CarryForwardPreviewQuery : IRequest<Result<CarryForwardPreviewResult>>;
 
-internal sealed class DevirPreviewQueryHandler(IDevirTransferService devirService)
-    : IRequestHandler<DevirPreviewQuery, Result<DevirPreviewResult>>
+internal sealed class CarryForwardPreviewQueryHandler(ICarryForwardTransferService devirService)
+    : IRequestHandler<CarryForwardPreviewQuery, Result<CarryForwardPreviewResult>>
 {
-    public async Task<Result<DevirPreviewResult>> Handle(
-        DevirPreviewQuery request,
+    public async Task<Result<CarryForwardPreviewResult>> Handle(
+        CarryForwardPreviewQuery request,
         CancellationToken cancellationToken)
     {
-        DevirPreviewResult preview = await devirService.BuildPreviewAsync(cancellationToken);
+        CarryForwardPreviewResult preview = await devirService.BuildPreviewAsync(cancellationToken);
 
-        return Result<DevirPreviewResult>.Succeed(preview);
+        return Result<CarryForwardPreviewResult>.Succeed(preview);
     }
 }

@@ -24,12 +24,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
         private DevExpress.XtraEditors.PanelControl pnlDetail;
 
-        private DevExpress.XtraEditors.LabelControl lblCariTuru;
-        private DevExpress.XtraEditors.LabelControl lblCariTuruValue;
+        private DevExpress.XtraEditors.LabelControl lblCurrentAccountType;
+        private DevExpress.XtraEditors.LabelControl lblCurrentAccountTypeValue;
         private DevExpress.XtraEditors.LabelControl lblMovementType;
         private DevExpress.XtraEditors.LabelControl lblMovementTypeValue;
-        private DevExpress.XtraEditors.LabelControl lblCari;
-        private DevExpress.XtraEditors.LabelControl lblCariValue;
+        private DevExpress.XtraEditors.LabelControl lblCurrentAccount;
+        private DevExpress.XtraEditors.LabelControl lblCurrentAccountValue;
 
         private DevExpress.XtraEditors.LabelControl lblDateCaption;
         private DevExpress.XtraEditors.DateEdit dtDate;
@@ -55,12 +55,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             pnlDetail = new DevExpress.XtraEditors.PanelControl();
             tlpDetailFields = new TableLayoutPanel();
-            lblCariTuru = new DevExpress.XtraEditors.LabelControl();
-            lblCariTuruValue = new DevExpress.XtraEditors.LabelControl();
+            lblCurrentAccountType = new DevExpress.XtraEditors.LabelControl();
+            lblCurrentAccountTypeValue = new DevExpress.XtraEditors.LabelControl();
             lblMovementType = new DevExpress.XtraEditors.LabelControl();
             lblMovementTypeValue = new DevExpress.XtraEditors.LabelControl();
-            lblCari = new DevExpress.XtraEditors.LabelControl();
-            lblCariValue = new DevExpress.XtraEditors.LabelControl();
+            lblCurrentAccount = new DevExpress.XtraEditors.LabelControl();
+            lblCurrentAccountValue = new DevExpress.XtraEditors.LabelControl();
             lblDateCaption = new DevExpress.XtraEditors.LabelControl();
             dtDate = new DevExpress.XtraEditors.DateEdit();
             lblAmountCaption = new DevExpress.XtraEditors.LabelControl();
@@ -159,12 +159,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             tlpDetailFields.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tlpDetailFields.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130F));
             tlpDetailFields.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tlpDetailFields.Controls.Add(lblCariTuru, 0, 0);
-            tlpDetailFields.Controls.Add(lblCariTuruValue, 1, 0);
+            tlpDetailFields.Controls.Add(lblCurrentAccountType, 0, 0);
+            tlpDetailFields.Controls.Add(lblCurrentAccountTypeValue, 1, 0);
             tlpDetailFields.Controls.Add(lblMovementType, 2, 0);
             tlpDetailFields.Controls.Add(lblMovementTypeValue, 3, 0);
-            tlpDetailFields.Controls.Add(lblCari, 0, 1);
-            tlpDetailFields.Controls.Add(lblCariValue, 1, 1);
+            tlpDetailFields.Controls.Add(lblCurrentAccount, 0, 1);
+            tlpDetailFields.Controls.Add(lblCurrentAccountValue, 1, 1);
             tlpDetailFields.Controls.Add(lblDateCaption, 0, 2);
             tlpDetailFields.Controls.Add(dtDate, 1, 2);
             tlpDetailFields.Controls.Add(lblAmountCaption, 2, 2);
@@ -179,25 +179,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             tlpDetailFields.Size = new Size(780, 96);
             tlpDetailFields.TabIndex = 0;
             // 
-            // lblCariTuru
+            // lblCurrentAccountType
             // 
-            lblCariTuru.Anchor = AnchorStyles.Left;
-            lblCariTuru.Location = new Point(3, 9);
-            lblCariTuru.Name = "lblCariTuru";
-            lblCariTuru.Size = new Size(48, 13);
-            lblCariTuru.TabIndex = 0;
-            lblCariTuru.Text = "Cari Türü:";
+            lblCurrentAccountType.Anchor = AnchorStyles.Left;
+            lblCurrentAccountType.Location = new Point(3, 9);
+            lblCurrentAccountType.Name = "lblCurrentAccountType";
+            lblCurrentAccountType.Size = new Size(48, 13);
+            lblCurrentAccountType.TabIndex = 0;
+            lblCurrentAccountType.Text = "Cari Türü:";
             // 
-            // lblCariTuruValue
+            // lblCurrentAccountTypeValue
             // 
-            lblCariTuruValue.Anchor = AnchorStyles.Left;
-            lblCariTuruValue.Appearance.Font = new Font("Segoe UI Semibold", 9F);
-            lblCariTuruValue.Appearance.Options.UseFont = true;
-            lblCariTuruValue.Location = new Point(113, 8);
-            lblCariTuruValue.Name = "lblCariTuruValue";
-            lblCariTuruValue.Size = new Size(5, 15);
-            lblCariTuruValue.TabIndex = 1;
-            lblCariTuruValue.Text = "-";
+            lblCurrentAccountTypeValue.Anchor = AnchorStyles.Left;
+            lblCurrentAccountTypeValue.Appearance.Font = new Font("Segoe UI Semibold", 9F);
+            lblCurrentAccountTypeValue.Appearance.Options.UseFont = true;
+            lblCurrentAccountTypeValue.Location = new Point(113, 8);
+            lblCurrentAccountTypeValue.Name = "lblCurrentAccountTypeValue";
+            lblCurrentAccountTypeValue.Size = new Size(5, 15);
+            lblCurrentAccountTypeValue.TabIndex = 1;
+            lblCurrentAccountTypeValue.Text = "-";
             // 
             // lblMovementType
             // 
@@ -219,25 +219,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             lblMovementTypeValue.TabIndex = 3;
             lblMovementTypeValue.Text = "-";
             // 
-            // lblCari
+            // lblCurrentAccount
             // 
-            lblCari.Anchor = AnchorStyles.Left;
-            lblCari.Location = new Point(3, 41);
-            lblCari.Name = "lblCari";
-            lblCari.Size = new Size(23, 13);
-            lblCari.TabIndex = 4;
-            lblCari.Text = "Cari:";
+            lblCurrentAccount.Anchor = AnchorStyles.Left;
+            lblCurrentAccount.Location = new Point(3, 41);
+            lblCurrentAccount.Name = "lblCurrentAccount";
+            lblCurrentAccount.Size = new Size(23, 13);
+            lblCurrentAccount.TabIndex = 4;
+            lblCurrentAccount.Text = "Cari:";
             // 
-            // lblCariValue
+            // lblCurrentAccountValue
             // 
-            lblCariValue.Anchor = AnchorStyles.Left;
-            lblCariValue.Appearance.Font = new Font("Segoe UI Semibold", 9F);
-            lblCariValue.Appearance.Options.UseFont = true;
-            lblCariValue.Location = new Point(113, 40);
-            lblCariValue.Name = "lblCariValue";
-            lblCariValue.Size = new Size(5, 15);
-            lblCariValue.TabIndex = 5;
-            lblCariValue.Text = "-";
+            lblCurrentAccountValue.Anchor = AnchorStyles.Left;
+            lblCurrentAccountValue.Appearance.Font = new Font("Segoe UI Semibold", 9F);
+            lblCurrentAccountValue.Appearance.Options.UseFont = true;
+            lblCurrentAccountValue.Location = new Point(113, 40);
+            lblCurrentAccountValue.Name = "lblCurrentAccountValue";
+            lblCurrentAccountValue.Size = new Size(5, 15);
+            lblCurrentAccountValue.TabIndex = 5;
+            lblCurrentAccountValue.Text = "-";
             // 
             // lblDateCaption
             // 

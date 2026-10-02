@@ -20,6 +20,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
     {
         private const int DashboardAutoRefreshIntervalMs = 30_000;
 
+        /// <summary>
+        /// KPI kart sayısı. <c>tblKpi</c> 5 sütunlu olduğu için bu değer
+        /// 5'in katı olmalı; aksi hâlde son satırda boş hücre kalıyor.
+        /// </summary>
+        private const int KpiCardCount = 10;
+
         private readonly SessionClaimContext _session;
         private readonly IAccountingDbSelector _dbSelector;
         private readonly ISender _sender;
@@ -67,6 +73,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _kpiValues[6] = lblKpi6Value;
             _kpiValues[7] = lblKpi7Value;
             _kpiValues[8] = lblKpi8Value;
+            _kpiValues[9] = lblKpi9Value;
+            _kpiValues[10] = lblKpi10Value;
 
             _refreshTimer =
                 new System.Windows.Forms.Timer
@@ -283,7 +291,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     // arka plandaki otomatik yenileme başarısızsa mevcut değerler korunur.
                     if (!quiet || !_hasLoadedOnce)
                     {
-                        for (int i = 1; i <= 8; i++)
+                        for (int i = 1; i <= KpiCardCount; i++)
                         {
                             SetKpi(i, null);
                         }
@@ -375,6 +383,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             SetKpi(6, snapshot.TotalReceivables.ToString("N2"));
             SetKpi(7, snapshot.TotalPayables.ToString("N2"));
             SetKpi(8, snapshot.ApprovedInvoiceCount.ToString("N0"));
+            SetKpi(9, snapshot.PendingApprovalCount.ToString("N0"));
+            SetKpi(10, snapshot.TotalStockValue.ToString("N2"));
         }
 
         private void RenderDashboard(DashboardSnapshot snapshot)
@@ -485,7 +495,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
               .Append(snapshot.CriticalStockCount).Append('|')
               .Append(snapshot.InStockCount).Append('|')
               .Append(snapshot.FinishedProductCount).Append('|')
-              .Append(snapshot.SemiFinishedProductCount).Append('|');
+              .Append(snapshot.SemiFinishedProductCount).Append('|')
+              .Append(snapshot.TotalStockValue.ToString("G29", CultureInfo.InvariantCulture)).Append('|');
 
             foreach (var row in snapshot.Receivables)
             {

@@ -37,7 +37,8 @@ internal sealed class YearDatabaseProvisioner(
         IdentityId companyId,
         int year,
         string databaseName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IProgress<DatabaseProvisionProgress>? progress = null)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseSqlServer(dbSelector.BuildConnectionString(databaseName));
@@ -58,13 +59,17 @@ internal sealed class YearDatabaseProvisioner(
             await yearContext.Database.MigrateAsync(cancellationToken);
         }
 
-        await SeedAsync(yearContext, cancellationToken);
+        AccountingYearProvisionSeedResult seeded =
+            await SeedAsync(yearContext, progress, cancellationToken);
 
         return new AccountingYearProvisionResult
         {
             DatabaseName = databaseName,
             Created = !exists,
-            AppliedMigrationCount = appliedMigrationCount
+            AppliedMigrationCount = appliedMigrationCount,
+            SeededChartOfAccountCount = seeded.ChartOfAccountCount,
+            SeededReferenceCount = seeded.ReferenceCount,
+            SeededSampleRecordCount = seeded.SampleRecordCount
         };
     }
 
@@ -72,8 +77,15 @@ internal sealed class YearDatabaseProvisioner(
     /// Yıl veritabanındaki denetim alanları (CreatedBy) null olamaz. Kullanıcı
     /// kayıtları master'da tutulduğu için tohum kayıtları master'daki admin
     /// kullanıcıya bağlanır.
+    ///
+    /// Her tohum adımı eklenen satır sayısını döner ve ilerleme bildirimi
+    /// verilmişse arayüze iletir; böylece kurulum sihirbazı adımları tek tek
+    /// tik işaretiyle gösterebilir.
     /// </summary>
-    private async Task SeedAsync(ApplicationDbContext context, CancellationToken cancellationToken)
+    private async Task<AccountingYearProvisionSeedResult> SeedAsync(
+        ApplicationDbContext context,
+        IProgress<DatabaseProvisionProgress>? progress,
+        CancellationToken cancellationToken)
     {
         Guid? adminUserId = await masterContext.Users
             .AsNoTracking()
@@ -83,16 +95,25 @@ internal sealed class YearDatabaseProvisioner(
 
         if (adminUserId is null)
         {
-            return;
+            return new AccountingYearProvisionSeedResult(0, 0, 0);
         }
 
         context.SetSeedAdminUserId(adminUserId.Value);
         try
         {
-            await SeedChartOfAccountsAsync(context, cancellationToken);
-            await SeedProductUnitTypesAsync(context, cancellationToken);
-            await SeedTaxRatesAsync(context, cancellationToken);
-            await SeedCustomersAndSuppliersAsync(context, cancellationToken);
+            int chartOfAccountCount = await SeedChartOfAccountsAsync(context, progress, cancellationToken);
+
+            int referenceCount =
+                  await SeedProductUnitTypesAsync(context, progress, cancellationToken)
+                + await SeedTaxRatesAsync(context, progress, cancellationToken);
+
+            int sampleRecordCount =
+                await SeedCustomersAndSuppliersAsync(context, progress, cancellationToken);
+
+            return new AccountingYearProvisionSeedResult(
+                chartOfAccountCount,
+                referenceCount,
+                sampleRecordCount);
         }
         finally
         {
@@ -105,24 +126,47 @@ internal sealed class YearDatabaseProvisioner(
     /// boş değilse dokunulmaz; böylece kullanıcının içe aktardığı veya elle
     /// eklediği hesaplar korunur.
     /// </summary>
-    private static async Task SeedChartOfAccountsAsync(
+    private static async Task<int> SeedChartOfAccountsAsync(
         ApplicationDbContext context,
+        IProgress<DatabaseProvisionProgress>? progress,
         CancellationToken cancellationToken)
     {
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedChartOfAccounts,
+            DatabaseProvisionStepState.Running));
+
         int added = await ChartOfAccountPlanSeeder.SeedAsync(context, cancellationToken);
+
         if (added > 0)
         {
             System.Diagnostics.Debug.WriteLine($"[Seed] Hesap planı tohumlandı: {added} hesap eklendi.");
         }
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedChartOfAccounts,
+            added > 0 ? DatabaseProvisionStepState.Completed : DatabaseProvisionStepState.Skipped,
+            added > 0 ? $"{added:N0} hesap" : "hesap planı zaten doluydu"));
+
+        return added;
     }
 
-    private static async Task SeedProductUnitTypesAsync(
+    private static async Task<int> SeedProductUnitTypesAsync(
         ApplicationDbContext context,
+        IProgress<DatabaseProvisionProgress>? progress,
         CancellationToken cancellationToken)
     {
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedUnitsAndTaxRates,
+            DatabaseProvisionStepState.Running));
+
         if (await context.Set<ProductUnitType>().AnyAsync(cancellationToken))
         {
-            return;
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.SeedUnitsAndTaxRates,
+                DatabaseProvisionStepState.Running,
+                "birim cinsleri zaten tanımlı"));
+
+            return 0;
         }
 
         foreach (string unitName in UnitTypeNames)
@@ -131,15 +175,18 @@ internal sealed class YearDatabaseProvisioner(
         }
 
         await context.SaveChangesAsync(cancellationToken);
+
+        return UnitTypeNames.Length;
     }
 
-    private static async Task SeedTaxRatesAsync(
+    private static async Task<int> SeedTaxRatesAsync(
         ApplicationDbContext context,
+        IProgress<DatabaseProvisionProgress>? progress,
         CancellationToken cancellationToken)
     {
         if (await context.Set<TaxRate>().AnyAsync(cancellationToken))
         {
-            return;
+            return 0;
         }
 
         foreach ((string name, decimal rate) in TaxRateSeeds)
@@ -148,19 +195,33 @@ internal sealed class YearDatabaseProvisioner(
         }
 
         await context.SaveChangesAsync(cancellationToken);
+
+        return TaxRateSeeds.Length;
     }
 
-    private static async Task SeedCustomersAndSuppliersAsync(
+    private static async Task<int> SeedCustomersAndSuppliersAsync(
         ApplicationDbContext context,
+        IProgress<DatabaseProvisionProgress>? progress,
         CancellationToken cancellationToken)
     {
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedSampleRecords,
+            DatabaseProvisionStepState.Running));
+
         bool hasCustomers = await context.Set<Customer>().AnyAsync(cancellationToken);
         bool hasSuppliers = await context.Set<Supplier>().AnyAsync(cancellationToken);
 
         if (hasCustomers && hasSuppliers)
         {
-            return;
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.SeedSampleRecords,
+                DatabaseProvisionStepState.Skipped,
+                "sanal kayıtlar zaten mevcut"));
+
+            return 0;
         }
+
+        int added = 0;
 
         if (!hasCustomers)
         {
@@ -181,6 +242,8 @@ internal sealed class YearDatabaseProvisioner(
                     new Address("Bursa", "Nilüfer", "Organize Sanayi Bölgesi 3. Cadde No:45"),
                     new Description("Kumaş ve hazır giyim hammaddesi"),
                     true));
+
+            added += 2;
         }
 
         if (!hasSuppliers)
@@ -202,8 +265,23 @@ internal sealed class YearDatabaseProvisioner(
                     new Address("İzmir", "Aliağa", "Sanayi Mah. 12. Cadde No:321"),
                     new Description("Alüminyum profil ve bileşen tedariki"),
                     true));
+
+            added += 2;
         }
 
         await context.SaveChangesAsync(cancellationToken);
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedSampleRecords,
+            added > 0 ? DatabaseProvisionStepState.Completed : DatabaseProvisionStepState.Skipped,
+            added > 0 ? $"{added} müşteri / tedarikçi" : "sanal kayıtlar zaten mevcut"));
+
+        return added;
     }
+
+    /// <summary>Yıl veritabanına bu çağrıda eklenen tohum satırları.</summary>
+    private sealed record AccountingYearProvisionSeedResult(
+        int ChartOfAccountCount,
+        int ReferenceCount,
+        int SampleRecordCount);
 }

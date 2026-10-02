@@ -87,10 +87,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     // akışı bozulmamalı ve pencere kapanmalıdır.
                     try
                     {
-                        waitForm ??= ShowWaitForm(caption, description);
-                        waitForm.SetCompleted(
-                            "Tüm veriler yüklendi",
-                            GetSummary(completionSummary));
+                        waitForm = ShowCompletion(waitForm, completionSummary);
                     }
                     catch (ArgumentException)
                     {
@@ -106,6 +103,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     Close(waitForm);
                 }
             }
+        }
+
+        /// <summary>
+        /// "Tüm veriler yüklendi" onayını en az görsel şiddetle gösterir.
+        ///
+        /// İş eşiğinin altında biten yüklemelerde bekleme penceresi henüz
+        /// açılmamıştır. Böyle bir durumda pencere "Veriler yükleniyor /
+        /// Lütfen bekleyin" başlığıyla açılıp hemen düzeltilir, kullanıcı da
+        /// iş zaten bitmişken yanlış bir "bekleyin" görüntüsüyle karşılaşırdı.
+        /// Bu yüzden pencere doğrudan tamamlanma metniyle açılır.
+        /// </summary>
+        private static WaitForm ShowCompletion(WaitForm? waitForm, Func<string>? completionSummary)
+        {
+            string caption = "Tüm veriler yüklendi";
+            string description = GetSummary(completionSummary);
+
+            if (waitForm is null)
+            {
+                return ShowWaitForm(caption, description);
+            }
+
+            waitForm.SetCompleted(caption, description);
+            return waitForm;
         }
 
         /// <summary>Bekleme penceresini açar ve aktif olarak işaretler.</summary>
@@ -161,15 +181,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
 
                 if (showCompleted)
                 {
-                    // Onay, veri geldikten sonra gösterilen son bir
-                    // göstergedir. DevExpress tarafından reddedilse bile veri
-                    // akışı bozulmamalı ve pencere kapanmalıdır.
                     try
                     {
-                        waitForm ??= ShowWaitForm(caption, description);
-                        waitForm.SetCompleted(
-                            "Tüm veriler yüklendi",
-                            GetSummary(completionSummary));
+                        waitForm = ShowCompletion(waitForm, completionSummary);
                     }
                     catch (ArgumentException)
                     {
@@ -233,6 +247,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                 return;
             }
 
+            // Pencere her seferinde yeniden çözülüp Dispose edildiği için
+            // (AddForms kaydı Transient) z-sırası ayarının sıfırlanmasına
+            // gerek yoktur.
             waitForm.Close();
             waitForm.Dispose();
         }

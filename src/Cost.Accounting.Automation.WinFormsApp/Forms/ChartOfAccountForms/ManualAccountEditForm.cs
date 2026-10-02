@@ -13,6 +13,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms
         private readonly Guid? _preselectedParentId;
         private bool _loading;
 
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta
+        /// <see cref="ManualAccountEditForm(Guid?)"/> kullanılır.
+        /// </summary>
+        public ManualAccountEditForm()
+        {
+            InitializeComponent();
+            DesignTime.Guard(typeof(ManualAccountEditForm));
+        }
+
         public ManualAccountEditForm(Guid? preselectedParentId = null)
         {
             _preselectedParentId = preselectedParentId;

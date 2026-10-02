@@ -50,18 +50,33 @@ internal sealed class AtelierTransferProductsQueryHandler(
             .Where(i => i.Status == StockIssueStatus.Approved)
             .ToList();
 
-        // Bekleyen miktar: onaylanmamış transferler (atölyeye gelen malzeme) ve
-        // maliyet pusulası taslaklarının tüketimi.
-        Dictionary<Guid, decimal> pendingTransferMap = transfers
+        List<StockIssueLine> approvedLines = approvedTransfers
+            .SelectMany(i => i.Lines)
+            .Where(l => l.Product is not null)
+            .ToList();
+
+        List<StockIssueLine> draftLines = transfers
             .Where(i => i.Status == StockIssueStatus.Draft)
             .SelectMany(i => i.Lines)
-            .GroupBy(l => l.ProductId.Value)
+            .Where(l => l.Product is not null)
+            .ToList();
+
+        // Bekleyen miktar: onaylanmamış transfer satırları (atölyeye gelen malzeme).
+        Dictionary<Guid, decimal> pendingTransferMap = draftLines
+            .GroupBy(l => l.ProductId!.Value)
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
-        HashSet<Guid> productIds = transfers
-            .SelectMany(t => t.Lines)
-            .Where(l => l.Product is not null)
-            .Select(l => l.ProductId.Value)
+        Dictionary<Guid, decimal> transferredMap = approvedLines
+            .GroupBy(l => l.ProductId!.Value)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+        Dictionary<Guid, StockIssueLine> latestApprovedLine = approvedLines
+            .GroupBy(l => l.ProductId!.Value)
+            .ToDictionary(g => g.Key, g => g.Last());
+
+        HashSet<Guid> productIds = approvedLines
+            .Concat(draftLines)
+            .Select(l => l.ProductId!.Value)
             .ToHashSet();
 
         Dictionary<Guid, decimal> consumedMap = [];
@@ -99,14 +114,23 @@ internal sealed class AtelierTransferProductsQueryHandler(
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
         }
 
-        var result = approvedTransfers
-            .SelectMany(t => t.Lines)
-            .Where(l => l.Product is not null)
-            .GroupBy(l => l.ProductId)
+        // Ürün listesi onaylı VE taslak transfer satırlarının birleşiminden kurulur.
+        // Yalnızca onaylı transferler taranırsa, sadece taslak transferi olan bir
+        // ürün hiç listelenmez ve "Taslak" kolonu hiçbir zaman değer gösteremez.
+        var result = approvedLines
+            .Concat(draftLines)
+            .GroupBy(l => l.ProductId!.Value)
             .Select(g =>
             {
+                Guid productId = g.Key;
                 Product product = g.First().Product!;
-                StockIssueLine latest = g.Last();
+
+                // Birim maliyet onaylı transferden gelir; yalnızca taslak transferi
+                // varsa son satırın maliyeti kullanılır.
+                if (!latestApprovedLine.TryGetValue(productId, out StockIssueLine? priceSource))
+                {
+                    priceSource = g.Last();
+                }
 
                 return new AtelierTransferProductDto
                 {
@@ -114,15 +138,16 @@ internal sealed class AtelierTransferProductsQueryHandler(
                     ProductCode = product.ProductCode.Value,
                     ProductName = product.Name.Value,
                     UnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
-                    UnitPrice = latest.UnitCost.Value,
-                    TransferredQuantity = g.Sum(l => l.Quantity),
-                    ConsumedQuantity = consumedMap.TryGetValue(product.Id.Value, out decimal consumed) ? consumed : 0m,
+                    UnitPrice = priceSource.UnitCost.Value,
+                    TransferredQuantity = transferredMap.TryGetValue(productId, out decimal transferred) ? transferred : 0m,
+                    ConsumedQuantity = consumedMap.TryGetValue(productId, out decimal consumed) ? consumed : 0m,
                     // Bekleyen = onaylanmamış transfer + maliyet pusulası taslağı
-                    DraftQuantity = (pendingTransferMap.TryGetValue(product.Id.Value, out decimal pending) ? pending : 0m)
-                        + (draftMap.TryGetValue(product.Id.Value, out decimal drafted) ? drafted : 0m)
+                    DraftQuantity = (pendingTransferMap.TryGetValue(productId, out decimal pending) ? pending : 0m)
+                        + (draftMap.TryGetValue(productId, out decimal drafted) ? drafted : 0m)
                 };
             })
-            .OrderBy(p => p.ProductCode)
+            .OrderBy(p => p.TransferredQuantity > 0m)
+            .ThenBy(p => p.ProductCode)
             .ThenBy(p => p.ProductName)
             .ToList();
 

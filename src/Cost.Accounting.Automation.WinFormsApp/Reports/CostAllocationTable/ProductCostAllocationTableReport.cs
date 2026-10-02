@@ -18,12 +18,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
         public void SetData(
             DateOnly startDate,
             DateOnly endDate,
-            GiderDagilimReportResult result,
+            ExpenseDistributionReportResult result,
             string companyName = "",
             CostSlipType type = CostSlipType.Product)
         {
             List<ProductCostAllocationReportRow> rows = result.Rows
-                .Select(ProductCostAllocationReportRow.FromGiderDagilimRow)
+                .Select(ProductCostAllocationReportRow.FromExpenseDistributionRow)
                 .Where(r => r.Total > 0)   // sadece bu aralıkta hareketi olan atölyeler
                 .ToList();
 

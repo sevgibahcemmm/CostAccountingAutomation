@@ -1,0 +1,593 @@
+using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Infrastructure;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
+using System.Drawing;
+
+namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
+{
+    /// <summary>
+    /// Açılış penceresi ve ilk kurulum sihirbazı.
+    ///
+    /// <para>
+    /// Bu pencere <b>her açılışta</b>, giriş ekranından önce gösterilir. Böylece
+    /// veritabanı yoklaması ve şema güncellemesi arka planda çalışırken
+    /// uygulama "donmuş" gibi görünmez. Önceden yalnızca veritabanı yoksa
+    /// açılıyordu; sunucuya ulaşılamadığında 30 saniyelik bağlantı zaman aşımı
+    /// hiçbir pencere gösterilmeden geçtiği için uygulama kilitleniyordu.
+    /// </para>
+    ///
+    /// <para>
+    /// Davranış akışı: veritabanı kontrolü (kısa zaman aşımı) → veritabanı
+    /// varsa arka planda sessizce güncellenip pencere kendini kapatır, yoksa
+    /// adım listesi tik işaretleriyle gösterilir, sunucuya ulaşılamazsa
+    /// gerçek hata mesajı "Tekrar Dene" düğmesiyle birlikte sunulur.
+    /// </para>
+    ///
+    /// <para>
+    /// Adım listesi <see cref="DatabaseInitializer.Steps"/>'ten gelir; ekranda
+    /// gösterilen adımlar veritabanı tarafında gerçekten yürütülen adımlarla
+    /// aynı kaynaktan beslenir.
+    /// </para>
+    /// </summary>
+    public partial class DatabaseSetupForm : DevExpress.XtraEditors.XtraForm
+    {
+        private static readonly Dictionary<DatabaseProvisionStep, string> StepTitles = new()
+        {
+            [DatabaseProvisionStep.ConnectServer] = "Veritabanı sunucusuna bağlanılıyor",
+            [DatabaseProvisionStep.CreateMasterDatabase] = "Ana veritabanı oluşturuluyor",
+            [DatabaseProvisionStep.ApplyMasterSchema] = "Tablo ve altyapı kuruluyor",
+            [DatabaseProvisionStep.SeedCompanies] = "Kurum kayıtları oluşturuluyor",
+            [DatabaseProvisionStep.SeedRolesAndUsers] = "Rol ve kullanıcı kayıtları oluşturuluyor",
+            [DatabaseProvisionStep.SeedPermissions] = "Yetki tanımları hazırlanıyor",
+            [DatabaseProvisionStep.ProvisionYearDatabases] = "Mali yıl veritabanları hazırlanıyor",
+            [DatabaseProvisionStep.SeedChartOfAccounts] = "Standart hesap planı yükleniyor",
+            [DatabaseProvisionStep.SeedUnitsAndTaxRates] = "Birim cinsleri ve KDV oranları yükleniyor",
+            [DatabaseProvisionStep.SeedSampleRecords] = "Sanal veri kayıtları oluşturuluyor"
+        };
+
+        private readonly Dictionary<DatabaseProvisionStep, StepRow> _rows = [];
+
+        private readonly Color _surface;
+        private readonly Color _surfaceMuted;
+        private readonly Color _text;
+        private readonly Color _mutedText;
+        private readonly Color _border;
+
+        private CancellationTokenSource? _cts;
+        private DatabaseProvisionStep? _runningStep;
+        private bool _shouldContinueToLogin;
+
+        /// <summary>
+        /// Kurulum tamamlandı (ya da veritabanı zaten günceldi). <c>Program</c>
+        /// yalnızca bu değer <c>true</c> ise giriş formunu açar.
+        /// </summary>
+        public bool ShouldContinueToLogin => _shouldContinueToLogin;
+
+        public DatabaseSetupForm()
+        {
+            InitializeComponent();
+
+            // Kurulum ekranı giriş öncesi olduğu için skin bu noktada zaten
+            // ayarlanmıştır; renkler buna göre çözülür ve pencere koyu temada da
+            // açık temada da okunabilir kalır.
+            _surface = SkinTheme.HighContrastSurface;
+            _surfaceMuted = SkinTheme.SurfaceMuted(SkinTheme.HighContrastSurface);
+            _text = SkinTheme.HighContrastText;
+            _mutedText = SkinTheme.MutedText(_surface);
+            _border = SkinTheme.BorderMuted(_surface);
+
+            btnOk.Click += BtnOk_Click;
+            btnRetry.Click += BtnRetry_Click;
+
+            BuildStepRows();
+            ApplyTheme();
+
+            // Kontrol aşamasındayken adım listesi gereksiz yere "boş" görünmesin.
+            pnlSteps.Visible = false;
+            SetBanner(BannerState.Checking);
+        }
+
+        /// <summary>
+        /// Adım satırlarını kurulum sırasına göre önceden basar. Böylece
+        /// kullanıcı neyin sırada beklediğini de görür.
+        /// </summary>
+        private void BuildStepRows()
+        {
+            int top = pnlSteps.Padding.Top;
+
+            foreach (DatabaseProvisionStep step in DatabaseInitializer.Steps)
+            {
+                StepRow row = new(StepTitles[step], top, _mutedText, _mutedText);
+
+                _rows[step] = row;
+
+                pnlSteps.Controls.Add(row.Container);
+
+                top += StepRow.Height;
+            }
+        }
+
+        private void ApplyTheme()
+        {
+            pnlSurface.BackColor = _surface;
+            pnlHeader.BackColor = _surfaceMuted;
+            pnlFooter.BackColor = _surfaceMuted;
+
+            pnlHeaderAccent.BackColor = SkinTheme.Primary;
+            lblHeaderTitle.ForeColor = _text;
+            lblHeaderSubtitle.ForeColor = _mutedText;
+
+            pnlProgressTrack.BackColor = _border;
+            pnlProgressFill.BackColor = SkinTheme.Primary;
+            lblProgress.ForeColor = _mutedText;
+
+            foreach (StepRow row in _rows.Values)
+            {
+                row.ApplyPending(_mutedText);
+            }
+        }
+
+        protected override async void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            await DetectAndPrepareAsync();
+        }
+
+        /// <summary>
+        /// Veritabanının varlığını kontrol eder ve gerekiyorsa hazırlar.
+        /// </summary>
+        private async Task DetectAndPrepareAsync()
+        {
+            SetBusy(true, "Veritabanı kontrol ediliyor...");
+
+            DatabaseFirstRunState state =
+                await Task.Run(() => DatabaseInitializer.GetFirstRunStateAsync(Program.Services));
+
+            CrashLog.Write("DatabaseSetup", $"Database state: {state}");
+
+            switch (state)
+            {
+                case DatabaseFirstRunState.Exists:
+                    // Veritabanı var: kullanıcıyı bekletmeden güncelle ve pencereyi
+                    // kapat. Pencerenin tek işi "bekle" bilgisini vermekti.
+                    await Task.Run(() => DatabaseInitializer.InitializeAsync(Program.Services));
+
+                    _shouldContinueToLogin = true;
+                    Close();
+
+                    break;
+
+                case DatabaseFirstRunState.Missing:
+                    await CreateDatabaseAsync();
+                    break;
+
+                default:
+                    Fail(
+                        "Veritabanı sunucusuna ulaşılamıyor. "
+                        + "Yerel SQL Server / LocalDB çalışıyor mu ve bağlantı "
+                        + "adresi doğru mu? Ayrıntı için logs\\crash.log dosyasına bakınız.");
+                    break;
+            }
+        }
+
+        private async Task CreateDatabaseAsync()
+        {
+            pnlSteps.Visible = true;
+
+            SetBanner(BannerState.Working);
+
+            var progress = new Progress<DatabaseProvisionProgress>(Apply);
+
+            _cts = new CancellationTokenSource();
+
+            try
+            {
+                await Task.Run(
+                    () => DatabaseInitializer.InitializeAsync(
+                        Program.Services,
+                        progress,
+                        _cts.Token));
+
+                Complete();
+            }
+            catch (OperationCanceledException)
+            {
+                Fail("İşlem durduruldu.");
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("DatabaseSetup.CreateDatabase", ex);
+                Fail(ex.Message);
+            }
+            finally
+            {
+                _cts.Dispose();
+                _cts = null;
+            }
+        }
+
+        private void Apply(DatabaseProvisionProgress report)
+        {
+            if (SetStep(report.Step, report.State, report.Detail, report.Error))
+            {
+                UpdateProgress();
+            }
+        }
+
+        /// <summary>Bir adımın durumunu günceller; durum değiştiyse true döner.</summary>
+        private bool SetStep(
+            DatabaseProvisionStep step,
+            DatabaseProvisionStepState state,
+            string? detail,
+            string? error)
+        {
+            if (!_rows.TryGetValue(step, out StepRow? row))
+            {
+                return false;
+            }
+
+            switch (state)
+            {
+                case DatabaseProvisionStepState.Running:
+                    _runningStep = step;
+                    row.ApplyRunning(_text, SkinTheme.Question, detail);
+                    return true;
+
+                case DatabaseProvisionStepState.Completed:
+                    _runningStep = null;
+                    row.ApplyDone(_text, SkinTheme.Success, detail);
+                    return true;
+
+                case DatabaseProvisionStepState.Failed:
+                    _runningStep = null;
+                    row.ApplyFailed(_text, SkinTheme.Danger, error ?? detail);
+                    return true;
+
+                case DatabaseProvisionStepState.Skipped:
+                    // Atlanan adım da tamamlanmış sayılır; yalnızca simge ve
+                    // metin nötr kalır ki "atlandı" ile "yapıldı" ayrışsın.
+                    _runningStep = null;
+                    row.ApplySkipped(_text, SkinTheme.SecondaryText, detail);
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        private void UpdateProgress()
+        {
+            int total = _rows.Count;
+
+            int done = _rows.Values.Count(
+                r => r.State is DatabaseProvisionStepState.Completed
+                    or DatabaseProvisionStepState.Skipped);
+
+            int width = pnlProgressTrack.ClientSize.Width;
+
+            pnlProgressFill.Width =
+                total == 0
+                    ? 0
+                    : (int)Math.Round(width * (double)done / total);
+
+            lblProgress.Text = $"{done} / {total} adım tamamlandı";
+        }
+
+        private void SetBusy(bool busy, string status)
+        {
+            btnOk.Enabled = !busy;
+            btnOk.Visible = !busy;
+            btnRetry.Enabled = !busy;
+            btnRetry.Visible = !busy;
+
+            lblProgress.Text = status;
+
+            pnlProgressFill.Width = 0;
+        }
+
+        private void Complete()
+        {
+            // Bildirimi hiç gönderilmemiş adımlar (örneğin kurum yoksa yıl
+            // veritabanı açılmaz) "gerekmiyordu" olarak kapanır; aksi hâlde
+            // sonsuza dek bekliyor gibi görünürlerdi.
+            foreach (StepRow row in _rows.Values)
+            {
+                if (row.State == DatabaseProvisionStepState.Pending)
+                {
+                    row.ApplySkipped(_text, SkinTheme.SecondaryText, "gerekmiyordu");
+                }
+            }
+
+            UpdateProgress();
+
+            _shouldContinueToLogin = true;
+
+            SetBanner(BannerState.Success);
+
+            btnOk.Text = "Tamam";
+            btnOk.Visible = true;
+            btnOk.Enabled = true;
+            btnOk.Focus();
+            btnRetry.Visible = false;
+
+            CrashLog.Write("DatabaseSetup", "Kurulum tamamlandi.");
+        }
+
+        private void Fail(string message)
+        {
+            // İstisna, adımın ortasında fırlatılmış olabilir; o adım "devam
+            // ediyor" simgesiyle sonsuza dek kalmasın diye burada kapatılır.
+            if (_runningStep is DatabaseProvisionStep failedStep
+                && _rows.TryGetValue(failedStep, out StepRow? row))
+            {
+                row.ApplyFailed(_text, SkinTheme.Danger, "başarısız");
+                _runningStep = null;
+
+                UpdateProgress();
+            }
+
+            _shouldContinueToLogin = false;
+
+            SetBanner(BannerState.Error, message);
+
+            btnOk.Visible = false;
+
+            btnRetry.Visible = true;
+            btnRetry.Enabled = true;
+            btnRetry.Focus();
+
+            CrashLog.Write("DatabaseSetup", "Kurulum basarisiz: " + message);
+        }
+
+        private void SetBanner(BannerState state, string? detail = null)
+        {
+            switch (state)
+            {
+                case BannerState.Checking:
+                    pnlBannerAccent.BackColor = SkinTheme.Question;
+                    lblBannerTitle.Text = "Uygulama hazırlanıyor";
+                    lblBannerTitle.ForeColor = SkinTheme.Question;
+                    lblBannerText.ForeColor = _text;
+                    lblBannerText.Text =
+                        detail ?? "Veritabanı kontrol ediliyor, lütfen bekleyin...";
+                    break;
+
+                case BannerState.Success:
+                    pnlBannerAccent.BackColor = SkinTheme.Success;
+                    lblBannerTitle.Text = "Kurulum tamamlandı";
+                    lblBannerTitle.ForeColor = SkinTheme.Success;
+                    lblBannerText.ForeColor = _text;
+                    lblBannerText.Text =
+                        detail
+                        ?? "Veritabanı oluşturuldu ve sanal kayıtlar yüklendi. Artık giriş yapabilirsiniz.";
+                    break;
+
+                case BannerState.Error:
+                    pnlBannerAccent.BackColor = SkinTheme.Danger;
+                    lblBannerTitle.Text = "Kurulum tamamlanamadı";
+                    lblBannerTitle.ForeColor = SkinTheme.Danger;
+                    lblBannerText.ForeColor = _text;
+                    lblBannerText.Text =
+                        detail ?? "Beklenmeyen bir hata oluştu.";
+                    break;
+
+                default:
+                    pnlBannerAccent.BackColor = SkinTheme.Warning;
+                    lblBannerTitle.Text = "Veritabanı bulunamadı";
+                    lblBannerTitle.ForeColor = SkinTheme.Warning;
+                    lblBannerText.ForeColor = _text;
+                    lblBannerText.Text =
+                        detail ?? "Lütfen bekleyin, oluşturuluyor...";
+                    break;
+            }
+
+            pnlBanner.BackColor =
+                SkinTheme.Blend(_surface, pnlBannerAccent.BackColor, 0.10F);
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // Kurulum sürerken kapatılırsa yarım kalmış bir veritabanı
+            // bırakılabilir; bu yüzden kapatma engellenir.
+            if (_cts is not null && e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+
+                MsgBox.Notice(
+                    this,
+                    "Veritabanı hazırlığı sürüyor. Lütfen işlem tamamlanana kadar bekleyin.",
+                    "İşlem Devam Ediyor");
+
+                return;
+            }
+
+            base.OnFormClosing(e);
+        }
+
+        private void BtnOk_Click(object? sender, EventArgs e)
+        {
+            // Kurulum sürerken düğmeye basılması yalnızca onay bekler.
+            if (_cts is not null)
+            {
+                return;
+            }
+
+            Close();
+        }
+
+        private async void BtnRetry_Click(object? sender, EventArgs e)
+        {
+            if (_cts is not null)
+            {
+                return;
+            }
+
+            // Yeniden denemede adım listesi ve ilerleme sıfırlanır.
+            foreach (StepRow row in _rows.Values)
+            {
+                row.ApplyPending(_mutedText);
+            }
+
+            pnlSteps.Visible = false;
+
+            await DetectAndPrepareAsync();
+        }
+
+        private enum BannerState
+        {
+            Checking,
+            Working,
+            Success,
+            Error
+        }
+
+        /// <summary>
+        /// Tek bir adım satırı: durum simgesi, başlık ve sağda özet metin.
+        ///
+        /// <para>
+        /// Satır konumla yerleştirilir; içindeki üç etiket <c>Left</c> /
+        /// <c>Fill</c> / <c>Right</c> olarak dock edilir. Etiketlerde
+        /// <c>AutoSize</c> KAPALI olmalıdır: açık bırakıldığında denetim kendi
+        /// metin genişliğine göre boyutlanır, <c>Dock</c> uygulanmaz ve sağdaki
+        /// özet metni (adet, veritabanı adı) görünmez olur.
+        /// </para>
+        /// </summary>
+        private sealed class StepRow
+        {
+            public const int Height = 32;
+
+            private const int GlyphWidth = 30;
+            private const int DetailWidth = 190;
+
+            private readonly string _caption;
+
+            public StepRow(string caption, int top, Color textColor, Color detailColor)
+            {
+                _caption = caption;
+
+                Container = new Panel
+                {
+                    Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent,
+                    Location = new Point(0, top),
+                    Size = new Size(600, Height)
+                };
+
+                Glyph = new Label
+                {
+                    AutoSize = false,
+                    Dock = DockStyle.Left,
+                    Font = new Font("Segoe UI", 13F, FontStyle.Bold),
+                    ForeColor = detailColor,
+                    Size = new Size(GlyphWidth, Height),
+                    Text = "○",
+                    TextAlign = ContentAlignment.MiddleCenter
+                };
+
+                Detail = new Label
+                {
+                    AutoSize = false,
+                    Dock = DockStyle.Right,
+                    Font = new Font("Segoe UI", 9F),
+                    ForeColor = detailColor,
+                    Size = new Size(DetailWidth, Height),
+                    TextAlign = ContentAlignment.MiddleRight
+                };
+
+                Title = new Label
+                {
+                    AutoSize = false,
+                    Dock = DockStyle.Fill,
+                    Font = new Font("Segoe UI", 10F),
+                    ForeColor = textColor,
+                    Text = caption,
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+
+                // Dock sırası ters çalışır: en son eklenen ilk yerleşir.
+                Container.Controls.Add(Title);
+                Container.Controls.Add(Detail);
+                Container.Controls.Add(Glyph);
+            }
+
+            public Panel Container { get; }
+
+            public Label Glyph { get; }
+
+            public Label Title { get; }
+
+            public Label Detail { get; }
+
+            public DatabaseProvisionStepState State { get; private set; }
+                = DatabaseProvisionStepState.Pending;
+
+            public void ApplyPending(Color mutedText)
+            {
+                State = DatabaseProvisionStepState.Pending;
+
+                Glyph.Text = "○";
+                Glyph.ForeColor = mutedText;
+
+                Title.Text = _caption;
+                Title.ForeColor = mutedText;
+
+                Detail.Text = string.Empty;
+                Detail.ForeColor = mutedText;
+            }
+
+            public void ApplyRunning(Color text, Color accent, string? detail)
+            {
+                State = DatabaseProvisionStepState.Running;
+
+                Glyph.Text = "◐";
+                Glyph.ForeColor = accent;
+
+                Title.ForeColor = text;
+
+                Detail.ForeColor = accent;
+                Detail.Text = detail ?? "yürüyor...";
+            }
+
+            public void ApplyDone(Color text, Color accent, string? detail)
+            {
+                State = DatabaseProvisionStepState.Completed;
+
+                Glyph.Text = "✔";
+                Glyph.ForeColor = accent;
+
+                Title.ForeColor = text;
+
+                Detail.ForeColor = accent;
+                Detail.Text = detail ?? "tamamlandı";
+            }
+
+            public void ApplySkipped(Color text, Color accent, string? detail)
+            {
+                State = DatabaseProvisionStepState.Skipped;
+
+                Glyph.Text = "✔";
+                Glyph.ForeColor = accent;
+
+                Title.ForeColor = text;
+
+                Detail.ForeColor = accent;
+                Detail.Text = detail ?? "atlandı";
+            }
+
+            public void ApplyFailed(Color text, Color accent, string? detail)
+            {
+                State = DatabaseProvisionStepState.Failed;
+
+                Glyph.Text = "✕";
+                Glyph.ForeColor = accent;
+
+                Title.ForeColor = text;
+
+                Detail.ForeColor = accent;
+                Detail.Text = detail ?? "başarısız";
+            }
+        }
+    }
+}

@@ -12,6 +12,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 
         public List<string> SelectedWorkshops { get; private set; } = [];
 
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta
+        /// atölye listesiyle açılan yapıcı kullanılır.
+        /// </summary>
+        public WorkshopSelectionPromptForm()
+        {
+            InitializeComponent();
+            DesignTime.Guard(typeof(WorkshopSelectionPromptForm));
+        }
+
         public WorkshopSelectionPromptForm(List<string> workshops, string headerTitle = "Atölye Seçimi")
         {
             InitializeComponent();

@@ -39,9 +39,11 @@
             progressPanel1.AnimationToTextDistance = 8;
             progressPanel1.Appearance.BackColor = Color.Transparent;
             progressPanel1.Appearance.Options.UseBackColor = true;
-            progressPanel1.AppearanceCaption.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            // Tam punto değerleri kullanılır: 13F / 9.5F gibi kesirli boyutlar %125 ve
+            // %150 ölçeklemede metni yuvarlayıp bulanıklaştırıyordu.
+            progressPanel1.AppearanceCaption.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             progressPanel1.AppearanceCaption.Options.UseFont = true;
-            progressPanel1.AppearanceDescription.Font = new Font("Segoe UI", 9.5F);
+            progressPanel1.AppearanceDescription.Font = new Font("Segoe UI", 9F);
             progressPanel1.AppearanceDescription.Options.UseFont = true;
             progressPanel1.CaptionToDescriptionDistance = 6;
             progressPanel1.Dock = DockStyle.Fill;

@@ -3,18 +3,18 @@ using FluentValidation;
 using TS.MediatR;
 using TS.Result;
 
-namespace Cost.Accounting.Automation.Application.Devirs;
+namespace Cost.Accounting.Automation.Application.CarryForwards;
 
 /// <summary>
 /// Seçili mali yılın veritabanına, aynı şirketin bir önceki mali yılından
 /// devir (açılış bakiyesi) yapar. Yalnızca boş yıl veritabanına çalışır.
 /// </summary>
 [Permission("devir:manage")]
-public sealed record DevirStartCommand(DevirOptions Options) : IRequest<Result<DevirTransferResult>>;
+public sealed record CarryForwardStartCommand(CarryForwardOptions Options) : IRequest<Result<CarryForwardTransferResult>>;
 
-public sealed class DevirStartCommandValidator : AbstractValidator<DevirStartCommand>
+public sealed class CarryForwardStartCommandValidator : AbstractValidator<CarryForwardStartCommand>
 {
-    public DevirStartCommandValidator()
+    public CarryForwardStartCommandValidator()
     {
         RuleFor(p => p.Options)
             .NotNull()
@@ -26,30 +26,30 @@ public sealed class DevirStartCommandValidator : AbstractValidator<DevirStartCom
     }
 }
 
-internal sealed class DevirStartCommandHandler(IDevirTransferService devirService)
-    : IRequestHandler<DevirStartCommand, Result<DevirTransferResult>>
+internal sealed class CarryForwardStartCommandHandler(ICarryForwardTransferService devirService)
+    : IRequestHandler<CarryForwardStartCommand, Result<CarryForwardTransferResult>>
 {
-    public async Task<Result<DevirTransferResult>> Handle(
-        DevirStartCommand request,
+    public async Task<Result<CarryForwardTransferResult>> Handle(
+        CarryForwardStartCommand request,
         CancellationToken cancellationToken)
     {
-        DevirPreviewResult preview = await devirService.BuildPreviewAsync(cancellationToken);
+        CarryForwardPreviewResult preview = await devirService.BuildPreviewAsync(cancellationToken);
 
         if (!preview.HasSource)
         {
-            return Result<DevirTransferResult>.Failure(
+            return Result<CarryForwardTransferResult>.Failure(
                 "Devir alınacak bir önceki mali yıl bulunamadı. " +
                 "Bu şirket için hedef yıldan eski bir mali yıl açılmalı.");
         }
 
         if (preview.BlockingReason is not null)
         {
-            return Result<DevirTransferResult>.Failure(preview.BlockingReason);
+            return Result<CarryForwardTransferResult>.Failure(preview.BlockingReason);
         }
 
-        if (preview.PreviousDevir is { } done)
+        if (preview.PreviousCarryForward is { } done)
         {
-            return Result<DevirTransferResult>.Failure(
+            return Result<CarryForwardTransferResult>.Failure(
                 $"{done.TargetYear} mali yılı zaten {done.SourceYear} mali yılından devredilmiş "
                 + $"({done.CreatedAt:d.MM.yyyy HH:mm}). Mükerrer devir yapılamaz.");
         }
@@ -60,13 +60,13 @@ internal sealed class DevirStartCommandHandler(IDevirTransferService devirServic
         // okunabilir mesaj dönmek için burada yakalanır.
         try
         {
-            DevirTransferResult result = await devirService.TransferAsync(request.Options, cancellationToken);
+            CarryForwardTransferResult result = await devirService.TransferAsync(request.Options, cancellationToken);
 
-            return Result<DevirTransferResult>.Succeed(result);
+            return Result<CarryForwardTransferResult>.Succeed(result);
         }
         catch (InvalidOperationException ex)
         {
-            return Result<DevirTransferResult>.Failure(ex.Message);
+            return Result<CarryForwardTransferResult>.Failure(ex.Message);
         }
     }
 }

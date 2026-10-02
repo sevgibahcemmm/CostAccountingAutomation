@@ -43,13 +43,13 @@ private void InitializeComponent()
             this.tblDetail = new DevExpress.XtraReports.UI.XRTable();
             this.rowDetail = new DevExpress.XtraReports.UI.XRTableRow();
             this.cellDetailSiraNo = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellDetailKodu = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellDetailBarkod = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellDetailAdi = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellDetailCode = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellDetailBarcode = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellDetailName = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellDetailOlcu = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellDetailMiktar = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellDetailBirimFiyat = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellDetailTutar = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellDetailUnitPrice = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellDetailAmount = new DevExpress.XtraReports.UI.XRTableCell();
             this.ReportHeader = new DevExpress.XtraReports.UI.ReportHeaderBand();
             this.lblTitle = new DevExpress.XtraReports.UI.XRLabel();
             this.subFisNo = new DevExpress.XtraReports.UI.SubBand();
@@ -94,12 +94,12 @@ private void InitializeComponent()
             this.subOperation = new DevExpress.XtraReports.UI.SubBand();
             this.tblOperation = new DevExpress.XtraReports.UI.XRTable();
             this.rowOperation1 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.cellOp1Islem = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellOp1Operation = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellOp1Nereden = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellOp1Kime = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellOp1Nereye = new DevExpress.XtraReports.UI.XRTableCell();
             this.rowOperation2 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.cellOp2Islem = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellOp2Operation = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellOp2Nereden = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellOp2Kime = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellOp2Nereye = new DevExpress.XtraReports.UI.XRTableCell();
@@ -131,8 +131,8 @@ private void InitializeComponent()
             this.rowGroupFooter = new DevExpress.XtraReports.UI.XRTableRow();
             this.cellGroupDisplay = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellGroupMiktar = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellGroupToplam = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellGroupTutar = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellGroupGrandTotal = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellGroupTotal = new DevExpress.XtraReports.UI.XRTableCell();
             this.ReportFooter = new DevExpress.XtraReports.UI.ReportFooterBand();
             this.subSummary = new DevExpress.XtraReports.UI.SubBand();
             this.lblOzet = new DevExpress.XtraReports.UI.XRLabel();
@@ -140,7 +140,7 @@ private void InitializeComponent()
             this.tblSignatures = new DevExpress.XtraReports.UI.XRTable();
             this.rowSignatures1 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cellSig1Giris = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellSig1Cikis = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellSig1Exit = new DevExpress.XtraReports.UI.XRTableCell();
             this.rowSignatures2 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cellSig2TeslimEden = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellSig2TeslimAlan = new DevExpress.XtraReports.UI.XRTableCell();
@@ -150,29 +150,29 @@ private void InitializeComponent()
             this.cellColTitle = new DevExpress.XtraReports.UI.XRTableCell();
             this.rowColumnHeader2 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cellColSiraNo = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellColKodu = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellColBarkod = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellColAdi = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellColCode = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellColBarcode = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellColName = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellColOlcu = new DevExpress.XtraReports.UI.XRTableCell();
             this.cellColMiktar = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellColBirimFiyat = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cellColTutar = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellColUnitPrice = new DevExpress.XtraReports.UI.XRTableCell();
+            this.cellColAmount = new DevExpress.XtraReports.UI.XRTableCell();
             this.FisSiraNo = new DevExpress.XtraReports.Parameters.Parameter();
             this.Tarih = new DevExpress.XtraReports.Parameters.Parameter();
-            this.IlIlceAdi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.IlIlceKodu = new DevExpress.XtraReports.Parameters.Parameter();
-            this.HarcamaBirimiAdi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.HarcamaBirimiKodu = new DevExpress.XtraReports.Parameters.Parameter();
-            this.AmbarAdi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.AmbarKodu = new DevExpress.XtraReports.Parameters.Parameter();
-            this.MuhasebeBirimiAdi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.MuhasebeBirimiKodu = new DevExpress.XtraReports.Parameters.Parameter();
-            this.DayanakTarihi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.DayanakKodu = new DevExpress.XtraReports.Parameters.Parameter();
-            this.IslemCesidi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.NeredenGeldigi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.KimeVerildigi = new DevExpress.XtraReports.Parameters.Parameter();
-            this.NereyeVerildigi = new DevExpress.XtraReports.Parameters.Parameter();
+            this.ProvinceDistrictName = new DevExpress.XtraReports.Parameters.Parameter();
+            this.ProvinceDistrictCode = new DevExpress.XtraReports.Parameters.Parameter();
+            this.ExpenditureUnitName = new DevExpress.XtraReports.Parameters.Parameter();
+            this.ExpenditureUnitCode = new DevExpress.XtraReports.Parameters.Parameter();
+            this.StoreName = new DevExpress.XtraReports.Parameters.Parameter();
+            this.StoreCode = new DevExpress.XtraReports.Parameters.Parameter();
+            this.AccountingUnitName = new DevExpress.XtraReports.Parameters.Parameter();
+            this.AccountingUnitCode = new DevExpress.XtraReports.Parameters.Parameter();
+            this.ReferenceDate = new DevExpress.XtraReports.Parameters.Parameter();
+            this.ReferenceCode = new DevExpress.XtraReports.Parameters.Parameter();
+            this.OperationType = new DevExpress.XtraReports.Parameters.Parameter();
+            this.SourceParty = new DevExpress.XtraReports.Parameters.Parameter();
+            this.RecipientParty = new DevExpress.XtraReports.Parameters.Parameter();
+            this.DestinationParty = new DevExpress.XtraReports.Parameters.Parameter();
             this.Ozet = new DevExpress.XtraReports.Parameters.Parameter();
             this.objectDataSource1 = new DevExpress.DataAccess.ObjectBinding.ObjectDataSource(this.components);
             this.object_5091f412_6f78_40c1_a41d_ba08f3934505 = new DevExpress.XtraReports.UI.XRTable();
@@ -300,20 +300,20 @@ private void InitializeComponent()
             // 
             this.rowDetail.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
             this.cellDetailSiraNo,
-            this.cellDetailKodu,
-            this.cellDetailBarkod,
-            this.cellDetailAdi,
+            this.cellDetailCode,
+            this.cellDetailBarcode,
+            this.cellDetailName,
             this.cellDetailOlcu,
             this.cellDetailMiktar,
-            this.cellDetailBirimFiyat,
-            this.cellDetailTutar});
+            this.cellDetailUnitPrice,
+            this.cellDetailAmount});
             this.rowDetail.Name = "rowDetail";
             this.rowDetail.Weight = 1D;
             // 
             // cellDetailSiraNo
             // 
             this.cellDetailSiraNo.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[SiraNo]")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[RowNumber]")});
             this.cellDetailSiraNo.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellDetailSiraNo.Multiline = true;
             this.cellDetailSiraNo.Name = "cellDetailSiraNo";
@@ -324,52 +324,52 @@ private void InitializeComponent()
             this.cellDetailSiraNo.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.cellDetailSiraNo.Weight = 0.41099476439790572D;
             // 
-            // cellDetailKodu
+            // cellDetailCode
             // 
-            this.cellDetailKodu.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Kodu]")});
-            this.cellDetailKodu.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
-            this.cellDetailKodu.Multiline = true;
-            this.cellDetailKodu.Name = "cellDetailKodu";
-            this.cellDetailKodu.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellDetailKodu.StylePriority.UseFont = false;
-            this.cellDetailKodu.StylePriority.UsePadding = false;
-            this.cellDetailKodu.StylePriority.UseTextAlignment = false;
-            this.cellDetailKodu.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellDetailKodu.Weight = 1.1487780665852014D;
+            this.cellDetailCode.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Code]")});
+            this.cellDetailCode.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.cellDetailCode.Multiline = true;
+            this.cellDetailCode.Name = "cellDetailCode";
+            this.cellDetailCode.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellDetailCode.StylePriority.UseFont = false;
+            this.cellDetailCode.StylePriority.UsePadding = false;
+            this.cellDetailCode.StylePriority.UseTextAlignment = false;
+            this.cellDetailCode.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellDetailCode.Weight = 1.1487780665852014D;
             // 
-            // cellDetailBarkod
+            // cellDetailBarcode
             // 
-            this.cellDetailBarkod.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[BarkodNo]")});
-            this.cellDetailBarkod.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
-            this.cellDetailBarkod.Multiline = true;
-            this.cellDetailBarkod.Name = "cellDetailBarkod";
-            this.cellDetailBarkod.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellDetailBarkod.StylePriority.UseFont = false;
-            this.cellDetailBarkod.StylePriority.UsePadding = false;
-            this.cellDetailBarkod.StylePriority.UseTextAlignment = false;
-            this.cellDetailBarkod.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellDetailBarkod.Weight = 0.77486934961448806D;
+            this.cellDetailBarcode.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Barcode]")});
+            this.cellDetailBarcode.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.cellDetailBarcode.Multiline = true;
+            this.cellDetailBarcode.Name = "cellDetailBarcode";
+            this.cellDetailBarcode.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellDetailBarcode.StylePriority.UseFont = false;
+            this.cellDetailBarcode.StylePriority.UsePadding = false;
+            this.cellDetailBarcode.StylePriority.UseTextAlignment = false;
+            this.cellDetailBarcode.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellDetailBarcode.Weight = 0.77486934961448806D;
             // 
-            // cellDetailAdi
+            // cellDetailName
             // 
-            this.cellDetailAdi.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            this.cellDetailName.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
             new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Adi]")});
-            this.cellDetailAdi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
-            this.cellDetailAdi.Multiline = true;
-            this.cellDetailAdi.Name = "cellDetailAdi";
-            this.cellDetailAdi.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellDetailAdi.StylePriority.UseFont = false;
-            this.cellDetailAdi.StylePriority.UsePadding = false;
-            this.cellDetailAdi.StylePriority.UseTextAlignment = false;
-            this.cellDetailAdi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.cellDetailAdi.Weight = 2.0554101754233476D;
+            this.cellDetailName.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.cellDetailName.Multiline = true;
+            this.cellDetailName.Name = "cellDetailName";
+            this.cellDetailName.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellDetailName.StylePriority.UseFont = false;
+            this.cellDetailName.StylePriority.UsePadding = false;
+            this.cellDetailName.StylePriority.UseTextAlignment = false;
+            this.cellDetailName.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.cellDetailName.Weight = 2.0554101754233476D;
             // 
             // cellDetailOlcu
             // 
             this.cellDetailOlcu.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[OlcuBirimi]")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[UnitOfMeasure]")});
             this.cellDetailOlcu.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellDetailOlcu.Multiline = true;
             this.cellDetailOlcu.Name = "cellDetailOlcu";
@@ -383,7 +383,7 @@ private void InitializeComponent()
             // cellDetailMiktar
             // 
             this.cellDetailMiktar.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Miktari]")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Quantity]")});
             this.cellDetailMiktar.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellDetailMiktar.Multiline = true;
             this.cellDetailMiktar.Name = "cellDetailMiktar";
@@ -395,35 +395,35 @@ private void InitializeComponent()
             this.cellDetailMiktar.TextFormatString = "{0:n2}";
             this.cellDetailMiktar.Weight = 1D;
             // 
-            // cellDetailBirimFiyat
+            // cellDetailUnitPrice
             // 
-            this.cellDetailBirimFiyat.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[BirimFiyati]")});
-            this.cellDetailBirimFiyat.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
-            this.cellDetailBirimFiyat.Multiline = true;
-            this.cellDetailBirimFiyat.Name = "cellDetailBirimFiyat";
-            this.cellDetailBirimFiyat.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellDetailBirimFiyat.StylePriority.UseFont = false;
-            this.cellDetailBirimFiyat.StylePriority.UsePadding = false;
-            this.cellDetailBirimFiyat.StylePriority.UseTextAlignment = false;
-            this.cellDetailBirimFiyat.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
-            this.cellDetailBirimFiyat.TextFormatString = "{0:n2}";
-            this.cellDetailBirimFiyat.Weight = 1D;
+            this.cellDetailUnitPrice.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[UnitPrice]")});
+            this.cellDetailUnitPrice.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.cellDetailUnitPrice.Multiline = true;
+            this.cellDetailUnitPrice.Name = "cellDetailUnitPrice";
+            this.cellDetailUnitPrice.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellDetailUnitPrice.StylePriority.UseFont = false;
+            this.cellDetailUnitPrice.StylePriority.UsePadding = false;
+            this.cellDetailUnitPrice.StylePriority.UseTextAlignment = false;
+            this.cellDetailUnitPrice.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
+            this.cellDetailUnitPrice.TextFormatString = "{0:n2}";
+            this.cellDetailUnitPrice.Weight = 1D;
             // 
-            // cellDetailTutar
+            // cellDetailAmount
             // 
-            this.cellDetailTutar.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Tutari]")});
-            this.cellDetailTutar.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
-            this.cellDetailTutar.Multiline = true;
-            this.cellDetailTutar.Name = "cellDetailTutar";
-            this.cellDetailTutar.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellDetailTutar.StylePriority.UseFont = false;
-            this.cellDetailTutar.StylePriority.UsePadding = false;
-            this.cellDetailTutar.StylePriority.UseTextAlignment = false;
-            this.cellDetailTutar.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
-            this.cellDetailTutar.TextFormatString = "{0:n2}";
-            this.cellDetailTutar.Weight = 1D;
+            this.cellDetailAmount.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Amount]")});
+            this.cellDetailAmount.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.cellDetailAmount.Multiline = true;
+            this.cellDetailAmount.Name = "cellDetailAmount";
+            this.cellDetailAmount.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellDetailAmount.StylePriority.UseFont = false;
+            this.cellDetailAmount.StylePriority.UsePadding = false;
+            this.cellDetailAmount.StylePriority.UseTextAlignment = false;
+            this.cellDetailAmount.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
+            this.cellDetailAmount.TextFormatString = "{0:n2}";
+            this.cellDetailAmount.Weight = 1D;
             // 
             // ReportHeader
             // 
@@ -597,7 +597,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellParty1NameVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?IlIlceAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ProvinceDistrictName")});
             this.cellParty1NameVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellParty1NameVal.Multiline = true;
             this.cellParty1NameVal.Name = "cellParty1NameVal";
@@ -632,7 +632,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellParty1CodeVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?IlIlceKodu")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ProvinceDistrictCode")});
             this.cellParty1CodeVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellParty1CodeVal.Multiline = true;
             this.cellParty1CodeVal.Name = "cellParty1CodeVal";
@@ -695,7 +695,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellParty2NameVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?HarcamaBirimiAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ExpenditureUnitName")});
             this.cellParty2NameVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellParty2NameVal.Multiline = true;
             this.cellParty2NameVal.Name = "cellParty2NameVal";
@@ -730,7 +730,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellParty2CodeVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?HarcamaBirimiKodu")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ExpenditureUnitCode")});
             this.cellParty2CodeVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellParty2CodeVal.Multiline = true;
             this.cellParty2CodeVal.Name = "cellParty2CodeVal";
@@ -793,7 +793,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellParty3NameVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MuhasebeBirimiAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?AccountingUnitName")});
             this.cellParty3NameVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellParty3NameVal.Multiline = true;
             this.cellParty3NameVal.Name = "cellParty3NameVal";
@@ -828,7 +828,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellParty3CodeVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MuhasebeBirimiKodu")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?AccountingUnitCode")});
             this.cellParty3CodeVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellParty3CodeVal.Multiline = true;
             this.cellParty3CodeVal.Name = "cellParty3CodeVal";
@@ -1011,7 +1011,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellDocRef2DateVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?DayanakTarihi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ReferenceDate")});
             this.cellDocRef2DateVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellDocRef2DateVal.Multiline = true;
             this.cellDocRef2DateVal.Name = "cellDocRef2DateVal";
@@ -1046,7 +1046,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellDocRef2CodeVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?DayanakKodu")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ReferenceCode")});
             this.cellDocRef2CodeVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellDocRef2CodeVal.Multiline = true;
             this.cellDocRef2CodeVal.Name = "cellDocRef2CodeVal";
@@ -1087,31 +1087,31 @@ private void InitializeComponent()
             // rowOperation1
             // 
             this.rowOperation1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
-            this.cellOp1Islem,
+            this.cellOp1Operation,
             this.cellOp1Nereden,
             this.cellOp1Kime,
             this.cellOp1Nereye});
             this.rowOperation1.Name = "rowOperation1";
             this.rowOperation1.Weight = 1D;
             // 
-            // cellOp1Islem
+            // cellOp1Operation
             // 
-            this.cellOp1Islem.BackColor = System.Drawing.Color.Silver;
-            this.cellOp1Islem.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellOp1Operation.BackColor = System.Drawing.Color.Silver;
+            this.cellOp1Operation.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellOp1Islem.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellOp1Islem.Multiline = true;
-            this.cellOp1Islem.Name = "cellOp1Islem";
-            this.cellOp1Islem.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellOp1Islem.StylePriority.UseBackColor = false;
-            this.cellOp1Islem.StylePriority.UseBorders = false;
-            this.cellOp1Islem.StylePriority.UseFont = false;
-            this.cellOp1Islem.StylePriority.UsePadding = false;
-            this.cellOp1Islem.StylePriority.UseTextAlignment = false;
-            this.cellOp1Islem.Text = "İŞLEM ÇEŞİDİ (6)";
-            this.cellOp1Islem.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellOp1Islem.Weight = 0.975D;
+            this.cellOp1Operation.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellOp1Operation.Multiline = true;
+            this.cellOp1Operation.Name = "cellOp1Operation";
+            this.cellOp1Operation.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellOp1Operation.StylePriority.UseBackColor = false;
+            this.cellOp1Operation.StylePriority.UseBorders = false;
+            this.cellOp1Operation.StylePriority.UseFont = false;
+            this.cellOp1Operation.StylePriority.UsePadding = false;
+            this.cellOp1Operation.StylePriority.UseTextAlignment = false;
+            this.cellOp1Operation.Text = "İŞLEM ÇEŞİDİ (6)";
+            this.cellOp1Operation.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellOp1Operation.Weight = 0.975D;
             // 
             // cellOp1Nereden
             // 
@@ -1173,30 +1173,30 @@ private void InitializeComponent()
             // rowOperation2
             // 
             this.rowOperation2.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
-            this.cellOp2Islem,
+            this.cellOp2Operation,
             this.cellOp2Nereden,
             this.cellOp2Kime,
             this.cellOp2Nereye});
             this.rowOperation2.Name = "rowOperation2";
             this.rowOperation2.Weight = 1D;
             // 
-            // cellOp2Islem
+            // cellOp2Operation
             // 
-            this.cellOp2Islem.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellOp2Operation.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellOp2Islem.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?IslemCesidi")});
-            this.cellOp2Islem.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
-            this.cellOp2Islem.Multiline = true;
-            this.cellOp2Islem.Name = "cellOp2Islem";
-            this.cellOp2Islem.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellOp2Islem.StylePriority.UseBorders = false;
-            this.cellOp2Islem.StylePriority.UseFont = false;
-            this.cellOp2Islem.StylePriority.UsePadding = false;
-            this.cellOp2Islem.StylePriority.UseTextAlignment = false;
-            this.cellOp2Islem.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellOp2Islem.Weight = 0.975D;
+            this.cellOp2Operation.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?OperationType")});
+            this.cellOp2Operation.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.cellOp2Operation.Multiline = true;
+            this.cellOp2Operation.Name = "cellOp2Operation";
+            this.cellOp2Operation.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellOp2Operation.StylePriority.UseBorders = false;
+            this.cellOp2Operation.StylePriority.UseFont = false;
+            this.cellOp2Operation.StylePriority.UsePadding = false;
+            this.cellOp2Operation.StylePriority.UseTextAlignment = false;
+            this.cellOp2Operation.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellOp2Operation.Weight = 0.975D;
             // 
             // cellOp2Nereden
             // 
@@ -1204,7 +1204,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellOp2Nereden.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?NeredenGeldigi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?SourceParty")});
             this.cellOp2Nereden.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellOp2Nereden.Multiline = true;
             this.cellOp2Nereden.Name = "cellOp2Nereden";
@@ -1222,7 +1222,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellOp2Kime.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?KimeVerildigi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?RecipientParty")});
             this.cellOp2Kime.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellOp2Kime.Multiline = true;
             this.cellOp2Kime.Name = "cellOp2Kime";
@@ -1240,7 +1240,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellOp2Nereye.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?NereyeVerildigi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?DestinationParty")});
             this.cellOp2Nereye.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellOp2Nereye.Multiline = true;
             this.cellOp2Nereye.Name = "cellOp2Nereye";
@@ -1357,7 +1357,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellUnits2NameVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?HarcamaBirimiAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ExpenditureUnitName")});
             this.cellUnits2NameVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellUnits2NameVal.Multiline = true;
             this.cellUnits2NameVal.Name = "cellUnits2NameVal";
@@ -1392,7 +1392,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellUnits2CodeVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?HarcamaBirimiKodu")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?ExpenditureUnitCode")});
             this.cellUnits2CodeVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellUnits2CodeVal.Multiline = true;
             this.cellUnits2CodeVal.Name = "cellUnits2CodeVal";
@@ -1455,7 +1455,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellUnits3NameVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?AmbarAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?StoreName")});
             this.cellUnits3NameVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellUnits3NameVal.Multiline = true;
             this.cellUnits3NameVal.Name = "cellUnits3NameVal";
@@ -1490,7 +1490,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellUnits3CodeVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?AmbarKodu")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?StoreCode")});
             this.cellUnits3CodeVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellUnits3CodeVal.Multiline = true;
             this.cellUnits3CodeVal.Name = "cellUnits3CodeVal";
@@ -1553,7 +1553,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellUnits4NameVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MuhasebeBirimiAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?AccountingUnitName")});
             this.cellUnits4NameVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellUnits4NameVal.Multiline = true;
             this.cellUnits4NameVal.Name = "cellUnits4NameVal";
@@ -1588,7 +1588,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellUnits4CodeVal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MuhasebeBirimiKodu")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?AccountingUnitCode")});
             this.cellUnits4CodeVal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellUnits4CodeVal.Multiline = true;
             this.cellUnits4CodeVal.Name = "cellUnits4CodeVal";
@@ -1639,8 +1639,8 @@ private void InitializeComponent()
             this.rowGroupFooter.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
             this.cellGroupDisplay,
             this.cellGroupMiktar,
-            this.cellGroupToplam,
-            this.cellGroupTutar});
+            this.cellGroupGrandTotal,
+            this.cellGroupTotal});
             this.rowGroupFooter.Name = "rowGroupFooter";
             this.rowGroupFooter.Weight = 1D;
             // 
@@ -1668,7 +1668,7 @@ private void InitializeComponent()
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellGroupMiktar.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Miktari]")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Quantity]")});
             this.cellGroupMiktar.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
             this.cellGroupMiktar.Multiline = true;
             this.cellGroupMiktar.Name = "cellGroupMiktar";
@@ -1684,44 +1684,44 @@ private void InitializeComponent()
             this.cellGroupMiktar.TextFormatString = "{0:n2}";
             this.cellGroupMiktar.Weight = 1D;
             // 
-            // cellGroupToplam
+            // cellGroupGrandTotal
             // 
-            this.cellGroupToplam.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellGroupGrandTotal.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellGroupToplam.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellGroupToplam.Multiline = true;
-            this.cellGroupToplam.Name = "cellGroupToplam";
-            this.cellGroupToplam.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellGroupToplam.StylePriority.UseBorders = false;
-            this.cellGroupToplam.StylePriority.UseFont = false;
-            this.cellGroupToplam.StylePriority.UsePadding = false;
-            this.cellGroupToplam.StylePriority.UseTextAlignment = false;
-            this.cellGroupToplam.Text = "TOPLAM";
-            this.cellGroupToplam.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellGroupToplam.Weight = 1D;
+            this.cellGroupGrandTotal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellGroupGrandTotal.Multiline = true;
+            this.cellGroupGrandTotal.Name = "cellGroupGrandTotal";
+            this.cellGroupGrandTotal.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellGroupGrandTotal.StylePriority.UseBorders = false;
+            this.cellGroupGrandTotal.StylePriority.UseFont = false;
+            this.cellGroupGrandTotal.StylePriority.UsePadding = false;
+            this.cellGroupGrandTotal.StylePriority.UseTextAlignment = false;
+            this.cellGroupGrandTotal.Text = "TOPLAM";
+            this.cellGroupGrandTotal.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellGroupGrandTotal.Weight = 1D;
             // 
-            // cellGroupTutar
+            // cellGroupTotal
             // 
-            this.cellGroupTutar.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellGroupTotal.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellGroupTutar.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Tutari]")});
-            this.cellGroupTutar.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellGroupTutar.Multiline = true;
-            this.cellGroupTutar.Name = "cellGroupTutar";
-            this.cellGroupTutar.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellGroupTutar.StylePriority.UseBorders = false;
-            this.cellGroupTutar.StylePriority.UseFont = false;
-            this.cellGroupTutar.StylePriority.UsePadding = false;
-            this.cellGroupTutar.StylePriority.UseTextAlignment = false;
+            this.cellGroupTotal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Amount]")});
+            this.cellGroupTotal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellGroupTotal.Multiline = true;
+            this.cellGroupTotal.Name = "cellGroupTotal";
+            this.cellGroupTotal.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellGroupTotal.StylePriority.UseBorders = false;
+            this.cellGroupTotal.StylePriority.UseFont = false;
+            this.cellGroupTotal.StylePriority.UsePadding = false;
+            this.cellGroupTotal.StylePriority.UseTextAlignment = false;
             xrSummary4.FormatString = "{0:n2}";
             xrSummary4.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
-            this.cellGroupTutar.Summary = xrSummary4;
-            this.cellGroupTutar.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
-            this.cellGroupTutar.TextFormatString = "{0:n2}";
-            this.cellGroupTutar.Weight = 1D;
+            this.cellGroupTotal.Summary = xrSummary4;
+            this.cellGroupTotal.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
+            this.cellGroupTotal.TextFormatString = "{0:n2}";
+            this.cellGroupTotal.Weight = 1D;
             // 
             // ReportFooter
             // 
@@ -1781,7 +1781,7 @@ private void InitializeComponent()
             // 
             this.rowSignatures1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
             this.cellSig1Giris,
-            this.cellSig1Cikis});
+            this.cellSig1Exit});
             this.rowSignatures1.Name = "rowSignatures1";
             this.rowSignatures1.Weight = 1D;
             // 
@@ -1803,23 +1803,23 @@ private void InitializeComponent()
             this.cellSig1Giris.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             this.cellSig1Giris.Weight = 1.51D;
             // 
-            // cellSig1Cikis
+            // cellSig1Exit
             // 
-            this.cellSig1Cikis.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellSig1Exit.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellSig1Cikis.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
-            this.cellSig1Cikis.Multiline = true;
-            this.cellSig1Cikis.Name = "cellSig1Cikis";
-            this.cellSig1Cikis.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellSig1Cikis.StylePriority.UseBorders = false;
-            this.cellSig1Cikis.StylePriority.UseFont = false;
-            this.cellSig1Cikis.StylePriority.UsePadding = false;
-            this.cellSig1Cikis.StylePriority.UseTextAlignment = false;
-            this.cellSig1Cikis.Text = "ÇIKIŞ KAYDI YAPILMIŞTIR\r\n\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
+            this.cellSig1Exit.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.cellSig1Exit.Multiline = true;
+            this.cellSig1Exit.Name = "cellSig1Exit";
+            this.cellSig1Exit.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellSig1Exit.StylePriority.UseBorders = false;
+            this.cellSig1Exit.StylePriority.UseFont = false;
+            this.cellSig1Exit.StylePriority.UsePadding = false;
+            this.cellSig1Exit.StylePriority.UseTextAlignment = false;
+            this.cellSig1Exit.Text = "ÇIKIŞ KAYDI YAPILMIŞTIR\r\n\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
     "anı :\r\nİmzası :\r\n\r\n\r\n";
-            this.cellSig1Cikis.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
-            this.cellSig1Cikis.Weight = 1.49D;
+            this.cellSig1Exit.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
+            this.cellSig1Exit.Weight = 1.49D;
             // 
             // rowSignatures2
             // 
@@ -1919,13 +1919,13 @@ private void InitializeComponent()
             // 
             this.rowColumnHeader2.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
             this.cellColSiraNo,
-            this.cellColKodu,
-            this.cellColBarkod,
-            this.cellColAdi,
+            this.cellColCode,
+            this.cellColBarcode,
+            this.cellColName,
             this.cellColOlcu,
             this.cellColMiktar,
-            this.cellColBirimFiyat,
-            this.cellColTutar});
+            this.cellColUnitPrice,
+            this.cellColAmount});
             this.rowColumnHeader2.Name = "rowColumnHeader2";
             this.rowColumnHeader2.Weight = 1.4D;
             // 
@@ -1948,62 +1948,62 @@ private void InitializeComponent()
             this.cellColSiraNo.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.cellColSiraNo.Weight = 0.41099476439790572D;
             // 
-            // cellColKodu
+            // cellColCode
             // 
-            this.cellColKodu.BackColor = System.Drawing.Color.Silver;
-            this.cellColKodu.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellColCode.BackColor = System.Drawing.Color.Silver;
+            this.cellColCode.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellColKodu.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellColKodu.Multiline = true;
-            this.cellColKodu.Name = "cellColKodu";
-            this.cellColKodu.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellColKodu.StylePriority.UseBackColor = false;
-            this.cellColKodu.StylePriority.UseBorders = false;
-            this.cellColKodu.StylePriority.UseFont = false;
-            this.cellColKodu.StylePriority.UsePadding = false;
-            this.cellColKodu.StylePriority.UseTextAlignment = false;
-            this.cellColKodu.Text = "KODU\r\n(13)";
-            this.cellColKodu.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellColKodu.Weight = 1.1487780665852014D;
+            this.cellColCode.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellColCode.Multiline = true;
+            this.cellColCode.Name = "cellColCode";
+            this.cellColCode.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellColCode.StylePriority.UseBackColor = false;
+            this.cellColCode.StylePriority.UseBorders = false;
+            this.cellColCode.StylePriority.UseFont = false;
+            this.cellColCode.StylePriority.UsePadding = false;
+            this.cellColCode.StylePriority.UseTextAlignment = false;
+            this.cellColCode.Text = "KODU\r\n(13)";
+            this.cellColCode.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellColCode.Weight = 1.1487780665852014D;
             // 
-            // cellColBarkod
+            // cellColBarcode
             // 
-            this.cellColBarkod.BackColor = System.Drawing.Color.Silver;
-            this.cellColBarkod.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellColBarcode.BackColor = System.Drawing.Color.Silver;
+            this.cellColBarcode.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellColBarkod.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellColBarkod.Multiline = true;
-            this.cellColBarkod.Name = "cellColBarkod";
-            this.cellColBarkod.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellColBarkod.StylePriority.UseBackColor = false;
-            this.cellColBarkod.StylePriority.UseBorders = false;
-            this.cellColBarkod.StylePriority.UseFont = false;
-            this.cellColBarkod.StylePriority.UsePadding = false;
-            this.cellColBarkod.StylePriority.UseTextAlignment = false;
-            this.cellColBarkod.Text = "BARKODU\r\n(14)";
-            this.cellColBarkod.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellColBarkod.Weight = 0.77486934961448806D;
+            this.cellColBarcode.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellColBarcode.Multiline = true;
+            this.cellColBarcode.Name = "cellColBarcode";
+            this.cellColBarcode.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellColBarcode.StylePriority.UseBackColor = false;
+            this.cellColBarcode.StylePriority.UseBorders = false;
+            this.cellColBarcode.StylePriority.UseFont = false;
+            this.cellColBarcode.StylePriority.UsePadding = false;
+            this.cellColBarcode.StylePriority.UseTextAlignment = false;
+            this.cellColBarcode.Text = "BARKODU\r\n(14)";
+            this.cellColBarcode.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellColBarcode.Weight = 0.77486934961448806D;
             // 
-            // cellColAdi
+            // cellColName
             // 
-            this.cellColAdi.BackColor = System.Drawing.Color.Silver;
-            this.cellColAdi.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellColName.BackColor = System.Drawing.Color.Silver;
+            this.cellColName.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellColAdi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellColAdi.Multiline = true;
-            this.cellColAdi.Name = "cellColAdi";
-            this.cellColAdi.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellColAdi.StylePriority.UseBackColor = false;
-            this.cellColAdi.StylePriority.UseBorders = false;
-            this.cellColAdi.StylePriority.UseFont = false;
-            this.cellColAdi.StylePriority.UsePadding = false;
-            this.cellColAdi.StylePriority.UseTextAlignment = false;
-            this.cellColAdi.Text = "ADI";
-            this.cellColAdi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellColAdi.Weight = 2.0554101754233476D;
+            this.cellColName.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellColName.Multiline = true;
+            this.cellColName.Name = "cellColName";
+            this.cellColName.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellColName.StylePriority.UseBackColor = false;
+            this.cellColName.StylePriority.UseBorders = false;
+            this.cellColName.StylePriority.UseFont = false;
+            this.cellColName.StylePriority.UsePadding = false;
+            this.cellColName.StylePriority.UseTextAlignment = false;
+            this.cellColName.Text = "ADI";
+            this.cellColName.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellColName.Weight = 2.0554101754233476D;
             // 
             // cellColOlcu
             // 
@@ -2043,43 +2043,43 @@ private void InitializeComponent()
             this.cellColMiktar.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.cellColMiktar.Weight = 1D;
             // 
-            // cellColBirimFiyat
+            // cellColUnitPrice
             // 
-            this.cellColBirimFiyat.BackColor = System.Drawing.Color.Silver;
-            this.cellColBirimFiyat.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellColUnitPrice.BackColor = System.Drawing.Color.Silver;
+            this.cellColUnitPrice.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellColBirimFiyat.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellColBirimFiyat.Multiline = true;
-            this.cellColBirimFiyat.Name = "cellColBirimFiyat";
-            this.cellColBirimFiyat.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellColBirimFiyat.StylePriority.UseBackColor = false;
-            this.cellColBirimFiyat.StylePriority.UseBorders = false;
-            this.cellColBirimFiyat.StylePriority.UseFont = false;
-            this.cellColBirimFiyat.StylePriority.UsePadding = false;
-            this.cellColBirimFiyat.StylePriority.UseTextAlignment = false;
-            this.cellColBirimFiyat.Text = "BİRİM FİYATI";
-            this.cellColBirimFiyat.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellColBirimFiyat.Weight = 1D;
+            this.cellColUnitPrice.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellColUnitPrice.Multiline = true;
+            this.cellColUnitPrice.Name = "cellColUnitPrice";
+            this.cellColUnitPrice.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellColUnitPrice.StylePriority.UseBackColor = false;
+            this.cellColUnitPrice.StylePriority.UseBorders = false;
+            this.cellColUnitPrice.StylePriority.UseFont = false;
+            this.cellColUnitPrice.StylePriority.UsePadding = false;
+            this.cellColUnitPrice.StylePriority.UseTextAlignment = false;
+            this.cellColUnitPrice.Text = "BİRİM FİYATI";
+            this.cellColUnitPrice.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellColUnitPrice.Weight = 1D;
             // 
-            // cellColTutar
+            // cellColAmount
             // 
-            this.cellColTutar.BackColor = System.Drawing.Color.Silver;
-            this.cellColTutar.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
+            this.cellColAmount.BackColor = System.Drawing.Color.Silver;
+            this.cellColAmount.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellColTutar.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.cellColTutar.Multiline = true;
-            this.cellColTutar.Name = "cellColTutar";
-            this.cellColTutar.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
-            this.cellColTutar.StylePriority.UseBackColor = false;
-            this.cellColTutar.StylePriority.UseBorders = false;
-            this.cellColTutar.StylePriority.UseFont = false;
-            this.cellColTutar.StylePriority.UsePadding = false;
-            this.cellColTutar.StylePriority.UseTextAlignment = false;
-            this.cellColTutar.Text = "TUTARI";
-            this.cellColTutar.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cellColTutar.Weight = 1D;
+            this.cellColAmount.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.cellColAmount.Multiline = true;
+            this.cellColAmount.Name = "cellColAmount";
+            this.cellColAmount.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 2F, 2F, 100F);
+            this.cellColAmount.StylePriority.UseBackColor = false;
+            this.cellColAmount.StylePriority.UseBorders = false;
+            this.cellColAmount.StylePriority.UseFont = false;
+            this.cellColAmount.StylePriority.UsePadding = false;
+            this.cellColAmount.StylePriority.UseTextAlignment = false;
+            this.cellColAmount.Text = "TUTARI";
+            this.cellColAmount.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellColAmount.Weight = 1D;
             // 
             // FisSiraNo
             // 
@@ -2091,75 +2091,75 @@ private void InitializeComponent()
             this.Tarih.Name = "Tarih";
             this.Tarih.Visible = false;
             // 
-            // IlIlceAdi
+            // ProvinceDistrictName
             // 
-            this.IlIlceAdi.Name = "IlIlceAdi";
-            this.IlIlceAdi.Visible = false;
+            this.ProvinceDistrictName.Name = "ProvinceDistrictName";
+            this.ProvinceDistrictName.Visible = false;
             // 
-            // IlIlceKodu
+            // ProvinceDistrictCode
             // 
-            this.IlIlceKodu.Name = "IlIlceKodu";
-            this.IlIlceKodu.Visible = false;
+            this.ProvinceDistrictCode.Name = "ProvinceDistrictCode";
+            this.ProvinceDistrictCode.Visible = false;
             // 
-            // HarcamaBirimiAdi
+            // ExpenditureUnitName
             // 
-            this.HarcamaBirimiAdi.Name = "HarcamaBirimiAdi";
-            this.HarcamaBirimiAdi.Visible = false;
+            this.ExpenditureUnitName.Name = "ExpenditureUnitName";
+            this.ExpenditureUnitName.Visible = false;
             // 
-            // HarcamaBirimiKodu
+            // ExpenditureUnitCode
             // 
-            this.HarcamaBirimiKodu.Name = "HarcamaBirimiKodu";
-            this.HarcamaBirimiKodu.Visible = false;
+            this.ExpenditureUnitCode.Name = "ExpenditureUnitCode";
+            this.ExpenditureUnitCode.Visible = false;
             // 
-            // AmbarAdi
+            // StoreName
             // 
-            this.AmbarAdi.Name = "AmbarAdi";
-            this.AmbarAdi.Visible = false;
+            this.StoreName.Name = "StoreName";
+            this.StoreName.Visible = false;
             // 
-            // AmbarKodu
+            // StoreCode
             // 
-            this.AmbarKodu.Name = "AmbarKodu";
-            this.AmbarKodu.Visible = false;
+            this.StoreCode.Name = "StoreCode";
+            this.StoreCode.Visible = false;
             // 
-            // MuhasebeBirimiAdi
+            // AccountingUnitName
             // 
-            this.MuhasebeBirimiAdi.Name = "MuhasebeBirimiAdi";
-            this.MuhasebeBirimiAdi.Visible = false;
+            this.AccountingUnitName.Name = "AccountingUnitName";
+            this.AccountingUnitName.Visible = false;
             // 
-            // MuhasebeBirimiKodu
+            // AccountingUnitCode
             // 
-            this.MuhasebeBirimiKodu.Name = "MuhasebeBirimiKodu";
-            this.MuhasebeBirimiKodu.Visible = false;
+            this.AccountingUnitCode.Name = "AccountingUnitCode";
+            this.AccountingUnitCode.Visible = false;
             // 
-            // DayanakTarihi
+            // ReferenceDate
             // 
-            this.DayanakTarihi.Name = "DayanakTarihi";
-            this.DayanakTarihi.Visible = false;
+            this.ReferenceDate.Name = "ReferenceDate";
+            this.ReferenceDate.Visible = false;
             // 
-            // DayanakKodu
+            // ReferenceCode
             // 
-            this.DayanakKodu.Name = "DayanakKodu";
-            this.DayanakKodu.Visible = false;
+            this.ReferenceCode.Name = "ReferenceCode";
+            this.ReferenceCode.Visible = false;
             // 
-            // IslemCesidi
+            // OperationType
             // 
-            this.IslemCesidi.Name = "IslemCesidi";
-            this.IslemCesidi.Visible = false;
+            this.OperationType.Name = "OperationType";
+            this.OperationType.Visible = false;
             // 
-            // NeredenGeldigi
+            // SourceParty
             // 
-            this.NeredenGeldigi.Name = "NeredenGeldigi";
-            this.NeredenGeldigi.Visible = false;
+            this.SourceParty.Name = "SourceParty";
+            this.SourceParty.Visible = false;
             // 
-            // KimeVerildigi
+            // RecipientParty
             // 
-            this.KimeVerildigi.Name = "KimeVerildigi";
-            this.KimeVerildigi.Visible = false;
+            this.RecipientParty.Name = "RecipientParty";
+            this.RecipientParty.Visible = false;
             // 
-            // NereyeVerildigi
+            // DestinationParty
             // 
-            this.NereyeVerildigi.Name = "NereyeVerildigi";
-            this.NereyeVerildigi.Visible = false;
+            this.DestinationParty.Name = "DestinationParty";
+            this.DestinationParty.Visible = false;
             // 
             // Ozet
             // 
@@ -2268,20 +2268,20 @@ private void InitializeComponent()
             this.Parameters.AddRange(new DevExpress.XtraReports.Parameters.Parameter[] {
             this.FisSiraNo,
             this.Tarih,
-            this.IlIlceAdi,
-            this.IlIlceKodu,
-            this.HarcamaBirimiAdi,
-            this.HarcamaBirimiKodu,
-            this.AmbarAdi,
-            this.AmbarKodu,
-            this.MuhasebeBirimiAdi,
-            this.MuhasebeBirimiKodu,
-            this.DayanakTarihi,
-            this.DayanakKodu,
-            this.IslemCesidi,
-            this.NeredenGeldigi,
-            this.KimeVerildigi,
-            this.NereyeVerildigi,
+            this.ProvinceDistrictName,
+            this.ProvinceDistrictCode,
+            this.ExpenditureUnitName,
+            this.ExpenditureUnitCode,
+            this.StoreName,
+            this.StoreCode,
+            this.AccountingUnitName,
+            this.AccountingUnitCode,
+            this.ReferenceDate,
+            this.ReferenceCode,
+            this.OperationType,
+            this.SourceParty,
+            this.RecipientParty,
+            this.DestinationParty,
             this.Ozet});
             this.Version = "25.2";
             ((System.ComponentModel.ISupportInitialize)(this.tblDetail)).EndInit();
@@ -2364,12 +2364,12 @@ private void InitializeComponent()
         private DevExpress.XtraReports.UI.XRTableCell cellDocRef2CodeVal;
         private DevExpress.XtraReports.UI.XRTable tblOperation;
         private DevExpress.XtraReports.UI.XRTableRow rowOperation1;
-        private DevExpress.XtraReports.UI.XRTableCell cellOp1Islem;
+        private DevExpress.XtraReports.UI.XRTableCell cellOp1Operation;
         private DevExpress.XtraReports.UI.XRTableCell cellOp1Nereden;
         private DevExpress.XtraReports.UI.XRTableCell cellOp1Kime;
         private DevExpress.XtraReports.UI.XRTableCell cellOp1Nereye;
         private DevExpress.XtraReports.UI.XRTableRow rowOperation2;
-        private DevExpress.XtraReports.UI.XRTableCell cellOp2Islem;
+        private DevExpress.XtraReports.UI.XRTableCell cellOp2Operation;
         private DevExpress.XtraReports.UI.XRTableCell cellOp2Nereden;
         private DevExpress.XtraReports.UI.XRTableCell cellOp2Kime;
         private DevExpress.XtraReports.UI.XRTableCell cellOp2Nereye;
@@ -2399,52 +2399,52 @@ private void InitializeComponent()
         private DevExpress.XtraReports.UI.XRTableCell cellColTitle;
         private DevExpress.XtraReports.UI.XRTableRow rowColumnHeader2;
         private DevExpress.XtraReports.UI.XRTableCell cellColSiraNo;
-        private DevExpress.XtraReports.UI.XRTableCell cellColKodu;
-        private DevExpress.XtraReports.UI.XRTableCell cellColBarkod;
-        private DevExpress.XtraReports.UI.XRTableCell cellColAdi;
+        private DevExpress.XtraReports.UI.XRTableCell cellColCode;
+        private DevExpress.XtraReports.UI.XRTableCell cellColBarcode;
+        private DevExpress.XtraReports.UI.XRTableCell cellColName;
         private DevExpress.XtraReports.UI.XRTableCell cellColOlcu;
         private DevExpress.XtraReports.UI.XRTableCell cellColMiktar;
-        private DevExpress.XtraReports.UI.XRTableCell cellColBirimFiyat;
-        private DevExpress.XtraReports.UI.XRTableCell cellColTutar;
+        private DevExpress.XtraReports.UI.XRTableCell cellColUnitPrice;
+        private DevExpress.XtraReports.UI.XRTableCell cellColAmount;
         private DevExpress.XtraReports.UI.XRTable tblDetail;
         private DevExpress.XtraReports.UI.XRTableRow rowDetail;
         private DevExpress.XtraReports.UI.XRTableCell cellDetailSiraNo;
-        private DevExpress.XtraReports.UI.XRTableCell cellDetailKodu;
-        private DevExpress.XtraReports.UI.XRTableCell cellDetailBarkod;
-        private DevExpress.XtraReports.UI.XRTableCell cellDetailAdi;
+        private DevExpress.XtraReports.UI.XRTableCell cellDetailCode;
+        private DevExpress.XtraReports.UI.XRTableCell cellDetailBarcode;
+        private DevExpress.XtraReports.UI.XRTableCell cellDetailName;
         private DevExpress.XtraReports.UI.XRTableCell cellDetailOlcu;
         private DevExpress.XtraReports.UI.XRTableCell cellDetailMiktar;
-        private DevExpress.XtraReports.UI.XRTableCell cellDetailBirimFiyat;
-        private DevExpress.XtraReports.UI.XRTableCell cellDetailTutar;
+        private DevExpress.XtraReports.UI.XRTableCell cellDetailUnitPrice;
+        private DevExpress.XtraReports.UI.XRTableCell cellDetailAmount;
         private DevExpress.XtraReports.UI.XRTable tblGroupFooter;
         private DevExpress.XtraReports.UI.XRTableRow rowGroupFooter;
         private DevExpress.XtraReports.UI.XRTableCell cellGroupDisplay;
         private DevExpress.XtraReports.UI.XRTableCell cellGroupMiktar;
-        private DevExpress.XtraReports.UI.XRTableCell cellGroupToplam;
-        private DevExpress.XtraReports.UI.XRTableCell cellGroupTutar;
+        private DevExpress.XtraReports.UI.XRTableCell cellGroupGrandTotal;
+        private DevExpress.XtraReports.UI.XRTableCell cellGroupTotal;
         private DevExpress.XtraReports.UI.XRTable tblSignatures;
         private DevExpress.XtraReports.UI.XRTableRow rowSignatures1;
         private DevExpress.XtraReports.UI.XRTableCell cellSig1Giris;
-        private DevExpress.XtraReports.UI.XRTableCell cellSig1Cikis;
+        private DevExpress.XtraReports.UI.XRTableCell cellSig1Exit;
         private DevExpress.XtraReports.UI.XRTableRow rowSignatures2;
         private DevExpress.XtraReports.UI.XRTableCell cellSig2TeslimEden;
         private DevExpress.XtraReports.UI.XRTableCell cellSig2TeslimAlan;
         private DevExpress.XtraReports.Parameters.Parameter FisSiraNo;
         private DevExpress.XtraReports.Parameters.Parameter Tarih;
-        private DevExpress.XtraReports.Parameters.Parameter IlIlceAdi;
-        private DevExpress.XtraReports.Parameters.Parameter IlIlceKodu;
-        private DevExpress.XtraReports.Parameters.Parameter HarcamaBirimiAdi;
-        private DevExpress.XtraReports.Parameters.Parameter HarcamaBirimiKodu;
-        private DevExpress.XtraReports.Parameters.Parameter AmbarAdi;
-        private DevExpress.XtraReports.Parameters.Parameter AmbarKodu;
-        private DevExpress.XtraReports.Parameters.Parameter MuhasebeBirimiAdi;
-        private DevExpress.XtraReports.Parameters.Parameter MuhasebeBirimiKodu;
-        private DevExpress.XtraReports.Parameters.Parameter DayanakTarihi;
-        private DevExpress.XtraReports.Parameters.Parameter DayanakKodu;
-        private DevExpress.XtraReports.Parameters.Parameter IslemCesidi;
-        private DevExpress.XtraReports.Parameters.Parameter NeredenGeldigi;
-        private DevExpress.XtraReports.Parameters.Parameter KimeVerildigi;
-        private DevExpress.XtraReports.Parameters.Parameter NereyeVerildigi;
+        private DevExpress.XtraReports.Parameters.Parameter ProvinceDistrictName;
+        private DevExpress.XtraReports.Parameters.Parameter ProvinceDistrictCode;
+        private DevExpress.XtraReports.Parameters.Parameter ExpenditureUnitName;
+        private DevExpress.XtraReports.Parameters.Parameter ExpenditureUnitCode;
+        private DevExpress.XtraReports.Parameters.Parameter StoreName;
+        private DevExpress.XtraReports.Parameters.Parameter StoreCode;
+        private DevExpress.XtraReports.Parameters.Parameter AccountingUnitName;
+        private DevExpress.XtraReports.Parameters.Parameter AccountingUnitCode;
+        private DevExpress.XtraReports.Parameters.Parameter ReferenceDate;
+        private DevExpress.XtraReports.Parameters.Parameter ReferenceCode;
+        private DevExpress.XtraReports.Parameters.Parameter OperationType;
+        private DevExpress.XtraReports.Parameters.Parameter SourceParty;
+        private DevExpress.XtraReports.Parameters.Parameter RecipientParty;
+        private DevExpress.XtraReports.Parameters.Parameter DestinationParty;
 private DevExpress.XtraReports.Parameters.Parameter Ozet;
         private DevExpress.DataAccess.ObjectBinding.ObjectDataSource objectDataSource1;
         private DevExpress.XtraReports.UI.XRTable object_5091f412_6f78_40c1_a41d_ba08f3934505;

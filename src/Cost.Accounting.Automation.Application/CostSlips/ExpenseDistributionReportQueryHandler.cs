@@ -6,12 +6,12 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.Application.CostSlips;
 
-internal sealed class GiderDagilimReportQueryHandler(
+internal sealed class ExpenseDistributionReportQueryHandler(
     ICostSlipRepository costSlipRepository,
     IChartOfAccountRepository chartOfAccountRepository)
-    : IRequestHandler<GiderDagilimReportQuery, GiderDagilimReportResult>
+    : IRequestHandler<ExpenseDistributionReportQuery, ExpenseDistributionReportResult>
 {
-    public async Task<GiderDagilimReportResult> Handle(GiderDagilimReportQuery request, CancellationToken cancellationToken)
+    public async Task<ExpenseDistributionReportResult> Handle(ExpenseDistributionReportQuery request, CancellationToken cancellationToken)
     {
         var expenseTypes = Enum.GetValues<ExpenseAccountType>().OrderBy(e => (int)e).ToList();
 
@@ -35,7 +35,7 @@ internal sealed class GiderDagilimReportQueryHandler(
             .Select(a => new { a.Id, a.Name })
             .ToListAsync(cancellationToken);
 
-        var rows = workshopAccounts.Select(w => new GiderDagilimRow
+        var rows = workshopAccounts.Select(w => new ExpenseDistributionRow
         {
             WorkshopId = w.Id,
             WorkshopName = w.Name.Value,
@@ -58,7 +58,7 @@ internal sealed class GiderDagilimReportQueryHandler(
 
         var columnHeaders = expenseTypes.Select(e => CostSlipDto.GetDisplayName(e)).ToList();
 
-        return new GiderDagilimReportResult
+        return new ExpenseDistributionReportResult
         {
             StartDate = request.StartDate,
             EndDate = request.EndDate,

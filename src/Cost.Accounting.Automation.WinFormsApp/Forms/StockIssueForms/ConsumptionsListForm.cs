@@ -5,7 +5,7 @@ using DevExpress.XtraGrid.Columns;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    public sealed class ConsumptionsListForm : StockIssueListFormBase<ConsumptionEditForm>
+    public sealed partial class ConsumptionsListForm : StockIssueListFormBase<ConsumptionEditForm>
     {
         public ConsumptionsListForm() : base(StockIssueType.Consumption, "Tüketim")
         {

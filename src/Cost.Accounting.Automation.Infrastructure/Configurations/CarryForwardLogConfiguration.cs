@@ -1,12 +1,12 @@
-using Cost.Accounting.Automation.Domain.Devirs;
+using Cost.Accounting.Automation.Domain.CarryForwards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cost.Accounting.Automation.Infrastructure.Configurations;
 
-internal sealed class DevirLogConfiguration : IEntityTypeConfiguration<DevirLog>
+internal sealed class CarryForwardLogConfiguration : IEntityTypeConfiguration<CarryForwardLog>
 {
-    public void Configure(EntityTypeBuilder<DevirLog> builder)
+    public void Configure(EntityTypeBuilder<CarryForwardLog> builder)
     {
         builder.ToTable("DevirLogs");
 

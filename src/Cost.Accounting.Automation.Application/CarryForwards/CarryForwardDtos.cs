@@ -1,10 +1,10 @@
-namespace Cost.Accounting.Automation.Application.Devirs;
+namespace Cost.Accounting.Automation.Application.CarryForwards;
 
 /// <summary>
 /// Devirde hedef yıl veritabanına aktarılacak veri grupları. Kullanıcı form
 /// üzerindeki onay kutularından seçim yapar.
 /// </summary>
-public sealed record DevirOptions
+public sealed record CarryForwardOptions
 {
     /// <summary>Hesap planı satırları (kod, ad, seviye, üst hesap).</summary>
     public bool ChartOfAccounts { get; init; } = true;
@@ -38,7 +38,7 @@ public sealed record DevirOptions
         || ProductPrices || Recipes || ChartBalances;
 }
 
-public sealed record DevirPreviewResult
+public sealed record CarryForwardPreviewResult
 {
     public required int TargetYear { get; init; }
     public required string TargetDatabaseName { get; init; }
@@ -56,9 +56,9 @@ public sealed record DevirPreviewResult
     /// bakiye yoksa devir hareket satırı yazmadığı için "hedef yıl boş" kuralı
     /// tekrar devri engellemez; bu kayıt o durumu kapatır.
     /// </summary>
-    public DevirLogInfo? PreviousDevir { get; init; }
+    public CarryForwardLogInfo? PreviousCarryForward { get; init; }
 
-    public bool CanTransfer => HasSource && BlockingReason is null && PreviousDevir is null;
+    public bool CanTransfer => HasSource && BlockingReason is null && PreviousCarryForward is null;
 
     public int SourceChartOfAccountCount { get; init; }
     public int TargetChartOfAccountCount { get; init; }
@@ -70,6 +70,23 @@ public sealed record DevirPreviewResult
 
     /// <summary>Net bakiyesi sıfırdan farklı cari hesap sayısı.</summary>
     public int SourceCurrentAccountBalanceCount { get; init; }
+
+    /// <summary>
+    /// Müşterilerden tahsil edilmemiş toplam alacak (müşteri borcu &gt; alacağı).
+    /// </summary>
+    public decimal SourceReceivableTotal { get; init; }
+
+    /// <summary>
+    /// Tedarikçilere ödenmemiş toplam borç (tedarikçi alacağı &gt; borcu).
+    /// </summary>
+    public decimal SourcePayableTotal { get; init; }
+
+    /// <summary>Alacak tarafındaki cari hesap sayısı.</summary>
+    public int SourceReceivableCount { get; init; }
+
+    /// <summary>Borç tarafındaki cari hesap sayısı.</summary>
+    public int SourcePayableCount { get; init; }
+
     public decimal SourceCurrentAccountDebit { get; init; }
     public decimal SourceCurrentAccountCredit { get; init; }
 
@@ -84,7 +101,7 @@ public sealed record DevirPreviewResult
     public decimal SourceChartCredit { get; init; }
 }
 
-public sealed record DevirLogInfo
+public sealed record CarryForwardLogInfo
 {
     public required int SourceYear { get; init; }
     public required int TargetYear { get; init; }
@@ -94,7 +111,7 @@ public sealed record DevirLogInfo
     public int TotalAdded { get; init; }
 }
 
-public sealed record DevirTransferResult
+public sealed record CarryForwardTransferResult
 {
     public required int SourceYear { get; init; }
     public required string SourceDatabaseName { get; init; }

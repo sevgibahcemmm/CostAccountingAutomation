@@ -20,6 +20,12 @@ public sealed record DashboardSnapshot
     public int TotalProductCount { get; init; }
     public int StockIssueCount { get; init; }
 
+    /// <summary>
+    /// Onay bekleyen kayıtların toplamı (Draft fatura + maliyet pusulası +
+    /// stok belgesi). Onay akışı olan liste ekranlarındaki kayıtlarla aynıdır.
+    /// </summary>
+    public int PendingApprovalCount { get; init; }
+
     public decimal TotalReceivables { get; init; }
     public decimal TotalPayables { get; init; }
     public decimal TotalStockValue { get; init; }

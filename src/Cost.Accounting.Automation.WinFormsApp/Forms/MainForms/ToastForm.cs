@@ -59,9 +59,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Region = new Region(AuthFormStyles.GetRoundedRectPath(new Rectangle(0, 0, Width, Height), CornerRadius));
 
             _btnClose.Click += (_, _) => Dismiss();
-            _btnClose.MouseHover += (_, _) => _btnClose.Appearance.ForeColor = SkinTheme.Text;
-            _btnClose.MouseLeave += (_, _) => _btnClose.Appearance.ForeColor = SkinTheme.SecondaryText;
-            _btnClose.Appearance.ForeColor = SkinTheme.SecondaryText;
+            _btnClose.MouseHover += (_, _) => _btnClose.Appearance.ForeColor = SkinTheme.HighContrastAccent(SkinTheme.HighContrastSurface);
+            _btnClose.MouseLeave += (_, _) => _btnClose.Appearance.ForeColor = SkinTheme.HighContrastText;
+            _btnClose.Appearance.ForeColor = SkinTheme.HighContrastText;
 
             _timer = new System.Windows.Forms.Timer();
             _timer.Tick += OnAnimationTick;
@@ -82,9 +82,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             _lblTitle.Text = GetTitle(type);
             _lblMessage.Text = message;
-            _lblTitle.Appearance.ForeColor = SkinTheme.Text;
-            _lblMessage.Appearance.ForeColor = SkinTheme.SecondaryText;
-            _btnClose.Appearance.ForeColor = SkinTheme.SecondaryText;
+
+            // Metin ve zemin SkinTheme'deki zıt çiftten gelir: açık temada koyu metin
+            // / açık zemin, koyu temada açık metin / koyu zemin. Skin değiştiğinde
+            // bir sonraki toast yeni renkleri otomatik alır.
+            Color textColor = SkinTheme.HighContrastText;
+            Color surface = SkinTheme.HighContrastSurface;
+
+            BackColor = surface;
+            _pnlContentArea.Appearance.BackColor = surface;
+            _pnlContentArea.Appearance.Options.UseBackColor = true;
+
+            _lblTitle.Appearance.ForeColor = textColor;
+            _lblTitle.Appearance.Options.UseForeColor = true;
+            _lblMessage.Appearance.ForeColor = textColor;
+            _lblMessage.Appearance.Options.UseForeColor = true;
+            _btnClose.Appearance.ForeColor = textColor;
+            _btnClose.Appearance.Options.UseForeColor = true;
+
+            // Tasarımdaki sabit 268x36 alan uzun metinleri kırpıyordu; form yalnızca
+            // gerektiği kadar uyar (genişlik, renkler, ikonlar ve ilerleme çubuğu
+            // animasyonu olduğu gibi kalır).
+            FitToMessage(message);
 
             _progressStartWidth = _progressTrack.Width;
             _durationMs = Math.Max(600, durationMs);
@@ -104,6 +123,39 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _enterWatch.Restart();
             _timer.Interval = 10;
             _timer.Start();
+        }
+
+        /// <summary>
+        /// Mesajı tasarımdaki sarım genişliğinde ölçer ve yalnızca dikeyde gerektiği
+        /// kadar büyür. Genişlik, ikon, renkler ve çubuk animasyonu değişmez.
+        /// </summary>
+        private void FitToMessage(string message)
+        {
+            const int textTop = 40;
+            const int bottomGap = 12;
+            const int progressHeight = 4;
+
+            int textWidth = _lblMessage.Width;
+
+            Font font = _lblMessage.Appearance.Font ?? Font;
+            Size measured = TextRenderer.MeasureText(
+                message,
+                font,
+                new Size(textWidth, int.MaxValue),
+                TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix);
+
+            int messageHeight = Math.Max(_lblMessage.Height, measured.Height);
+            int contentHeight = textTop + messageHeight + bottomGap;
+            int formHeight = contentHeight + progressHeight;
+
+            _lblMessage.Height = messageHeight;
+            _pnlContentArea.Height = contentHeight;
+            _pnlAccentBar.Height = formHeight;
+            _progressTrack.Top = contentHeight;
+            _progressFill.Top = contentHeight;
+
+            ClientSize = new Size(ClientSize.Width, formHeight);
+            Region = new Region(AuthFormStyles.GetRoundedRectPath(new Rectangle(0, 0, Width, Height), CornerRadius));
         }
 
         private void PositionTopRight()

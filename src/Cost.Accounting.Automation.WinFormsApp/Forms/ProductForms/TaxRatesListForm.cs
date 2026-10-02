@@ -14,8 +14,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
     {
         public TaxRatesListForm() : base("KDV Oranları")
         {
-            InitializeComponent();
-            IncreaseHeaderHeight();
+InitializeComponent();
         }
 
         protected override SvgImage ModuleIcon => DxIcon.Tag;
@@ -25,15 +24,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             nameof(TaxRateDto.Name)
         ];
 
-        private void IncreaseHeaderHeight()
-        {
-            if (Controls.Find("pnlHeader", true).FirstOrDefault() is Control headerPanel)
-            {
-                headerPanel.Height = 88;
-            }
-        }
-
-        protected override void ConfigureColumns()
+protected override void ConfigureColumns()
         {
             AddColumnsFromAttributes();
         }

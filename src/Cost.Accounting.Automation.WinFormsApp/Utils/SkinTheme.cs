@@ -93,6 +93,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static Color MutedText(Color surface) => Blend(Text, surface, 0.35F);
 
         /// <summary>
+        /// Yüksek kontrastlı yüzeylerde (bildirim balonu, uyarı şeridi) kullanılacak
+        /// metin rengi. <see cref="MutedText"/> soluk olduğu için dar yüzeylerde
+        /// okunmuyor; burada metin koyu temada açık, açık temada koyu çözülür.
+        /// </summary>
+        public static Color HighContrastText
+            => IsDarkSkin ? Color.FromArgb(242, 244, 247) : Color.FromArgb(17, 24, 39);
+
+        /// <summary>
+        /// <see cref="HighContrastText"/> ile daima zıt olan zemin rengi. Metin ve
+        /// zemin tek kaynaktan geldiği için herhangi bir temada okunabilir kaldığı
+        /// garanti edilir.
+        /// </summary>
+        public static Color HighContrastSurface
+            => IsDarkSkin ? Color.FromArgb(40, 43, 48) : Color.FromArgb(250, 250, 252);
+
+        /// <summary>
+        /// <see cref="HighContrastText"/> rengini zemin üzerinde okunur kılan vurgu
+        /// rengi (ikon ve çubuk gibi küçük öğeler için).
+        /// </summary>
+        public static Color HighContrastAccent(Color surface)
+            => IsColorDark(surface) ? Color.FromArgb(232, 236, 242) : Color.FromArgb(24, 30, 45);
+
+        /// <summary>
         /// Skin değiştiğinde <paramref name="handler"/>'ı yeniden çalıştırır. Dönen IDisposable,
         /// form Dispose edilirken çağrılmalıdır (bkz. skinBinding alanı).
         /// </summary>

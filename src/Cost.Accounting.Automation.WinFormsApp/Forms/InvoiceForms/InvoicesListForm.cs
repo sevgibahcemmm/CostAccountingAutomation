@@ -225,6 +225,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         protected override bool SupportsApprove => true;
 
+        /// <summary>Bu liste onaylı faturaları da içerir; bekleyenler taslak durumdadır.</summary>
+        protected override string PendingItemLabel => "fatura";
+
+        protected override bool IsPendingApproval(InvoiceDto item) => item.Status == InvoiceStatus.Draft;
+
+        /// <summary>"Tamam" ile ayrı onay ekranına geçilir.</summary>
+        protected override Type? PendingApprovalFormType => typeof(InvoiceApprovalForm);
+
+        protected override string? PendingApprovalFormTitle => "Fatura Onaylama";
+
         protected override bool AllowsEdit(InvoiceDto item) => item.Status != InvoiceStatus.Approved;
 
         protected override bool AllowsDelete(InvoiceDto item) => item.Status != InvoiceStatus.Approved;
@@ -265,18 +275,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             {
                 DocumentNumber = invoice.InvoiceNumber,
                 Date = date,
-                IslemCesidi = "Giriş",
-                NeredenGeldigi = invoice.SupplierName ?? string.Empty,
-                KimeVerildigi = string.Empty,
-                NereyeVerildigi = string.Empty,
-                IlIlceAdi = ilIlce,
-                IlIlceKodu = string.Empty,
-                HarcamaBirimiAdi = company.ExpenditureUnitName ?? string.Empty,
-                HarcamaBirimiKodu = company.ExpenditureUnitCode ?? string.Empty,
-                MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
-                MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
-                DayanakTarihi = date,
-                DayanakKodu = invoice.InvoiceNumber,
+                OperationType = "Giriş",
+                SourceParty = invoice.SupplierName ?? string.Empty,
+                RecipientParty = string.Empty,
+                DestinationParty = string.Empty,
+                ProvinceDistrictName = ilIlce,
+                ProvinceDistrictCode = string.Empty,
+                ExpenditureUnitName = company.ExpenditureUnitName ?? string.Empty,
+                ExpenditureUnitCode = company.ExpenditureUnitCode ?? string.Empty,
+                AccountingUnitName = company.AccountingUnitName ?? string.Empty,
+                AccountingUnitCode = company.AccountingUnitCode ?? string.Empty,
+                ReferenceDate = date,
+                ReferenceCode = invoice.InvoiceNumber,
                 AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(accounts)
             };
 
@@ -285,15 +295,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
                 ProductCatalogDto? product = productsById.GetValueOrDefault(line.ProductId);
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
-                    Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
-                    DepoKodu = product?.WarehouseCode ?? string.Empty,
-                    DepoAdi = product?.WarehouseName ?? string.Empty,
-                    BarkodNo = product?.Barcode ?? string.Empty,
+                    Code = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
+                    WarehouseCode = product?.WarehouseCode ?? string.Empty,
+                    WarehouseName = product?.WarehouseName ?? string.Empty,
+                    Barcode = product?.Barcode ?? string.Empty,
                     Adi = product?.Name ?? line.ProductName,
-                    OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
-                    Miktari = line.Quantity,
-                    BirimFiyati = line.UnitPrice,
-                    Tutari = line.Quantity * line.UnitPrice
+                    UnitOfMeasure = product?.ProductUnitTypeName ?? string.Empty,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    Amount = line.Quantity * line.UnitPrice
                 });
             }
 

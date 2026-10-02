@@ -16,6 +16,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            HeaderPanel.Height = 88;
         }
     }
 }

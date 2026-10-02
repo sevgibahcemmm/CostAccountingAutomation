@@ -3,7 +3,7 @@ using Cost.Accounting.Automation.Domain.StockIssues;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 {
-    public sealed class AtelierTransferEditForm : StockIssueEditFormBase
+    public sealed partial class AtelierTransferEditForm : StockIssueEditFormBase
     {
         public AtelierTransferEditForm() : base(StockIssueType.AtelierTransfer, null)
         {

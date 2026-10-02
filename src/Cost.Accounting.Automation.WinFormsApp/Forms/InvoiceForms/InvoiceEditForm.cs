@@ -255,7 +255,7 @@ catch (Exception ex)
                 NullText = "Ürün Seçiniz...",
                 PopupFilterMode = PopupFilterMode.Contains
             };
-            // Popup"ta yalnızca ürün görünsün: gereksiz alt-detail kolonları (Ürün Kodu, Stok) listelenmesin.
+            // Popup"ta yalnızca ürün görünsün: gereksiz alt-detail kolonları (Ürün Code, Stok) listelenmesin.
             _riProductLookUp.View.OptionsBehavior.AutoPopulateColumns = false;
             _riProductLookUp.View.Columns.AddField(nameof(ProductCatalogDto.Name)).Caption = "Ürün Adı";
             _riProductLookUp.View.Columns[0].Visible = true;
@@ -1256,20 +1256,20 @@ private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
             {
                 DocumentNumber = txtInvoiceNumber.Text.Trim(),
                 Date = dtDate.DateTime,
-                IslemCesidi = "Giriş",
-                NeredenGeldigi = supplierName,
-                KimeVerildigi = string.Empty,
-                NereyeVerildigi = string.Empty,
-                IlIlceAdi = ilIlce,
-                IlIlceKodu = string.Empty,
-                HarcamaBirimiAdi = company.ExpenditureUnitName ?? string.Empty,
-                HarcamaBirimiKodu = company.ExpenditureUnitCode ?? string.Empty,
-                AmbarAdi = string.Empty,
-                AmbarKodu = string.Empty,
-                MuhasebeBirimiAdi = company.AccountingUnitName ?? string.Empty,
-                MuhasebeBirimiKodu = company.AccountingUnitCode ?? string.Empty,
-                DayanakTarihi = dtDate.DateTime,
-                DayanakKodu = txtInvoiceNumber.Text.Trim(),
+                OperationType = "Giriş",
+                SourceParty = supplierName,
+                RecipientParty = string.Empty,
+                DestinationParty = string.Empty,
+                ProvinceDistrictName = ilIlce,
+                ProvinceDistrictCode = string.Empty,
+                ExpenditureUnitName = company.ExpenditureUnitName ?? string.Empty,
+                ExpenditureUnitCode = company.ExpenditureUnitCode ?? string.Empty,
+                StoreName = string.Empty,
+                StoreCode = string.Empty,
+                AccountingUnitName = company.AccountingUnitName ?? string.Empty,
+                AccountingUnitCode = company.AccountingUnitCode ?? string.Empty,
+                ReferenceDate = dtDate.DateTime,
+                ReferenceCode = txtInvoiceNumber.Text.Trim(),
                 AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(_accounts)
             };
 
@@ -1280,16 +1280,16 @@ private async void RiProductLookUp_EditValueChanged(object? sender, EventArgs e)
                 order++;
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
-                    SiraNo = order,
-                    Kodu = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
-                    DepoKodu = product?.WarehouseCode ?? string.Empty,
-                    DepoAdi = product?.WarehouseName ?? string.Empty,
-                    BarkodNo = product?.Barcode ?? string.Empty,
+                    RowNumber = order,
+                    Code = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
+                    WarehouseCode = product?.WarehouseCode ?? string.Empty,
+                    WarehouseName = product?.WarehouseName ?? string.Empty,
+                    Barcode = product?.Barcode ?? string.Empty,
                     Adi = product?.Name ?? string.Empty,
-                    OlcuBirimi = product?.ProductUnitTypeName ?? string.Empty,
-                    Miktari = line.Quantity,
-                    BirimFiyati = line.UnitPrice,
-                    Tutari = line.Quantity * line.UnitPrice
+                    UnitOfMeasure = product?.ProductUnitTypeName ?? string.Empty,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    Amount = line.Quantity * line.UnitPrice
                 });
             }
 

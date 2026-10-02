@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.WinFormsApp.Tools;
+using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
@@ -21,6 +22,17 @@ public sealed partial class SalesPriceSuggestionForm : XtraForm
     }
 
     public bool SaveAsSalePrice => chkSaveAsSalePrice.Checked;
+
+    /// <summary>
+    /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta ürün
+    /// bilgileriyle açılan yapıcı kullanılır.
+    /// </summary>
+    public SalesPriceSuggestionForm()
+    {
+        SuggestedPrice = 0m;
+        InitializeComponent();
+        DesignTime.Guard(typeof(SalesPriceSuggestionForm));
+    }
 
     public SalesPriceSuggestionForm(
         string productName,

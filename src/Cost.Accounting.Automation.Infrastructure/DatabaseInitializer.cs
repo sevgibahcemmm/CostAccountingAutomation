@@ -9,8 +9,11 @@ using Cost.Accounting.Automation.Domain.Shared;
 using Cost.Accounting.Automation.Domain.Users;
 using Cost.Accounting.Automation.Domain.Users.ValueObjects;
 using Cost.Accounting.Automation.Infrastructure.Context;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Data;
 
 namespace Cost.Accounting.Automation.Infrastructure;
 
@@ -25,7 +28,109 @@ namespace Cost.Accounting.Automation.Infrastructure;
 /// </summary>
 public static class DatabaseInitializer
 {
-    public static async Task InitializeAsync(IServiceProvider services)
+    /// <summary>
+    /// Açılışta "veritabanı var mı" yoklamasının bağlantı ve komut zaman aşımı.
+    /// Kısa tutulur: yoklama yalnızca bir varlık kontrolüdür, veri taşımaz.
+    /// </summary>
+    private const int ProbeTimeoutSeconds = 5;
+
+    /// <summary>
+    /// İlk kurulum sihirbazının ekrana basacağı adımların sırası.
+    /// </summary>
+    public static IReadOnlyList<DatabaseProvisionStep> Steps { get; } =
+    [
+        DatabaseProvisionStep.ConnectServer,
+        DatabaseProvisionStep.CreateMasterDatabase,
+        DatabaseProvisionStep.ApplyMasterSchema,
+        DatabaseProvisionStep.SeedCompanies,
+        DatabaseProvisionStep.SeedRolesAndUsers,
+        DatabaseProvisionStep.SeedPermissions,
+        DatabaseProvisionStep.ProvisionYearDatabases,
+        DatabaseProvisionStep.SeedChartOfAccounts,
+        DatabaseProvisionStep.SeedUnitsAndTaxRates,
+        DatabaseProvisionStep.SeedSampleRecords
+    ];
+
+    /// <summary>
+    /// Ana veritabanının var olup olmadığını sunucuya sorar.
+    ///
+    /// <para>
+    /// Sorgu <c>master</c> kataloğuna bağlanıp <c>sys.databases</c> üzerinde
+    /// yapılır; böylece veritabanı yokken bile bağlantı kurulabilir.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Zaman aşımı bilinçli olarak kısadır.</b> Bağlantı dizesindeki
+    /// <c>Connect Timeout = 30</c> değeri kullanılmaz; yoklama
+    /// <see cref="ProbeTimeoutSeconds"/> saniye ile sınırlıdır. Bu sorgu
+    /// uygulama açılışında "veritabanı var mı" sorusuna yanıt arar — sunucu
+    /// kapalıysa kullanıcı 30 saniye donmuş ekran beklemek yerine birkaç
+    /// saniyede anlaşılır bir hata görmelidir. Asıl veri işlemleri kendi
+    /// zaman aşımlarını kendi bağlantı dizelerinde kullanmaya devam eder.
+    /// </para>
+    /// </summary>
+    public static async Task<DatabaseFirstRunState> GetFirstRunStateAsync(
+        IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        IConfiguration configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        string? masterConnectionString = configuration.GetConnectionString("Master");
+
+        if (string.IsNullOrWhiteSpace(masterConnectionString))
+        {
+            return DatabaseFirstRunState.Unreachable;
+        }
+
+        string databaseName = ServiceRegistrar.ReadDatabaseName(masterConnectionString);
+
+        if (string.IsNullOrWhiteSpace(databaseName))
+        {
+            return DatabaseFirstRunState.Unreachable;
+        }
+
+        var builder = new SqlConnectionStringBuilder(masterConnectionString)
+        {
+            InitialCatalog = "master",
+            ConnectTimeout = ProbeTimeoutSeconds,
+            CommandTimeout = ProbeTimeoutSeconds
+        };
+
+        try
+        {
+            await using var connection = new SqlConnection(builder.ConnectionString);
+
+            await connection.OpenAsync();
+
+            await using SqlCommand command = connection.CreateCommand();
+            command.CommandText = "SELECT 1 FROM sys.databases WHERE name = @name";
+            command.Parameters.Add("@name", SqlDbType.NVarChar, 128).Value = databaseName;
+
+            object? result = await command.ExecuteScalarAsync();
+
+            return result is null
+                ? DatabaseFirstRunState.Missing
+                : DatabaseFirstRunState.Exists;
+        }
+        catch (Exception ex)
+        {
+            // Sunucuya ulaşılamadı; kurulum penceresi bu durumu kendi ekranında
+            // göstereceği için yalnızca tanılayıcı bilgi düşülür.
+            System.Diagnostics.Debug.WriteLine(
+                $"[DatabaseInitializer] Sunucuya ulaşılamadı: {ex.Message}");
+
+            return DatabaseFirstRunState.Unreachable;
+        }
+    }
+
+    /// <param name="progress">
+    /// Adım durumlarını arayüze iletir. Opsiyoneldir; verilmezse adımlar
+    /// sessizce çalışır (normal açılışta kurulum sihirbazı gösterilmez).
+    /// </param>
+    public static async Task InitializeAsync(
+        IServiceProvider services,
+        IProgress<DatabaseProvisionProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         using var scope = services.CreateScope();
         IServiceProvider sp = scope.ServiceProvider;
@@ -36,10 +141,68 @@ public static class DatabaseInitializer
         var databaseNameBuilder = sp.GetRequiredService<IDatabaseNameBuilder>();
         var provisioner = sp.GetRequiredService<IAccountingYearProvisioner>();
 
-        await masterContext.Database.MigrateAsync();
+        IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+        string databaseName =
+            ServiceRegistrar.ReadDatabaseName(configuration.GetConnectionString("Master") ?? string.Empty);
 
-        await SeedMasterAsync(masterContext, permissionService, roleRepository);
-        await EnsureCurrentYearAsync(masterContext, databaseNameBuilder, provisioner);
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.ConnectServer,
+            DatabaseProvisionStepState.Running,
+            "sunucuya bağlanılıyor"));
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.CreateMasterDatabase,
+            DatabaseProvisionStepState.Running,
+            databaseName));
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.ApplyMasterSchema,
+            DatabaseProvisionStepState.Running));
+
+        await masterContext.Database.MigrateAsync(cancellationToken);
+
+        int tableCount = await CountMasterTablesAsync(masterContext, cancellationToken);
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.ConnectServer,
+            DatabaseProvisionStepState.Completed));
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.CreateMasterDatabase,
+            DatabaseProvisionStepState.Completed,
+            databaseName));
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.ApplyMasterSchema,
+            DatabaseProvisionStepState.Completed,
+            $"{tableCount} tablo"));
+
+        await SeedMasterAsync(masterContext, permissionService, roleRepository, progress, cancellationToken);
+        await EnsureCurrentYearAsync(masterContext, databaseNameBuilder, provisioner, progress, cancellationToken);
+    }
+
+    /// <summary>Ana veritabanındaki tablo sayısı; kurulum ilerlemesinde raporlanır.</summary>
+    private static async Task<int> CountMasterTablesAsync(
+        MasterDbContext masterContext,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await masterContext.Database
+                .SqlQuery<int>($"SELECT COUNT(*) AS Value FROM sys.tables")
+                .ToListAsync(cancellationToken) is { Count: > 0 } values
+                ? values[0]
+                : 0;
+        }
+        catch (Exception ex)
+        {
+            // Sayaç yalnızca bilgilendirme amaçlıdır; başarısız olması
+            // kurulumu durdurmamalıdır.
+            System.Diagnostics.Debug.WriteLine(
+                $"[DatabaseInitializer] Tablo sayısı okunamadı: {ex.Message}");
+
+            return 0;
+        }
     }
 
     /// <summary>
@@ -49,9 +212,19 @@ public static class DatabaseInitializer
     private static async Task SeedMasterAsync(
         MasterDbContext masterContext,
         PermissionService permissionService,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IProgress<DatabaseProvisionProgress>? progress,
+        CancellationToken cancellationToken)
     {
-        if (!await masterContext.Companies.AnyAsync())
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedCompanies,
+            DatabaseProvisionStepState.Running));
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedRolesAndUsers,
+            DatabaseProvisionStepState.Running));
+
+        if (!await masterContext.Companies.AnyAsync(cancellationToken))
         {
             var merkezCompany = new Company(
                 new Name("DEMİRCİ AÇIK CEZA İNFAZ KURUMU MÜDÜRLÜĞÜ"),
@@ -153,9 +326,45 @@ public static class DatabaseInitializer
             {
                 masterContext.ClearSeedAdminUserId();
             }
+
+            int companyCount = await masterContext.Companies.CountAsync(cancellationToken);
+            int roleCount = await masterContext.Roles.CountAsync(cancellationToken);
+            int userCount = await masterContext.Users.CountAsync(cancellationToken);
+
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.SeedCompanies,
+                DatabaseProvisionStepState.Completed,
+                $"{companyCount} kurum"));
+
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.SeedRolesAndUsers,
+                DatabaseProvisionStepState.Completed,
+                $"{roleCount} rol, {userCount} kullanıcı"));
+        }
+        else
+        {
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.SeedCompanies,
+                DatabaseProvisionStepState.Skipped,
+                "kurum kayıtları zaten mevcut"));
+
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.SeedRolesAndUsers,
+                DatabaseProvisionStepState.Skipped,
+                "rol ve kullanıcı kayıtları zaten mevcut"));
         }
 
-        await EnsureAdminRolePermissionsAsync(masterContext, permissionService, roleRepository);
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedPermissions,
+            DatabaseProvisionStepState.Running));
+
+        await EnsureAdminRolePermissionsAsync(
+            masterContext, permissionService, roleRepository, cancellationToken);
+
+        progress?.Report(new DatabaseProvisionProgress(
+            DatabaseProvisionStep.SeedPermissions,
+            DatabaseProvisionStepState.Completed,
+            "yönetici yetkileri tanımlandı"));
     }
 
     /// <summary>
@@ -168,7 +377,9 @@ public static class DatabaseInitializer
     private static async Task EnsureCurrentYearAsync(
         MasterDbContext masterContext,
         IDatabaseNameBuilder databaseNameBuilder,
-        IAccountingYearProvisioner provisioner)
+        IAccountingYearProvisioner provisioner,
+        IProgress<DatabaseProvisionProgress>? progress,
+        CancellationToken cancellationToken)
     {
         int currentYear = DateTime.Now.Year;
 
@@ -176,7 +387,7 @@ public static class DatabaseInitializer
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(c => c.Name.Value)
             .Select(c => new { Id = c.Id.Value, Name = c.Name.Value })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (companies.Count == 0)
         {
@@ -190,7 +401,7 @@ public static class DatabaseInitializer
             .AsNoTracking()
             .Where(cy => cy.Year == new Year(currentYear))
             .Select(cy => cy.CompanyId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var pendingCompanies = companies
             .Where(c => !companiesWithCurrentYear.Contains(new IdentityId(c.Id)))
@@ -207,17 +418,36 @@ public static class DatabaseInitializer
             .AsNoTracking()
             .Where(u => u.UserName.Value == "admin")
             .Select(u => (Guid?)u.Id.Value)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         masterContext.SetSeedAdminUserId(adminId);
+
+        int chartOfAccountTotal = 0;
+        int referenceTotal = 0;
+        int sampleRecordTotal = 0;
 
         try
         {
             foreach (var company in pendingCompanies)
             {
-                string databaseName = await databaseNameBuilder.SuggestAvailableAsync(company.Name, currentYear);
+                string databaseName = await databaseNameBuilder
+                    .SuggestAvailableAsync(company.Name, currentYear, cancellationToken);
 
-                await provisioner.EnsureDatabaseAsync(new IdentityId(company.Id), currentYear, databaseName);
+                progress?.Report(new DatabaseProvisionProgress(
+                    DatabaseProvisionStep.ProvisionYearDatabases,
+                    DatabaseProvisionStepState.Running,
+                    $"{company.Name} · {databaseName}"));
+
+                AccountingYearProvisionResult result = await provisioner.EnsureDatabaseAsync(
+                    new IdentityId(company.Id),
+                    currentYear,
+                    databaseName,
+                    cancellationToken,
+                    progress);
+
+                chartOfAccountTotal += result.SeededChartOfAccountCount;
+                referenceTotal += result.SeededReferenceCount;
+                sampleRecordTotal += result.SeededSampleRecordCount;
 
                 var companyYear = new CompanyYear(
                     new IdentityId(company.Id),
@@ -227,8 +457,17 @@ public static class DatabaseInitializer
                 companyYear.SetOpeningDate(new DateTimeOffset(currentYear, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
                 masterContext.CompanyYears.Add(companyYear);
-                await masterContext.SaveChangesAsync();
+                await masterContext.SaveChangesAsync(cancellationToken);
             }
+
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.ProvisionYearDatabases,
+                DatabaseProvisionStepState.Completed,
+                $"{pendingCompanies.Count} kurum · {currentYear} mali yılı"));
+
+            ReportSeedTotal(progress, DatabaseProvisionStep.SeedChartOfAccounts, chartOfAccountTotal, "hesap");
+            ReportSeedTotal(progress, DatabaseProvisionStep.SeedUnitsAndTaxRates, referenceTotal, "tanım");
+            ReportSeedTotal(progress, DatabaseProvisionStep.SeedSampleRecords, sampleRecordTotal, "müşteri / tedarikçi");
         }
         finally
         {
@@ -236,16 +475,39 @@ public static class DatabaseInitializer
         }
     }
 
+    /// <summary>
+    /// Tohum alt adımları yıl veritabanı sağlayıcısı tarafından kurum bazında
+    /// bildirilir; burada kurumların toplamı bir kez daha raporlanır. Böylece
+    /// ekranda satır başına tek bir tik kalır ve tutarlar tüm kurumları kapsar.
+    /// </summary>
+    private static void ReportSeedTotal(
+        IProgress<DatabaseProvisionProgress>? progress,
+        DatabaseProvisionStep step,
+        int total,
+        string unit)
+    {
+        if (progress is null)
+        {
+            return;
+        }
+
+        progress.Report(new DatabaseProvisionProgress(
+            step,
+            total > 0 ? DatabaseProvisionStepState.Completed : DatabaseProvisionStepState.Skipped,
+            total > 0 ? $"{total} {unit}" : "kayıtlar zaten mevcut"));
+    }
+
     private static async Task EnsureAdminRolePermissionsAsync(
         MasterDbContext masterContext,
         PermissionService permissionService,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        CancellationToken cancellationToken)
     {
         Guid? adminId = await masterContext.Users
             .AsNoTracking()
             .Where(u => u.UserName.Value == "admin")
             .Select(u => (Guid?)u.Id.Value)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (adminId is null)
         {

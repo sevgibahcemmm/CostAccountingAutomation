@@ -29,18 +29,32 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
 
         private readonly List<StockCountPromptItem> _workshops;
         private readonly List<StockCountPromptItem> _warehouses;
-        private DateEdit? dateEdit;
 
         public StockCountGroupMode Mode { get; private set; }
         public bool AllGroups { get; private set; }
         public List<Guid> GroupIds { get; private set; } = [];
         public DateOnly AsOfDate { get; private set; }
 
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta atölye
+        /// ve depo listeleriyle açılan yapıcı kullanılır.
+        /// </summary>
+        public StockCountPromptForm()
+        {
+            _workshops = [];
+            _warehouses = [];
+
+            InitializeComponent();
+            InitializeDefaults();
+            DesignTime.Guard(typeof(StockCountPromptForm));
+        }
+
         public StockCountPromptForm(
             IReadOnlyList<ChartOfAccountLookUpDto> workshops,
             IReadOnlyList<ChartOfAccountLookUpDto> warehouses)
         {
             InitializeComponent();
+            InitializeDefaults();
 
             _workshops = workshops
                 .Where(w => w.Type == ChartOfAccountType.Workshop)
@@ -54,59 +68,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
                 .Select(w => new StockCountPromptItem(w.Id, w.Display))
                 .ToList();
 
-            radioGroup.Properties.Items.AddRange(new[]
-            {
-                new DevExpress.XtraEditors.Controls.RadioGroupItem
-                {
-                    Value = (byte)StockCountGroupMode.Workshop,
-                    Description = "Atölye Bazında"
-                },
-                new DevExpress.XtraEditors.Controls.RadioGroupItem
-                {
-                    Value = (byte)StockCountGroupMode.Warehouse,
-                    Description = "Depo Bazında"
-                }
-            });
-            radioGroup.EditValue = (byte)StockCountGroupMode.Workshop;
-
             lblHeaderTitle.Text = "Stok Sayım Listesi";
             Text = "Stok Sayım Listesi";
             lblHeaderSub.Text = "Raporu hangi kırılımda hazırlamak istiyorsunuz?";
-
-            // Tarih seçici
-            var lblDate = new LabelControl
-            {
-                Text = "Sayım Tarihi:",
-                Location = new Point(24, 376),
-                AutoSizeMode = LabelAutoSizeMode.None,
-                Size = new Size(100, 18),
-                Appearance = { Font = new Font("Segoe UI", 9F) }
-            };
-
-            dateEdit = new DateEdit
-            {
-                Location = new Point(130, 373),
-                Size = new Size(160, 24),
-                Properties =
-                {
-                    DisplayFormat = { FormatString = "dd.MM.yyyy", FormatType = DevExpress.Utils.FormatType.DateTime },
-                    EditFormat = { FormatString = "dd.MM.yyyy", FormatType = DevExpress.Utils.FormatType.DateTime },
-                    UseMaskAsDisplayFormat = true,
-                    CalendarTimeEditing = DevExpress.Utils.DefaultBoolean.False
-                },
-                EditValue = DateTime.Today
-            };
-
-            Controls.Add(lblDate);
-            Controls.Add(dateEdit);
-
-            // Badge ve butonları aşağı kaydır
-            badge.Location = new Point(24, 410);
-            lblInfo.Location = new Point(24, 462);
-            footerDivider.Location = new Point(24, 492);
-            btnOk.Location = new Point(296, 514);
-            btnCancel.Location = new Point(191, 514);
-            ClientSize = new Size(470, 566);
 
             FillList(checkedWorkshops, _workshops);
             FillList(checkedWarehouses, _warehouses);
@@ -121,6 +85,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
 
             RefreshListVisibility();
             UpdateBadge();
+        }
+
+        /// <summary>
+        /// Kırılım seçenekleri ve sayım tarihinin başlangıç değeri. Kontrollerin
+        /// kendisi tasarım dosyasında tanımlıdır; burada yalnızca içerik varsayılanları atanır.
+        /// </summary>
+        private void InitializeDefaults()
+        {
+            radioGroup.Properties.Items.AddRange(new[]
+            {
+                new DevExpress.XtraEditors.Controls.RadioGroupItem
+                {
+                    Value = (byte)StockCountGroupMode.Workshop,
+                    Description = "Atölye Bazında"
+                },
+                new DevExpress.XtraEditors.Controls.RadioGroupItem
+                {
+                    Value = (byte)StockCountGroupMode.Warehouse,
+                    Description = "Depo Bazında"
+                }
+            });
+            radioGroup.EditValue = (byte)StockCountGroupMode.Workshop;
+            dateEdit.DateTime = DateTime.Today;
         }
 
         private StockCountGroupMode CurrentMode => radioGroup.EditValue is byte mode
@@ -198,7 +185,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             Mode = CurrentMode;
             AllGroups = selected.Count == CurrentItems.Count;
             GroupIds = selected.Select(s => s.Id).ToList();
-            AsOfDate = DateOnly.FromDateTime((dateEdit?.EditValue as DateTime?) ?? DateTime.Today);
+            AsOfDate = DateOnly.FromDateTime((dateEdit.EditValue as DateTime?) ?? DateTime.Today);
             DialogResult = DialogResult.OK;
         }
 

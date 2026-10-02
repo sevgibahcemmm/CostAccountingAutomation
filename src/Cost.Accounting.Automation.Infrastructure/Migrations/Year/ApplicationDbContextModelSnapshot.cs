@@ -22,6 +22,100 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.CarryForwards.CarryForwardLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ChartBalancesAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChartOfAccountsAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChartOfAccountsSkipped")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CurrentAccountBalancesAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CustomersAdded")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductPhotosAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductPricesAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductsAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecipesAdded")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SourceDatabaseName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<int>("SourceYear")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockBalancesAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SuppliersAdded")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetDatabaseName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<int>("TargetYear")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalAdded")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("TargetYear");
+
+                    b.ToTable("DevirLogs", (string)null);
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -422,31 +516,16 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.ToTable("Customers", (string)null);
                 });
 
-            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Devirs.DevirLog", b =>
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.Employee", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ChartBalancesAdded")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ChartOfAccountsAdded")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ChartOfAccountsSkipped")
-                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CurrentAccountBalancesAdded")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CustomersAdded")
-                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
@@ -458,48 +537,36 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("IdentityNumber")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)")
+                        .HasColumnName("IdentityNumber");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("ProductPhotosAdded")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductPricesAdded")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductsAdded")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RecipesAdded")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SourceDatabaseName")
+                    b.Property<string>("PhoneNumber1")
                         .IsRequired()
-                        .HasMaxLength(128)
+                        .HasMaxLength(50)
                         .HasColumnType("nvarchar(MAX)");
 
-                    b.Property<int>("SourceYear")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StockBalancesAdded")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SuppliersAdded")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TargetDatabaseName")
+                    b.Property<string>("PhoneNumber2")
                         .IsRequired()
-                        .HasMaxLength(128)
+                        .HasMaxLength(50)
                         .HasColumnType("nvarchar(MAX)");
 
-                    b.Property<int>("TargetYear")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalAdded")
-                        .HasColumnType("int");
+                    b.Property<string>("PhotoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(MAX)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -509,11 +576,69 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedBy");
+
                     b.HasIndex("DuplicateKey");
 
-                    b.HasIndex("TargetYear");
+                    b.HasIndex("IdentityNumber")
+                        .IsUnique();
 
-                    b.ToTable("DevirLogs", (string)null);
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("Employees", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.EmployeeDuty", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte>("SigningRole")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("WorkshopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("WorkshopId");
+
+                    b.ToTable("EmployeeDuties", (string)null);
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Invoices.Invoice", b =>
@@ -1634,6 +1759,93 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.Employee", b =>
+                {
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Employees.ValueObjects.EmployeeTitle", "Title", b1 =>
+                        {
+                            b1.Property<Guid>("EmployeeId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Title");
+
+                            b1.HasKey("EmployeeId");
+
+                            b1.ToTable("Employees");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmployeeId");
+                        });
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.FirstName", "FirstName", b1 =>
+                        {
+                            b1.Property<Guid>("EmployeeId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("FirstName");
+
+                            b1.HasKey("EmployeeId");
+
+                            b1.ToTable("Employees");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmployeeId");
+                        });
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Shared.LastName", "LastName", b1 =>
+                        {
+                            b1.Property<Guid>("EmployeeId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("LastName");
+
+                            b1.HasKey("EmployeeId");
+
+                            b1.ToTable("Employees");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmployeeId");
+                        });
+
+                    b.Navigation("FirstName")
+                        .IsRequired();
+
+                    b.Navigation("LastName")
+                        .IsRequired();
+
+                    b.Navigation("Title")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.EmployeeDuty", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.Employees.Employee", "Employee")
+                        .WithMany("Duties")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "Workshop")
+                        .WithMany()
+                        .HasForeignKey("WorkshopId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Workshop");
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Invoices.Invoice", b =>
                 {
                     b.HasOne("Cost.Accounting.Automation.Domain.Customers.Customer", "Customer")
@@ -2211,6 +2423,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
                 {
                     b.Navigation("CostSlipItems");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.Employee", b =>
+                {
+                    b.Navigation("Duties");
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Invoices.Invoice", b =>

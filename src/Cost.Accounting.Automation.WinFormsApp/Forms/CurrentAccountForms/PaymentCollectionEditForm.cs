@@ -13,6 +13,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
     {
         private CurrentAccountBalanceDto? _selected;
 
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta
+        /// <see cref="PaymentCollectionEditForm(CurrentAccountMovementType?)"/> kullanılır.
+        /// </summary>
+        public PaymentCollectionEditForm()
+        {
+            InitializeComponent();
+
+            Text = "Ödeme / Tahsilat";
+            lblTitle.Text = "Ödeme / Tahsilat İşlemi";
+            lblSubtitle.Text = "Cari borç/alacak listesinden kayıt seçin, tutarı teyit edip işlemi tamamlayın";
+            dtDate.DateTime = DateTime.Today;
+            SetButtonsEnabled(false, false);
+
+            DesignTime.Guard(typeof(PaymentCollectionEditForm));
+        }
+
         public PaymentCollectionEditForm(CurrentAccountMovementType? targetType = null)
         {
             InitializeComponent();
@@ -79,8 +96,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             }
 
             _selected = dto;
-            lblCariTuruValue.Text = dto.AccountTypeName;
-            lblCariValue.Text = dto.AccountName;
+            lblCurrentAccountTypeValue.Text = dto.AccountTypeName;
+            lblCurrentAccountValue.Text = dto.AccountName;
 
             bool isReceivable = dto.Balance > 0;
 

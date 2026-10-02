@@ -2,7 +2,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
 {
     public sealed class MovableAssetTransactionSlipRow
     {
-        public int? SiraNo { get; set; }
+        public int? RowNumber { get; set; }
 
         /// <summary>
         /// Kalemin gruplanacağı hesap kodu (üretim kodlarında 4., diğerlerinde 3. düzey).
@@ -29,43 +29,43 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
             }
         }
 
-        public string Kodu { get; set; } = string.Empty;
-        public string DepoKodu { get; set; } = string.Empty;
-        public string DepoAdi { get; set; } = string.Empty;
-        public string BarkodNo { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string WarehouseCode { get; set; } = string.Empty;
+        public string WarehouseName { get; set; } = string.Empty;
+        public string Barcode { get; set; } = string.Empty;
         public string Adi { get; set; } = string.Empty;
-        public string OlcuBirimi { get; set; } = string.Empty;
-        public decimal Miktari { get; set; }
-        public decimal? BirimFiyati { get; set; }
-        public decimal Tutari { get; set; }
+        public string UnitOfMeasure { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public decimal? UnitPrice { get; set; }
+        public decimal Amount { get; set; }
     }
 
     public sealed class MovableAssetTransactionSlipDepotTotal
     {
-        public string DepoKodu { get; set; } = string.Empty;
-        public string DepoAdi { get; set; } = string.Empty;
-        public decimal Miktari { get; set; }
-        public decimal Tutari { get; set; }
+        public string WarehouseCode { get; set; } = string.Empty;
+        public string WarehouseName { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public decimal Amount { get; set; }
     }
 
     public sealed class MovableAssetTransactionSlipData
     {
         public string DocumentNumber { get; set; } = string.Empty;
         public DateTime Date { get; set; }
-        public string IslemCesidi { get; set; } = string.Empty;
-        public string NeredenGeldigi { get; set; } = string.Empty;
-        public string KimeVerildigi { get; set; } = string.Empty;
-        public string NereyeVerildigi { get; set; } = string.Empty;
-        public string IlIlceAdi { get; set; } = string.Empty;
-        public string IlIlceKodu { get; set; } = string.Empty;
-        public string HarcamaBirimiAdi { get; set; } = string.Empty;
-        public string HarcamaBirimiKodu { get; set; } = string.Empty;
-        public string AmbarAdi { get; set; } = string.Empty;
-        public string AmbarKodu { get; set; } = string.Empty;
-        public string MuhasebeBirimiAdi { get; set; } = string.Empty;
-        public string MuhasebeBirimiKodu { get; set; } = string.Empty;
-        public DateTime? DayanakTarihi { get; set; }
-        public string DayanakKodu { get; set; } = string.Empty;
+        public string OperationType { get; set; } = string.Empty;
+        public string SourceParty { get; set; } = string.Empty;
+        public string RecipientParty { get; set; } = string.Empty;
+        public string DestinationParty { get; set; } = string.Empty;
+        public string ProvinceDistrictName { get; set; } = string.Empty;
+        public string ProvinceDistrictCode { get; set; } = string.Empty;
+        public string ExpenditureUnitName { get; set; } = string.Empty;
+        public string ExpenditureUnitCode { get; set; } = string.Empty;
+        public string StoreName { get; set; } = string.Empty;
+        public string StoreCode { get; set; } = string.Empty;
+        public string AccountingUnitName { get; set; } = string.Empty;
+        public string AccountingUnitCode { get; set; } = string.Empty;
+        public DateTime? ReferenceDate { get; set; }
+        public string ReferenceCode { get; set; } = string.Empty;
         public List<MovableAssetTransactionSlipRow> Rows { get; set; } = [];
 
         /// <summary>
@@ -80,15 +80,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         /// </summary>
         public List<MovableAssetTransactionSlipDepotTotal> DepotTotals { get; private set; } = [];
 
-        public decimal GrandMiktar { get; private set; }
-        public decimal GrandTutar { get; private set; }
+        public decimal GrandQuantity { get; private set; }
+        public decimal GrandAmount { get; private set; }
 
         public int DetailLineCount => Rows.Count;
-        public decimal TotalQuantity => Rows.Sum(r => r.Miktari);
-        public decimal TotalAmount => Rows.Sum(r => r.Tutari);
+        public decimal TotalQuantity => Rows.Sum(r => r.Quantity);
+        public decimal TotalAmount => Rows.Sum(r => r.Amount);
 
         /// <summary>
-        /// Kalemleri hesap koduna göre gruplar. Kodu "150.98" ile başlayan kalemler 4. düzeyde,
+        /// Kalemleri hesap koduna göre gruplar. Code "150.98" ile başlayan kalemler 4. düzeyde,
         /// diğer kalemler 3. düzeyde gruplanır. Sıra numaraları nihai basım sırasına göre atanır,
         /// depo toplamları ve genel toplam hesaplanır. Toplam satırları belgeye eklenmez;
         /// rapor tarafında grup dip notu (GroupFooter) ve rapor sonunda gösterilir.
@@ -96,17 +96,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         public void Prepare()
         {
             List<MovableAssetTransactionSlipRow> ordered = Rows
-                .OrderBy(r => ResolveGroupCode(r.Kodu), StringComparer.Ordinal)
-                .ThenBy(r => r.Kodu, StringComparer.Ordinal)
+                .OrderBy(r => ResolveGroupCode(r.Code), StringComparer.Ordinal)
+                .ThenBy(r => r.Code, StringComparer.Ordinal)
                 .ThenBy(r => r.Adi, StringComparer.Ordinal)
                 .ToList();
 
             int order = 0;
             foreach (MovableAssetTransactionSlipRow row in ordered)
             {
-                row.GroupCode = ResolveGroupCode(row.Kodu);
+                row.GroupCode = ResolveGroupCode(row.Code);
                 row.GroupName = ResolveGroupName(row.GroupCode);
-                row.SiraNo = ++order;
+                row.RowNumber = ++order;
             }
 
             Rows = ordered;
@@ -117,15 +117,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
                 .OrderBy(g => g.Key, StringComparer.Ordinal)
                 .Select(g => new MovableAssetTransactionSlipDepotTotal
                 {
-                    DepoKodu = g.First().DepoKodu,
-                    DepoAdi = g.First().DepoAdi,
-                    Miktari = g.Sum(r => r.Miktari),
-                    Tutari = g.Sum(r => r.Tutari)
+                    WarehouseCode = g.First().WarehouseCode,
+                    WarehouseName = g.First().WarehouseName,
+                    Quantity = g.Sum(r => r.Quantity),
+                    Amount = g.Sum(r => r.Amount)
                 })
                 .ToList();
 
-            GrandMiktar = ordered.Sum(r => r.Miktari);
-            GrandTutar = ordered.Sum(r => r.Tutari);
+            GrandQuantity = ordered.Sum(r => r.Quantity);
+            GrandAmount = ordered.Sum(r => r.Amount);
         }
 
         private static string ResolveGroupCode(string code)
@@ -140,27 +140,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
 
         private static string GetWarehouseKey(MovableAssetTransactionSlipRow row)
         {
-            if (!string.IsNullOrWhiteSpace(row.DepoKodu))
+            if (!string.IsNullOrWhiteSpace(row.WarehouseCode))
             {
-                return row.DepoKodu;
+                return row.WarehouseCode;
             }
 
-            if (!string.IsNullOrWhiteSpace(row.DepoAdi))
+            if (!string.IsNullOrWhiteSpace(row.WarehouseName))
             {
-                return row.DepoAdi;
+                return row.WarehouseName;
             }
 
-            if (string.IsNullOrWhiteSpace(row.Kodu))
+            if (string.IsNullOrWhiteSpace(row.Code))
             {
                 return string.Empty;
             }
 
-            if (IsProductionCode(row.Kodu))
+            if (IsProductionCode(row.Code))
             {
                 return "150.98";
             }
 
-            string[] parts = row.Kodu.Split('.');
+            string[] parts = row.Code.Split('.');
             return parts.Length > 0 ? parts[0] : string.Empty;
         }
 

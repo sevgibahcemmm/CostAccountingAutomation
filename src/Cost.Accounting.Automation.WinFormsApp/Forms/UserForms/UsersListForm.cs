@@ -22,6 +22,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
     {
         public UsersListForm() : base("Kullanıcılar")
         {
+            InitializeComponent();
             View.CustomUnboundColumnData += UsersListForm_CustomUnboundColumnData;
         }
 
@@ -40,15 +41,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-
-            foreach (Control ctrl in Controls)
-            {
-                if (ctrl is Panel panel && panel.Dock == DockStyle.Top)
-                {
-                    panel.Height = 100;
-                    break;
-                }
-            }
 
             if (View.GridControl != null)
             {

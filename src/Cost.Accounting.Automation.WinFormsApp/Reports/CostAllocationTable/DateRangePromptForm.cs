@@ -38,6 +38,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 
         public Guid? WarehouseId { get; private set; }
 
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta
+        /// varsayılan değerlerle açılan yapıcı kullanılır.
+        /// </summary>
+        public DateRangePromptForm()
+        {
+            InitializeComponent();
+            picHeader.SvgImage = DxIcon.Receipt;
+            DesignTime.Guard(typeof(DateRangePromptForm));
+        }
+
         public DateRangePromptForm(
             DateOnly? defaultStart = null,
             DateOnly? defaultEnd = null,

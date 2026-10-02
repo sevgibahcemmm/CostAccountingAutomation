@@ -30,6 +30,7 @@ protected List<TDto> _allItems = [];
         private bool _isFilterSetting;
         private int _reloadVersion;
         private bool _columnsFitted;
+        private readonly IDisposable? _skinBinding;
 
         protected CrudListFormBase(string formTitle) : base(formTitle)
         {
@@ -40,6 +41,35 @@ InitializeComponent();
             SetupGrid();
             SetupButtonIcons();
             picModuleIcon.SvgImage = ModuleIcon;
+            ApplySkin();
+            _skinBinding = SkinTheme.Bind(ApplySkin);
+        }
+
+        /// <summary>
+        /// Başlık ve ayırıcı renkleri aktif skinden çözülür; böylece açık ve koyu
+        /// temalarda başlık metni zeminin üzerinde okunur kalır. Butonlara renk
+        /// atanmaz — onların görünümü tamamen DevExpress skin'ine bırakılır.
+        /// </summary>
+        private void ApplySkin()
+        {
+            Color surface = SkinTheme.SurfaceOf(pnlHeader);
+            Color primary = SkinTheme.Text;
+            Color secondary = SkinTheme.Blend(primary, surface, 0.22F);
+
+            pnlHeader.Appearance.BackColor = SkinTheme.SurfaceMuted(surface);
+            pnlToolbar.Appearance.BackColor = surface;
+            headerAccent.Appearance.BackColor = SkinTheme.Primary;
+            headerDivider.Appearance.BackColor = SkinTheme.BorderMuted(surface);
+
+            headerAccent.Appearance.Options.UseBackColor = true;
+            headerDivider.Appearance.Options.UseBackColor = true;
+
+            lblTitle.Appearance.ForeColor = primary;
+            lblTitle.Appearance.Options.UseForeColor = true;
+            lblSub.Appearance.ForeColor = secondary;
+            lblSub.Appearance.Options.UseForeColor = true;
+            lblFilter.Appearance.ForeColor = secondary;
+            lblFilter.Appearance.Options.UseForeColor = true;
         }
 
         protected GridView View => gridView;
@@ -58,6 +88,7 @@ InitializeComponent();
             button.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             button.Appearance.Options.UseFont = true;
             flpToolbar.Controls.Add(button);
+            button.Width = MeasureButtonWidth(button);
 
             if (index is >= 0)
             {
@@ -65,12 +96,51 @@ InitializeComponent();
             }
         }
 
-        protected virtual SvgImage ModuleIcon => DxIcon.Module;
+        /// <summary>
+        /// Türetilmiş formun kendi araç çubuğu butonlarını hazırladığı kanca.
+        ///
+        /// Türetilmiş formların butonları kendi tasarım dosyalarında tanımlanır ve
+        /// <c>flpToolbar</c> içine eklenir; bu yüzden butonlar ancak türetilmiş
+        /// kurucunun <c>InitializeComponent()</c> çağrısından sonra var olur.
+        /// Kurucu bu metodu kendi <c>InitializeComponent()</c> çağrısından hemen
+        /// sonra çağırmalıdır.
+        /// </summary>
+        protected virtual void RegisterDerivedToolbarButtons()
+        {
+            // Türetilmiş tasarım dosyasının eklediği butonlar taban genişlik
+            // hesabından sonra geldiği için yeniden ölçülür.
+            AutoSizeToolbarButtons();
+        }
 
+        /// <summary>
+        /// Tasarım dosyasında <c>flpToolbar</c> içine eklenmiş bir butonun araç
+        /// çubuğundaki sırasını belirler.
+        /// </summary>
+        protected void MoveToolbarButton(Control button, int index)
+        {
+            if (index >= 0 && index < flpToolbar.Controls.Count)
+            {
+                flpToolbar.Controls.SetChildIndex(button, index);
+            }
+        }
+
+protected virtual SvgImage ModuleIcon => DxIcon.Module;
+
+        /// <summary>Liste ekranında "Yeni" butonunun gösterilip gösterilmeyeceği.</summary>
         protected virtual bool AllowCreate => true;
 
+        /// <summary>
+        /// Liste ekranında "Düzenle" butonunun gösterilip gösterilmeyeceği.
+        /// Onaylama gibi yalnızca mevcut kayıt üzerinde işlem yapan listelerde
+        /// <c>false</c> verilir; aksi halde <see cref="AllowsEdit"/> her kayıt için
+        /// <c>false</c> döndüğünden buton hep pasif görünür.
+        /// </summary>
+        protected virtual bool AllowEdit => true;
+
+        /// <summary>Liste ekranında "Sil" butonunun gösterilip gösterilmeyeceği.</summary>
         protected virtual bool AllowDelete => true;
 
+        /// <summary>Belirli bir kaydın düzenlenip düzenlenemeyeceği.</summary>
         protected virtual bool AllowsEdit(TDto item) => true;
 
         /// <summary>
@@ -99,6 +169,141 @@ InitializeComponent();
 
         protected virtual bool SupportsApprove => false;
 
+        /// <summary>
+        /// Sayfa açılışında onay bekleyen kayıt varsa nasıl bilgilendirileceği.
+        /// Program genelinde tek tip kullanılır (kalıcı pencere); "Tamam" ile onay
+        /// ekranına geçilir.
+        /// </summary>
+        protected virtual PendingNoticeMode PendingNotice => PendingNoticeMode.MessageBox;
+
+        /// <summary>
+        /// Bilgilendirme metninde kullanılacak kayıt adı (örn. "fatura",
+        /// "maliyet pusulası").
+        /// </summary>
+        protected virtual string PendingItemLabel => "kayıt";
+
+        /// <summary>
+        /// Listedeki kaydın onay bekleyip beklemediği. Varsayılan olarak
+        /// <see cref="AllowsApprove"/> kuralı kullanılır; onay edilebilen kayıt
+        /// onay bekleyen kayıttır. Bildirim yalnızca <see cref="SupportsApprove"/>
+        /// true iken gösterildiğinden bu kural yalnızca onay ekranlarında anlamlıdır.
+        /// </summary>
+        protected virtual bool IsPendingApproval(TDto item) => AllowsApprove(item);
+
+        /// <summary>
+        /// Bildirim penceresindeki "Tamam" sonrasında açılacak onay ekranının türü.
+        /// Ayrı bir onay ekranı olmayan listeler (maliyet pusulası, stok belgesi)
+        /// onayı kendi üzerinde yaptığı için <c>null</c> bırakır.
+        /// </summary>
+        protected virtual Type? PendingApprovalFormType => null;
+
+        /// <summary>
+        /// Açılacak onay ekranının başlığı. <c>null</c> ise formun kendi başlığı
+        /// kullanılır.
+        /// </summary>
+        protected virtual string? PendingApprovalFormTitle => null;
+
+        /// <summary>
+        /// Başarılı her yüklemeden sonra onay bekleyen kayıtları bildirir.
+        ///
+        /// Bildirim yalnızca onay akışı olan ekranlarda çalışır; onay desteği
+        /// olmayan listelerde (örn. cari hareketler) gösterilmez. "Tamam" ile
+        /// kapatıldığında <see cref="PendingApprovalFormType"/> tanımlıysa onay
+        /// ekranı açılır.
+        /// </summary>
+        private void NotifyPendingItems()
+        {
+            // Onay akışı olmayan ekranlarda "onay bekleyen kayıt" kavramı yoktur;
+            // SupportsApprove bunun tek güvenilir göstergesidir.
+            if (PendingNotice == PendingNoticeMode.None || !SupportsApprove)
+            {
+                return;
+            }
+
+            List<TDto> pendingItems = _allItems.Where(IsPendingApproval).ToList();
+            if (pendingItems.Count == 0)
+            {
+                return;
+            }
+
+            string label = pendingItems.Count == 1 ? PendingItemLabel : PendingItemLabelPlural;
+            string message = BuildPendingMessage(pendingItems, label);
+
+            if (PendingNotice == PendingNoticeMode.Toast)
+            {
+                ToastHelper.Show(message, ToastType.Warning, 5000);
+                return;
+            }
+
+            MsgBox.Notice(this, message, "Onay Bekleyen Kayıtlar");
+            OpenPendingApprovalScreen();
+        }
+
+        /// <summary>
+        /// Bekleyen kayıtların dökümünü içeren bildirim metnini kurar. Kullanıcı
+        /// neyin beklediğini görmek zorunda; yalnızca sayı söylemek hangi kaydın
+        /// sıkıştığını anlatmaz.
+        /// </summary>
+        private string BuildPendingMessage(List<TDto> pendingItems, string label)
+        {
+            const int maxShown = 5;
+
+            string header = pendingItems.Count == 1
+                ? $"1 {label} onay bekliyor:"
+                : $"{pendingItems.Count} {label} onay bekliyor:";
+
+            List<string> lines = [header, ""];
+
+            for (int i = 0; i < Math.Min(maxShown, pendingItems.Count); i++)
+            {
+                lines.Add($"• {GetItemSummary(pendingItems[i])}");
+            }
+
+            if (pendingItems.Count > maxShown)
+            {
+                lines.Add($"• ... ve {pendingItems.Count - maxShown} kayıt daha");
+            }
+
+            lines.Add("");
+            lines.Add("Onay ekranında inceleyip onaylayabilirsiniz.");
+
+            return string.Join("\r\n", lines);
+        }
+
+        /// <summary>
+        /// Bildirimde ve silme onayında kullanılan kısa kayıt tanımı.
+        /// </summary>
+        protected virtual string GetItemSummary(TDto item) => GetDeleteSummary(item);
+
+        /// <summary>
+        /// "Tamam" sonrasında onay ekranını açar. MDI çocuk form, başka bir MDI
+        /// çocuğu doğuramadığı için hedef daima asıl MDI kapsayıcıdır.
+        /// </summary>
+        private void OpenPendingApprovalScreen()
+        {
+            if (PendingApprovalFormType is not Type target || MdiParent is not XtraForm container)
+            {
+                return;
+            }
+
+            try
+            {
+                MdiFormManager.Instance.OpenForm(container, target, PendingApprovalFormTitle);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("PendingApproval.Open", ex);
+                ToastHelper.Show("Onay ekranı açılamadı: " + ex.Message, ToastType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Çoğul durumda kullanılacak kayıt adı. Türkçede çoğul ek fiille değil
+        /// sözcük değişimiyle yapıldığı için ayrı tanımlanır; varsayılan tekil
+        /// biçimle aynıdır.
+        /// </summary>
+        protected virtual string PendingItemLabelPlural => PendingItemLabel;
+
         protected virtual bool AllowsApprove(TDto item) => true;
 
         /// <summary>
@@ -126,6 +331,13 @@ InitializeComponent();
         /// </summary>
         protected virtual bool SupportsStockCountListReport => false;
 
+        /// <summary>
+        /// Tek kaydın onay komutunu üretir.
+        ///
+        /// KURAL: Onay yalnızca liste ekranlarında yapılır. Kayıt (düzenleme /
+        /// oluşturma) formlarında onay düğmesi bulunmaz; kayıt formu daima
+        /// taslak yazar, onay listeden ya da toplu onaydan yapılır.
+        /// </summary>
         protected virtual IRequest<Result<string>>? BuildApproveCommand(TDto item) => null;
 
         /// <summary>
@@ -220,6 +432,7 @@ InitializeComponent();
             base.OnLoad(e);
             IconOptions.SvgImage = ModuleIcon;
             btnNew.Visible = AllowCreate;
+            btnEdit.Visible = AllowEdit;
             btnDeleted.Visible = SupportsRestore;
             if (!AllowDelete)
             {
@@ -248,6 +461,11 @@ InitializeComponent();
             btnNew.Click += async (_, _) => await RunEditorAsync(null);
             btnEdit.Click += async (_, _) =>
             {
+                if (!AllowEdit)
+                {
+                    return;
+                }
+
                 int[] rows = gridView.GetSelectedRows();
                 if (rows.Length == 1 && gridView.GetRow(rows[0]) is TDto dto)
                 {
@@ -523,7 +741,8 @@ protected void AddColumnsFromAttributes()
 
             btnNew.Enabled = AllowCreate && !showDeleted;
             btnNew.Visible = AllowCreate;
-            btnEdit.Enabled = !showDeleted && selected == 1 && allEditable;
+            btnEdit.Visible = AllowEdit;
+            btnEdit.Enabled = AllowEdit && !showDeleted && selected == 1 && allEditable;
             btnDelete.Enabled = !showDeleted && selected >= 1 && allDeletable;
             btnDelete.Visible = AllowDelete && !showDeleted;
             btnSlipPrint.Visible = SupportsSlipPrint;
@@ -696,16 +915,34 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
         /// Listeyi bekleme penceresi eşliğinde yeniler. Tüm liste formları
         /// verisini bu metottan yüklediği için bekleme davranışı tek yerden
         /// yönetilir.
+        ///
+        /// Onay bekleyen kayıt bildirimi bilerek yükleme işinin İÇİNDE
+        /// gösterilmez: içeride çağrılırsa "Lütfen Bekleyin" penceresi
+        /// ekrandayken MsgBox açılır ve kullanıcı iki kalıcı pencereyi
+        /// üst üste görür. Bunun yerine yükleme bitip bekleme penceresi
+        /// kapandıktan SONRA bildirim gösterilir.
         /// </summary>
         protected virtual async Task ReloadAsync()
         {
-            await LoadingHelper.RunAsync(
+            bool loaded = await LoadingHelper.RunAsync(
                 ReloadCoreAsync,
                 caption: "Kayıtlar yükleniyor...",
                 description: "Lütfen bekleyin...");
+
+            // Yükleme başarısızsa uyarı zaten Toast ile verildi; onay
+            // bildirimi yalnızca gerçekten yüklenmiş veri için anlamlıdır.
+            if (loaded)
+            {
+                NotifyPendingItems();
+            }
         }
 
-        private async Task ReloadCoreAsync()
+        /// <summary>
+        /// Veriyi yükler ve listeye bağlar. Bekleme penceresi bu metottan
+        /// sonra kapanır; bu yüzden burada hiçbir kalıcı pencere açılmaz.
+        /// </summary>
+        /// <returns>Liste başarıyla yüklendiyse <c>true</c>.</returns>
+        private async Task<bool> ReloadCoreAsync()
         {
             int version = ++_reloadVersion;
             try
@@ -739,7 +976,7 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
 
                     if (version != _reloadVersion)
                     {
-                        return;
+                        return false;
                     }
 
                     sw.Restart();
@@ -751,7 +988,7 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
 
                 if (version != _reloadVersion)
                 {
-                    return;
+                    return false;
                 }
 
                 sw.Restart();
@@ -761,18 +998,22 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
                 FitColumnsToContent();
                 lblSub.Text = GetSubtitle(items.Count);
                 CrashLog.Write("PageLoad", $"{GetType().Name} Ready Toplam {sw.Elapsed.TotalMilliseconds:N0} ms");
+
+                return true;
             }
             catch (AuthorizationException ex)
             {
                 CrashLog.WriteException("Reload.Auth", ex);
                 ToastHelper.Show(ex.Message, ToastType.Warning, 4000);
                 lblSub.Text = "Yetkiniz yok";
+                return false;
             }
             catch (Exception ex)
             {
                 CrashLog.WriteException("Reload", ex);
                 ToastHelper.Show("Liste yüklenemedi: " + ex.Message, ToastType.Error, 4000);
                 lblSub.Text = "Yükleme hatası";
+                return false;
             }
             finally
             {
@@ -879,7 +1120,7 @@ using (form)
 
         private async void GridView_DoubleClick(object? sender, EventArgs e)
         {
-            if (_showDeleted)
+            if (_showDeleted || !AllowEdit)
             {
                 return;
             }

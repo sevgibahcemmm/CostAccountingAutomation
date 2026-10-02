@@ -28,20 +28,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
         {
             SetParameter("FisSiraNo", data.DocumentNumber);
             SetParameter("Tarih", data.Date.ToString("dd.MM.yyyy"));
-            SetParameter("IlIlceAdi", data.IlIlceAdi);
-            SetParameter("IlIlceKodu", data.IlIlceKodu);
-            SetParameter("HarcamaBirimiAdi", data.HarcamaBirimiAdi);
-            SetParameter("HarcamaBirimiKodu", data.HarcamaBirimiKodu);
-            SetParameter("AmbarAdi", data.AmbarAdi);
-            SetParameter("AmbarKodu", data.AmbarKodu);
-            SetParameter("MuhasebeBirimiAdi", data.MuhasebeBirimiAdi);
-            SetParameter("MuhasebeBirimiKodu", data.MuhasebeBirimiKodu);
-            SetParameter("DayanakTarihi", data.DayanakTarihi?.ToString("dd.MM.yyyy") ?? string.Empty);
-            SetParameter("DayanakKodu", data.DayanakKodu);
-            SetParameter("IslemCesidi", data.IslemCesidi);
-            SetParameter("NeredenGeldigi", data.NeredenGeldigi);
-            SetParameter("KimeVerildigi", data.KimeVerildigi);
-            SetParameter("NereyeVerildigi", data.NereyeVerildigi);
+            SetParameter("ProvinceDistrictName", data.ProvinceDistrictName);
+            SetParameter("ProvinceDistrictCode", data.ProvinceDistrictCode);
+            SetParameter("ExpenditureUnitName", data.ExpenditureUnitName);
+            SetParameter("ExpenditureUnitCode", data.ExpenditureUnitCode);
+            SetParameter("StoreName", data.StoreName);
+            SetParameter("StoreCode", data.StoreCode);
+            SetParameter("AccountingUnitName", data.AccountingUnitName);
+            SetParameter("AccountingUnitCode", data.AccountingUnitCode);
+            SetParameter("ReferenceDate", data.ReferenceDate?.ToString("dd.MM.yyyy") ?? string.Empty);
+            SetParameter("ReferenceCode", data.ReferenceCode);
+            SetParameter("OperationType", data.OperationType);
+            SetParameter("SourceParty", data.SourceParty);
+            SetParameter("RecipientParty", data.RecipientParty);
+            SetParameter("DestinationParty", data.DestinationParty);
             SetParameter(
                 "Ozet",
                 $"Yukarıda gösterilen {data.DetailLineCount} kalem, toplam {data.TotalQuantity:N0} adet taşınırın");
@@ -64,24 +64,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
 
             foreach (MovableAssetTransactionSlipDepotTotal depot in data.DepotTotals)
             {
-                string label = string.IsNullOrWhiteSpace(depot.DepoAdi)
+                string label = string.IsNullOrWhiteSpace(depot.WarehouseName)
                     ? "DEPO TOPLAMI"
-                    : $"{depot.DepoAdi} DEPO TOPLAMI";
+                    : $"{depot.WarehouseName} DEPO TOPLAMI";
 
                 rows.Add(MakeRow(
                     1D,
                     MakeCell(5D, label, bold: true, header: true),
-                    MakeCell(1D, depot.Miktari.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight),
+                    MakeCell(1D, depot.Quantity.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight),
                     MakeCell(1D, string.Empty, bold: true, header: true),
-                    MakeCell(1D, depot.Tutari.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight)));
+                    MakeCell(1D, depot.Amount.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight)));
             }
 
             rows.Add(MakeRow(
                 1D,
                 MakeCell(5D, "GENEL TOPLAM", bold: true, header: true),
-                MakeCell(1D, data.GrandMiktar.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight),
+                MakeCell(1D, data.GrandQuantity.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight),
                 MakeCell(1D, string.Empty, bold: true, header: true),
-                MakeCell(1D, data.GrandTutar.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight)));
+                MakeCell(1D, data.GrandAmount.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight)));
 
             float height = RowHeight * rows.Count;
             XRTable table = MakeTable(height, [.. rows]);

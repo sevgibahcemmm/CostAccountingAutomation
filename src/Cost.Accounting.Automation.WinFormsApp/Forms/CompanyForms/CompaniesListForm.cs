@@ -11,12 +11,12 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
 {
-    public sealed partial class CompaniesListForm : CrudListFormBase<CompanyGetAllQuery, CompanyDto, CompanyEditForm>
-    {
-        private readonly SimpleButton _btnAccountingYear = new();
-
+public sealed partial class CompaniesListForm : CrudListFormBase<CompanyGetAllQuery, CompanyDto, CompanyEditForm>
+{
         public CompaniesListForm() : base("Şirketler")
         {
+            InitializeComponent();
+            RegisterDerivedToolbarButtons();
         }
 
         protected override SvgImage ModuleIcon => DxIcon.Company;
@@ -32,25 +32,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms
             nameof(CompanyDto.Email)
         ];
 
-        protected override void OnLoad(EventArgs e)
+        protected override void RegisterDerivedToolbarButtons()
         {
-            foreach (Control ctrl in Controls)
-            {
-                if (ctrl is Panel panel && panel.Dock == DockStyle.Top)
-                {
-                    panel.Height = 100;
-                    break;
-                }
-            }
+            base.RegisterDerivedToolbarButtons();
 
-            _btnAccountingYear.Text = "Mali Yıl Aç";
-            _btnAccountingYear.ImageOptions.SvgImage = DxIcon.Recipe;
-            _btnAccountingYear.ImageOptions.SvgImageSize = new Size(18, 18);
-            _btnAccountingYear.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-            _btnAccountingYear.Click += BtnAccountingYear_Click;
-            AddToolbarButton(_btnAccountingYear);
-
-            base.OnLoad(e);
+            btnAccountingYear.Click += BtnAccountingYear_Click;
         }
 
         /// <summary>

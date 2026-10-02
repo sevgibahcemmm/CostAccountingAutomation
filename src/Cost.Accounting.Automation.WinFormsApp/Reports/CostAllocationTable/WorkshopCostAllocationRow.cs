@@ -41,7 +41,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             Account740_4 + Account740_5 + Account740_6 + Account740_7 +
             Account750_780;
 
-        public static ProductCostAllocationReportRow FromGiderDagilimRow(GiderDagilimRow row) => new()
+        public static ProductCostAllocationReportRow FromExpenseDistributionRow(ExpenseDistributionRow row) => new()
         {
             WorkshopName = row.WorkshopName,
             Account710 = row.Values.GetValueOrDefault(ExpenseAccountType.Account710),
@@ -66,13 +66,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
                 ExpenseAccountType.Account770, ExpenseAccountType.Account780),
         };
 
-        private static decimal SumOf(GiderDagilimRow row, params ExpenseAccountType[] types)
+        private static decimal SumOf(ExpenseDistributionRow row, params ExpenseAccountType[] types)
             => types.Sum(t => row.Values.GetValueOrDefault(t));
     }
 
     public interface ICostAllocationTableReport
     {
-        void SetData(DateOnly startDate, DateOnly endDate, GiderDagilimReportResult result, string companyName = "", CostSlipType type = CostSlipType.Product);
+        void SetData(DateOnly startDate, DateOnly endDate, ExpenseDistributionReportResult result, string companyName = "", CostSlipType type = CostSlipType.Product);
 
         void PrintReport();
     }

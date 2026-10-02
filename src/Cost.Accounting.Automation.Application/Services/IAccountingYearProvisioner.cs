@@ -13,11 +13,16 @@ public interface IAccountingYearProvisioner
     /// <paramref name="databaseName"/> veritabanının var olduğundan ve güncel
     /// şemadan olduğundan emin olur.
     /// </summary>
+    /// <param name="progress">
+    /// Yalnızca alt adımları (hesap planı, birim/KDV, sanal kayıtlar) bildirmek
+    /// için kullanılır. Opsiyoneldir; verilmezse bildirim yapılmaz.
+    /// </param>
     Task<AccountingYearProvisionResult> EnsureDatabaseAsync(
         IdentityId companyId,
         int year,
         string databaseName,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        IProgress<DatabaseProvisionProgress>? progress = null);
 }
 
 /// <summary>Yıl veritabanı hazırlama sonucu.</summary>
@@ -30,4 +35,13 @@ public sealed record AccountingYearProvisionResult
 
     /// <summary>Uygulanan migration sayısı.</summary>
     public required int AppliedMigrationCount { get; init; }
+
+    /// <summary>Bu çağrıda tohumlanan hesap planı satırı sayısı.</summary>
+    public int SeededChartOfAccountCount { get; init; }
+
+    /// <summary>Bu çağrıda tohumlanan birim cinsi ve KDV oranı sayısı.</summary>
+    public int SeededReferenceCount { get; init; }
+
+    /// <summary>Bu çağrıda tohumlanan müşteri ve tedarikçi sayısı.</summary>
+    public int SeededSampleRecordCount { get; init; }
 }

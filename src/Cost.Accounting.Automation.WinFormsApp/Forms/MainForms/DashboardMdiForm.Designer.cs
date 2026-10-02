@@ -72,6 +72,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private System.Windows.Forms.Panel pnlKpi8IconBadge;
         private System.Windows.Forms.Label lblKpi8Icon;
 
+        private DevExpress.XtraEditors.PanelControl kpi9;
+        private System.Windows.Forms.Panel acc9;
+        private System.Windows.Forms.Label lblKpi9Value;
+        private System.Windows.Forms.Label lblKpi9Title;
+        private System.Windows.Forms.Panel pnlKpi9IconBadge;
+        private System.Windows.Forms.Label lblKpi9Icon;
+
+        private DevExpress.XtraEditors.PanelControl kpi10;
+        private System.Windows.Forms.Panel acc10;
+        private System.Windows.Forms.Label lblKpi10Value;
+        private System.Windows.Forms.Label lblKpi10Title;
+        private System.Windows.Forms.Panel pnlKpi10IconBadge;
+        private System.Windows.Forms.Label lblKpi10Icon;
+
         private System.Windows.Forms.TableLayoutPanel tblBottom;
 
         private DevExpress.XtraEditors.PanelControl pnlTableReceivables;
@@ -318,6 +332,42 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblKpi8Icon =
                 new System.Windows.Forms.Label();
 
+            kpi9 =
+                new DevExpress.XtraEditors.PanelControl();
+
+            acc9 =
+                new System.Windows.Forms.Panel();
+
+            lblKpi9Value =
+                new System.Windows.Forms.Label();
+
+            lblKpi9Title =
+                new System.Windows.Forms.Label();
+
+            pnlKpi9IconBadge =
+                new System.Windows.Forms.Panel();
+
+            lblKpi9Icon =
+                new System.Windows.Forms.Label();
+
+            kpi10 =
+                new DevExpress.XtraEditors.PanelControl();
+
+            acc10 =
+                new System.Windows.Forms.Panel();
+
+            lblKpi10Value =
+                new System.Windows.Forms.Label();
+
+            lblKpi10Title =
+                new System.Windows.Forms.Label();
+
+            pnlKpi10IconBadge =
+                new System.Windows.Forms.Panel();
+
+            lblKpi10Icon =
+                new System.Windows.Forms.Label();
+
             tblBottom =
                 new System.Windows.Forms.TableLayoutPanel();
 
@@ -498,6 +548,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ((System.ComponentModel.ISupportInitialize)kpi8).BeginInit();
             kpi8.SuspendLayout();
             pnlKpi8IconBadge.SuspendLayout();
+            kpi9.SuspendLayout();
+            pnlKpi9IconBadge.SuspendLayout();
+
+            ((System.ComponentModel.ISupportInitialize)kpi10).BeginInit();
+            kpi10.SuspendLayout();
+            pnlKpi10IconBadge.SuspendLayout();
 
             tblBottom.SuspendLayout();
 
@@ -797,7 +853,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             tblLayout.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Absolute,
-                    104F));
+                    186F));
 
             tblLayout.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
@@ -810,56 +866,43 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 0;
 
             tblKpi.ColumnCount =
-                8;
+                5;
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    12.5F));
+                    20F));
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    12.5F));
+                    20F));
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    12.5F));
+                    20F));
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    12.5F));
+                    20F));
 
             tblKpi.ColumnStyles.Add(
                 new System.Windows.Forms.ColumnStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    12.5F));
-
-            tblKpi.ColumnStyles.Add(
-                new System.Windows.Forms.ColumnStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    12.5F));
-
-            tblKpi.ColumnStyles.Add(
-                new System.Windows.Forms.ColumnStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    12.5F));
-
-            tblKpi.ColumnStyles.Add(
-                new System.Windows.Forms.ColumnStyle(
-                    System.Windows.Forms.SizeType.Percent,
-                    12.5F));
+                    20F));
 
             tblKpi.Controls.Add(kpi1, 0, 0);
             tblKpi.Controls.Add(kpi2, 1, 0);
             tblKpi.Controls.Add(kpi3, 2, 0);
             tblKpi.Controls.Add(kpi4, 3, 0);
             tblKpi.Controls.Add(kpi5, 4, 0);
-            tblKpi.Controls.Add(kpi6, 5, 0);
-            tblKpi.Controls.Add(kpi7, 6, 0);
-            tblKpi.Controls.Add(kpi8, 7, 0);
+            tblKpi.Controls.Add(kpi6, 0, 1);
+            tblKpi.Controls.Add(kpi7, 1, 1);
+            tblKpi.Controls.Add(kpi8, 2, 1);
+            tblKpi.Controls.Add(kpi9, 3, 1);
+            tblKpi.Controls.Add(kpi10, 4, 1);
 
             tblKpi.Dock =
                 System.Windows.Forms.DockStyle.Fill;
@@ -874,15 +917,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 "tblKpi";
 
             tblKpi.RowCount =
-                1;
+                2;
 
             tblKpi.RowStyles.Add(
                 new System.Windows.Forms.RowStyle(
                     System.Windows.Forms.SizeType.Percent,
-                    100F));
+                    50F));
+
+            // On kart tek satıra sığmadığı için 5 + 5 olmak üzere iki satıra
+            // bölünür; aksi hâlde kart içindeki etiketler komşu kartların
+            // üstüne taşıyordu. Sütun sayısı kart adedini bölen değer olmalı,
+            // aksi hâlde son satırda boş hücre kalıyor.
+            tblKpi.RowStyles.Add(
+                new System.Windows.Forms.RowStyle(
+                    System.Windows.Forms.SizeType.Percent,
+                    50F));
 
             tblKpi.Size =
-                new System.Drawing.Size(1248, 104);
+                new System.Drawing.Size(1248, 186);
 
             tblKpi.TabIndex =
                 0;
@@ -974,6 +1026,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 "ONAYLI FATURA",
                 "✓",
                 "#17A2B8");
+
+            ConfigureKpiCard(
+                kpi9,
+                acc9,
+                lblKpi9Value,
+                lblKpi9Title,
+                pnlKpi9IconBadge,
+                lblKpi9Icon,
+                "ONAY BEKLEYEN",
+                "⏱",
+                "#ED6C02");
+
+            ConfigureKpiCard(
+                kpi10,
+                acc10,
+                lblKpi10Value,
+                lblKpi10Title,
+                pnlKpi10IconBadge,
+                lblKpi10Icon,
+                "STOK DEĞERİ",
+                "▣",
+                "#C2185B");
 
             // 4 sütun x 5 satır: 10 grafik (3 satır) + 4 tablo (2 satır)
             tblBottom.ColumnCount =
@@ -1276,6 +1350,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             kpi8.ResumeLayout(false);
             pnlKpi8IconBadge.ResumeLayout(false);
+            kpi9.ResumeLayout(false);
+            pnlKpi9IconBadge.ResumeLayout(false);
+            kpi9.PerformLayout();
+
+            kpi10.ResumeLayout(false);
+            pnlKpi10IconBadge.ResumeLayout(false);
 
             tblBottom.ResumeLayout(false);
 

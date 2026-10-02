@@ -12,34 +12,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
     /// </summary>
     public sealed partial class ProductDetailForm : XtraForm
     {
-        private readonly ProductDetailDto _detail;
+        /// <summary>
+        /// <summary>
+        /// Tasarım yüzeyi yapıcısında doldurulmaz; gerçek açılışta verilen <c>detail</c> atanır.
+        /// </summary>
+        private readonly ProductDetailDto _detail = default!;
         private readonly IDisposable? skinBinding;
 
-        private readonly LabelControl lblEmptyMovement = new()
+        /// <summary>
+        /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta
+        /// <see cref="ProductDetailForm(ProductDetailDto)"/> kullanılır.
+        /// </summary>
+        public ProductDetailForm()
         {
-            Name = "lblEmptyMovement",
-            AutoSize = false,
-            AutoSizeMode = LabelAutoSizeMode.None,
-            Location = new Point(20, 330),
-            Size = new Size(1080, 40),
-            Appearance =
-            {
-                TextOptions =
-                {
-                    HAlignment = DevExpress.Utils.HorzAlignment.Center,
-                    VAlignment = DevExpress.Utils.VertAlignment.Center
-                }
-            },
-            Text = "Bu ürün için belgeli stok hareketi bulunmuyor."
-        };
+            InitializeComponent();
+            ApplyLayout();
+            DesignTime.Guard(typeof(ProductDetailForm));
+        }
 
         public ProductDetailForm(ProductDetailDto detail)
         {
             InitializeComponent();
             _detail = detail;
-
-            lblEmptyMovement.Appearance.Font = new Font("Segoe UI", 10F);
-            Controls.Add(lblEmptyMovement);
 
             ApplyLayout();
             ApplySkin();

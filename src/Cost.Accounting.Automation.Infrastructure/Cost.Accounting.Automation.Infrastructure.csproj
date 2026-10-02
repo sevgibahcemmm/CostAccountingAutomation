@@ -34,7 +34,7 @@
   <ItemGroup>
     <!-- Standart UFRS hesap planı. Yeni mali yıl veritabanı açılırken
          YearDatabaseProvisioner tarafından gömülü kaynaktan okunur. -->
-    <EmbeddedResource Include="Resources\HesapPlani.xlsx" />
+    <EmbeddedResource Include="Resources\ChartOfAccounts.xlsx" />
   </ItemGroup>
 
 </Project>

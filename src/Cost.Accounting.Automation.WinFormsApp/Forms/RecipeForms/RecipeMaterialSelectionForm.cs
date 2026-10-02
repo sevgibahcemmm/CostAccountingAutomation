@@ -13,6 +13,16 @@ public sealed partial class RecipeMaterialSelectionForm : XtraForm
 
     public List<RecipeItemRow> SelectedItems { get; private set; } = [];
 
+    /// <summary>
+    /// Yalnızca Visual Studio tasarım yüzeyi içindir; gerçek açılışta malzeme
+    /// listesiyle açılan yapıcı kullanılır.
+    /// </summary>
+    public RecipeMaterialSelectionForm()
+    {
+        InitializeComponent();
+        DesignTime.Guard(typeof(RecipeMaterialSelectionForm));
+    }
+
     public RecipeMaterialSelectionForm(
         string producedProductName,
         int producedQuantity,

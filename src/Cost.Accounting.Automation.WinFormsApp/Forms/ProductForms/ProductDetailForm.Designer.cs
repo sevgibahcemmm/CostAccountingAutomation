@@ -13,6 +13,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private DevExpress.XtraEditors.LabelControl lblSummary = default!;
         private DevExpress.XtraEditors.LabelControl lblInfo = default!;
         private DevExpress.XtraEditors.LabelControl lblMovementTitle = default!;
+        private DevExpress.XtraEditors.LabelControl lblEmptyMovement = default!;
         private DevExpress.XtraGrid.GridControl gridMovements = default!;
         private DevExpress.XtraGrid.Views.Grid.GridView viewMovements = default!;
         private DevExpress.XtraEditors.PanelControl footerDivider = default!;
@@ -40,6 +41,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             lblSummary = new DevExpress.XtraEditors.LabelControl();
             lblInfo = new DevExpress.XtraEditors.LabelControl();
             lblMovementTitle = new DevExpress.XtraEditors.LabelControl();
+            lblEmptyMovement = new DevExpress.XtraEditors.LabelControl();
             gridMovements = new DevExpress.XtraGrid.GridControl();
             viewMovements = new DevExpress.XtraGrid.Views.Grid.GridView();
             footerDivider = new DevExpress.XtraEditors.PanelControl();
@@ -178,6 +180,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             lblMovementTitle.TabIndex = 4;
             lblMovementTitle.Text = "Belgeli Stok Hareketleri";
             // 
+            // lblEmptyMovement
+            // 
+            lblEmptyMovement.Appearance.Font = new Font("Segoe UI", 10F);
+            lblEmptyMovement.Appearance.Options.UseFont = true;
+            lblEmptyMovement.Appearance.Options.UseForeColor = true;
+            lblEmptyMovement.Appearance.Options.UseTextOptions = true;
+            lblEmptyMovement.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+            lblEmptyMovement.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
+            lblEmptyMovement.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblEmptyMovement.Location = new Point(20, 330);
+            lblEmptyMovement.Margin = new Padding(3, 2, 3, 2);
+            lblEmptyMovement.Name = "lblEmptyMovement";
+            lblEmptyMovement.Size = new Size(1080, 40);
+            lblEmptyMovement.TabIndex = 6;
+            lblEmptyMovement.Text = "Bu ürün için belgeli stok hareketi bulunmuyor.";
+            // 
             // gridMovements
             // 
             gridMovements.Location = new Point(20, 164);
@@ -240,6 +258,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             CancelButton = btnClose;
             ClientSize = new Size(1120, 724);
             Controls.Add(gridMovements);
+            Controls.Add(lblEmptyMovement);
             Controls.Add(lblMovementTitle);
             Controls.Add(lblInfo);
             Controls.Add(summaryPanel);

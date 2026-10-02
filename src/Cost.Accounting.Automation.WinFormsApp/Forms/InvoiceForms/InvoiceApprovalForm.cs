@@ -33,7 +33,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
 
         protected override SvgImage ModuleIcon => DxIcon.Invoices;
 
+        /// <summary>
+        /// Bu ekran yalnızca onay bekleyen faturaları listeler ve onaylar; yeni fatura
+        /// oluşturma işi "Faturalar" listesinden yapılır. "Yeni" butonu bu yüzden gizlidir.
+        /// </summary>
+        protected override bool AllowCreate => false;
+
+        /// <summary>Onay ekranında düzenleme yapılmaz; "Düzenle" butonu gizlidir.</summary>
+        protected override bool AllowEdit => false;
+
         protected override bool AllowDelete => false;
+
+        protected override string GetSubtitle(int count)
+            => count == 0
+                ? "Onay bekleyen fatura yok"
+                : $"{count} fatura onay bekliyor";
 
         protected override string[] SearchFieldNames =>
         [
@@ -53,6 +67,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
             => new(InvoiceType: _targetType, OnlyDeleted: false, Status: InvoiceStatus.Draft);
 
         protected override bool SupportsApprove => true;
+
+        /// <summary>Bu ekranda listelenen kayıtların tamamı zaten onay bekleyen faturalardır.</summary>
+        protected override string PendingItemLabel => "fatura";
+
+        /// <summary>Ekran zaten yalnızca onay bekleyen faturaları gösterdiği için hepsi bekleyendir.</summary>
+        protected override bool IsPendingApproval(InvoiceDto item) => true;
 
         protected override IRequest<Result<string>>? BuildApproveCommand(InvoiceDto item)
         {

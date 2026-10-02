@@ -66,7 +66,14 @@ public sealed record DashboardCounters(
     int SemiFinishedProducts,
     int FinishedProducts,
     decimal TotalStockQuantity,
-    decimal TotalStockValue);
+    decimal TotalStockValue,
+
+    /// <summary>
+    /// Onay bekleyen kayıtların toplamı: Draft durumundaki fatura + maliyet
+    /// pusulası + stok belgesi. Liste ekranlarındaki onay kurallarıyla aynı
+    /// kayıtlar sayılır.
+    /// </summary>
+    int PendingApprovals);
 
 /// <summary>Alacak/borç toplamları ve en yüksek N cari listesi.</summary>
 public sealed record DashboardBalanceTotals(

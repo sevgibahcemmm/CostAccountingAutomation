@@ -56,7 +56,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
             DevExpressLocalizers.Register();
 
             BonusSkins.Register();
-            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.DarkSide);
+            WindowsFormsSettings.DefaultLookAndFeel.SetSkinStyle(SkinStyle.Office2019Black);
 
             ApplicationConfiguration.Initialize();
 
@@ -80,8 +80,11 @@ namespace Cost.Accounting.Automation.WinFormsApp
 
             InstallCrashLogHandlers();
             InstallSessionFileLogging();
-            DatabaseInitializer.InitializeAsync(Services).GetAwaiter().GetResult();
-            CrashLog.Write("Main", "After DatabaseInitializer");
+
+            if (!PrepareDatabaseBeforeLogin())
+            {
+                return;
+            }
 
             var loginForm = Services.GetRequiredService<XtraLoginForm>();
             CrashLog.Write("Main", "After loginForm");
@@ -97,6 +100,37 @@ namespace Cost.Accounting.Automation.WinFormsApp
                 throw;
             }
             CrashLog.Write("Main", "After Application.Run");
+        }
+
+        /// <summary>
+        /// Giriş ekranından önce veritabanının hazır olduğundan emin olur.
+        ///
+        /// Açılış penceresi HER ZAMAN gösterilir ve tüm veritabanı işini kendi
+        /// içinde yapar: yoklama, ilk kurulum ve şema güncellemesi. Böylece
+        /// pencere açılmadan önce hiçbir ağ/sunucu beklemesi olmaz; kullanıcı
+        /// donmuş bir ekran görmez.
+        ///
+        /// Veritabanı zaten güncelse pencere kısa süre sonra kendini kapatır ve
+        /// giriş ekranı açılır; yoksa adımlar tik işaretleriyle gösterilir.
+        ///
+        /// <c>true</c> dönerse giriş ekranı açılabilir.
+        /// </summary>
+        private static bool PrepareDatabaseBeforeLogin()
+        {
+            using var setupForm = new DatabaseSetupForm();
+
+            System.Windows.Forms.Application.Run(setupForm);
+
+            if (!setupForm.ShouldContinueToLogin)
+            {
+                CrashLog.Write("Main", "Database setup did not complete; exiting before login.");
+
+                return false;
+            }
+
+            CrashLog.Write("Main", "Database ready; opening login.");
+
+            return true;
         }
     }
 }

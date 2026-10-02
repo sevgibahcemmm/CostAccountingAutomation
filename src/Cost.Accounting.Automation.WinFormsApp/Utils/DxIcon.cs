@@ -72,6 +72,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage Customers => Icon("svgimages/business%20objects/bo_customer.svg");
         public static SvgImage Users => Icon("svgimages/business%20objects/bo_user.svg");
         public static SvgImage Roles => Icon("svgimages/business%20objects/bo_role.svg");
+
+        /// <summary>
+        /// Personel (rapor imza yetkilileri). Kullanıcı ikonundan farklı olarak
+        /// "bo_contact" kullanılır: <c>bo_user</c> oturum açan hesabı, bo_contact
+        /// ise belgelerde imza atacak gerçek kişiyi temsil eder.
+        /// </summary>
+        public static SvgImage Employees => Icon("svgimages/business%20objects/bo_contact.svg");
         public static SvgImage Invoices => Icon("svgimages/business%20objects/bo_invoice.svg");
         public static SvgImage Sales => Icon("svgimages/business%20objects/bo_sale.svg");
         public static SvgImage PriceStock => Icon("svgimages/icon%20builder/business_dollar.svg");
@@ -92,5 +99,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage Module => Icon("svgimages/business%20objects/bo_list.svg");
         public static SvgImage Recipe => Icon("svgimages/business%20objects/bo_document.svg");
         public static SvgImage RecipeMaterials => Icon("svgimages/icon%20builder/actions_edit.svg");
+
+        // Hamburger menü grupları. Her grup ve her öğe kendi ikonunu kullanır:
+        // eski haritada "Fiyat & Stok Listesi" ile "Atölye Stok Raporu" aynı
+        // SVG'yi, "Birim Cinsleri" ile "Tüketim Birimleri" aynı SVG'yi paylasiyordu.
+        public static SvgImage Store => Icon("svgimages/icon%20builder/shopping_store.svg");
+        public static SvgImage Cart => Icon("svgimages/icon%20builder/shopping_shoppingcart.svg");
+        public static SvgImage Contact => Icon("svgimages/business%20objects/bo_contact.svg");
+        public static SvgImage Category => Icon("svgimages/business%20objects/bo_category.svg");
+        public static SvgImage PriceItem => Icon("svgimages/business%20objects/bo_price_item.svg");
+        public static SvgImage Coupon => Icon("svgimages/icon%20builder/shopping_coupon.svg");
+        public static SvgImage Contract => Icon("svgimages/business%20objects/bo_contract.svg");
+        public static SvgImage Calculator => Icon("svgimages/icon%20builder/business_calculator.svg");
+        public static SvgImage Report => Icon("svgimages/icon%20builder/business_report.svg");
+        public static SvgImage ListItems => Icon("svgimages/icon%20builder/actions_list.svg");
+        public static SvgImage Swap => Icon("svgimages/icon%20builder/actions_refresh.svg");
+        public static SvgImage Ledger => Icon("svgimages/business%20objects/bo_list.svg");
+        public static SvgImage DoughnutChart => Icon("svgimages/icon%20builder/business_doughnutchart.svg");
     }
 }

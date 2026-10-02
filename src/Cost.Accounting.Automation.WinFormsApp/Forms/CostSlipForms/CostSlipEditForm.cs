@@ -87,7 +87,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             lblSubtitle.Text = _editing is null
                 ? "Atölyeyi seçin, üretilen ürünü belirleyin ve gider kalemlerini girin"
                 : _editing.Status == CostSlipStatus.Draft
-                    ? "Taslağı düzenleyip kaydedebilir veya onaylayabilirsiniz"
+                    ? "Taslağı düzenleyip kaydedebilirsiniz; onayı listeden yaparsınız"
                     : "Maliyet pusulası ve gider kalemi detayları";
 
             InitControls();
@@ -109,13 +109,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLines.DataSource = _lines;
             ConfigureGrid();
 
-            btnApprove.Visible = false;
-            btnApprove.Text = "Pusulayı Onayla";
-
-            // "Kaydet ve Onayla" düğmesi kalıcı olarak gizlidir: her pusula
-            // önce TASLAK olarak girilir, onay listeden veya toplu onaydan
-            // SONRA yapılır. Giriş ekranından doğrudan onaylı pusula açılamaz.
-            btnSave.Visible = false;
+            // Onay işlemi bu ekranda yok: yeni kayıt formlarında onay verilmez.
+            // Pusula daima TASLAK kaydedilir; onay CostSlipsListForm'daki
+            // satır onayı ya da toplu onay ile yapılır.
             btnPrintSlip.Enabled = false;
             lblStatusValue.Text = "";
 
@@ -123,9 +119,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             {
                 bool isDraft = _editing.Status == CostSlipStatus.Draft;
 
-                btnSave.Visible = false;
                 btnSaveDraft.Visible = isDraft;
-                btnApprove.Visible = isDraft;
                 btnAddLine.Enabled = isDraft;
                 btnDeleteLine.Enabled = isDraft;
                 gridLinesView.OptionsBehavior.Editable = isDraft;
@@ -270,9 +264,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             lookUpWorkshop.EditValueChanged += LookUpWorkshop_EditValueChanged;
             btnAddLine.Click += (_, _) => AddEmptyLine();
             btnDeleteLine.Click += (_, _) => DeleteSelectedLine();
-            btnSave.Click += BtnSave_Click;
             btnSaveDraft.Click += BtnSaveDraft_Click;
-            btnApprove.Click += BtnApprove_Click;
             btnPrintSlip.Click += (_, _) => ShowPreviewAsync();
             btnCancel.Click += (_, _) => Close();
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
@@ -950,33 +942,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         {
             Guid? workshopId = SelectedWorkshopId;
 
-            List<ProductCatalogDto> filtered;
-            List<ProductLookUpItem> lookupItems;
+            List<ProductLookUpItem> lookupItems = [];
+
             if (workshopId is Guid wid
                 && _transferredByWorkshop.TryGetValue(wid, out List<AtelierTransferProductDto>? transferred))
             {
-                List<ProductCatalogDto> transferredProducts = _products
-                    .Where(p => transferred.Any(t => t.ProductId == p.Id))
+                // Liste doğrudan transfer kayıtlarından kurulur. Atölyeye transfer
+                // edilmemiş bir ürünün bakiyesi bilinmediği için listelenmez; daha
+                // önce 150 deposunun tamamı listeleniyor ve bakiyeleri de transfer
+                // kaydı bulunamadığı için 0 görünüyordu.
+                lookupItems = transferred
+                    .Select(t => new ProductLookUpItem(
+                        t.ProductId,
+                        t.ProductName,
+                        t.ProductCode,
+                        t.UnitTypeName,
+                        t.AvailableQuantity,
+                        t.DraftQuantity))
+                    .OrderByDescending(x => x.Balance)
+                    .ThenBy(x => x.Code)
+                    .ThenBy(x => x.Name)
                     .ToList();
-
-                List<ProductCatalogDto> materialProducts = transferredProducts.Count > 0
-                    ? transferredProducts
-                    : GetWorkshopMaterialProducts(wid);
-
-                filtered = materialProducts;
-
-                lookupItems = filtered.Select(p => new ProductLookUpItem(
-                    p.Id,
-                    p.Name,
-                    p.ProductCode,
-                    p.ProductUnitTypeName,
-                    transferred.FirstOrDefault(t => t.ProductId == p.Id)?.AvailableQuantity ?? 0m,
-                    transferred.FirstOrDefault(t => t.ProductId == p.Id)?.DraftQuantity ?? 0m)).ToList();
-            }
-            else
-            {
-                filtered = [];
-                lookupItems = [];
             }
 
             if (_semiFinishedProductId is Guid semiId)
@@ -984,7 +970,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 ProductCatalogDto? semi = _products.FirstOrDefault(p => p.Id == semiId);
                 if (semi is not null && !lookupItems.Any(x => x.Id == semiId))
                 {
-                    lookupItems.Add(new ProductLookUpItem(
+                    lookupItems.Insert(0, new ProductLookUpItem(
                         semi.Id,
                         semi.Name,
                         semi.ProductCode,
@@ -999,15 +985,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 ? "Önce atölye seçin"
                 : !_transferredByWorkshop.ContainsKey(workshopId.Value)
                     ? "Atölyeye transfer edilen ürünler yükleniyor..."
-                    : filtered.Count == 0
-                        ? "Bu atölye için malzeme ürünü bulunamadı"
+                    : lookupItems.Count == 0
+                        ? "Bu atölyeye henüz transfer yapılmamış"
                         : "Ürün / Masraf Seçiniz...";
 
             foreach (var line in _lines)
             {
                 if (line.ProductId is Guid pid
                     && pid != _semiFinishedProductId
-                    && !filtered.Any(p => p.Id == pid))
+                    && !lookupItems.Any(x => x.Id == pid))
                 {
                     line.ProductId = null;
                     line.ProductName = string.Empty;
@@ -1021,27 +1007,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             RefreshAvailableQuantities();
             gridLinesView.RefreshData();
-        }
-
-        private List<ProductCatalogDto> GetWorkshopMaterialProducts(Guid workshopId)
-        {
-            List<ProductCatalogDto> materialPool = _products
-                .Where(p => MatchesWarehouse(p, "150"))
-                .ToList();
-
-            Guid? semiAccountId = GetWorkshopProducedAccountId(workshopId, CostSlipType.SemiFinishedProduct);
-            Guid? finishedAccountId = GetWorkshopProducedAccountId(workshopId, CostSlipType.Product);
-            string? workshopName = GetSelectedWorkshopName();
-
-            List<ProductCatalogDto> matched = materialPool
-                .Where(p =>
-                    (semiAccountId is Guid semi && p.CategoryId == semi)
-                    || (finishedAccountId is Guid fin && p.CategoryId == fin)
-                    || (workshopName is not null
-                        && string.Equals(p.CategoryName.Trim(), workshopName, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-
-            return matched.Count > 0 ? matched : materialPool;
         }
 
         private void RefreshAvailableQuantities()
@@ -1743,17 +1708,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             };
         }
 
-        private async void BtnSave_Click(object? sender, EventArgs e)
-        {
-            await SaveAsync(approve: true);
-        }
-
         private async void BtnSaveDraft_Click(object? sender, EventArgs e)
         {
-            await SaveAsync(approve: false);
+            await SaveAsync();
         }
 
-        private async Task SaveAsync(bool approve)
+        /// <summary>
+        /// Pusulayı kaydeder. Kayıt daima TASLAK olarak yazılır; onay kayıt
+        /// formunda yapılmaz, listedeki satır onayı ya da toplu onay ile yapılır.
+        /// </summary>
+        private async Task SaveAsync()
         {
             string number = txtSlipNumber.Text.Trim();
             if (string.IsNullOrEmpty(number))
@@ -1889,7 +1853,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             bool ok = false;
             Guid? createdSlipId = null;
-            btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
             try
             {
@@ -1918,15 +1881,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                         CustomerId: null,
                         Quantity: quantity,
                         Description: txtDescription.Text.Trim(),
-                        Items: itemModels,
-                        IsApproved: approve));
+                        Items: itemModels));
                     ok = createResult is not null;
                     createdSlipId = createResult?.Data?.SlipId;
                 }
             }
             finally
             {
-                btnSave.Enabled = !ok;
                 btnSaveDraft.Enabled = !ok;
             }
 
@@ -1936,9 +1897,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
 
             bool isEditingDraft = _editing is { Status: CostSlipStatus.Draft };
-            bool becomesApproved = approve && !isEditingDraft;
 
-            if (!becomesApproved && _editing is null && createdSlipId is Guid createdId)
+            if (_editing is null && createdSlipId is Guid createdId)
             {
                 _editing = new CostSlipListDto
                 {
@@ -1951,20 +1911,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 };
             }
 
-string message = isEditingDraft
-                 ? "Maliyet pusulası taslağı güncellendi."
-                 : approve
-                     ? "Maliyet pusulası onaylandı; stok hareketleri oluşturuldu."
-                     : "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.";
-             ToastHelper.Show(message, ToastType.Success);
+            ToastHelper.Show(
+                isEditingDraft
+                    ? "Maliyet pusulası taslağı güncellendi."
+                    : "Maliyet pusulası taslak olarak kaydedildi. Onaylanınca stok hareketleri oluşturulacak.",
+                ToastType.Success);
 
-             if (becomesApproved && RequiresRecipeCheck && producedProductId.HasValue)
-             {
-                 await CheckRecipeAndSalePriceAsync(producedProductId.Value, materialLines, _grandTotal, quantity);
-             }
-
-             _saved = true;
-             LockAfterSave(becomesApproved);
+            _saved = true;
+            LockAfterSave();
         }
 
         private async Task<bool> ConfirmRecipeCompatibilityAsync(Guid producedProductId, List<CostSlipItemEditDto> materialLines, decimal grandTotal, int quantity)
@@ -2099,59 +2053,16 @@ string message = isEditingDraft
         {
             CrashLog.WriteException("CostSlip.RecipeCheck", ex);
         }
-    }
+}
 
-    private async void BtnApprove_Click(object? sender, EventArgs e)
-        {
-            if (_editing is null)
-            {
-                ToastHelper.Show("Pusula onaylanamadı. Listeden yeniden açıp onaylayabilirsiniz.", ToastType.Warning);
-                return;
-            }
-
-            btnApprove.Enabled = false;
-            try
-            {
-                if (!await ConfirmSemiFinishedBalanceAsync())
-                {
-                    return;
-                }
-
-                if (lookUpProducedProduct.EditValue is Guid approveProductId
-                    && int.TryParse(txtQuantity.Text.Trim(), out int approveQuantity)
-                    && RequiresRecipeCheck
-                    && !await ConfirmRecipeCompatibilityAsync(
-                        approveProductId,
-                        _lines.Where(l => l.Quantity > 0).ToList(),
-                        _grandTotal,
-                        approveQuantity))
-                {
-                    return;
-                }
-
-                bool ok = await CrudExecutor.ExecuteAsync(new CostSlipApproveCommand(_editing.Id));
-                if (ok)
-                {
-                    ToastHelper.Show("Maliyet pusulası onaylandı; stok hareketleri oluşturuldu.", ToastType.Success);
-                    _saved = true;
-                    LockAfterApproval();
-                }
-            }
-            finally
-            {
-                btnApprove.Enabled = true;
-            }
-        }
-
-        private void LockAfterApproval() => LockAfterSave(approved: true);
-
-        private void LockAfterSave(bool approved)
+        /// <summary>
+        /// Kaydettikten sonra formu kilitler. Kayıt daima taslak olduğu için
+        /// durum etiketi "Durum: Taslak" olur.
+        /// </summary>
+        private void LockAfterSave()
         {
             btnPrintSlip.Enabled = true;
-            btnSave.Enabled = false;
             btnSaveDraft.Enabled = false;
-            btnApprove.Enabled = !approved;
-            btnApprove.Visible = !approved;
             btnAddLine.Enabled = false;
             btnDeleteLine.Enabled = false;
             cmbCostSlipType.ReadOnly = true;
@@ -2168,8 +2079,8 @@ string message = isEditingDraft
                 input.ReadOnly = true;
             }
 
-            lblStatusValue.Text = approved ? "Durum: Onaylı" : "Durum: Taslak";
-            lblStatusValue.Appearance.ForeColor = approved ? SkinTheme.Success : SkinTheme.Warning;
+            lblStatusValue.Text = "Durum: Taslak";
+            lblStatusValue.Appearance.ForeColor = SkinTheme.Warning;
         }
 
         // Hesap alanı, satırları RebuildAccountPanel tarafından kurulduktan sonra
@@ -2240,10 +2151,10 @@ string message = isEditingDraft
 
                 CompanyDto company = await LoadCompanyAsync();
 
-                SetReportParam(report, "MamulAdi", lookUpProducedProduct.EditValue is Guid pid && pid != Guid.Empty
+                SetReportParam(report, "ProductName", lookUpProducedProduct.EditValue is Guid pid && pid != Guid.Empty
                     ? _products.FirstOrDefault(p => p.Id == pid)?.Name ?? string.Empty
                     : string.Empty);
-                SetReportParam(report, "Miktari", int.TryParse(txtQuantity.Text.Trim(), out int qty) ? qty : 0);
+                SetReportParam(report, "Quantity", int.TryParse(txtQuantity.Text.Trim(), out int qty) ? qty : 0);
                 SetReportParam(report, "Tarih", DateOnly.FromDateTime(dtCostDate.DateTime));
                 SetReportParam(report, "Donem", dtCostDate.DateTime.ToString(
                     "MM'. Ay - 'MMMM'-'yyyy",
@@ -2253,11 +2164,11 @@ string message = isEditingDraft
                 string workshopName = lookUpWorkshop.EditValue is Guid wid && wid != Guid.Empty
                     ? _workshops.FirstOrDefault(w => w.Id == wid)?.Display ?? string.Empty
                     : _workshopName;
-                SetReportParam(report, "Atolye", workshopName);
+                SetReportParam(report, "Workshop", workshopName);
                 SetReportParam(report, "Antet", company.Name);
 
                 SetReportParam(report, "CiltNo", dtCostDate.DateTime.Year);
-                SetReportParam(report, "SeriNo", txtSlipNumber.Text.Trim());
+                SetReportParam(report, "SerialNo", txtSlipNumber.Text.Trim());
                 SetReportParam(report, "SiparisNo", txtSlipNumber.Text.Trim());
 
                 string[] moneyParams = ["M710", "M720", "M730", "M740", "M750", "M760", "M770", "M780", "M151"];
