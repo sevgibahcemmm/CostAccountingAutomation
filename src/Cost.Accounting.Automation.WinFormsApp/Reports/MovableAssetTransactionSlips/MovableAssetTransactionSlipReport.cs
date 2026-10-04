@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
+using Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips;
 using DevExpress.Drawing;
 using DevExpress.XtraPrinting;
 using DevExpress.XtraReports.UI;
@@ -53,19 +53,78 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
         }
 
         /// <summary>
-        /// Giriş ve çıkış kaydının imza kutularını hazırlar.
+        /// İmza kutularını fişin türüne göre doldurur.
         ///
         /// <para>
-        /// Kutuların başlığı ("GİRİŞ/ÇIKIŞ KAYDI YAPILMIŞTIR") şablonda hücrenin
-        /// kendi metnidir; burada yalnızca yetkili satırları yazılır. Metnin
-        /// tamamı <see cref="MovableAssetTransactionSlipData.EntrySignatureBlock"/>
-        /// içinde hazırlanır — ayrı bir rapor parametresi açmaya gerek yoktur.
+        /// Giriş fişinde yalnızca kayıt (giriş) kutusu dolar. Tüketim ve atölye
+        /// transferi çıkış kaydıdır: çıkış kutusunu ve teslim eden kutusunu
+        /// taşınırcı (kayıt yetkilisi) doldurur, teslim alan kutusunu ise
+        /// malzemeyi teslim alan görevli (tüketimde muhasebe birimi, transferde
+        /// atölye şefi).
+        /// </para>
+        ///
+        /// <para>
+        /// Fişe ait olmayan kutuların değerleri ve tarihleri boşaltılır.
+        /// </para>
+        ///
+        /// <para>
+        /// Etiketler ("Adı Soyadı :", ...) ve başlıklar şablonda hücreye
+        /// eklenmiş, tasarımda konumlandırılmış kontrollerdir; burada yalnızca
+        /// değer etiketlerine yazılır. Böylece etiketler yerinden oynamaz,
+        /// iki noktalar tek dikey çizgide kalır ve değerler kendi sütununda
+        /// hizalı basılır.
+        /// </para>
+        ///
+        /// <para>
+        /// Tarih, etiket sütununda değil kutunun başlık satırının sağ ucunda,
+        /// başlığın hemen bitişiğinde durur.
         /// </para>
         /// </summary>
         private void BuildSignatureBlocks(MovableAssetTransactionSlipData data)
         {
-            cellSig1Giris.Text = data.EntrySignatureBlock;
-            cellSig1Exit.Text = data.ExitSignatureBlock;
+            bool isEntry = data.Kind == MovableAssetTransactionSlipKind.Entry;
+            bool isExit = data.Kind is MovableAssetTransactionSlipKind.Exit or MovableAssetTransactionSlipKind.AtelierTransfer;
+
+            FillSignatureValues(
+                isEntry,
+                lblSig1GirisAdiSoyadi, lblSig1GirisUnvani,
+                data.SignatureName, data.SignatureTitle);
+            lblSig1GirisTarihi.Text = isEntry ? data.SignatureDate : string.Empty;
+
+            FillSignatureValues(
+                isExit,
+                lblSig1ExitAdiSoyadi, lblSig1ExitUnvani,
+                data.SignatureName, data.SignatureTitle);
+            lblSig1ExitTarihi.Text = isExit ? data.SignatureDate : string.Empty;
+
+            // Teslim eden taşınırcının kendisidir: malzemeyi fişi düzenleyen
+            // kayıt yetkilisi elden eder.
+            FillSignatureValues(
+                isExit,
+                lblSig2TeslimEdenAdiSoyadi, lblSig2TeslimEdenUnvani,
+                data.SignatureName, data.SignatureTitle);
+            lblSig2TeslimEdenTarihi.Text = isExit ? data.SignatureDate : string.Empty;
+
+            FillSignatureValues(
+                isExit,
+                lblSig2TeslimAlanAdiSoyadi, lblSig2TeslimAlanUnvani,
+                data.RecipientSignatureName, data.RecipientSignatureTitle);
+            lblSig2TeslimAlanTarihi.Text = isExit ? data.SignatureDate : string.Empty;
+        }
+
+        /// <summary>
+        /// Bir kutunun ad ve ünvan satırlarını yazar; kutu fişe ait değilse
+        /// satırları boşaltır.
+        /// </summary>
+        private static void FillSignatureValues(
+            bool isFilled,
+            XRLabel nameLabel,
+            XRLabel titleLabel,
+            string name,
+            string title)
+        {
+            nameLabel.Text = isFilled ? name : string.Empty;
+            titleLabel.Text = isFilled ? title : string.Empty;
         }
 
         private void SetParameter(string name, string? value)

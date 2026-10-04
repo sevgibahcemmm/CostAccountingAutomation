@@ -14,6 +14,12 @@ public static class EmployeeMessages
     public const string DuplicateIdentityNumber =
         "Bu TC kimlik numarası ile kayıtlı bir personel zaten mevcut";
 
+    public const string DuplicateRegistryNumber =
+        "Bu sicil numarası ile kayıtlı bir personel zaten mevcut";
+
+    public const string RegistryNumberTooLong =
+        "Sicil numarası en fazla 50 karakter olabilir";
+
     public const string DuplicateDuty =
         "Aynı görev birden fazla kez eklenmiş. Her görevi yalnızca bir kez tanımlayın.";
 
@@ -28,4 +34,16 @@ public static class EmployeeMessages
 
     public const string UnknownRole =
         "Seçilen yetkili görev bulunamadı. Görev tanımı silinmiş olabilir; görev listesini yenileyin.";
+}
+
+/// <summary>
+/// Sicil numarasının kayda yazılmadan önce aldığı biçim. Sicil numarası
+/// isteğe bağlı olduğu için boş girdiler <c>null</c>'a indirgenir; veritabanında
+/// boş dizeyle <c>NULL</c> karışmasın ve benzersizlik denetimi yalnızca gerçek
+/// numaraları görsün diye bu tek giriş noktasından geçirilir.
+/// </summary>
+public static class EmployeeRegistryNumber
+{
+    public static string? Normalize(string? registryNumber)
+        => string.IsNullOrWhiteSpace(registryNumber) ? null : registryNumber.Trim();
 }

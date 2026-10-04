@@ -404,9 +404,6 @@ public ProductPriceStockListForm() : base("Fiyat & Stok Listesi")
             }
         }
 
-        protected override IRequest<Result<string>> BuildDeleteCommand(ProductCatalogDto item)
-            => throw new NotSupportedException("Fiyat & Stok Listesi salt okunurdur.");
-
         protected override ProductEditForm CreateEditEditor(ProductCatalogDto item)
             => CreateEditEditor(item, priceAndPhotosOnly: false);
 

@@ -97,8 +97,14 @@ public sealed partial class RecipeListForm : CrudListFormBase<RecipeGetAllQuery,
     protected override RecipeGetAllQuery BuildListQuery()
         => new(OnlyDeleted: ShowDeleted);
 
-    protected override IRequest<Result<string>> BuildDeleteCommand(RecipeListDto item)
-        => new RecipeDeleteCommand(item.Id);
+protected override string DeleteItemLabel => "reçete";
+
+        protected override IRequest<Result<string>> BuildDeleteCommand(RecipeListDto item)
+            => new RecipeDeleteCommand(item.Id);
+
+        /// <summary>Seçili reçeteler tek transaction'da silinir.</summary>
+        protected override IRequest<Result<string>>? BuildBulkDeleteCommand(IReadOnlyList<RecipeListDto> items)
+            => new BulkDeleteRecipesCommand(items.Select(item => item.Id).ToList());
 
     protected override string GetDeleteSummary(RecipeListDto item)
         => item.ProductName;

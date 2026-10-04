@@ -1,6 +1,7 @@
-﻿using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.Products;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ internal sealed class BulkApproveCostSlipsCommandHandler(
     ICostSlipRepository costSlipRepository,
     IProductMovementRepository productMovementRepository,
     IProductRepository productRepository,
+    IChartOfAccountRepository chartOfAccountRepository,
     IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<BulkApproveCostSlipsCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(
@@ -105,6 +107,7 @@ internal sealed class BulkApproveCostSlipsCommandHandler(
                 request.CostingMethod,
                 productMovementRepository,
                 productRepository,
+                chartOfAccountRepository,
                 accumulatedMovements,
                 cancellationToken);
 

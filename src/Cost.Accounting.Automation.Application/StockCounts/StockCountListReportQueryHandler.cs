@@ -60,10 +60,12 @@ internal sealed class StockCountListReportQueryHandler(
                 UnitTypeName = p.ProductUnitType?.Name.Value ?? string.Empty,
                 SystemQuantity = balanceMap.GetValueOrDefault(p.Id),
                 GroupId = p.WarehouseId,
+                GroupCode = p.Warehouse?.Code.Value ?? string.Empty,
                 GroupName = p.Warehouse?.Name.Value ?? "Belirtilmemiş Depo"
             })
             .Where(r => r.SystemQuantity > 0)
-            .OrderBy(r => r.GroupName)
+            .OrderBy(r => r.GroupCode)
+            .ThenBy(r => r.GroupName)
             .ThenBy(r => r.ProductCode)
             .ThenBy(r => r.ProductName)
             .ToList();
@@ -107,7 +109,7 @@ internal sealed class StockCountListReportQueryHandler(
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
-        (balances, Dictionary<IdentityId, string> accountNames) =
+        (balances, Dictionary<IdentityId, string> accountNames, Dictionary<IdentityId, string> accountCodes) =
             await KeepWorkshopAccountsAsync(balances, cancellationToken);
 
         if (balances.Count == 0)
@@ -140,11 +142,14 @@ internal sealed class StockCountListReportQueryHandler(
         // Grup adı önce hesap planından gelir; yalnızca atölye üretim/tüketiminden gelen
         // (transferi olmayan) atölyelerde listede görünen ad yedek olarak kullanılır.
         Dictionary<IdentityId, string> targetNameMap = new(accountNames);
+        Dictionary<IdentityId, string> targetCodeMap = new(accountCodes);
+
         foreach (IGrouping<IdentityId, StockIssue> group in transfers
                      .Where(t => t.TargetAccount is not null)
                      .GroupBy(t => t.TargetAccountId))
         {
             targetNameMap.TryAdd(group.Key, group.First().TargetAccount!.Name.Value);
+            targetCodeMap.TryAdd(group.Key, group.First().TargetAccount!.Code.Value);
         }
 
         List<StockCountReportRowDto> rows = balances
@@ -160,11 +165,13 @@ internal sealed class StockCountListReportQueryHandler(
                     UnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
                     SystemQuantity = kv.Value,
                     GroupId = kv.Key.TargetId.Value,
+                    GroupCode = targetCodeMap.GetValueOrDefault(kv.Key.TargetId, string.Empty),
                     GroupName = targetNameMap.GetValueOrDefault(kv.Key.TargetId, "Belirtilmemiş Atölye")
                 };
             })
             .Where(r => r.SystemQuantity > 0)
-            .OrderBy(r => r.GroupName)
+            .OrderBy(r => r.GroupCode)
+            .ThenBy(r => r.GroupName)
             .ThenBy(r => r.ProductCode)
             .ThenBy(r => r.ProductName)
             .ToList();
@@ -186,7 +193,8 @@ internal sealed class StockCountListReportQueryHandler(
 
     private async Task<(
         Dictionary<(IdentityId ProductId, IdentityId TargetId), decimal> Balances,
-        Dictionary<IdentityId, string> Names)> KeepWorkshopAccountsAsync(
+        Dictionary<IdentityId, string> Names,
+        Dictionary<IdentityId, string> Codes)> KeepWorkshopAccountsAsync(
         Dictionary<(IdentityId ProductId, IdentityId TargetId), decimal> balances,
         CancellationToken cancellationToken)
     {
@@ -194,7 +202,7 @@ internal sealed class StockCountListReportQueryHandler(
         HashSet<IdentityId> groupIds = balances.Keys.Select(k => k.TargetId).ToHashSet();
         if (groupIds.Count == 0)
         {
-            return (balances, []);
+            return (balances, [], []);
         }
 
         List<ChartOfAccount> accounts = await chartOfAccountRepository.GetAll()
@@ -208,15 +216,16 @@ internal sealed class StockCountListReportQueryHandler(
 
         if (workshops.Count == 0)
         {
-            return ([], []);
+            return ([], [], []);
         }
 
         Dictionary<IdentityId, string> names = workshops.ToDictionary(a => a.Id, a => a.Name.Value);
+        Dictionary<IdentityId, string> codes = workshops.ToDictionary(a => a.Id, a => a.Code.Value);
         HashSet<IdentityId> workshopIds = names.Keys.ToHashSet();
 
         return (balances
             .Where(kv => workshopIds.Contains(kv.Key.TargetId))
-            .ToDictionary(kv => kv.Key, kv => kv.Value), names);
+            .ToDictionary(kv => kv.Key, kv => kv.Value), names, codes);
     }
 
     private async Task<Dictionary<IdentityId, decimal>> LoadBalancesAsync(

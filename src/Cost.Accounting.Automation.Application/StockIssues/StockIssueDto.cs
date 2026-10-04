@@ -34,7 +34,7 @@ public sealed class StockIssueLineDto
     public string Description { get; set; } = default!;
 }
 
-public sealed class StockIssueListDto : EntityDto
+public sealed class StockIssueListDto : EntityDto, IApprovalStatusDto
 {
     [Column("Belge No", Order = 10, Width = 140)]
     public string DocumentNumber { get; set; } = default!;
@@ -68,6 +68,12 @@ public sealed class StockIssueListDto : EntityDto
 
     [Column("Durum", IsVisible = false)]
     public StockIssueStatus Status { get; set; }
+
+    /// <summary>
+    /// Ortak durum sözleşmesi: liste ekranı taslak/onaylı ayrımını renk olarak
+    /// yansıtır. <c>[Column]</c> taşımadığı için gridde ayrı kolon olusmaz.
+    /// </summary>
+    public bool IsApproved => Status == StockIssueStatus.Approved;
 
     [Column("Depo Id", IsVisible = false)]
     public Guid SourceWarehouseId { get; set; }
@@ -111,7 +117,13 @@ public static class StockIssueExtensions
                 TargetAccountId = s.Entity.TargetAccountId,
                 TargetAccountCode = s.Entity.TargetAccount == null ? string.Empty : s.Entity.TargetAccount.Code.Value,
                 TargetAccountName = s.Entity.TargetAccount == null ? string.Empty : s.Entity.TargetAccount.Name.Value,
-                LineCount = s.Entity.Lines.Count(),
+                // Kalem sayısı ürün adedidir, satır sayısı değil. Belge satırları giriş
+                // fiyatı başına birer katman olarak saklandığı için 174 adetlik
+                // tek bir ürün çıkışı 144 + 30 olmak üzere iki satır tutar;
+                // "Kalem" sütunu kullanıcıya 2 dememeli, 1 demelidir.
+                LineCount = s.Entity.Lines.Select(l => l.ProductId).Distinct().Count(),
+                // Her satır gerçek bir katman olduğundan miktar × satır fiyatı
+                // toplamı belge gerçek maliyetini verir.
                 TotalAmount = s.Entity.Lines.Sum(l => l.Quantity * l.UnitCost.Value),
                 Description = s.Entity.Description.Value,
                 Lines = s.Entity.Lines

@@ -66,6 +66,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         protected override InvoiceGetAllQuery BuildListQuery()
             => new(InvoiceType: _targetType, OnlyDeleted: false, Status: InvoiceStatus.Draft);
 
+        /// <summary>Onay kuyruğunda en yeni fatura üstte.</summary>
+        protected override IEnumerable<InvoiceDto> ApplyDefaultOrder(IEnumerable<InvoiceDto> items)
+            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
+
         protected override bool SupportsApprove => true;
 
         /// <summary>Bu ekranda listelenen kayıtların tamamı zaten onay bekleyen faturalardır.</summary>

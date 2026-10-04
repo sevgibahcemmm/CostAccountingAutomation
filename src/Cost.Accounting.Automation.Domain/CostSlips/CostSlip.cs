@@ -122,6 +122,25 @@ public sealed class CostSlip : Entity, IHardDeletable
         }
     }
 
+    /// <summary>
+    /// Onayı geri alır ve pusulayı taslağa döndürür.
+    ///
+    /// <para>
+    /// Yalnızca üretim yan etkileri (stok hareketi ve yevmiye) ÖNCE geri
+    /// alınmışsa çağrılmalıdır; aksi hâlde pusula yeniden onaylandığında aynı
+    /// hareketler ikinci kez yazılır. Bu yüzden çağıran, önce
+    /// <c>RepairCostSlipLedgerCommand</c> gibi bir onarımın yan etkilerini
+    /// geri aldığından emin olmalıdır.
+    /// </para>
+    /// </summary>
+    public void ReturnToDraft()
+    {
+        if (Status == CostSlipStatus.Approved)
+        {
+            Status = CostSlipStatus.Draft;
+        }
+    }
+
     public void AddItem(CostSlipItem item)
     {
         ArgumentNullException.ThrowIfNull(item);

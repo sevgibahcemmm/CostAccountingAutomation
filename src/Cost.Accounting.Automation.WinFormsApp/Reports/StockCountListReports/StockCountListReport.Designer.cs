@@ -204,7 +204,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.xrLabelGroup.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[GroupName]")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "Iif([GroupCode] = '', [GroupName], [GroupCode] + ' - ' + [GroupName])")});
             this.xrLabelGroup.Font = new DevExpress.Drawing.DXFont("Arial", 9.5F, DevExpress.Drawing.DXFontStyle.Bold);
             this.xrLabelGroup.LocationFloat = new DevExpress.Utils.PointFloat(0F, 0F);
             this.xrLabelGroup.Multiline = true;

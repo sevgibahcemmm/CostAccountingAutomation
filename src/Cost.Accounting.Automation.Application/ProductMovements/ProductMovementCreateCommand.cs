@@ -106,6 +106,50 @@ internal sealed class ProductMovementCreateCommandHandler(
                 return Result<string>.Failure(
                     $"'{product.Name.Value}' için bu tarihe kadar yeterli giriş (stok) yok. Mevcut: {available:n2}, istenen: {request.Quantity:n2}.");
             }
+
+            // Çıkış FIFO ile giriş katmanlarına bölünür: ilk giren tamamen
+            // tüketilir, kalan miktar sonraki girişten alınır. Her katman için
+            // AYRI hareket yazılır ve fiyatı o katmanın GİRİŞ fiyatıdır.
+            //
+            // Tek bir fiyatla yazılsaydı o fiyat hiçbir girişe uymazdı; stok
+            // hareketi listesi raporu fiyatı grup anahtarı olarak kullandığı için
+            // girişi olmayan, bakiyesi eksi satırlar oluşurdu. Kullanıcının
+            // ekranda yazdığı fiyat bilgilendirme amaçlıdır; çıkışın fiyatı
+            // daima giriş fiyatından gelir.
+            List<(decimal Quantity, decimal UnitPrice)> layers =
+                StockIssueCostingHelper.BuildConsumptionLayers(
+                    movements, productId, request.Quantity, StockCostingMethod.Fifo, request.Date);
+
+            if (layers.Count > 0)
+            {
+                foreach ((decimal layerQuantity, decimal layerUnitPrice) in layers)
+                {
+                    ProductMovement layerMovement = new(
+                        productId: productId,
+                        movementType: ProductMovementType.Output,
+                        quantity: layerQuantity,
+                        unitPrice: new Price(layerUnitPrice),
+                        date: request.Date,
+                        referenceNo: referenceNo,
+                        description: new Description(request.Description ?? string.Empty),
+                        reason: request.Reason);
+
+                    await productMovementRepository.AddAsync(layerMovement, cancellationToken);
+
+                    if (product.ChartOfAccountId is { } layerAccountId && layerUnitPrice > 0)
+                    {
+                        decimal layerAmount = Math.Round(layerQuantity * layerUnitPrice, 2);
+
+                        await ledgerPoster.PostAsync(
+                            layerAccountId, 0, layerAmount, "StokCikisi", layerMovement.Id, cancellationToken);
+                    }
+                }
+
+                return layers.Count == 1
+                    ? Result<string>.Succeed("Stok çıkışı başarıyla kaydedildi.")
+                    : Result<string>.Succeed(
+                        $"Stok çıkışı başarıyla kaydedildi ({layers.Count} farklı giriş fiyatından karşılandı).");
+            }
         }
 
         ProductMovement movement = new(

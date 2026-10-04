@@ -19,6 +19,7 @@ internal sealed class ProductDeclarationReportQueryHandler(
             .Where(s => s.ProducedProduct != null)
             .Select(s => new ProductDeclarationRowDto
             {
+                WorkshopId = s.Workshop == null ? (Guid?)null : s.Workshop.Id.Value,
                 WorkshopName = s.Workshop == null ? string.Empty : s.Workshop.Name.Value,
                 ProductName = s.ProducedProduct!.Name.Value,
                 ProductUnitTypeName = s.ProducedProduct.ProductUnitType == null

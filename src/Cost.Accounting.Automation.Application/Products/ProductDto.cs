@@ -174,8 +174,15 @@ public static class ProductExtensions
                 SemiFinishedProductName = s.Entity.SemiFinishedProduct == null ? null : s.Entity.SemiFinishedProduct.Name.Value,
                 Description = s.Entity.Description.Value,
 
-                StockQuantity = s.Entity.Movements.Sum(m =>
-                    m.MovementType == ProductMovementType.Input
+                // Atölye transferi girişi mülkiyet devridir, miktar yaratmaz; ürün
+                // artık atölyededir ve ürün stok toplamlarına dâhil edilmez
+                // (ProductStockBalanceHelper). Bu filtre uygulanmazsa ürün kartı
+                // "Mevcut Stok" ile ürün listesi aynı ürün için FARKLI stok
+                // gösterir: 500 alınan / 20 transfer edilen üründe kart 500,
+                // liste 480 der.
+                StockQuantity = s.Entity.Movements
+                    .Where(m => ProductStockBalanceHelper.CountsAsProductStock(m))
+                    .Sum(m => m.MovementType == ProductMovementType.Input
                         ? m.Quantity
                         : -m.Quantity),
 

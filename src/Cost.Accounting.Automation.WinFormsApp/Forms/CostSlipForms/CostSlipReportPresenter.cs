@@ -70,7 +70,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 System.Globalization.CultureInfo.GetCultureInfo("tr-TR")));
             SetReportParam(report, "Isyurdu", company.Name);
             SetReportParam(report, "Workshop", slip.WorkshopName);
-            SetReportParam(report, "Antet", company.Name);
+            SetReportParam(report, "Antet", company.Letterhead);
 
             SetReportParam(report, "CiltNo", slip.CostDate.Year);
             SetReportParam(report, "SerialNo", slip.SlipNumber);
@@ -85,6 +85,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             decimal grandTotal = slip.CostSlipItems.Sum(i => i.TotalAmount);
             SetReportParam(report, "Toplam", Math.Round(grandTotal, 2));
+
+            // Alt bilgi cümlesindeki birim maliyet ifade içinde hesaplanırsa
+            // miktar sıfırken bölme hatası boş metne yol açar; burada
+            // biçimlendirilmiş metin parametre olarak verilir.
+            SetReportParam(report, "BirimFiyat", FormatUnitPrice(slip.Quantity, grandTotal));
+
+            // İmza kutuları (işyurdu müdürü, atölye şefi, taşınır kayıt
+            // yetkilisi) personel görev kayıtlarından çözümlenir. Atölye şefi
+            // bu pusulanın atölyesine özeldir.
+            await CostSlipSignatoryHelper.ApplySignatoriesAsync(
+                report,
+                slip.WorkshopId == Guid.Empty ? null : slip.WorkshopId);
 
             // Belge üretimi arka plana alınır; bekleme penceresi yalnızca
             // üretim sırasında görünür, önizleme modal olduğu için sonra açılır.
@@ -124,6 +136,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             {
                 parameter.Value = value;
             }
+        }
+
+        private static string FormatUnitPrice(int quantity, decimal total)
+        {
+            return quantity <= 0
+                ? string.Empty
+                : (total / quantity).ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));
         }
 
         private static async Task<CompanyDto> LoadCompanyAsync()

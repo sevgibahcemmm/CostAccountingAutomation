@@ -63,7 +63,7 @@ public sealed class InvoiceLineDto
     public string Description { get; set; } = default!;
 }
 
-public sealed class InvoiceDto : EntityDto
+public sealed class InvoiceDto : EntityDto, IApprovalStatusDto
 {
     [Column("Fatura No", Order = 10, Width = 120)]
     public string InvoiceNumber { get; set; } = default!;
@@ -76,6 +76,12 @@ public sealed class InvoiceDto : EntityDto
 
     [Column("Durum", IsVisible = false)]
     public InvoiceStatus Status { get; set; }
+
+    /// <summary>
+    /// Ortak durum sözleşmesi: liste ekranı taslak/onaylı ayrımını renk olarak
+    /// yansıtır. <c>[Column]</c> taşımadığı için gridde ayrı kolon olusmaz.
+    /// </summary>
+    public bool IsApproved => Status == InvoiceStatus.Approved;
 
     [Column("Durum", Order = 55, Width = 80, Alignment = "Center")]
     public string StatusName => Status == InvoiceStatus.Approved ? "Onaylı" : "Taslak";

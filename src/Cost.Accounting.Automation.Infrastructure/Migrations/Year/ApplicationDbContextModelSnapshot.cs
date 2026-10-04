@@ -568,6 +568,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(MAX)");
 
+                    b.Property<string>("RegistryNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("RegistryNumber");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -582,6 +587,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.HasIndex("IdentityNumber")
                         .IsUnique();
+
+                    b.HasIndex("RegistryNumber")
+                        .IsUnique()
+                        .HasFilter("[RegistryNumber] IS NOT NULL");
 
                     b.HasIndex("UpdatedBy");
 

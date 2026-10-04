@@ -19,95 +19,85 @@ internal sealed class ChartOfAccountRepository : AuditableRepository<ChartOfAcco
     public Task<List<ChartOfAccount>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default)
         => this.Context.Set<ChartOfAccount>().IgnoreQueryFilters().ToListAsync(cancellationToken);
 
-    public async Task<AccountDeletionCheck> GetDeletionCheckAsync(IReadOnlyCollection<Guid> accountIds, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Seçilen hesapların tamamını <c>IN</c> listesiyle denetler; sorgu sayısı
+    /// seçim büyüklüğünden bağımsızdır.
+    ///
+    /// <para>
+    /// <b>EF çeviri kuralı:</b> <see cref="IdentityId"/> değer converter ile
+    /// eşlendiği için yabancı anahtar sütunu bir <c>IN</c> listesiyle
+    /// karşılaştırılırken liste elemanı <b>sütunun kendi tipinde</b>
+    /// olmalıdır (nullable olmayan sütun → <c>List&lt;Guid&gt;</c>, nullable
+    /// sütun → <c>List&lt;Guid?&gt;</c>). Sütunun <c>.Value</c> alanına
+    /// <c>Contains</c> argümanı olarak erişmek SQL'e çevrilmez; <c>.Value</c>
+    /// yalnızca projeksiyonda kullanılabilir.
+    /// </para>
+    /// </summary>
+    public async Task<DeletionCheck> GetDeletionCheckAsync(
+        IReadOnlyCollection<Guid> accountIds,
+        CancellationToken cancellationToken = default)
     {
-        HashSet<IdentityId> ids = accountIds.Select(id => new IdentityId(id)).ToHashSet();
-        if (ids.Count == 0)
+        List<Guid> keys = [.. accountIds];
+        if (keys.Count == 0)
         {
-            return new AccountDeletionCheck([], []);
+            return DeletionCheck.Empty;
         }
 
-        HashSet<Guid> movementIds = new();
-        HashSet<Guid> relatedIds = new();
+        List<Guid?> nullableKeys = [.. accountIds.Select(id => (Guid?)id)];
 
         // Hareket: hesap üzerinde gerçekleşen işlem/fiş kayıtları (engellenir).
-        List<IdentityId> ledgerAccounts = await this.Context.Set<ChartOfAccountLedger>()
-            .Where(x => ids.Contains(x.ChartOfAccountId))
-            .Select(x => x.ChartOfAccountId)
+        List<Guid> movementIds = await this.Context.Set<ChartOfAccountLedger>()
+            .Where(x => keys.Contains(x.ChartOfAccountId))
+            .Select(x => x.ChartOfAccountId.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        AddAll(movementIds, ledgerAccounts);
 
-        // İlişkili (yapısal): hareket değil, yalnızca başka kayıtlar tarafından referans verilmiş.
-        List<IdentityId> warehouseIds = await this.Context.Set<Product>()
-            .Where(p => ids.Contains(p.WarehouseId))
-            .Select(p => p.WarehouseId)
+        // İlişkili (yapısal): hareket değil, yalnızca başka kayıtlar tarafından
+        // referans verilmiş. Silinir ama not üretir.
+        List<Guid> warehouseIds = await this.Context.Set<Product>()
+            .Where(p => keys.Contains(p.WarehouseId))
+            .Select(p => p.WarehouseId.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        AddAll(relatedIds, warehouseIds);
 
-        List<IdentityId> categoryIds = await this.Context.Set<Product>()
-            .Where(p => ids.Contains(p.CategoryId))
-            .Select(p => p.CategoryId)
+        List<Guid> categoryIds = await this.Context.Set<Product>()
+            .Where(p => keys.Contains(p.CategoryId))
+            .Select(p => p.CategoryId.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        AddAll(relatedIds, categoryIds);
 
-        List<IdentityId?> chartAccountIds = await this.Context.Set<Product>()
-            .Where(p => p.ChartOfAccountId != null)
-            .Select(p => p.ChartOfAccountId)
+        List<Guid> chartAccountIds = await this.Context.Set<Product>()
+            .Where(p => p.ChartOfAccountId != null && nullableKeys.Contains(p.ChartOfAccountId))
+            .Select(p => p.ChartOfAccountId!.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        foreach (IdentityId? id in chartAccountIds)
-        {
-            if (id is { } concreteId && ids.Contains(concreteId))
-            {
-                relatedIds.Add(concreteId.Value);
-            }
-        }
 
-        List<IdentityId> workshopIds = await this.Context.Set<CostSlip>()
-            .Where(c => ids.Contains(c.WorkshopId))
-            .Select(c => c.WorkshopId)
+        List<Guid> workshopIds = await this.Context.Set<CostSlip>()
+            .Where(c => keys.Contains(c.WorkshopId))
+            .Select(c => c.WorkshopId.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        AddAll(relatedIds, workshopIds);
 
-        List<IdentityId> sourceWarehouseIds = await this.Context.Set<StockIssue>()
-            .Where(s => ids.Contains(s.SourceWarehouseId))
-            .Select(s => s.SourceWarehouseId)
+        List<Guid> sourceWarehouseIds = await this.Context.Set<StockIssue>()
+            .Where(s => keys.Contains(s.SourceWarehouseId))
+            .Select(s => s.SourceWarehouseId.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        AddAll(relatedIds, sourceWarehouseIds);
 
-        List<IdentityId> targetAccountIds = await this.Context.Set<StockIssue>()
-            .Where(s => ids.Contains(s.TargetAccountId))
-            .Select(s => s.TargetAccountId)
+        List<Guid> targetAccountIds = await this.Context.Set<StockIssue>()
+            .Where(s => keys.Contains(s.TargetAccountId))
+            .Select(s => s.TargetAccountId.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        AddAll(relatedIds, targetAccountIds);
 
-        List<IdentityId?> consumptionRefs = await this.Context.Set<CostSlipItem>()
-            .Where(i => i.ProductUnitTypeId != null)
-            .Select(i => i.ProductUnitTypeId)
+        List<Guid> unitTypeIds = await this.Context.Set<CostSlipItem>()
+            .Where(i => i.ProductUnitTypeId != null && nullableKeys.Contains(i.ProductUnitTypeId))
+            .Select(i => i.ProductUnitTypeId!.Value)
             .Distinct()
             .ToListAsync(cancellationToken);
-        foreach (IdentityId? id in consumptionRefs)
-        {
-            if (id is { } refId && ids.Contains(refId))
-            {
-                relatedIds.Add(refId.Value);
-            }
-        }
 
-        return new AccountDeletionCheck(movementIds.ToList(), relatedIds.ToList());
-    }
-
-    private static void AddAll(HashSet<Guid> target, IEnumerable<IdentityId> source)
-    {
-        foreach (IdentityId id in source)
-        {
-            target.Add(id.Value);
-        }
+        return new DeletionCheck(
+            movementIds,
+            [.. warehouseIds, .. categoryIds, .. chartAccountIds, .. workshopIds, .. sourceWarehouseIds, .. targetAccountIds, .. unitTypeIds]);
     }
 }

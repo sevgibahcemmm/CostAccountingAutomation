@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
@@ -10,11 +11,35 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.Application.CostSlips;
 
+/// <summary>
+/// Yarımamülün tüketilmemiş tek bir giriş katmanı.
+/// </summary>
+/// <param name="Quantity">Bu girişten kalan miktar.</param>
+/// <param name="UnitPrice">Bu girişin birim maliyeti.</param>
+public sealed record CostSlipSemiFinishedLayerDto(decimal Quantity, decimal UnitPrice);
+
+/// <summary>
+/// <paramref name="Balance"/> yarımamülün stoktaki miktar bakiyesidir ve
+/// <paramref name="Layers"/> bu bakiyenin hangi girişlerden oluştuğunu gösterir.
+/// <para>
+/// <paramref name="AvailableAmount"/> katmanların toplam tutarıdır. Ortalama
+/// birim maliyetten hesaplanan bir tutar kullanılırsa, kullanıcı kısmi tutar
+/// girdiğinde hangi girişten ne kadar alınacağı bilinemez ve yevmiye pusula
+/// tutarıyla tutmaz. Bu yüzden katmanlar tek doğruluk kaynağıdır.
+/// </para>
+/// </summary>
 public sealed record CostSlipSemiFinishedBalanceDto(
     Guid? SemiProductId,
     decimal Balance,
     decimal UnitPrice,
-    IReadOnlyList<CostSlipExpenseBreakdownDto> ExpenseBreakdown);
+    decimal AvailableAmount,
+    IReadOnlyList<CostSlipExpenseBreakdownDto> ExpenseBreakdown,
+    IReadOnlyList<CostSlipSemiFinishedLayerDto> Layers)
+{
+    /// <summary>FIFO kırılımı için katmanları üretir.</summary>
+    public List<CostingLayer> ToCostingLayers()
+        => Layers.Select(l => new CostingLayer(l.Quantity, l.UnitPrice)).ToList();
+}
 
 /// <summary>
 /// Yarımamülün birim maliyetinin gider hesabı (710 / 720 / 730 ...) bazında
@@ -23,13 +48,25 @@ public sealed record CostSlipSemiFinishedBalanceDto(
 /// </summary>
 public sealed record CostSlipExpenseBreakdownDto(ExpenseAccountType AccountType, decimal UnitPrice);
 
+/// <summary>
+/// <paramref name="CostDate"/> verilmezse bugünün tarihi kullanılır. Katmanlar
+/// yalnızca bu tarihe kadar olan giriş/çıkışlardan hesaplanır; pusulanın
+/// tarihinden sonraki üretimler mevcut stoka sayılmaz.
+/// </summary>
 [Permission("costslip:view")]
-public sealed record CostSlipSemiFinishedBalanceQuery(Guid WorkshopId, Guid ProductId) : IRequest<Result<CostSlipSemiFinishedBalanceDto>>;
+public sealed record CostSlipSemiFinishedBalanceQuery(
+    Guid WorkshopId,
+    Guid ProductId,
+    DateOnly? CostDate = null,
+    StockCostingMethod CostingMethod = StockCostingMethod.Fifo)
+    : IRequest<Result<CostSlipSemiFinishedBalanceDto>>;
 
 internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
     ICostSlipRepository costSlipRepository,
     IChartOfAccountRepository chartOfAccountRepository,
-    IProductRepository productRepository) : IRequestHandler<CostSlipSemiFinishedBalanceQuery, Result<CostSlipSemiFinishedBalanceDto>>
+    IProductRepository productRepository,
+    IProductMovementRepository productMovementRepository)
+    : IRequestHandler<CostSlipSemiFinishedBalanceQuery, Result<CostSlipSemiFinishedBalanceDto>>
 {
     public async Task<Result<CostSlipSemiFinishedBalanceDto>> Handle(
         CostSlipSemiFinishedBalanceQuery request,
@@ -106,41 +143,55 @@ internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
             }
         }
 
-        List<CostSlip> approvedSlips = await costSlipRepository.GetAll()
-            .Where(s => workshopIds.Contains(s.WorkshopId)
-                && !s.IsDeleted)
-            .Include(s => s.CostSlipItems)
-            .ToListAsync(cancellationToken);
+        // Bakiye artık PUSULA kayıtlarından değil, gerçek stok hareketlerinden
+        // hesaplanır. Yarımamül stoğu, yarımamül pusulalarının ONAYLANDIĞI anda
+        // oluşan giriş hareketlerinden gelir; tüketim de yalnızca onaylı
+        // mamül pusulalarının çıkış hareketleriyle olur. Pusula kayıtlarından
+        // bakiye tutulduğunda taslaklar da sayılır ve stokla iki ayrı gerçek
+        // oluşurdu.
+        DateOnly costDate = request.CostDate ?? DateOnly.FromDateTime(DateTime.Today);
 
-        decimal produced = approvedSlips
-            .Where(s => s.CostSlipType == CostSlipType.SemiFinishedProduct
-                && s.ProducedProductId == (semiProductId ?? productId))
-            .Sum(s => (decimal)s.Quantity);
+        List<CostingLayer> layers = [];
+        if (semiProductId is IdentityId semiProductVal)
+        {
+            List<ProductMovement> movements = await StockIssueCostingHelper.LoadMovementsAsync(
+                [semiProductVal],
+                productMovementRepository,
+                cancellationToken);
 
-        decimal consumed = approvedSlips
-            .SelectMany(s => s.CostSlipItems)
-            .Where(i => i.ProductId == productId || i.ProductId == semiProductId)
-            .Sum(i => i.Quantity);
+            layers = StockIssueCostingHelper.BuildRemainingLayers(
+                movements, semiProductVal, request.CostingMethod, costDate);
+        }
 
-        decimal balance = Math.Max(0m, produced - consumed);
+        decimal balance = StockCostingLayers.TotalQuantity(layers);
+        decimal availableAmount = StockCostingLayers.TotalAmount(layers);
 
-        decimal unitPrice = 0m;
+        // Ortalama birim maliyet yalnızca tek satırlı gösterim için
+        // (bakiye sıfır değilse) ve geriye dönük uyum için saklanır. Tutar
+        // hesabında kullanılmaz.
+        decimal unitPrice = balance > 0m
+            ? Math.Round(availableAmount / balance, 4)
+            : 0m;
+
+        decimal produced = balance;
         IReadOnlyList<CostSlipExpenseBreakdownDto> expenseBreakdown = [];
 
-        if (semiProductId is IdentityId semiProductVal && produced > 0)
+        if (semiProductId is IdentityId semiProductForBreakdown && produced > 0)
         {
-            List<CostSlip> semiSlips = approvedSlips
-                .Where(s => s.CostSlipType == CostSlipType.SemiFinishedProduct
-                    && s.ProducedProductId == semiProductVal)
-                .ToList();
-
-            decimal producedCost = semiSlips.Sum(s => s.GrandTotal);
-
-            unitPrice = Math.Round(producedCost / produced, 2);
+            List<CostSlip> semiSlips = await costSlipRepository.GetAll()
+                .Where(s => workshopIds.Contains(s.WorkshopId)
+                    && !s.IsDeleted
+                    && s.CostSlipType == CostSlipType.SemiFinishedProduct
+                    && s.ProducedProductId == semiProductForBreakdown)
+                .Include(s => s.CostSlipItems)
+                .ToListAsync(cancellationToken);
 
             // Gider hesabı bazında kırılım: her hesabın toplam maliyeti üretilen
             // miktara bölünür. Kuruş yuvarlamasından doğan fark en büyük
             // kaleme eklenir; böylece kalemler toplamı birim maliyete eşit olur.
+            // Yalnızca satır açıklamasında gösterildiği için gider satırı
+            // olarak YAZILMAZ: o giderler zaten yarımamül pusulasında
+            // giderleşmiştir.
             List<(ExpenseAccountType Account, decimal Amount)> amounts = semiSlips
                 .SelectMany(s => s.CostSlipItems)
                 .GroupBy(i => i.ExpenseAccountType)
@@ -152,7 +203,7 @@ internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
 
             if (amounts.Count == 0)
             {
-                // Pusula kalemi yoksa mevcut davranış korunur: tek satır, 710.
+                // Pusula kalemi yoksa tek satır, 710.
                 expenseBreakdown = [new CostSlipExpenseBreakdownDto(ExpenseAccountType.Account710, unitPrice)];
             }
             else
@@ -160,14 +211,14 @@ internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
                 List<CostSlipExpenseBreakdownDto> parts = amounts
                     .Select(x => new CostSlipExpenseBreakdownDto(
                         x.Account,
-                        Math.Round(x.Amount / produced, 2)))
+                        Math.Round(x.Amount / produced, 4)))
                     .ToList();
 
                 decimal partsSum = parts.Sum(p => p.UnitPrice);
-                decimal remainder = Math.Round(unitPrice - partsSum, 2);
-                if (remainder != 0m)
+                decimal remainder = Math.Round(unitPrice - partsSum, 4);
+                if (remainder != 0m && parts.Count > 0)
                 {
-                    parts[0] = parts[0] with { UnitPrice = Math.Round(parts[0].UnitPrice + remainder, 2) };
+                    parts[0] = parts[0] with { UnitPrice = Math.Round(parts[0].UnitPrice + remainder, 4) };
                 }
 
                 expenseBreakdown = parts
@@ -194,12 +245,15 @@ internal sealed class CostSlipSemiFinishedBalanceQueryHandler(
 
         System.Diagnostics.Debug.WriteLine($"[SEMI-DIAG] workshopIds={string.Join(",", workshopIds.Select(w => w.Value))} " +
             $"productId={productId.Value} semiProductId={(semiProductId == null ? "null" : semiProductId.Value.ToString())} " +
-            $"produced={produced:0.##} consumed={consumed:0.##} balance={balance:0.##} unitPrice={unitPrice:0.##}");
+            $"asOf={costDate:dd.MM.yyyy} balance={balance:0.####} availableAmount={availableAmount:n2} " +
+            $"layers={string.Join(" | ", layers.Select(l => $"{l.Quantity:0.####}@{l.UnitPrice:n2}"))}");
 
         return Result<CostSlipSemiFinishedBalanceDto>.Succeed(new CostSlipSemiFinishedBalanceDto(
             semiProductId?.Value,
             balance,
             unitPrice,
-            expenseBreakdown));
+            availableAmount,
+            expenseBreakdown,
+            [.. layers.Select(l => new CostSlipSemiFinishedLayerDto(l.Quantity, l.UnitPrice))]));
     }
 }

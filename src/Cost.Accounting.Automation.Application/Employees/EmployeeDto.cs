@@ -39,6 +39,9 @@ public sealed class EmployeeDto : EntityDto
     [Column("E-Posta", Order = 60, Width = 200)]
     public string Email { get; set; } = string.Empty;
 
+    [Column("Sicil No", Order = 65, Width = 140)]
+    public string? RegistryNumber { get; set; }
+
     [Column("Fotoğraf", IsVisible = false)]
     public string? PhotoPath { get; set; }
 
@@ -87,6 +90,7 @@ public static class EmployeeExtensions
                 PhoneNumber1 = e.Entity.PhoneNumber1,
                 PhoneNumber2 = e.Entity.PhoneNumber2,
                 Email = e.Entity.Email,
+                RegistryNumber = e.Entity.RegistryNumber,
                 PhotoPath = e.Entity.PhotoPath,
                 IsActive = e.Entity.IsActive,
 
@@ -158,6 +162,7 @@ public static class EmployeeExtensions
         PhoneNumber1 = entity.PhoneNumber1,
         PhoneNumber2 = entity.PhoneNumber2,
         Email = entity.Email,
+        RegistryNumber = entity.RegistryNumber,
         PhotoPath = entity.PhotoPath,
         IsActive = entity.IsActive,
 

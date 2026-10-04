@@ -39,7 +39,7 @@ internal sealed class RoleCreateCommandHandler(
 
         string? duplicateKey = Role.BuildDuplicateKey(request.Name);
 
-        Role? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Role>(
+        Role? nameDuplicate = await duplicateCheckService.FindMasterDuplicateAsync<Role>(
             duplicateKey,
             cancellationToken: cancellationToken);
 

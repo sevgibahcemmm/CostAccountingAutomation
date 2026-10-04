@@ -1,5 +1,7 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Deletion;
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
@@ -325,16 +327,19 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
 
         if (ids.Count == 0)
         {
-            ToastHelper.Show("Silmek için önce satırları işaretleyin", ToastType.Warning, 3200);
+            ToastHelper.Show(DeletionMessages.NoSelection("hesap"), ToastType.Warning, 3200);
             return;
         }
 
-        AccountDeletionCheck check;
+        Dictionary<Guid, string> codes = GetAccountCodes();
+        DeletionCheck check;
         try
         {
             using var scope = Program.Services.CreateScope();
-            IChartOfAccountRepository accounts = scope.ServiceProvider.GetRequiredService<IChartOfAccountRepository>();
-            check = await accounts.GetDeletionCheckAsync(ids, CancellationToken.None);
+            IChartOfAccountRepository repository =
+                scope.ServiceProvider.GetRequiredService<IChartOfAccountRepository>();
+
+            check = await repository.GetDeletionCheckAsync(ids, CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -343,12 +348,16 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
             return;
         }
 
-        if (check.MovementAccountIds.Count > 0)
+        if (check.HasMovement)
         {
-            string codes = string.Join(", ", check.MovementAccountIds.Take(5));
-            string suffix = check.MovementAccountIds.Count > 5 ? $" ve {check.MovementAccountIds.Count - 5} hesap daha" : "";
-            ToastHelper.Show($"{check.MovementAccountIds.Count} hesap hareket gördüğü için silinemez: {codes}{suffix}",
-                ToastType.Warning, 6000);
+            ToastHelper.Show(
+                DeletionMessages.MovementBlocked(
+                    "hesap",
+                    check.MovementIds.Count,
+                    check.MovementIds.Select(id =>
+                        codes.TryGetValue(id, out string? code) ? code : id.ToString())),
+                ToastType.Warning,
+                6000);
             return;
         }
 
@@ -365,6 +374,13 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
             await ReloadAsync();
         }
     }
+
+    /// <summary>
+    /// Onay ve engelleme mesajlarında hesap kodlarını göstermek için kullanılan
+    /// kimlik → kod eşlemesi.
+    /// </summary>
+    private Dictionary<Guid, string> GetAccountCodes()
+        => _items.ToDictionary(a => a.Id, a => a.Code);
 
     private void BtnManualAdd_Click(object? sender, EventArgs e)
     {

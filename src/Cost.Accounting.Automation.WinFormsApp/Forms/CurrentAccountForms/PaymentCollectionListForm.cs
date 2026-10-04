@@ -33,6 +33,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         protected override XtraForm CreateNewEditor()
             => new PaymentCollectionEditForm(_targetType);
 
+        /// <summary>
+        /// Ödeme/tahsilat kayıtları kullanıcı tarafından bu ekrandan girildiği
+        /// için burada silme yeteneği korunur; yanlış girilen kayıt ancak
+        /// bu ekrandan düzeltilebilir.
+        /// </summary>
+        protected override string DeleteItemLabel => "ödeme/tahsilat";
+
         protected override string[] SearchFieldNames =>
         [
             nameof(CurrentAccountMovementDto.CurrentAccountName),
@@ -56,6 +63,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
             return new(AccountType: null, CustomerId: null, SupplierId: null, OnlyDeleted: ShowDeleted, MovementTypes: types);
         }
+
+        /// <summary>En yeni tahsilat/ödeme üstte.</summary>
+        protected override IEnumerable<CurrentAccountMovementDto> ApplyDefaultOrder(IEnumerable<CurrentAccountMovementDto> items)
+            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
 
         protected override IRequest<Result<string>> BuildDeleteCommand(CurrentAccountMovementDto item)
             => new CurrentAccountMovementDeleteCommand(item.Id);

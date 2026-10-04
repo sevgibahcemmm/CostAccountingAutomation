@@ -27,8 +27,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             AddColumnsFromAttributes();
         }
 
+        protected override string DeleteItemLabel => "birim cinsi";
+
         protected override IRequest<Result<string>> BuildDeleteCommand(ProductUnitTypeDto item)
             => new ProductUnitTypeDeleteCommand(item.Id);
+
+        /// <summary>Seçili birim cinsleri tek transaction'da silinir.</summary>
+        protected override IRequest<Result<string>>? BuildBulkDeleteCommand(IReadOnlyList<ProductUnitTypeDto> items)
+            => new BulkDeleteProductUnitTypesCommand(items.Select(item => item.Id).ToList());
 
         protected override string GetDeleteSummary(ProductUnitTypeDto item) => item.Name;
 

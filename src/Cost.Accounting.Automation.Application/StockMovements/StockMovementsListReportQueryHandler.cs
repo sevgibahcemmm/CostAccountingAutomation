@@ -89,17 +89,26 @@ internal sealed class StockMovementsListReportQueryHandler(
              accountType = ChartOfAccountType.Warehouse;
          }
 
-         return new
-         {
-             LocationCode = locationCode,
-             LocationName = locationName,
-             AccountType = accountType,
-             SubGroupCode = subGroupCode,
-             SubGroupName = subGroupName,
-             ProductId = m.ProductId,
-             UnitPrice = m.UnitPrice != null ? (decimal?)m.UnitPrice.Value : null
-         };
-     })
+return new
+        {
+            LocationCode = locationCode,
+            LocationName = locationName,
+            AccountType = accountType,
+            SubGroupCode = subGroupCode,
+            SubGroupName = subGroupName,
+            ProductId = m.ProductId,
+            // FİYAT GRUPLAMA ANAHTARIDIR. Aynı ürün farklı fiyatlardan alınmışsa
+            // her fiyat AYRI satırda listelenir; "ilk giren ilk çıkar" kuralı
+            // ancak bu ayrım varsa raporda görülebilir.
+            //
+            // Bu anahtar, her hareketin fiyatının bir giriş fiyatına BİREBİR
+            // uymasını zorunlu kılar: çıkışlar katman kırılımıyla yazılmalıdır.
+            // Tek bir ortalama fiyatla yazılan çıkış (175 adet @ 12,60 gibi)
+            // hiçbir girişle eşleşmez ve girişi olmayan, bakiyesi eksi bir satır
+            // doğar.
+            UnitPrice = m.UnitPrice != null ? (decimal?)m.UnitPrice.Value : null
+        };
+    })
                     .Select(g =>
             {
                 Product p = g.First().Product!;
@@ -131,9 +140,7 @@ internal sealed class StockMovementsListReportQueryHandler(
                     TotalInQuantity = totalInQty,
                     TotalOutQuantity = totalOutQty,
                     BalanceQuantity = totalInQty - totalOutQty,
-                    UnitCost = g.Where(m => m.MovementType == ProductMovementType.Input && m.UnitPrice != null)
-                                .Select(m => (decimal?)m.UnitPrice!.Value)
-                                .Average() ?? 0m,
+                    UnitCost = g.Key.UnitPrice ?? 0m,
                     TotalInAmount = totalInAmt,
                     TotalOutAmount = totalOutAmt,
                     BalanceAmount = totalInAmt - totalOutAmt,

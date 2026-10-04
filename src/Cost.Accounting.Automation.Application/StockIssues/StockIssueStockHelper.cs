@@ -30,71 +30,130 @@ internal static class StockIssueStockHelper
     /// Taslak bir belgenin üreteceği stok ve yevmiye hareketlerini HESAPLAR ama
     /// YAZMAZ.
     ///
-    /// Hesaplama kayıt anında yapılır ve satırda saklanan birim maliyet
-    /// (<see cref="StockIssueLine.UnitCost"/>) olarak kalır; böylece onay anında
-    /// FIFO/LIFO yeniden hesaplanmaz ve belgenin maliyeti kayıt anındakiyle
-    /// birebir aynıdır. Onay yalnızca bu planı yazar.
+    /// <para>
+    /// Çıkış (ve atölye transferinde atölye girişi) <b>giriş katmanlarına bölünerek</b>
+    /// yazılır: tüketilen miktarın hangi alımdan ne kadar karşılandığı ancak böyle
+    /// bellidir. Tek bir ortalama fiyatlı satır yazılsaydı o fiyat hiçbir giriş
+    /// kaydına uymazdı; stok hareketi listesi raporu fiyatı grup anahtarı olarak
+    /// kullandığı için girişi olmayan, bakiyesi eksi satırlar oluşurdu.
+    /// </para>
+    ///
+    /// <para>
+    /// Katmanlar <paramref name="movements"/> havuzundan FIFO/LIFO ile hesaplanır.
+    /// Katman paylaşıldığı için toplu onayda aynı işlemde onaylanan önceki
+    /// belgelerin hareketleri de bu havuza eklenmelidir; aksi hâlde belgeler aynı
+    /// giriş katmanını defalarca tüketir.
+    /// </para>
     /// </summary>
     public static StockIssueStockPlan PlanStockEffects(
         StockIssue issue,
-        IReadOnlyDictionary<IdentityId, ChartOfAccount> targetAccountMap)
+        ChartOfAccount? targetAccount,
+        IReadOnlyDictionary<IdentityId, ChartOfAccount> productAccountMap,
+        List<ProductMovement> movements)
     {
         bool isConsumption = issue.IssueType == StockIssueType.Consumption;
         string sourceType = isConsumption ? "StokTuketimi" : "AtolyeTransferi";
         string movementPrefix = isConsumption ? "Tüketim" : "Atölye Transferi";
 
-        ChartOfAccount? target = targetAccountMap.GetValueOrDefault(issue.TargetAccountId);
-
-        List<ProductMovement> movements = [];
+        List<ProductMovement> plannedMovements = [];
         List<StockIssueLedgerEntry> ledgerEntries = [];
 
         foreach (StockIssueLine line in issue.Lines)
         {
-            decimal unitCost = line.UnitCost.Value;
+            // Belge satırı zaten GERÇEK bir giriş katmanıdır (bkz.
+            // StockIssueCreateCommand): miktarı ve fiyatı o katmanın kendi
+            // değerleridir. Hareketler bu satırlardan birebir üretilir; böylece
+            // belgedeki kalem ile stok hareketi aynı satırı gösterir. Satır
+            // başına yeniden katman hesabı yapılmaz; onaydan önce satırlar
+            // güncel FIFO kırılımıyla eşitlenir (SyncLinesWithFifo).
+            decimal layerQuantity = line.Quantity;
+            decimal layerUnitPrice = line.UnitCost.Value;
 
             ProductMovement output = new(
                 productId: line.ProductId,
                 movementType: ProductMovementType.Output,
-                quantity: line.Quantity,
-                unitPrice: new Price(unitCost),
+                quantity: layerQuantity,
+                unitPrice: new Price(layerUnitPrice),
                 date: issue.Date,
                 referenceNo: issue.DocumentNumber,
                 description: new Description($"{movementPrefix} - {issue.DocumentNumber}"),
                 stockIssueId: issue.Id);
 
-            movements.Add(output);
+            plannedMovements.Add(output);
 
             if (!isConsumption)
             {
-                movements.Add(new ProductMovement(
+                plannedMovements.Add(new ProductMovement(
                     productId: line.ProductId,
                     movementType: ProductMovementType.Input,
-                    quantity: line.Quantity,
-                    unitPrice: new Price(unitCost),
+                    quantity: layerQuantity,
+                    unitPrice: new Price(layerUnitPrice),
                     date: issue.Date,
                     referenceNo: issue.DocumentNumber,
                     description: new Description(
-                        $"{ProductStockBalanceHelper.AtelierTransferInputDescriptionPrefix}{target?.Name.Value ?? string.Empty}"),
+                        $"{ProductStockBalanceHelper.AtelierTransferInputDescriptionPrefix}{targetAccount?.Name.Value ?? string.Empty}"),
                     stockIssueId: issue.Id));
             }
 
-            decimal amount = Math.Round(line.Quantity * unitCost, 2);
-            if (amount <= 0)
+            decimal amount = Math.Round(layerQuantity * layerUnitPrice, 2);
+            if (amount > 0)
+            {
+                if (productAccountMap.TryGetValue(line.ProductId, out ChartOfAccount? productAccount))
+                {
+                    ledgerEntries.Add(new StockIssueLedgerEntry(
+                        productAccount.Id, 0, amount, sourceType, output.Id));
+                }
+
+                ledgerEntries.Add(new StockIssueLedgerEntry(
+                    issue.TargetAccountId, amount, 0, sourceType, output.Id));
+            }
+        }
+
+        return new StockIssueStockPlan(plannedMovements, ledgerEntries);
+    }
+
+    /// <summary>
+    /// Taslak satırlarını güncel FIFO kırılımıyla eşitler.
+    ///
+    /// <para>
+    /// Taslak ile onay arasında başka bir belge onaylanmış ya da yeni alım
+    /// yapılmış olabilir. Belgenin satırları eskide kalmışsa yazılacak çıkış
+    /// hareketleri de eski olur ve belgedeki kalem ile hareketler ayrışır.
+    /// Bu yüzden onaydan hemen önce satırlar, o anki katmanlarla değiştirilir;
+    /// böylece <see cref="StockIssueLine"/> ile <c>ProductMovement</c> kayıtları
+    /// tanım gereği aynıdır.
+    /// </para>
+    /// </summary>
+    public static void SyncLinesWithFifo(StockIssue issue, List<ProductMovement> movements)
+    {
+        List<StockIssueLine> synced = [];
+
+        foreach (IGrouping<IdentityId, StockIssueLine> group in issue.Lines.GroupBy(l => l.ProductId))
+        {
+            decimal requestedQuantity = group.Sum(l => l.Quantity);
+            string description = group.First().Description.Value;
+
+            List<(decimal Quantity, decimal UnitPrice)> layers =
+                StockIssueCostingHelper.BuildConsumptionLayers(
+                    movements, group.Key, requestedQuantity, StockCostingMethod.Fifo, issue.Date);
+
+            if (layers.Count == 0)
             {
                 continue;
             }
 
-            if (targetAccountMap.TryGetValue(line.ProductId, out ChartOfAccount? productAccount))
+            foreach ((decimal layerQuantity, decimal layerUnitPrice) in layers)
             {
-                ledgerEntries.Add(new StockIssueLedgerEntry(
-                    productAccount.Id, 0, amount, sourceType, output.Id));
+                synced.Add(new StockIssueLine(
+                    stockIssueId: issue.Id,
+                    productId: group.Key,
+                    quantity: layerQuantity,
+                    unitCost: new Price(layerUnitPrice),
+                    description: new Description(description)));
             }
-
-            ledgerEntries.Add(new StockIssueLedgerEntry(
-                issue.TargetAccountId, amount, 0, sourceType, output.Id));
         }
 
-        return new StockIssueStockPlan(movements, ledgerEntries);
+        issue.ReplaceLines(synced);
     }
 
     /// <summary>

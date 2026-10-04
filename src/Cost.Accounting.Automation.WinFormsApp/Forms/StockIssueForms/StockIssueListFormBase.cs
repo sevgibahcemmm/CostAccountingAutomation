@@ -128,6 +128,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             => new(IssueType: _issueType, OnlyDeleted: ShowDeleted);
 
         /// <summary>
+        /// En yeni stok belgesi üstte. Belge tarihi geçmişe dönük girilen
+        /// kayıtlarda kayıt zamanından önemlidir; varsayılan sıra son kaydedilen
+        /// üstte olduğu için tarih sırası burada geçersiz kılınır.
+        /// </summary>
+        protected override IEnumerable<StockIssueListDto> ApplyDefaultOrder(IEnumerable<StockIssueListDto> items)
+            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
+
+        /// <summary>
         /// Stok çıkışı/tüketim kaydı bu liste ekranından oluşturulmaz; belge
         /// ilgili menüden açılır. Bu yüzden "Yeni" düğmesi varsayılan olarak
         /// gösterilmez. Menüde ayrı bir "yeni belge" girdisi bulunmayan belgeler
@@ -244,6 +252,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 DocumentNumber = issue.DocumentNumber,
                 Date = date,
                 OperationType = issue.IssueType == StockIssueType.Consumption ? "Tüketim" : "Atölye Transferi",
+
+                // Atölye transferinde hedef bir atölyedir; teslim alan
+                // kutusunun atölye şefiyle doldurulması için kimliği gerekir.
+                RecipientWorkshopId = issue.IssueType == StockIssueType.AtelierTransfer
+                    ? issue.TargetAccountId
+                    : null,
                 SourceParty = warehouseName,
                 RecipientParty = issue.TargetAccountName,
                 DestinationParty = string.IsNullOrWhiteSpace(issue.TargetAccountCode)
@@ -262,9 +276,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 AccountNames = MovableAssetTransactionSlipPresenter.BuildAccountNameMap(accounts)
             };
 
+            // Belge satırı zaten GERÇEK bir giriş katmanıdır (bkz.
+            // StockIssueCreateCommand): 174 adetlik bir tüketim 144 @ 12,60 ve
+            // 30 @ 13,20 olarak İKİ satırda kaydedilir. Fiş bu satırları
+            // birebir basar; Miktar × satır fiyatı toplamı gerçek maliyettir.
             foreach (StockIssueLineDto line in lines)
             {
                 ProductCatalogDto? product = productsById.GetValueOrDefault(line.ProductId);
+
                 data.Rows.Add(new MovableAssetTransactionSlipRow
                 {
                     Code = MovableAssetTransactionSlipPresenter.ResolveItemCode(product, line.ProductCode),
@@ -275,7 +294,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                     UnitOfMeasure = product?.ProductUnitTypeName ?? line.UnitTypeName,
                     Quantity = line.Quantity,
                     UnitPrice = line.UnitCost,
-                    Amount = line.Quantity * line.UnitCost
+                    Amount = line.TotalAmount
                 });
             }
 

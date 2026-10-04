@@ -55,7 +55,7 @@ internal sealed class UserCreateCommandHandler(
 
         string? duplicateKey = User.BuildDuplicateKey(request.UserName);
 
-        User? userNameDuplicate = await duplicateCheckService.FindDuplicateAsync<User>(
+        User? userNameDuplicate = await duplicateCheckService.FindMasterDuplicateAsync<User>(
             duplicateKey,
             cancellationToken: cancellationToken);
 

@@ -218,7 +218,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnNew.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnNew.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnNew.Name = "btnNew";
-            btnNew.Size = new System.Drawing.Size(84, 36);
+            btnNew.Size = new System.Drawing.Size(60, 36);
             btnNew.TabIndex = 0;
             btnNew.Text = "Yeni";
             // 
@@ -231,7 +231,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnEdit.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnEdit.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnEdit.Name = "btnEdit";
-            btnEdit.Size = new System.Drawing.Size(104, 36);
+            btnEdit.Size = new System.Drawing.Size(78, 36);
             btnEdit.TabIndex = 1;
             btnEdit.Text = "Düzenle";
             // 
@@ -244,7 +244,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnDelete.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnDelete.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new System.Drawing.Size(74, 36);
+            btnDelete.Size = new System.Drawing.Size(56, 36);
             btnDelete.TabIndex = 2;
             btnDelete.Text = "Sil";
             // 
@@ -270,7 +270,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnSlipPrint.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnSlipPrint.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnSlipPrint.Name = "btnSlipPrint";
-            btnSlipPrint.Size = new System.Drawing.Size(118, 36);
+            btnSlipPrint.Size = new System.Drawing.Size(100, 36);
             btnSlipPrint.TabIndex = 9;
             btnSlipPrint.Text = "TIF Yazdır";
             // 
@@ -283,9 +283,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnSlipReport.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnSlipReport.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnSlipReport.Name = "btnSlipReport";
-            btnSlipReport.Size = new System.Drawing.Size(200, 36);
+            btnSlipReport.Size = new System.Drawing.Size(122, 36);
             btnSlipReport.TabIndex = 10;
-            btnSlipReport.Text = "Maliyet Pusulası Yazdır";
+            btnSlipReport.Text = "Maliyet Pusulası";
             btnSlipReport.Visible = false;
             // 
             // btnDistributionReport
@@ -297,9 +297,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnDistributionReport.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnDistributionReport.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDistributionReport.Name = "btnDistributionReport";
-            btnDistributionReport.Size = new System.Drawing.Size(235, 36);
+            btnDistributionReport.Size = new System.Drawing.Size(148, 36);
             btnDistributionReport.TabIndex = 11;
-            btnDistributionReport.Text = "Gider Dağıtım Tablosu Yazdır";
+            btnDistributionReport.Text = "Gider Dağıtım Tablosu";
             btnDistributionReport.Visible = false;
             // 
             // btnProductDeclaration
@@ -311,9 +311,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnProductDeclaration.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnProductDeclaration.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnProductDeclaration.Name = "btnProductDeclaration";
-            btnProductDeclaration.Size = new System.Drawing.Size(200, 36);
+            btnProductDeclaration.Size = new System.Drawing.Size(110, 36);
             btnProductDeclaration.TabIndex = 12;
-            btnProductDeclaration.Text = "Mamül Beyan Yazdır";
+            btnProductDeclaration.Text = "Ürün Beyanı";
             btnProductDeclaration.Visible = false;
             // 
             // btnStockMovementsList
@@ -325,9 +325,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnStockMovementsList.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnStockMovementsList.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnStockMovementsList.Name = "btnStockMovementsList";
-            btnStockMovementsList.Size = new System.Drawing.Size(215, 36);
+            btnStockMovementsList.Size = new System.Drawing.Size(128, 36);
             btnStockMovementsList.TabIndex = 13;
-            btnStockMovementsList.Text = "Stok Hareket Listesi Yazdır";
+            btnStockMovementsList.Text = "Stok Hareketleri";
             btnStockMovementsList.Visible = false;
             // 
             // btnStockCountList
@@ -339,9 +339,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnStockCountList.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnStockCountList.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnStockCountList.Name = "btnStockCountList";
-            btnStockCountList.Size = new System.Drawing.Size(205, 36);
+            btnStockCountList.Size = new System.Drawing.Size(104, 36);
             btnStockCountList.TabIndex = 14;
-            btnStockCountList.Text = "Stok Sayım Listesi Yazdır";
+            btnStockCountList.Text = "Stok Sayımı";
             btnStockCountList.Visible = false;
             // 
             // btnApprove
@@ -366,9 +366,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnDeleted.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnDeleted.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnDeleted.Name = "btnDeleted";
-            btnDeleted.Size = new System.Drawing.Size(94, 36);
+            btnDeleted.Size = new System.Drawing.Size(78, 36);
             btnDeleted.TabIndex = 5;
-            btnDeleted.Text = "Silinenler";
+            btnDeleted.Text = "Çöpteki";
             // 
             // btnRestore
             // 
@@ -379,29 +379,33 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnRestore.ImageOptions.SvgImageSize = new System.Drawing.Size(18, 18);
             btnRestore.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
             btnRestore.Name = "btnRestore";
-            btnRestore.Size = new System.Drawing.Size(90, 36);
+            btnRestore.Size = new System.Drawing.Size(78, 36);
             btnRestore.TabIndex = 6;
-            btnRestore.Text = "Geri Yükle";
+            btnRestore.Text = "Geri Al";
             // 
             // flpToolbar
             // 
+            flpToolbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            flpToolbar.AutoScroll = true;
             flpToolbar.BackColor = System.Drawing.Color.Transparent;
             flpToolbar.Controls.Add(btnNew);
             flpToolbar.Controls.Add(btnEdit);
             flpToolbar.Controls.Add(btnDelete);
             flpToolbar.Controls.Add(btnRefresh);
+            // Onayla, kullanıcının en sık kullandığı eylem: taşan butonların
+            // arasında kalmasın diye kayıt işlemlerinin hemen ardından durur.
+            flpToolbar.Controls.Add(btnApprove);
             flpToolbar.Controls.Add(btnSlipPrint);
             flpToolbar.Controls.Add(btnSlipReport);
             flpToolbar.Controls.Add(btnDistributionReport);
             flpToolbar.Controls.Add(btnProductDeclaration);
             flpToolbar.Controls.Add(btnStockMovementsList);
             flpToolbar.Controls.Add(btnStockCountList);
-            flpToolbar.Controls.Add(btnApprove);
             flpToolbar.Controls.Add(btnDeleted);
             flpToolbar.Controls.Add(btnRestore);
             flpToolbar.Location = new System.Drawing.Point(16, 10);
             flpToolbar.Name = "flpToolbar";
-            flpToolbar.Size = new System.Drawing.Size(1460, 36);
+            flpToolbar.Size = new System.Drawing.Size(830, 36);
             flpToolbar.TabIndex = 12;
             flpToolbar.WrapContents = false;
             // 

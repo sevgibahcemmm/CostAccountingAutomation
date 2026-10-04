@@ -1,6 +1,8 @@
 using System.Drawing;
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
+using Cost.Accounting.Automation.Application.Deletion;
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using DomainEntityDto = Cost.Accounting.Automation.Domain.Abstractions.EntityDto;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
@@ -78,6 +80,18 @@ InitializeComponent();
             lblSub.Appearance.Options.UseForeColor = true;
             lblFilter.Appearance.ForeColor = secondary;
             lblFilter.Appearance.Options.UseForeColor = true;
+
+            // Satır renkleri skin'in zemininden türetildiği için tema değişince
+            // yeniden hesaplanmalı ve grid yeniden boyanmalıdır; aksi hâlde eski
+            // zemine karışık tonlar kalır ve koyu temada okunmaz hale gelir.
+            _approvedRowColor = null;
+            _draftRowColor = null;
+            RefreshStatusRowColors();
+
+            if (!gridControl.IsDisposed)
+            {
+                gridView.RefreshData();
+            }
         }
 
         /// <summary>
@@ -383,10 +397,70 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
         protected virtual bool CanPrintSlip(TDto item) => SupportsSlipPrint;
 
         /// <summary>
+        /// "TIF Yazdır" butonunun bir kayıt SEÇİLMEDEN de çalışıp çalışmayacağı.
+        ///
+        /// <para>
+        /// Fişi tek bir kayda bağlı formlarda (ör. stok çıkışı) buton seçimsiz
+        /// kalır. Fiş bir dönemi kapsayan formlarda (ör. maliyet pusulası) ise
+        /// seçim zorunlu değildir: kullanıcı dönemi fiş penceresinde seçer.
+        /// </para>
+        /// </summary>
+        protected virtual bool AllowsSlipPrintWithoutSelection => false;
+
+        /// <summary>
         /// Kaydın taşınır işlem fişi verisini üretir. Desteklenmiyorsa null döner.
         /// </summary>
         protected virtual Task<MovableAssetTransactionSlipData?> BuildSlipDataAsync(TDto item)
             => Task.FromResult<MovableAssetTransactionSlipData?>(null);
+
+        /// <summary>
+        /// Fiş verisi hazırlanmadan ÖNCE çalışır; tarih aralığı veya atölye
+        /// seçimi gibi kullanıcı soruları burada sorulur.
+        ///
+        /// <para>
+        /// Sorusu burada sorulmasının nedeni bekleme penceresidir: veri
+        /// hazırlama <see cref="LoadingHelper"/> ile sarılır ve kullanıcı
+        /// sorusu bu pencerenin arkasında kalırsa ekranda iki kalıcı pencere
+        /// üst üste birikir. Bu yüzden bu adım, bekleme penceresi açılmadan
+        /// çağrılır.
+        /// </para>
+        ///
+        /// <para>
+        /// false dönerse fiş basılmaz (kullanıcı vazgeçti).
+        /// </para>
+        ///
+        /// <para>
+        /// <paramref name="item"/> null ise seçim yapılmadan basılmak isteniyor
+        /// demektir; yalnızca <see cref="AllowsSlipPrintWithoutSelection"/>
+        /// true olan formlarda olur.
+        /// </para>
+        /// </summary>
+        protected virtual Task<bool> PrepareSlipPrintAsync(TDto? item) => Task.FromResult(true);
+
+        /// <summary>
+        /// Bir kayıt için birden çok taşınır işlem fişi basılabilir (ör. atölye
+        /// başına bir fiş). Varsayılan olarak <see cref="BuildSlipDataAsync"/>
+        /// sonucu tek fiş olarak döndürülür; liste boşsa fiş basılmaz.
+        ///
+        /// <para>
+        /// <paramref name="item"/> null ise (seçim yok) varsayılan
+        /// uygulama fiş basmaz; seçimsiz basım yalnızca fişi bir kayda
+        /// bağlı olmayan formlarda anlamlıdır.
+        /// </para>
+        /// </summary>
+        protected virtual async Task<IReadOnlyList<MovableAssetTransactionSlipData>> BuildSlipDataListAsync(TDto? item)
+        {
+            if (item is null)
+            {
+                return [];
+            }
+
+            MovableAssetTransactionSlipData? data = await BuildSlipDataAsync(item);
+
+            return data is null
+                ? []
+                : [data];
+        }
 
         /// <summary>
         /// Seçili kaydın raporu (ör. maliyet pusulası) açılır. Desteklenmiyorsa hiçbir işlem yapılmaz.
@@ -434,7 +508,29 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
 
         protected abstract void ConfigureColumns();
 
-        protected abstract IRequest<Result<string>> BuildDeleteCommand(TDto item);
+        /// <summary>
+        /// Tekil silme komutu. <c>null</c> dönerse liste ekranından silme yapılamaz;
+        /// bu durumda <see cref="BuildBulkDeleteCommand"/> da <c>null</c> dönmelidir.
+        /// </summary>
+        protected virtual IRequest<Result<string>>? BuildDeleteCommand(TDto item) => null;
+
+        /// <summary>
+        /// Seçili kayıtların tamamı için TEK transaction'da çalışan toplu silme
+        /// komutunu döndürür.
+        ///
+        /// <para>
+        /// Sağlandığında silme akışı kayıt başına ayrı komut göndermek yerine bu
+        /// komutu kullanır: hareket denetimi tek sorguda yapılır ve ya bütün
+        /// kayıtlar silinir ya hiçbiri. Bu yüzden sağlayan listelerde silme
+        /// düğmesi yalnızca engellenen kayıtlar varsa pasifleşir.
+        /// </para>
+        /// </summary>
+        protected virtual IRequest<Result<string>>? BuildBulkDeleteCommand(IReadOnlyList<TDto> items) => null;
+
+        /// <summary>
+        /// Silme mesajlarında kullanılan kayıt adı (örn. "müşteri", "hesap").
+        /// </summary>
+        protected virtual string DeleteItemLabel => "kayıt";
 
         protected virtual string GetDeleteSummary(TDto item) => item.Id.ToString();
 
@@ -469,11 +565,39 @@ protected virtual SvgImage ModuleIcon => DxIcon.Module;
             SetupSlipContextMenu();
             ConfigureColumns();
 
+            // Buton satırı, arama kutusuna girmeyecek kadar daraltılır; sığmayan
+            // butonlar kaydırma çubuğuyla erişilebilir kalır.
+            Resize += (_, _) => ClampToolbarWidth();
+            ClampToolbarWidth();
+
             // Tüm listelerde sayısal kolonlar 0,00 biçiminde ve boş değerlerde de
             // 0,00 görünür (kod içinde elle eklenen kolonlar dâhil).
             GridColumnFactory.RegisterManualNumericColumns(View);
 
             _ = ReloadAsync();
+        }
+
+        /// <summary>
+        /// Buton çubuğunun genişliğini arama/filtre alanına kadar sınırlar.
+        /// Sınırlanmazsa çubuk, üst üste binen butonların arama kutusunu
+        /// kapatmasına yol açar.
+        /// </summary>
+        private void ClampToolbarWidth()
+        {
+            Control[] rightSide = [lblFilter, cmbFilter, txtSearch];
+
+            int limit = rightSide
+                .Where(c => c.Visible)
+                .Select(c => c.Left)
+                .DefaultIfEmpty(int.MaxValue)
+                .Min();
+
+            if (limit == int.MaxValue)
+            {
+                return;
+            }
+
+            flpToolbar.Width = Math.Max(200, limit - 8 - flpToolbar.Left);
         }
 
         private void WireEvents()
@@ -528,10 +652,24 @@ btnSlipPrint.Click += async (_, _) => await ShowSelectedSlipAsync();
             gridView.OptionsView.ShowGroupPanel = false;
             gridView.OptionsSelection.MultiSelect = true;
             gridView.OptionsSelection.MultiSelectMode = GridMultiSelectMode.CheckBoxRowSelect;
-gridView.OptionsBehavior.Editable = false;
-            gridView.OptionsView.EnableAppearanceEvenRow = true;
-            gridView.OptionsView.EnableAppearanceOddRow = true;
+            gridView.OptionsBehavior.Editable = false;
             gridView.OptionsView.ColumnAutoWidth = false;
+
+            // DevExpress'te satır şeridi (even/odd) görünümü açıkken çizimde
+            // Appearance.EvenRow/OddRow rengi, RowStyle'da atanan rengin ÜSTÜNE
+            // bilyor; taslak/onaylı boyaması bu yüzden hiç görünmez. Bu, gerçek
+            // ekran çizimi üzerinden piksel okunarak doğrulanmıştır. Durum
+            // renklendirmesi olan listelerde şerit kapatılır, renk tamamen
+            // RowStyle'dan gelir. Durumu olmayan listelerde şerit korunur.
+            bool hasStatusRows = typeof(IApprovalStatusDto).IsAssignableFrom(typeof(TDto));
+            gridView.OptionsView.EnableAppearanceEvenRow = !hasStatusRows;
+            gridView.OptionsView.EnableAppearanceOddRow = !hasStatusRows;
+
+            // Satır boyama tek olay üzerinden yürür: hem depo grup paleti hem de
+            // taslak/onaylı durum rengi burada karar verilir. İki ayrı işleyici
+            // bağlanırsa son eklenen diğerini ezer.
+            gridView.RowStyle -= GridView_RowStyle;
+            gridView.RowStyle += GridView_RowStyle;
         }
 
         private void SetupButtonIcons()
@@ -667,6 +805,11 @@ protected void AddColumnsFromAttributes()
             Color.FromArgb(150, 224, 224)   // pastel turkuaz
         ];
 
+        private static readonly Font GroupRowFont = new("Segoe UI Semibold", 9.5F);
+
+        private Color? _approvedRowColor;
+        private Color? _draftRowColor;
+
         protected void ConfigureWarehouseGrouping(string fieldName)
         {
             GridColumn? warehouseColumn = View.Columns[fieldName];
@@ -681,32 +824,46 @@ protected void AddColumnsFromAttributes()
             warehouseColumn.Group();
             _warehouseGroupColumn = warehouseColumn;
 
-            // Zemin rengi artık grup başına CustomRowStyle ile belirlendiği için
-            // Appearance yalnızca font ve varsayılan metin rengini taşır.
+            // Zemin rengi grup başına RowStyle ile belirlendiği için Appearance
+            // yalnızca font ve varsayılan metin rengini taşır.
             View.Appearance.GroupRow.Font = new Font("Segoe UI Semibold", 9.5F);
             View.Appearance.GroupRow.Options.UseFont = true;
             View.Appearance.GroupRow.ForeColor = Color.FromArgb(24, 30, 45);
             View.Appearance.GroupRow.Options.UseForeColor = true;
-
-            gridView.RowStyle -= GridView_RowStyle;
-            gridView.RowStyle += GridView_RowStyle;
         }
 
         /// <summary>
-        /// Grup başlık satırlarını paletten bir renge boyar. Satır içi kayıtlar
-        /// dokunulmadan bırakılır; renk yalnızca depo grubu başlığında görünür.
+        /// Satır boyamayı TEK yerden yönetir.
+        ///
+        /// <para>
+        /// Öncelik sırası: grup başlığı satırı → depo paleti; kayıt satırı →
+        /// durum rengi (taslak/onaylı). İkisi aynı anda devrede olamaz; bir
+        /// liste ya gruplar ya durum gösterir. <c>RowStyle</c> tek olay olduğu
+        /// için iki ayrı işleyici bağlanmamalıdır.
+        /// </para>
         /// </summary>
         private void GridView_RowStyle(object? sender, RowStyleEventArgs e)
         {
-            if (_warehouseGroupColumn is null || !View.IsGroupRow(e.RowHandle))
+            if (TryStyleGroupRow(e))
             {
                 return;
+            }
+
+            TryStyleStatusRow(e);
+        }
+
+        /// <summary>Grup başlık satırını depo paletinden bir renge boyar.</summary>
+        private bool TryStyleGroupRow(RowStyleEventArgs e)
+        {
+            if (_warehouseGroupColumn is null || !View.IsGroupRow(e.RowHandle))
+            {
+                return false;
             }
 
             object? groupValue = View.GetGroupRowValue(e.RowHandle, _warehouseGroupColumn);
             if (groupValue is null)
             {
-                return;
+                return false;
             }
 
             int hash = StringComparer.Ordinal.GetHashCode(groupValue.ToString() ?? string.Empty);
@@ -714,8 +871,67 @@ protected void AddColumnsFromAttributes()
 
             e.Appearance.BackColor = backColor;
             e.Appearance.BackColor2 = backColor;
+
+            // Options bayrakları olmadan atanan renk/font çizimde yok sayılır.
+            e.Appearance.Options.UseBackColor = true;
+            e.Appearance.Options.UseForeColor = true;
+            e.Appearance.Options.UseFont = true;
+
             e.Appearance.ForeColor = SkinTheme.GetContrastText(backColor);
-            e.Appearance.Font = new Font("Segoe UI Semibold", 9.5F);
+            e.Appearance.Font = GroupRowFont;
+            return true;
+        }
+
+        /// <summary>
+        /// Taslak/onaylı kayıt satırını renklendirir.
+        ///
+        /// <para>
+        /// Yalnızca <see cref="IApprovalStatusDto"/> uygulayan DTO'lar boyanır;
+        /// böylece durumu olmayan listeler (ürün, müşteri, hesap planı ...)
+        /// hiç etkilenmez. Renk aktif skin'in zeminiyle harmanlanır: tam doygun
+        /// bir sarı/yeşil zemin hem açık hem koyu temada okunmaz hale gelir.
+        /// </para>
+        /// </summary>
+        private void TryStyleStatusRow(RowStyleEventArgs e)
+        {
+            if (View.IsGroupRow(e.RowHandle)
+                || View.GetRow(e.RowHandle) is not IApprovalStatusDto status)
+            {
+                return;
+            }
+
+            if (_approvedRowColor is null || _draftRowColor is null)
+            {
+                RefreshStatusRowColors();
+            }
+
+            StatusRowPainter.Apply(
+                e,
+                status,
+                _approvedRowColor ?? Color.Empty,
+                _draftRowColor ?? Color.Empty);
+        }
+
+        /// <summary>
+        /// Durum renklerini aktif skin'in zeminine göre hesaplar.
+        ///
+        /// <para>
+        /// <c>RowStyle</c> her boyamada her satır için çağrıldığı ve skin
+        /// çözümlemesi DevExpress paletine bakıyor; bu yüzden iki renk bir kez
+        /// hesaplanıp saklanır. Skin değişince <see cref="ApplySkin"/>
+        /// değerleri geçersiz kılar.
+        /// </para>
+        /// </summary>
+        private void RefreshStatusRowColors()
+        {
+            if (gridControl.IsDisposed)
+            {
+                return;
+            }
+
+            Color surface = SkinTheme.SurfaceOf(gridControl);
+            _approvedRowColor = StatusRowPainter.ApprovedRowColor(surface);
+            _draftRowColor = StatusRowPainter.DraftRowColor(surface);
         }
 
         private void GridView_SelectionChanged(object? sender, EventArgs e)
@@ -767,7 +983,11 @@ protected void AddColumnsFromAttributes()
             btnDelete.Enabled = !showDeleted && selected >= 1 && allDeletable;
             btnDelete.Visible = AllowDelete && !showDeleted;
             btnSlipPrint.Visible = SupportsSlipPrint;
-            btnSlipPrint.Enabled = !showDeleted && selected == 1 && allPrintable;
+
+            // Seçim zorunlu olmayan fişlerde buton her zaman açıktır: kayıt
+            // seçimi yalnızca varsayılan dönemi belirler, zorunlu değildir.
+            btnSlipPrint.Enabled = !showDeleted
+                && (AllowsSlipPrintWithoutSelection || selected == 1 && allPrintable);
 btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allApprovable;
             btnApprove.Visible = SupportsApprove && !showDeleted;
             btnSlipReport.Visible = SupportsSlipReport;
@@ -804,7 +1024,11 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
         private async Task ShowSelectedSlipAsync()
         {
             int[] rows = gridView.GetSelectedRows();
-            if (rows.Length != 1 || gridView.GetRow(rows[0]) is not TDto dto)
+            TDto? dto = rows.Length == 1 ? gridView.GetRow(rows[0]) as TDto : null;
+
+            // Seçim zorunlu olmayan fişlerde (ör. dönem bazlı üretim fişi)
+            // buton seçimsiz de çalışır; dönem sorusu fiş penceresinde sorulur.
+            if (dto is null && !AllowsSlipPrintWithoutSelection)
             {
                 ToastHelper.Show("Taşınır işlem fişi için tek bir kayıt seçin.", ToastType.Warning);
                 return;
@@ -907,9 +1131,11 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
             await PrintSlipAsync(dto);
         }
 
-        private async Task PrintSlipAsync(TDto item)
+        private async Task PrintSlipAsync(TDto? item)
         {
-            if (!CanPrintSlip(item))
+            // Seçim yoksa (seçimsiz basıma izin veren form) kayda özel kontrol
+            // yapılamaz; kapsam dönem/atölye sorularıyla belirlenir.
+            if (item is not null && !CanPrintSlip(item))
             {
                 ToastHelper.Show("Bu kayıt için taşınır işlem fişi oluşturulamaz.", ToastType.Warning);
                 return;
@@ -917,21 +1143,25 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
 
             try
             {
-                // Fiş verisi hazırlanırken ekranın bir saniye boyunca
-                // donmaması için bekleme penceresiyle sarılır. Belge
-                // üretimi kendi penceresini açar; bu yüzden iki aşama
-                // ayrı ayrı gösterilir.
-                MovableAssetTransactionSlipData? data = await LoadingHelper.RunAsync(
-                    () => BuildSlipDataAsync(item),
-                    caption: "Fiş verileri hazırlanıyor...",
-                    description: "Lütfen bekleyin...");
-
-                if (data is null)
+                // Tarih/atölye gibi sorular bekleme penceresi açılmadan sorulur.
+                if (!await PrepareSlipPrintAsync(item))
                 {
                     return;
                 }
 
-                await MovableAssetTransactionSlipPresenter.ShowAsync(data);
+                // Fiş verisi hazırlanırken ekranın bir saniye boyunca
+                // donmaması için bekleme penceresiyle sarılır. Belge
+                // üretimi kendi penceresini açar; bu yüzden iki aşama
+                // ayrı ayrı gösterilir.
+                IReadOnlyList<MovableAssetTransactionSlipData> slips = await LoadingHelper.RunAsync(
+                    () => BuildSlipDataListAsync(item),
+                    caption: "Fiş verileri hazırlanıyor...",
+                    description: "Lütfen bekleyin...");
+
+                foreach (MovableAssetTransactionSlipData data in slips)
+                {
+                    await MovableAssetTransactionSlipPresenter.ShowAsync(data);
+                }
             }
             catch (Exception ex)
             {
@@ -967,6 +1197,28 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
         }
 
         /// <summary>
+        /// Liste satırlarının yüklendikten sonraki sırasını belirler.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Varsayılan sıra <b>en son kaydedilen üstte</b>dir. Belge tarihi
+        /// olan listeler (fatura, maliyet pusulası, stok çıkışı, stok hareketi,
+        /// cari hareket) bu kuralı geçersiz kılar ve
+        /// <see cref="Utils.ListOrder.NewestDocumentFirst{T}"/> ile belge
+        /// tarihine göre sıralanır.
+        /// </para>
+        /// <para>
+        /// Sorgular çoğunlukla sırasız döndüğü için sıralama veri
+        /// materialize edildikten sonra burada uygulanır; her liste formu
+        /// ayrı ayrı sıralama yazmak yerine tek bir kural paylaşır.
+        /// </para>
+        /// </remarks>
+        protected virtual IEnumerable<TDto> ApplyDefaultOrder(IEnumerable<TDto> items)
+            => items
+                .OrderByDescending(x => x.CreatedAt)
+                .ThenByDescending(x => x.Id);
+
+        /// <summary>
         /// Veriyi yükler ve listeye bağlar. Bekleme penceresi bu metottan
         /// sonra kapanır; bu yüzden burada hiçbir kalıcı pencere açılmaz.
         /// </summary>
@@ -983,9 +1235,9 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
 
                 if (EnrichReplacesBaseQuery)
                 {
-                    items = (await Task.Run(
+                    items = ApplyDefaultOrder((await Task.Run(
                         () => EnrichAsync([], CancellationToken.None),
-                        CancellationToken.None)).ToList();
+                        CancellationToken.None)).ToList()).ToList();
                     CrashLog.Write("PageLoad", $"{GetType().Name} DB(Enrich Only) {sw.Elapsed.TotalMilliseconds:N0} ms ({items.Count} satir)");
                 }
                 else
@@ -996,9 +1248,7 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
                         ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
                         IQueryable<TDto> result = await mediator.Send(query, CancellationToken.None);
                         List<TDto> resultItems = result.ToList();
-                        return resultItems.OrderByDescending(x => x.CreatedAt)
-                            .ThenByDescending(x => x.Id)
-                            .ToList();
+                        return ApplyDefaultOrder(resultItems).ToList();
                     });
 
                     CrashLog.Write("PageLoad", $"{GetType().Name} DB(Query) {sw.Elapsed.TotalMilliseconds:N0} ms ({fetched.Count} satir)");
@@ -1172,6 +1422,26 @@ using (form)
             }
         }
 
+        /// <summary>
+        /// Seçili kayıtları döndürür. Silme, geri yükleme ve onaylama akışları
+        /// aynı seçim kuralını paylaşır.
+        /// </summary>
+        private List<TDto> GetSelectedItems()
+            => gridView.GetSelectedRows()
+                .Select(i => gridView.GetRow(i) as TDto)
+                .Where(x => x is not null)
+                .Cast<TDto>()
+                .ToList();
+
+        /// <summary>
+        /// Silme akışının tek uygulaması.
+        ///
+        /// <para>
+        /// Sıra şöyledir: seçim al → hareket denetimi → onay → atomik toplu silme.
+        /// Denetim <c>GetUndeletableAsync</c> ile tek sorguda yapılır; sorgu
+        /// sayısı seçim büyüklüğüne bağlı değildir.
+        /// </para>
+        /// </summary>
         private async void BtnDelete_Click(object? sender, EventArgs e)
         {
             if (!AllowDelete)
@@ -1179,19 +1449,15 @@ using (form)
                 return;
             }
 
-            List<TDto> selected = gridView.GetSelectedRows()
-                .Select(i => gridView.GetRow(i) as TDto)
-                .Where(x => x is not null)
-                .Cast<TDto>()
-                .ToList();
+            List<TDto> selected = GetSelectedItems();
 
             if (selected.Count == 0)
             {
-                ToastHelper.Show("Silinecek kayıtları işaretleyin", ToastType.Warning);
+                ToastHelper.Show(DeletionMessages.NoSelection(DeleteItemLabel), ToastType.Warning);
                 return;
             }
 
-if (selected.Any(item => !AllowsDelete(item)))
+            if (selected.Any(item => !AllowsDelete(item)))
             {
                 ToastHelper.Show("Silinemeyen kayıt(lar) seçildi. İşlem iptal edildi.", ToastType.Warning);
                 return;
@@ -1211,23 +1477,19 @@ if (selected.Any(item => !AllowsDelete(item)))
 
             if (blocked.Count > 0)
             {
-                string blockedPreview = string.Join(", ", blocked.Take(3).Select(GetDeleteSummary));
-                if (blocked.Count > 3)
-                {
-                    blockedPreview += $" ve {blocked.Count - 3} kayıt daha";
-                }
-
-                ToastHelper.Show($"{blocked.Count} kayıt hareket gördüğü için silinemez: {blockedPreview}", ToastType.Warning, 6000);
+                ToastHelper.Show(
+                    DeletionMessages.MovementBlocked(
+                        DeleteItemLabel,
+                        blocked.Count,
+                        blocked.Select(GetDeleteSummary)),
+                    ToastType.Warning,
+                    6000);
                 return;
             }
 
-            string preview = string.Join(", ", selected.Take(3).Select(GetDeleteSummary));
-            if (selected.Count > 3)
-            {
-                preview += $" ve {selected.Count - 3} kayıt daha";
-            }
-
-            if (MsgBox.Confirm($"{selected.Count} kayıt silinecek.\n{preview}\n\nEmin misiniz?", $"{Text} - Silme Onayı") != DialogResult.Yes)
+            IRequest<Result<string>>? bulkCommand = BuildBulkDeleteCommand(selected);
+            if (MsgBox.Confirm(BuildDeleteConfirmText(selected, bulkCommand is not null), $"{Text} - Silme Onayı")
+                != DialogResult.Yes)
             {
                 return;
             }
@@ -1235,17 +1497,49 @@ if (selected.Any(item => !AllowsDelete(item)))
             btnDelete.Enabled = false;
             try
             {
+                // Öncelikli yol: atomik toplu silme. Tek komut, tek transaction.
+                if (bulkCommand is not null)
+                {
+                    if (await CrudExecutor.ExecuteAsync(bulkCommand))
+                    {
+                        await ReloadAsync();
+                    }
+
+                    return;
+                }
+
                 foreach (TDto item in selected)
                 {
-                    bool ok = await CrudExecutor.ExecuteAsync(BuildDeleteCommand(item));
-                    if (!ok) break;
+                    IRequest<Result<string>>? command = BuildDeleteCommand(item);
+                    if (command is null)
+                    {
+                        ToastHelper.Show($"{typeof(TDto).Name} için silme tanımlı değil.", ToastType.Warning);
+                        return;
+                    }
+
+                    if (!await CrudExecutor.ExecuteAsync(command))
+                    {
+                        break;
+                    }
                 }
+
                 await ReloadAsync();
             }
             finally
             {
                 btnDelete.Enabled = true;
             }
+        }
+
+        /// <summary>Silme onay penceresinin metnini üretir.</summary>
+        private string BuildDeleteConfirmText(List<TDto> selected, bool atomic)
+        {
+            string preview = DeletionMessages.BuildPreview(selected.Select(GetDeleteSummary));
+            string atomicNote = atomic
+                ? "\n\nSeçilen kayıtlar birlikte silinecek; biri silinemezse hiçbiri silinmez."
+                : string.Empty;
+
+            return $"{selected.Count} {DeleteItemLabel} silinecek.\n{preview}{atomicNote}\n\nEmin misiniz?";
         }
 
         private async void CmbFilter_EditValueChanged(object? sender, EventArgs e)
@@ -1265,11 +1559,7 @@ if (selected.Any(item => !AllowsDelete(item)))
                 return;
             }
 
-            List<TDto> selected = gridView.GetSelectedRows()
-                .Select(i => gridView.GetRow(i) as TDto)
-                .Where(x => x is not null)
-                .Cast<TDto>()
-                .ToList();
+            List<TDto> selected = GetSelectedItems();
 
             if (selected.Count == 0)
             {
@@ -1325,11 +1615,7 @@ if (selected.Any(item => !AllowsDelete(item)))
                 return;
             }
 
-            List<TDto> selected = gridView.GetSelectedRows()
-                .Select(i => gridView.GetRow(i) as TDto)
-                .Where(x => x is not null)
-                .Cast<TDto>()
-                .ToList();
+            List<TDto> selected = GetSelectedItems();
 
             if (selected.Count == 0)
             {
@@ -1337,11 +1623,7 @@ if (selected.Any(item => !AllowsDelete(item)))
                 return;
             }
 
-            string preview = string.Join(", ", selected.Take(3).Select(GetDeleteSummary));
-            if (selected.Count > 3)
-            {
-                preview += $" ve {selected.Count - 3} kayıt daha";
-            }
+            string preview = DeletionMessages.BuildPreview(selected.Select(GetDeleteSummary));
 
             if (MsgBox.Confirm($"{selected.Count} kayıt geri yüklenecek.\n{preview}\n\nEmin misiniz?", $"{Text} - Geri Yükleme Onayı") != DialogResult.Yes)
             {

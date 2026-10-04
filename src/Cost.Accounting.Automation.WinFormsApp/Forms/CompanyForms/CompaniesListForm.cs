@@ -62,8 +62,14 @@ public sealed partial class CompaniesListForm : CrudListFormBase<CompanyGetAllQu
             AddColumnsFromAttributes();
         }
 
+        protected override string DeleteItemLabel => "şirket";
+
         protected override IRequest<Result<string>> BuildDeleteCommand(CompanyDto item)
             => new CompanyDeleteCommand(item.Id);
+
+        /// <summary>Seçili şirketler tek transaction'da silinir.</summary>
+        protected override IRequest<Result<string>>? BuildBulkDeleteCommand(IReadOnlyList<CompanyDto> items)
+            => new BulkDeleteCompaniesCommand(items.Select(item => item.Id).ToList());
 
         protected override string GetDeleteSummary(CompanyDto item) => item.Name;
 

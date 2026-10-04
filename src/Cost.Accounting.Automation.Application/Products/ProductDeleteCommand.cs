@@ -1,11 +1,9 @@
-using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
-using Cost.Accounting.Automation.Domain.CostSlips;
-using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
-using Cost.Accounting.Automation.Domain.StockIssues;
+using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 using TS.Result;
 
@@ -15,62 +13,56 @@ namespace Cost.Accounting.Automation.Application.Products;
 public sealed record ProductDeleteCommand(
     Guid Id) : IRequest<Result<string>>;
 
+/// <summary>
+/// Tekil silme de toplu silmeyle aynı koruma ve hesap bağlantısı yolunu
+/// kullanır.
+/// </summary>
 internal sealed class ProductDeleteCommandHandler(
     IProductRepository productRepository,
-    IChartOfAccountRepository chartOfAccountRepository,
-    IProductMovementRepository productMovementRepository,
-    IInvoiceRepository invoiceRepository,
-    ICostSlipRepository costSlipRepository,
-    IStockIssueRepository stockIssueRepository) : IRequestHandler<ProductDeleteCommand, Result<string>>
+    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ProductDeleteCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ProductDeleteCommand request, CancellationToken cancellationToken)
     {
-        var product = await productRepository.FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
-        if (product is null)
-        {
-            return Result<string>.Failure("Ürün bulunamadı");
-        }
+        var runner = new BulkDeletionRunner<Product>(
+            productRepository,
+            (ids, token) => productRepository.GetDeletionCheckAsync(ids, token),
+            (ids, token) => DeleteLinkedAccountsAsync(ids, token));
 
-        bool hasMovement = await productMovementRepository.AnyAsync(
-            m => m.ProductId == request.Id, cancellationToken);
-        if (hasMovement)
-        {
-            return Result<string>.Failure(
-                $"'{product.Name.Value}' ürünü işlem/hareket gördüğü için silinemez.");
-        }
-
-        bool hasInvoiceLine = await invoiceRepository.AnyAsync(
-            i => i.Lines.Any(l => l.ProductId == request.Id), cancellationToken);
-        bool hasCostSlipItem = await costSlipRepository.AnyAsync(
-            c => c.ProducedProductId == new IdentityId(request.Id)
-                 || c.CostSlipItems.Any(i => i.ProductId == new IdentityId(request.Id)),
+        Result<BulkDeletionOutcome> result = await runner.RunAsync(
+            [request.Id],
+            "ürün",
             cancellationToken);
-        bool hasStockIssueLine = await stockIssueRepository.AnyAsync(
-            s => s.Lines.Any(l => l.ProductId == request.Id), cancellationToken);
-        bool hasLinkedProduct = await productRepository.AnyAsync(
-            p => p.SemiFinishedProductId == new IdentityId(request.Id), cancellationToken);
 
-        if (product.ChartOfAccountId is { } nodeId)
+        return BulkDeletionResult.ToMessage(result, "ürün");
+    }
+
+    /// <summary>Ürüne bağlı hesap planı düğümünü de aynı transaction içinde siler.</summary>
+    private async Task DeleteLinkedAccountsAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken)
+    {
+        HashSet<IdentityId> keys = ids.Select(id => new IdentityId(id)).ToHashSet();
+
+        List<Guid> linkedAccountIds = await productRepository.GetAll()
+            .Where(p => keys.Contains(p.Id) && p.ChartOfAccountId != null)
+            .Select(p => p.ChartOfAccountId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (linkedAccountIds.Count == 0)
         {
-            List<ChartOfAccount> accounts = await chartOfAccountRepository.GetAllIncludingDeletedAsync(cancellationToken);
-            ChartOfAccount? node = accounts.FirstOrDefault(a => a.Id == nodeId && !a.IsDeleted);
-            if (node is not null)
-            {
-                node.Delete();
-                chartOfAccountRepository.Update(node);
-            }
+            return;
         }
 
-        product.Delete();
-        productRepository.Update(product);
+        HashSet<Guid> accountIds = linkedAccountIds.ToHashSet();
+        List<ChartOfAccount> accounts = await chartOfAccountRepository.GetAllIncludingDeletedAsync(cancellationToken);
+        List<ChartOfAccount> toDelete = accounts
+            .Where(a => !a.IsDeleted && accountIds.Contains(a.Id.Value))
+            .ToList();
 
-        if (hasInvoiceLine || hasCostSlipItem || hasStockIssueLine || hasLinkedProduct)
+        if (toDelete.Count > 0)
         {
-            return DeleteWarnings.Compose(
-                $"'{product.Name.Value}' ürünü silindi. NOT: irsaliye/maliyet pusulası/stok çıkışı kayıtlarında " +
-                $"kullanılıyor; hareket görmediği için silme gerçekleştirildi.");
+            chartOfAccountRepository.SoftDeleteRange(toDelete);
         }
-
-        return "Ürün başarıyla silindi";
     }
 }

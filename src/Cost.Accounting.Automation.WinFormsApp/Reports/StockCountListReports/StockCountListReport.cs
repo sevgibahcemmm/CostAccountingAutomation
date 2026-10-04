@@ -21,6 +21,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
             List<StockCountReportRowDto> rows,
             string companyName = "")
         {
+            // Depo/atölye kodları hesap planından gelir; yazarken boşluk
+            // kalabiliyor. Grup başlığında "kod - ad" basıldığı için kod
+            // temizlenmezse başlıkta gereksiz boşluklar görünür.
+            foreach (StockCountReportRowDto row in rows)
+            {
+                row.GroupCode = row.GroupCode?.Trim() ?? string.Empty;
+            }
+
             DataSource = rows;
 
             Parameters["parameterCompanyName"].Value = companyName;

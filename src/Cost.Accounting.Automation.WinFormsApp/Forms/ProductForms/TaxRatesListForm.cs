@@ -29,8 +29,14 @@ protected override void ConfigureColumns()
             AddColumnsFromAttributes();
         }
 
+protected override string DeleteItemLabel => "KDV oranı";
+
         protected override IRequest<Result<string>> BuildDeleteCommand(TaxRateDto item)
             => new TaxRateDeleteCommand(item.Id);
+
+        /// <summary>Seçili KDV oranları tek transaction'da silinir.</summary>
+        protected override IRequest<Result<string>>? BuildBulkDeleteCommand(IReadOnlyList<TaxRateDto> items)
+            => new BulkDeleteTaxRatesCommand(items.Select(item => item.Id).ToList());
 
         protected override string GetDeleteSummary(TaxRateDto item)
             => $"{item.Name} (%{item.Rate * 100:0.###})";

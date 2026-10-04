@@ -53,6 +53,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             Parameters["parameterGrandTotal"].Value = rows.Sum(r => r.Total);
         }
 
+        public void SetSignatoryNames(string accountingOfficer, string accountingClerk)
+        {
+            SetParameter("MuhasebeYetkilisiAdi", accountingOfficer);
+            SetParameter("MuhasebeMemuruAdi", accountingClerk);
+        }
+
+        private void SetParameter(string name, string value)
+        {
+            if (Parameters[name] is { } parameter)
+            {
+                parameter.Value = value;
+            }
+        }
+
         private void ApplyColumnHeaders()
         {
             var headers = new (XRTableCell Cell, ExpenseAccountType Type)[]

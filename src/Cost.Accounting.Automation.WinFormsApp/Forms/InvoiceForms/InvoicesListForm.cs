@@ -215,6 +215,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         protected override InvoiceGetAllQuery BuildListQuery()
             => new(InvoiceType: _targetType, OnlyDeleted: ShowDeleted);
 
+        /// <summary>
+        /// En yeni fatura üstte. Geçmiş tarihli fatura bugün kaydedilse bile
+        /// kendi tarihine göre aşağıda kalır.
+        /// </summary>
+        protected override IEnumerable<InvoiceDto> ApplyDefaultOrder(IEnumerable<InvoiceDto> items)
+            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
+
         protected override IRequest<Result<string>> BuildDeleteCommand(InvoiceDto item)
             => new InvoiceDeleteCommand(item.Id);
 

@@ -27,6 +27,7 @@
 //}
 
 
+using Cost.Accounting.Automation.Application.Services;
 using GenericRepository;
 using TS.MediatR;
 using TS.Result; // Result yapınızın namespace'i
@@ -37,10 +38,12 @@ namespace Cost.Accounting.Automation.Application.Behaviors
         where TRequest : IRequest<TResponse>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMasterUnitOfWork _masterUnitOfWork;
 
-        public TransactionBehavior(IUnitOfWork unitOfWork)
+        public TransactionBehavior(IUnitOfWork unitOfWork, IMasterUnitOfWork masterUnitOfWork)
         {
             _unitOfWork = unitOfWork;
+            _masterUnitOfWork = masterUnitOfWork;
         }
 
         public async Task<TResponse> Handle(
@@ -53,6 +56,11 @@ namespace Cost.Accounting.Automation.Application.Behaviors
             try
             {
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                if (_masterUnitOfWork.HasChanges())
+                {
+                    await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
+                }
             }
             catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
             {

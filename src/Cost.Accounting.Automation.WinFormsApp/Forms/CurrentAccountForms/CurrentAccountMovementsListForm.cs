@@ -33,6 +33,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
         protected override SvgImage ModuleIcon => DxIcon.CurrentAccounts;
 
+        /// <summary>
+        /// Cari hareket bir ikincil kayıttır: fatura, maliyet pusulası, stok
+        /// çıkışı ve ödeme/tahsilat kayıtlarından türetilir. Bu ekrandan
+        /// silinirse kaynak belge ile cari hesap arasındaki bağ kopar. Düzeltme
+        /// kaynak belge üzerinden yapılır; bu yüzden "Sil" düğmesi gizlenir.
+        /// </summary>
+        protected override bool AllowDelete => false;
+
         protected override string[] SearchFieldNames =>
         [
             nameof(CurrentAccountMovementDto.CurrentAccountName),
@@ -75,8 +83,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         protected override CurrentAccountMovementGetAllQuery BuildListQuery()
             => new(AccountType: _accountType, CustomerId: _customerId, SupplierId: _supplierId, OnlyDeleted: ShowDeleted);
 
-        protected override IRequest<Result<string>> BuildDeleteCommand(CurrentAccountMovementDto item)
-            => new CurrentAccountMovementDeleteCommand(item.Id);
+        /// <summary>En yeni cari hareket üstte, ilk hareket altta.</summary>
+        protected override IEnumerable<CurrentAccountMovementDto> ApplyDefaultOrder(IEnumerable<CurrentAccountMovementDto> items)
+            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
 
         protected override string GetDeleteSummary(CurrentAccountMovementDto item)
             => $"{item.CurrentAccountName} ({item.MovementTypeName} - {(item.Debit > 0 ? item.Debit : item.Credit):n2} ₺)";

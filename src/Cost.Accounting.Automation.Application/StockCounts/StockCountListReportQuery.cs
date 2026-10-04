@@ -31,5 +31,14 @@ public sealed class StockCountReportRowDto
     public decimal GroupTotalQuantity { get; set; }
     public decimal GrandTotalQuantity { get; set; }
     public Guid GroupId { get; set; }
+
+    /// <summary>
+    /// Grubun hesap planı kodu (depo kodu veya atölye kodu).
+    /// Grup başlığında kod ve ad birlikte basılır; kod bulunamazsa boş kalır
+    /// ve yalnızca ad gösterilir.
+    /// </summary>
+    public string GroupCode { get; set; } = default!;
+
+    /// <summary>Grubun adı: depo bazında depo adı, atölye bazında atölye adı.</summary>
     public string GroupName { get; set; } = default!;
 }

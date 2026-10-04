@@ -1,7 +1,6 @@
-﻿using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.Companies;
-using Cost.Accounting.Automation.Domain.Users;
 using TS.MediatR;
 using TS.Result;
 
@@ -11,30 +10,20 @@ namespace Cost.Accounting.Automation.Application.Companies;
 public sealed record CompanyDeleteCommand(
     Guid Id) : IRequest<Result<string>>;
 
+/// <summary>Şirkete bağlı kullanıcı varsa silme sonrası not üretir.</summary>
 internal sealed class CompanyDeleteCommandHandler(
-    ICompanyRepository companyRepository,
-    IUserRepository userRepository) : IRequestHandler<CompanyDeleteCommand, Result<string>>
+    ICompanyRepository companyRepository) : IRequestHandler<CompanyDeleteCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CompanyDeleteCommand request, CancellationToken cancellationToken)
     {
-        var company = await companyRepository.FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
-        if (company is null)
-        {
-            return Result<string>.Failure("Şirket bulunamadı");
-        }
+        var runner = new BulkDeletionRunner<Company>(
+            companyRepository,
+            (ids, token) => companyRepository.GetDeletionCheckAsync(ids, token));
+        Result<BulkDeletionOutcome> result = await runner.RunAsync(
+            [request.Id],
+            "şirket",
+            cancellationToken);
 
-        bool hasUser = await userRepository.AnyAsync(u => u.CompanyId == request.Id, cancellationToken);
-
-        company.Delete();
-        companyRepository.Update(company);
-
-        if (hasUser)
-        {
-            return DeleteWarnings.Compose(
-                $"'{company.Name.Value}' şirketi silindi, ancak şirkete bağlı kullanıcılar olduğu için " +
-                $"ilgili kullanıcıların gözden geçirilmesi gerekir.");
-        }
-
-        return "Şirket başarıyla silindi";
+        return BulkDeletionResult.ToMessage(result, "şirket");
     }
 }

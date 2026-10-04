@@ -78,7 +78,7 @@ internal sealed class CompanyCreateCommandHandler(
         // Şirket adı kontrolü
         string? duplicateKey = Company.BuildDuplicateKey(request.Name);
 
-        Company? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Company>(
+        Company? nameDuplicate = await duplicateCheckService.FindMasterDuplicateAsync<Company>(
             duplicateKey,
             cancellationToken: cancellationToken);
 

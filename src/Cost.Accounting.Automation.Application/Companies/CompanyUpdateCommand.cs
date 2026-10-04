@@ -95,7 +95,7 @@ internal sealed class CompanyUpdateCommandHandler(
         // Aynı isimde başka bir şirket var mı kontrol et (kendisi hariç)
         string? duplicateKey = Company.BuildDuplicateKey(request.Name);
 
-        Company? nameDuplicate = await duplicateCheckService.FindDuplicateAsync<Company>(
+        Company? nameDuplicate = await duplicateCheckService.FindMasterDuplicateAsync<Company>(
             duplicateKey,
             excludeId: request.Id,
             cancellationToken: cancellationToken);

@@ -1,5 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.Recipes;
 using TS.MediatR;
 using TS.Result;
@@ -14,7 +14,12 @@ internal sealed class RecipeDeleteCommandHandler(
 {
     public async Task<Result<string>> Handle(RecipeDeleteCommand request, CancellationToken cancellationToken)
     {
-        await recipeRepository.SoftDeleteAsync(new IdentityId(request.Id), cancellationToken);
-        return Result<string>.Succeed("Reçete silindi.");
+        var runner = new BulkDeletionRunner<Recipe>(recipeRepository);
+        Result<BulkDeletionOutcome> result = await runner.RunAsync(
+            [request.Id],
+            "reçete",
+            cancellationToken);
+
+        return BulkDeletionResult.ToMessage(result, "reçete");
     }
 }

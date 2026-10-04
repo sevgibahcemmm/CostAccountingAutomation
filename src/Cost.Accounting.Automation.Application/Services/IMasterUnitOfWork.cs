@@ -8,5 +8,7 @@ namespace Cost.Accounting.Automation.Application.Services;
 /// </summary>
 public interface IMasterUnitOfWork
 {
+    bool HasChanges();
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

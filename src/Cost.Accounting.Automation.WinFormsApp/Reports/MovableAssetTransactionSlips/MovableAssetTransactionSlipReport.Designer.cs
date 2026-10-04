@@ -29,8 +29,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
 private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            DevExpress.XtraReports.UI.XRSummary xrSummary1 = new DevExpress.XtraReports.UI.XRSummary();
-            DevExpress.XtraReports.UI.XRSummary xrSummary2 = new DevExpress.XtraReports.UI.XRSummary();
+            DevExpress.XtraReports.UI.XRSummary xrSummary5 = new DevExpress.XtraReports.UI.XRSummary();
+            DevExpress.XtraReports.UI.XRSummary xrSummary6 = new DevExpress.XtraReports.UI.XRSummary();
             this.TopMargin = new DevExpress.XtraReports.UI.TopMarginBand();
             this.PageFooter = new DevExpress.XtraReports.UI.PageFooterBand();
             this.xrLine1 = new DevExpress.XtraReports.UI.XRLine();
@@ -140,10 +140,40 @@ private void InitializeComponent()
             this.tblSignatures = new DevExpress.XtraReports.UI.XRTable();
             this.rowSignatures1 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cellSig1Giris = new DevExpress.XtraReports.UI.XRTableCell();
+            this.lblSig1GirisBaslik = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1GirisAltBaslik = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1GirisEtiketAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1GirisEtiketUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1GirisEtiketImzasi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1GirisAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1GirisUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1GirisTarihi = new DevExpress.XtraReports.UI.XRLabel();
             this.cellSig1Exit = new DevExpress.XtraReports.UI.XRTableCell();
+            this.lblSig1ExitBaslik = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1ExitAltBaslik = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1ExitEtiketAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1ExitEtiketUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1ExitEtiketImzasi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1ExitAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1ExitUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig1ExitTarihi = new DevExpress.XtraReports.UI.XRLabel();
             this.rowSignatures2 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cellSig2TeslimEden = new DevExpress.XtraReports.UI.XRTableCell();
+            this.lblSig2TeslimEdenBaslik = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimEdenEtiketAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimEdenEtiketUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimEdenEtiketImzasi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimEdenAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimEdenUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimEdenTarihi = new DevExpress.XtraReports.UI.XRLabel();
             this.cellSig2TeslimAlan = new DevExpress.XtraReports.UI.XRTableCell();
+            this.lblSig2TeslimAlanBaslik = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimAlanEtiketAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimAlanEtiketUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimAlanEtiketImzasi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimAlanAdiSoyadi = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimAlanUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.lblSig2TeslimAlanTarihi = new DevExpress.XtraReports.UI.XRLabel();
             this.PageHeader = new DevExpress.XtraReports.UI.PageHeaderBand();
             this.tblColumnHeader = new DevExpress.XtraReports.UI.XRTable();
             this.rowColumnHeader1 = new DevExpress.XtraReports.UI.XRTableRow();
@@ -206,7 +236,7 @@ private void InitializeComponent()
             this.xrPageInfo1,
             this.xrPageInfo2,
             this.xrLabelFooter});
-            this.PageFooter.HeightF = 40F;
+            this.PageFooter.HeightF = 31.20829F;
             this.PageFooter.Name = "PageFooter";
             // 
             // xrLine1
@@ -217,11 +247,11 @@ private void InitializeComponent()
             // 
             // xrPageInfo1
             // 
-            this.xrPageInfo1.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrPageInfo1.LocationFloat = new DevExpress.Utils.PointFloat(0F, 8F);
+            this.xrPageInfo1.Font = new DevExpress.Drawing.DXFont("Arial", 5F);
+            this.xrPageInfo1.LocationFloat = new DevExpress.Utils.PointFloat(0F, 7.999992F);
             this.xrPageInfo1.Name = "xrPageInfo1";
             this.xrPageInfo1.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrPageInfo1.SizeF = new System.Drawing.SizeF(220F, 23F);
+            this.xrPageInfo1.SizeF = new System.Drawing.SizeF(220F, 22.00002F);
             this.xrPageInfo1.StylePriority.UseFont = false;
             this.xrPageInfo1.StylePriority.UseTextAlignment = false;
             this.xrPageInfo1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
@@ -229,12 +259,12 @@ private void InitializeComponent()
             // 
             // xrPageInfo2
             // 
-            this.xrPageInfo2.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrPageInfo2.LocationFloat = new DevExpress.Utils.PointFloat(559.8968F, 8F);
+            this.xrPageInfo2.Font = new DevExpress.Drawing.DXFont("Arial", 5F);
+            this.xrPageInfo2.LocationFloat = new DevExpress.Utils.PointFloat(559.8968F, 7.999992F);
             this.xrPageInfo2.Name = "xrPageInfo2";
             this.xrPageInfo2.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrPageInfo2.PageInfo = DevExpress.XtraPrinting.PageInfo.DateTime;
-            this.xrPageInfo2.SizeF = new System.Drawing.SizeF(171.4322F, 23F);
+            this.xrPageInfo2.SizeF = new System.Drawing.SizeF(171.4322F, 22.00002F);
             this.xrPageInfo2.StylePriority.UseFont = false;
             this.xrPageInfo2.StylePriority.UseTextAlignment = false;
             this.xrPageInfo2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
@@ -242,12 +272,12 @@ private void InitializeComponent()
             // 
             // xrLabelFooter
             // 
-            this.xrLabelFooter.Font = new DevExpress.Drawing.DXFont("Arial", 8F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.xrLabelFooter.LocationFloat = new DevExpress.Utils.PointFloat(220F, 8F);
+            this.xrLabelFooter.Font = new DevExpress.Drawing.DXFont("Arial", 5F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.xrLabelFooter.LocationFloat = new DevExpress.Utils.PointFloat(220F, 7.999992F);
             this.xrLabelFooter.Multiline = true;
             this.xrLabelFooter.Name = "xrLabelFooter";
             this.xrLabelFooter.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrLabelFooter.SizeF = new System.Drawing.SizeF(339.8968F, 30.00001F);
+            this.xrLabelFooter.SizeF = new System.Drawing.SizeF(339.8968F, 22.00002F);
             this.xrLabelFooter.StylePriority.UseFont = false;
             this.xrLabelFooter.StylePriority.UseTextAlignment = false;
             this.xrLabelFooter.Text = "© Yazılımcı Emrullah AKPINAR\nMuhasebe Yetkilisi";
@@ -1666,9 +1696,7 @@ private void InitializeComponent()
             // 
             this.cellGroupMiktar.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
-            | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellGroupMiktar.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Quantity]")});
+| DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.cellGroupMiktar.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
             this.cellGroupMiktar.Multiline = true;
             this.cellGroupMiktar.Name = "cellGroupMiktar";
@@ -1677,9 +1705,20 @@ private void InitializeComponent()
             this.cellGroupMiktar.StylePriority.UseFont = false;
             this.cellGroupMiktar.StylePriority.UsePadding = false;
             this.cellGroupMiktar.StylePriority.UseTextAlignment = false;
-            xrSummary1.FormatString = "{0:n2}";
-            xrSummary1.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
-            this.cellGroupMiktar.Summary = xrSummary1;
+            // GRUP ALTTOPLAMI (miktar). DevExpress'te özet, hücrenin veri
+            // bağını (DataBindings) kullanır; XRSummary'nin kendi alanı yoktur.
+            // Bağ tanımlı değilken toplam boş kalır. Önceden bu hücrede
+            // "BeforePrint -> Text = [Quantity]" ifadesi vardı; o ifade özeti
+            // ezip grubun YALNIZCA bir satırının miktarını yazıyordu. Belgede
+            // ürün başına tek satır varken fark edilmiyordu; iki katmanlı
+            // çıkışta (144 @ 12,60 + 30 @ 13,20) alt toplam 144 çıkıyor,
+            // beklenen 174 değil.
+            this.cellGroupMiktar.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "Quantity")});
+xrSummary5.Func = DevExpress.XtraReports.UI.SummaryFunc.Sum;
+            xrSummary5.FormatString = "{0:n2}";
+            xrSummary5.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
+            this.cellGroupMiktar.Summary = xrSummary5;
             this.cellGroupMiktar.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.cellGroupMiktar.TextFormatString = "{0:n2}";
             this.cellGroupMiktar.Weight = 1D;
@@ -1706,8 +1745,6 @@ private void InitializeComponent()
             this.cellGroupTotal.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
-            this.cellGroupTotal.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Amount]")});
             this.cellGroupTotal.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F, DevExpress.Drawing.DXFontStyle.Bold);
             this.cellGroupTotal.Multiline = true;
             this.cellGroupTotal.Name = "cellGroupTotal";
@@ -1716,9 +1753,13 @@ private void InitializeComponent()
             this.cellGroupTotal.StylePriority.UseFont = false;
             this.cellGroupTotal.StylePriority.UsePadding = false;
             this.cellGroupTotal.StylePriority.UseTextAlignment = false;
-            xrSummary2.FormatString = "{0:n2}";
-            xrSummary2.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
-            this.cellGroupTotal.Summary = xrSummary2;
+            // GRUP ALTTOPLAMI (tutar = miktar x fiyat). Bkz. cellGroupMiktar.
+            this.cellGroupTotal.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "Amount")});
+            xrSummary6.Func = DevExpress.XtraReports.UI.SummaryFunc.Sum;
+            xrSummary6.FormatString = "{0:n2}";
+            xrSummary6.Running = DevExpress.XtraReports.UI.SummaryRunning.Group;
+            this.cellGroupTotal.Summary = xrSummary6;
             this.cellGroupTotal.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.cellGroupTotal.TextFormatString = "{0:n2}";
             this.cellGroupTotal.Weight = 1D;
@@ -1787,10 +1828,18 @@ private void InitializeComponent()
             // 
             // cellSig1Giris
             // 
-            this.cellSig1Giris.CanGrow = true;
             this.cellSig1Giris.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
+            this.cellSig1Giris.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+            this.lblSig1GirisBaslik,
+            this.lblSig1GirisAltBaslik,
+            this.lblSig1GirisEtiketAdiSoyadi,
+            this.lblSig1GirisEtiketUnvani,
+            this.lblSig1GirisEtiketImzasi,
+            this.lblSig1GirisAdiSoyadi,
+            this.lblSig1GirisUnvani,
+            this.lblSig1GirisTarihi});
             this.cellSig1Giris.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellSig1Giris.Multiline = true;
             this.cellSig1Giris.Name = "cellSig1Giris";
@@ -1799,17 +1848,124 @@ private void InitializeComponent()
             this.cellSig1Giris.StylePriority.UseFont = false;
             this.cellSig1Giris.StylePriority.UsePadding = false;
             this.cellSig1Giris.StylePriority.UseTextAlignment = false;
-            this.cellSig1Giris.Text = "GİRİŞ KAYDI YAPILMIŞTIR\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
-    "anı     :\r\nTarih      :\r\nİmzası     :\r\n\r\n\r\n";
             this.cellSig1Giris.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
-            this.cellSig1Giris.Weight = 1.51D;
+            this.cellSig1Giris.Weight = 1.5099999904632568D;
+            // 
+            // lblSig1GirisBaslik
+            // 
+            this.lblSig1GirisBaslik.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisBaslik.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisBaslik.LocationFloat = new DevExpress.Utils.PointFloat(92.5F, 6.039993F);
+            this.lblSig1GirisBaslik.Name = "lblSig1GirisBaslik";
+            this.lblSig1GirisBaslik.SizeF = new System.Drawing.SizeF(122F, 8F);
+            this.lblSig1GirisBaslik.StylePriority.UseBorders = false;
+            this.lblSig1GirisBaslik.StylePriority.UseFont = false;
+            this.lblSig1GirisBaslik.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisBaslik.Text = "GİRİŞ KAYDI YAPILMIŞTIR";
+            this.lblSig1GirisBaslik.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // lblSig1GirisAltBaslik
+            // 
+            this.lblSig1GirisAltBaslik.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisAltBaslik.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisAltBaslik.LocationFloat = new DevExpress.Utils.PointFloat(10.00001F, 14.03999F);
+            this.lblSig1GirisAltBaslik.Name = "lblSig1GirisAltBaslik";
+            this.lblSig1GirisAltBaslik.SizeF = new System.Drawing.SizeF(355.6645F, 8F);
+            this.lblSig1GirisAltBaslik.StylePriority.UseBorders = false;
+            this.lblSig1GirisAltBaslik.StylePriority.UseFont = false;
+            this.lblSig1GirisAltBaslik.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisAltBaslik.Text = "Taşınır Kayıt ve Yetkilisinin";
+            this.lblSig1GirisAltBaslik.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // lblSig1GirisEtiketAdiSoyadi
+            // 
+            this.lblSig1GirisEtiketAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisEtiketAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisEtiketAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 28.08F);
+            this.lblSig1GirisEtiketAdiSoyadi.Name = "lblSig1GirisEtiketAdiSoyadi";
+            this.lblSig1GirisEtiketAdiSoyadi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig1GirisEtiketAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig1GirisEtiketAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig1GirisEtiketAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisEtiketAdiSoyadi.Text = "Adı Soyadı :";
+            this.lblSig1GirisEtiketAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig1GirisEtiketUnvani
+            // 
+            this.lblSig1GirisEtiketUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisEtiketUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisEtiketUnvani.LocationFloat = new DevExpress.Utils.PointFloat(94F, 35.1F);
+            this.lblSig1GirisEtiketUnvani.Name = "lblSig1GirisEtiketUnvani";
+            this.lblSig1GirisEtiketUnvani.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig1GirisEtiketUnvani.StylePriority.UseBorders = false;
+            this.lblSig1GirisEtiketUnvani.StylePriority.UseFont = false;
+            this.lblSig1GirisEtiketUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisEtiketUnvani.Text = "Ünvanı     :";
+            this.lblSig1GirisEtiketUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig1GirisEtiketImzasi
+            // 
+            this.lblSig1GirisEtiketImzasi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisEtiketImzasi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisEtiketImzasi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 42.12F);
+            this.lblSig1GirisEtiketImzasi.Name = "lblSig1GirisEtiketImzasi";
+            this.lblSig1GirisEtiketImzasi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig1GirisEtiketImzasi.StylePriority.UseBorders = false;
+            this.lblSig1GirisEtiketImzasi.StylePriority.UseFont = false;
+            this.lblSig1GirisEtiketImzasi.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisEtiketImzasi.Text = "İmzası     :";
+            this.lblSig1GirisEtiketImzasi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig1GirisAdiSoyadi
+            // 
+            this.lblSig1GirisAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(168F, 28.08F);
+            this.lblSig1GirisAdiSoyadi.Name = "lblSig1GirisAdiSoyadi";
+            this.lblSig1GirisAdiSoyadi.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig1GirisAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig1GirisAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig1GirisAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig1GirisUnvani
+            // 
+            this.lblSig1GirisUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisUnvani.LocationFloat = new DevExpress.Utils.PointFloat(168F, 35.1F);
+            this.lblSig1GirisUnvani.Name = "lblSig1GirisUnvani";
+            this.lblSig1GirisUnvani.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig1GirisUnvani.StylePriority.UseBorders = false;
+            this.lblSig1GirisUnvani.StylePriority.UseFont = false;
+            this.lblSig1GirisUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig1GirisTarihi
+            // 
+            this.lblSig1GirisTarihi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1GirisTarihi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1GirisTarihi.LocationFloat = new DevExpress.Utils.PointFloat(217.5F, 6.039993F);
+            this.lblSig1GirisTarihi.Name = "lblSig1GirisTarihi";
+            this.lblSig1GirisTarihi.SizeF = new System.Drawing.SizeF(58F, 8F);
+            this.lblSig1GirisTarihi.StylePriority.UseBorders = false;
+            this.lblSig1GirisTarihi.StylePriority.UseFont = false;
+            this.lblSig1GirisTarihi.StylePriority.UseTextAlignment = false;
+            this.lblSig1GirisTarihi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // cellSig1Exit
             // 
-            this.cellSig1Exit.CanGrow = true;
             this.cellSig1Exit.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
+            this.cellSig1Exit.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+            this.lblSig1ExitBaslik,
+            this.lblSig1ExitAltBaslik,
+            this.lblSig1ExitEtiketAdiSoyadi,
+            this.lblSig1ExitEtiketUnvani,
+            this.lblSig1ExitEtiketImzasi,
+            this.lblSig1ExitAdiSoyadi,
+            this.lblSig1ExitUnvani,
+            this.lblSig1ExitTarihi});
             this.cellSig1Exit.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellSig1Exit.Multiline = true;
             this.cellSig1Exit.Name = "cellSig1Exit";
@@ -1818,10 +1974,109 @@ private void InitializeComponent()
             this.cellSig1Exit.StylePriority.UseFont = false;
             this.cellSig1Exit.StylePriority.UsePadding = false;
             this.cellSig1Exit.StylePriority.UseTextAlignment = false;
-            this.cellSig1Exit.Text = "ÇIKIŞ KAYDI YAPILMIŞTIR\r\n\r\n  Taşınır Kayıt ve Yetkilisinin\r\n\r\nAdı Soyadı :\r\nÜnv" +
-    "anı     :\r\nTarih      :\r\nİmzası     :\r\n\r\n\r\n";
             this.cellSig1Exit.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
-            this.cellSig1Exit.Weight = 1.49D;
+            this.cellSig1Exit.Weight = 1.4900000095367432D;
+            // 
+            // lblSig1ExitBaslik
+            // 
+            this.lblSig1ExitBaslik.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitBaslik.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitBaslik.LocationFloat = new DevExpress.Utils.PointFloat(90F, 6.039993F);
+            this.lblSig1ExitBaslik.Name = "lblSig1ExitBaslik";
+            this.lblSig1ExitBaslik.SizeF = new System.Drawing.SizeF(122F, 8F);
+            this.lblSig1ExitBaslik.StylePriority.UseBorders = false;
+            this.lblSig1ExitBaslik.StylePriority.UseFont = false;
+            this.lblSig1ExitBaslik.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitBaslik.Text = "ÇIKIŞ KAYDI YAPILMIŞTIR";
+            this.lblSig1ExitBaslik.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // lblSig1ExitAltBaslik
+            // 
+            this.lblSig1ExitAltBaslik.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitAltBaslik.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitAltBaslik.LocationFloat = new DevExpress.Utils.PointFloat(9.999969F, 14.03999F);
+            this.lblSig1ExitAltBaslik.Name = "lblSig1ExitAltBaslik";
+            this.lblSig1ExitAltBaslik.SizeF = new System.Drawing.SizeF(348F, 8F);
+            this.lblSig1ExitAltBaslik.StylePriority.UseBorders = false;
+            this.lblSig1ExitAltBaslik.StylePriority.UseFont = false;
+            this.lblSig1ExitAltBaslik.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitAltBaslik.Text = "Taşınır Kayıt ve Yetkilisinin";
+            this.lblSig1ExitAltBaslik.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // lblSig1ExitEtiketAdiSoyadi
+            // 
+            this.lblSig1ExitEtiketAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitEtiketAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitEtiketAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 28.08F);
+            this.lblSig1ExitEtiketAdiSoyadi.Name = "lblSig1ExitEtiketAdiSoyadi";
+            this.lblSig1ExitEtiketAdiSoyadi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig1ExitEtiketAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig1ExitEtiketAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig1ExitEtiketAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitEtiketAdiSoyadi.Text = "Adı Soyadı :";
+            this.lblSig1ExitEtiketAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig1ExitEtiketUnvani
+            // 
+            this.lblSig1ExitEtiketUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitEtiketUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitEtiketUnvani.LocationFloat = new DevExpress.Utils.PointFloat(94F, 35.1F);
+            this.lblSig1ExitEtiketUnvani.Name = "lblSig1ExitEtiketUnvani";
+            this.lblSig1ExitEtiketUnvani.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig1ExitEtiketUnvani.StylePriority.UseBorders = false;
+            this.lblSig1ExitEtiketUnvani.StylePriority.UseFont = false;
+            this.lblSig1ExitEtiketUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitEtiketUnvani.Text = "Ünvanı     :";
+            this.lblSig1ExitEtiketUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig1ExitEtiketImzasi
+            // 
+            this.lblSig1ExitEtiketImzasi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitEtiketImzasi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitEtiketImzasi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 42.12F);
+            this.lblSig1ExitEtiketImzasi.Name = "lblSig1ExitEtiketImzasi";
+            this.lblSig1ExitEtiketImzasi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig1ExitEtiketImzasi.StylePriority.UseBorders = false;
+            this.lblSig1ExitEtiketImzasi.StylePriority.UseFont = false;
+            this.lblSig1ExitEtiketImzasi.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitEtiketImzasi.Text = "İmzası     :";
+            this.lblSig1ExitEtiketImzasi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig1ExitAdiSoyadi
+            // 
+            this.lblSig1ExitAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(168F, 28.08F);
+            this.lblSig1ExitAdiSoyadi.Name = "lblSig1ExitAdiSoyadi";
+            this.lblSig1ExitAdiSoyadi.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig1ExitAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig1ExitAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig1ExitAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig1ExitUnvani
+            // 
+            this.lblSig1ExitUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitUnvani.LocationFloat = new DevExpress.Utils.PointFloat(168F, 35.1F);
+            this.lblSig1ExitUnvani.Name = "lblSig1ExitUnvani";
+            this.lblSig1ExitUnvani.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig1ExitUnvani.StylePriority.UseBorders = false;
+            this.lblSig1ExitUnvani.StylePriority.UseFont = false;
+            this.lblSig1ExitUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig1ExitTarihi
+            // 
+            this.lblSig1ExitTarihi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig1ExitTarihi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig1ExitTarihi.LocationFloat = new DevExpress.Utils.PointFloat(215F, 6.039993F);
+            this.lblSig1ExitTarihi.Name = "lblSig1ExitTarihi";
+            this.lblSig1ExitTarihi.SizeF = new System.Drawing.SizeF(58F, 8F);
+            this.lblSig1ExitTarihi.StylePriority.UseBorders = false;
+            this.lblSig1ExitTarihi.StylePriority.UseFont = false;
+            this.lblSig1ExitTarihi.StylePriority.UseTextAlignment = false;
+            this.lblSig1ExitTarihi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // rowSignatures2
             // 
@@ -1833,10 +2088,17 @@ private void InitializeComponent()
             // 
             // cellSig2TeslimEden
             // 
-            this.cellSig2TeslimEden.CanGrow = true;
             this.cellSig2TeslimEden.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
+            this.cellSig2TeslimEden.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+            this.lblSig2TeslimEdenBaslik,
+            this.lblSig2TeslimEdenEtiketAdiSoyadi,
+            this.lblSig2TeslimEdenEtiketUnvani,
+            this.lblSig2TeslimEdenEtiketImzasi,
+            this.lblSig2TeslimEdenAdiSoyadi,
+            this.lblSig2TeslimEdenUnvani,
+            this.lblSig2TeslimEdenTarihi});
             this.cellSig2TeslimEden.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellSig2TeslimEden.Multiline = true;
             this.cellSig2TeslimEden.Name = "cellSig2TeslimEden";
@@ -1845,16 +2107,112 @@ private void InitializeComponent()
             this.cellSig2TeslimEden.StylePriority.UseFont = false;
             this.cellSig2TeslimEden.StylePriority.UsePadding = false;
             this.cellSig2TeslimEden.StylePriority.UseTextAlignment = false;
-            this.cellSig2TeslimEden.Text = "TESLİM EDEN (15)\r\n\r\n\r\n\r\nAdı Soyadı :\r\nÜnvanı :\r\nİmzası :\r\n\r\n\r\n";
             this.cellSig2TeslimEden.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
-            this.cellSig2TeslimEden.Weight = 1.51D;
+            this.cellSig2TeslimEden.Weight = 1.5099999904632568D;
+            // 
+            // lblSig2TeslimEdenBaslik
+            // 
+            this.lblSig2TeslimEdenBaslik.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimEdenBaslik.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimEdenBaslik.LocationFloat = new DevExpress.Utils.PointFloat(95.5F, 0F);
+            this.lblSig2TeslimEdenBaslik.Name = "lblSig2TeslimEdenBaslik";
+            this.lblSig2TeslimEdenBaslik.SizeF = new System.Drawing.SizeF(116F, 8F);
+            this.lblSig2TeslimEdenBaslik.StylePriority.UseBorders = false;
+            this.lblSig2TeslimEdenBaslik.StylePriority.UseFont = false;
+            this.lblSig2TeslimEdenBaslik.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimEdenBaslik.Text = "TESLİM EDEN (15)";
+            this.lblSig2TeslimEdenBaslik.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // lblSig2TeslimEdenEtiketAdiSoyadi
+            // 
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 28.08F);
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.Name = "lblSig2TeslimEdenEtiketAdiSoyadi";
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.Text = "Adı Soyadı :";
+            this.lblSig2TeslimEdenEtiketAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig2TeslimEdenEtiketUnvani
+            // 
+            this.lblSig2TeslimEdenEtiketUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimEdenEtiketUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimEdenEtiketUnvani.LocationFloat = new DevExpress.Utils.PointFloat(94F, 35.1F);
+            this.lblSig2TeslimEdenEtiketUnvani.Name = "lblSig2TeslimEdenEtiketUnvani";
+            this.lblSig2TeslimEdenEtiketUnvani.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig2TeslimEdenEtiketUnvani.StylePriority.UseBorders = false;
+            this.lblSig2TeslimEdenEtiketUnvani.StylePriority.UseFont = false;
+            this.lblSig2TeslimEdenEtiketUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimEdenEtiketUnvani.Text = "Ünvanı     :";
+            this.lblSig2TeslimEdenEtiketUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig2TeslimEdenEtiketImzasi
+            // 
+            this.lblSig2TeslimEdenEtiketImzasi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimEdenEtiketImzasi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimEdenEtiketImzasi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 42.12F);
+            this.lblSig2TeslimEdenEtiketImzasi.Name = "lblSig2TeslimEdenEtiketImzasi";
+            this.lblSig2TeslimEdenEtiketImzasi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig2TeslimEdenEtiketImzasi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimEdenEtiketImzasi.StylePriority.UseFont = false;
+            this.lblSig2TeslimEdenEtiketImzasi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimEdenEtiketImzasi.Text = "İmzası     :";
+            this.lblSig2TeslimEdenEtiketImzasi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig2TeslimEdenAdiSoyadi
+            // 
+            this.lblSig2TeslimEdenAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimEdenAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimEdenAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(168F, 28.08F);
+            this.lblSig2TeslimEdenAdiSoyadi.Name = "lblSig2TeslimEdenAdiSoyadi";
+            this.lblSig2TeslimEdenAdiSoyadi.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig2TeslimEdenAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimEdenAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig2TeslimEdenAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimEdenAdiSoyadi.Text = "...............................";
+            this.lblSig2TeslimEdenAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig2TeslimEdenUnvani
+            // 
+            this.lblSig2TeslimEdenUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimEdenUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimEdenUnvani.LocationFloat = new DevExpress.Utils.PointFloat(168F, 35.1F);
+            this.lblSig2TeslimEdenUnvani.Name = "lblSig2TeslimEdenUnvani";
+            this.lblSig2TeslimEdenUnvani.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig2TeslimEdenUnvani.StylePriority.UseBorders = false;
+            this.lblSig2TeslimEdenUnvani.StylePriority.UseFont = false;
+            this.lblSig2TeslimEdenUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimEdenUnvani.Text = "...............................";
+            this.lblSig2TeslimEdenUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig2TeslimEdenTarihi
+            // 
+            this.lblSig2TeslimEdenTarihi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimEdenTarihi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimEdenTarihi.LocationFloat = new DevExpress.Utils.PointFloat(214.5F, 0F);
+            this.lblSig2TeslimEdenTarihi.Name = "lblSig2TeslimEdenTarihi";
+            this.lblSig2TeslimEdenTarihi.SizeF = new System.Drawing.SizeF(58F, 8F);
+            this.lblSig2TeslimEdenTarihi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimEdenTarihi.StylePriority.UseFont = false;
+            this.lblSig2TeslimEdenTarihi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimEdenTarihi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // cellSig2TeslimAlan
             // 
-            this.cellSig2TeslimAlan.CanGrow = true;
             this.cellSig2TeslimAlan.Borders = ((DevExpress.XtraPrinting.BorderSide)((((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
+            this.cellSig2TeslimAlan.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+            this.lblSig2TeslimAlanBaslik,
+            this.lblSig2TeslimAlanEtiketAdiSoyadi,
+            this.lblSig2TeslimAlanEtiketUnvani,
+            this.lblSig2TeslimAlanEtiketImzasi,
+            this.lblSig2TeslimAlanAdiSoyadi,
+            this.lblSig2TeslimAlanUnvani,
+            this.lblSig2TeslimAlanTarihi});
             this.cellSig2TeslimAlan.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
             this.cellSig2TeslimAlan.Multiline = true;
             this.cellSig2TeslimAlan.Name = "cellSig2TeslimAlan";
@@ -1863,9 +2221,96 @@ private void InitializeComponent()
             this.cellSig2TeslimAlan.StylePriority.UseFont = false;
             this.cellSig2TeslimAlan.StylePriority.UsePadding = false;
             this.cellSig2TeslimAlan.StylePriority.UseTextAlignment = false;
-            this.cellSig2TeslimAlan.Text = "TESLİM ALAN (16)\r\n\r\n\r\n\r\nAdı Soyadı :\r\nÜnvanı :\r\nİmzası :\r\n\r\n\r\n";
             this.cellSig2TeslimAlan.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
-            this.cellSig2TeslimAlan.Weight = 1.49D;
+            this.cellSig2TeslimAlan.Weight = 1.4900000095367432D;
+            // 
+            // lblSig2TeslimAlanBaslik
+            // 
+            this.lblSig2TeslimAlanBaslik.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimAlanBaslik.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimAlanBaslik.LocationFloat = new DevExpress.Utils.PointFloat(93F, 0F);
+            this.lblSig2TeslimAlanBaslik.Name = "lblSig2TeslimAlanBaslik";
+            this.lblSig2TeslimAlanBaslik.SizeF = new System.Drawing.SizeF(116F, 8F);
+            this.lblSig2TeslimAlanBaslik.StylePriority.UseBorders = false;
+            this.lblSig2TeslimAlanBaslik.StylePriority.UseFont = false;
+            this.lblSig2TeslimAlanBaslik.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimAlanBaslik.Text = "TESLİM ALAN (16)";
+            this.lblSig2TeslimAlanBaslik.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // lblSig2TeslimAlanEtiketAdiSoyadi
+            // 
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 28.08F);
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.Name = "lblSig2TeslimAlanEtiketAdiSoyadi";
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.Text = "Adı Soyadı :";
+            this.lblSig2TeslimAlanEtiketAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig2TeslimAlanEtiketUnvani
+            // 
+            this.lblSig2TeslimAlanEtiketUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimAlanEtiketUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimAlanEtiketUnvani.LocationFloat = new DevExpress.Utils.PointFloat(94F, 35.1F);
+            this.lblSig2TeslimAlanEtiketUnvani.Name = "lblSig2TeslimAlanEtiketUnvani";
+            this.lblSig2TeslimAlanEtiketUnvani.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig2TeslimAlanEtiketUnvani.StylePriority.UseBorders = false;
+            this.lblSig2TeslimAlanEtiketUnvani.StylePriority.UseFont = false;
+            this.lblSig2TeslimAlanEtiketUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimAlanEtiketUnvani.Text = "Ünvanı     :";
+            this.lblSig2TeslimAlanEtiketUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig2TeslimAlanEtiketImzasi
+            // 
+            this.lblSig2TeslimAlanEtiketImzasi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimAlanEtiketImzasi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimAlanEtiketImzasi.LocationFloat = new DevExpress.Utils.PointFloat(94F, 42.12F);
+            this.lblSig2TeslimAlanEtiketImzasi.Name = "lblSig2TeslimAlanEtiketImzasi";
+            this.lblSig2TeslimAlanEtiketImzasi.SizeF = new System.Drawing.SizeF(70F, 7.02F);
+            this.lblSig2TeslimAlanEtiketImzasi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimAlanEtiketImzasi.StylePriority.UseFont = false;
+            this.lblSig2TeslimAlanEtiketImzasi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimAlanEtiketImzasi.Text = "İmzası     :";
+            this.lblSig2TeslimAlanEtiketImzasi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopRight;
+            // 
+            // lblSig2TeslimAlanAdiSoyadi
+            // 
+            this.lblSig2TeslimAlanAdiSoyadi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimAlanAdiSoyadi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimAlanAdiSoyadi.LocationFloat = new DevExpress.Utils.PointFloat(168F, 28.08F);
+            this.lblSig2TeslimAlanAdiSoyadi.Name = "lblSig2TeslimAlanAdiSoyadi";
+            this.lblSig2TeslimAlanAdiSoyadi.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig2TeslimAlanAdiSoyadi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimAlanAdiSoyadi.StylePriority.UseFont = false;
+            this.lblSig2TeslimAlanAdiSoyadi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimAlanAdiSoyadi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig2TeslimAlanUnvani
+            // 
+            this.lblSig2TeslimAlanUnvani.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimAlanUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimAlanUnvani.LocationFloat = new DevExpress.Utils.PointFloat(168F, 35.1F);
+            this.lblSig2TeslimAlanUnvani.Name = "lblSig2TeslimAlanUnvani";
+            this.lblSig2TeslimAlanUnvani.SizeF = new System.Drawing.SizeF(190F, 7.02F);
+            this.lblSig2TeslimAlanUnvani.StylePriority.UseBorders = false;
+            this.lblSig2TeslimAlanUnvani.StylePriority.UseFont = false;
+            this.lblSig2TeslimAlanUnvani.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimAlanUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopLeft;
+            // 
+            // lblSig2TeslimAlanTarihi
+            // 
+            this.lblSig2TeslimAlanTarihi.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.lblSig2TeslimAlanTarihi.Font = new DevExpress.Drawing.DXFont("Arial", 6.4F);
+            this.lblSig2TeslimAlanTarihi.LocationFloat = new DevExpress.Utils.PointFloat(212F, 0F);
+            this.lblSig2TeslimAlanTarihi.Name = "lblSig2TeslimAlanTarihi";
+            this.lblSig2TeslimAlanTarihi.SizeF = new System.Drawing.SizeF(58F, 8F);
+            this.lblSig2TeslimAlanTarihi.StylePriority.UseBorders = false;
+            this.lblSig2TeslimAlanTarihi.StylePriority.UseFont = false;
+            this.lblSig2TeslimAlanTarihi.StylePriority.UseTextAlignment = false;
+            this.lblSig2TeslimAlanTarihi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
             // 
             // PageHeader
             // 
@@ -2446,6 +2891,36 @@ private void InitializeComponent()
         private DevExpress.XtraReports.UI.XRTable tblSignatures;
         private DevExpress.XtraReports.UI.XRTableRow rowSignatures1;
         private DevExpress.XtraReports.UI.XRTableCell cellSig1Giris;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisBaslik;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisAltBaslik;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisEtiketAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisEtiketUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisEtiketImzasi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1GirisTarihi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitBaslik;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitAltBaslik;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitEtiketAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitEtiketUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitEtiketImzasi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig1ExitTarihi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimEdenBaslik;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimEdenEtiketAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimEdenEtiketUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimEdenEtiketImzasi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimEdenAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimEdenUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimEdenTarihi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimAlanBaslik;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimAlanEtiketAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimAlanEtiketUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimAlanEtiketImzasi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimAlanAdiSoyadi;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimAlanUnvani;
+        private DevExpress.XtraReports.UI.XRLabel lblSig2TeslimAlanTarihi;
         private DevExpress.XtraReports.UI.XRTableCell cellSig1Exit;
         private DevExpress.XtraReports.UI.XRTableRow rowSignatures2;
         private DevExpress.XtraReports.UI.XRTableCell cellSig2TeslimEden;

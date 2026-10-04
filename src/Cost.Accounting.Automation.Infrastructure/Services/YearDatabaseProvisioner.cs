@@ -29,7 +29,7 @@ internal sealed class YearDatabaseProvisioner(
     IClaimContext claimContext) : IAccountingYearProvisioner
 {
     private static readonly string[] UnitTypeNames =
-        ["Adet", "Kg", "Lt", "m", "m²", "m³", "Paket", "Koli", "Kutu", "Çuval", "Teneke"];
+        ["Adet", "Kg", "Lt", "Metre (m)", "Metre Kare (m²)", "Metre Küp (m³)", "Paket", "Takım", "Koli", "Kutu", "Çuval", "Teneke"];
 
     private static readonly (string Name, decimal Rate)[] TaxRateSeeds =
         [("KDV % 00", 0m), ("KDV % 01", 0.01m), ("KDV % 10", 0.10m), ("KDV % 20", 0.20m)];
@@ -51,10 +51,11 @@ internal sealed class YearDatabaseProvisioner(
         new("Atölye Şefi", "Üretimin yapıldığı atölyenin şefi; mamül beyanı ve maliyet pusulası imzası", true, 20),
         new("Taşınır Kayıt Yetkilisi", "Taşınır işlem fişi giriş/çıkış kaydını yapan yetkili", false, 30),
         new("Muhasebe Yetkilisi", "Mali kayıtları tutan ve onaylayan muhasebe yetkilisi", false, 40),
+        new("Muhasebe Memuru", "Tüketim fişinde malzemeyi teslim alan muhasebe memuru", false, 45),
         new("Harcama Yetkilisi", "Harcama onaylayan yetkili", false, 50),
-        new("Sabit Görevli", "Belgeyi düzenleyen ve teslim eden sabit kadro görevlisi", false, 60),
-        new("Sayım Yapan", "Stok sayımını fiilen gerçekleştiren personel", false, 70),
-        new("Kontrol Eden", "Sayım sonucunu kontrol edip onaylayan personel", false, 80)
+        new("Gerçekleştirme Görevlisi", "Belgeyi düzenleyen ve teslim eden sabit kadro görevlisi", false, 60),
+        new("Katip", "Stok sayımını fiilen gerçekleştiren personel", false, 70),
+        new("Satınalma Memuru", "Satınalma işini yapan ve sonucunu kontrol edip onaylayan personel", false, 80)
     ];
 
     /// <summary>Yetkili görev tohum satırı.</summary>

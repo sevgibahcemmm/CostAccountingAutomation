@@ -118,6 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="xrLabel28.ExpressionBindings" xml:space="preserve">
-    <value>'                ' + ?Isyurdu + ' İşyurdunun ' + ?Atolye + ' atölyesinde imal olunan ' + ?Miktari+' adet '+?MamulAdi + ' nın ' + FormatString('{0:N2}', ToDecimal(?Toplam) / ToDecimal(?Miktari)) + ' TL/krş. bedelle imal olunduğu ve mamuller ambarına alınması icabettiği,'</value>
+    <value>'                ' + Parameters.Isyurdu + ' İşyurdunun ' + Parameters.Workshop + ' atölyesinde imal olunan ' + Parameters.Quantity + ' adet ' + Parameters.ProductName + ' nın ' + Parameters.BirimFiyat + ' TL/krş. bedelle imal olunduğu ve mamuller ambarına alınması icabettiği,'</value>
   </data>
 </root>

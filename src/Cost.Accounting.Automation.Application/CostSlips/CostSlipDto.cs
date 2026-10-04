@@ -37,7 +37,7 @@ public sealed class CostSlipItemDto
     public ExpenseAccountType ExpenseAccountType { get; set; }
 }
 
-public sealed class CostSlipListDto : EntityDto
+public sealed class CostSlipListDto : EntityDto, IApprovalStatusDto
 {
     [Column("Pusula No", Order = 10, Width = 130)]
     public string SlipNumber { get; set; } = default!;
@@ -74,6 +74,12 @@ public sealed class CostSlipListDto : EntityDto
 
     [Column("Durum Kodu", IsVisible = false)]
     public CostSlipStatus Status { get; set; }
+
+    /// <summary>
+    /// Ortak durum sözleşmesi: liste ekranı taslak/onaylı ayrımını renk olarak
+    /// yansıtır. <c>[Column]</c> taşımadığı için gridde ayrı kolon olusmaz.
+    /// </summary>
+    public bool IsApproved => Status == CostSlipStatus.Approved;
 
     [Column("Atölye Id", IsVisible = false)]
     public Guid WorkshopId { get; set; }

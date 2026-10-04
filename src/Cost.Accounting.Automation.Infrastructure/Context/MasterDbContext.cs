@@ -19,6 +19,8 @@ public sealed class MasterDbContext(DbContextOptions<MasterDbContext> options, I
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
 
+    public bool HasChanges() => ChangeTracker.HasChanges();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(

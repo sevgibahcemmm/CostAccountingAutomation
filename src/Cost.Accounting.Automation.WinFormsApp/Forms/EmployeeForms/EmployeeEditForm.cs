@@ -384,6 +384,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             txtPhone1.Text = employee.PhoneNumber1;
             txtPhone2.Text = employee.PhoneNumber2;
             txtEmail.Text = employee.Email;
+            txtRegistryNumber.Text = employee.RegistryNumber ?? string.Empty;
             chkActive.IsOn = employee.IsActive;
 
             // _duties alan readonly BindingList; mevcut görevler aynı kapsama
@@ -643,6 +644,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             string phone1 = txtPhone1.Text.Trim();
             string phone2 = txtPhone2.Text.Trim();
 
+            // Sicil numarası isteğe bağlıdır; yalnızca boşsa temizlenir.
+            string? registryNumber = txtRegistryNumber.Text.Trim();
+
+            if (string.IsNullOrEmpty(registryNumber))
+            {
+                registryNumber = null;
+            }
+
             IRequest<Result<Guid>> command = _editing is null
                 ? new EmployeeCreateCommand(
                     txtFirstName.Text.Trim(),
@@ -652,6 +661,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
                     phone1,
                     phone2,
                     txtEmail.Text.Trim(),
+                    registryNumber,
                     photo,
                     chkActive.IsOn,
                     duties)
@@ -664,6 +674,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
                     phone1,
                     phone2,
                     txtEmail.Text.Trim(),
+                    registryNumber,
                     photo,
                     chkActive.IsOn,
                     duties);
@@ -781,6 +792,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             txtPhone1.ErrorText = string.Empty;
             txtPhone2.ErrorText = string.Empty;
             txtEmail.ErrorText = string.Empty;
+            txtRegistryNumber.ErrorText = string.Empty;
         }
 
         /// <summary>

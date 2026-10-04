@@ -24,7 +24,7 @@ public sealed record CostSlipItemModel(
 
 public sealed record CostSlipCreateResult(
     Guid SlipId,
-    string Message) : IResultMessage;
+    string Message);
 
 [Permission("costslip:create")]
 public sealed record CostSlipCreateCommand(
@@ -179,6 +179,7 @@ internal sealed class CostSlipCreateCommandHandler(
                 productMovementRepository,
                 ledgerPoster,
                 productRepository,
+                chartOfAccountRepository,
                 cancellationToken);
 
             if (!stockResult.IsSuccessful)

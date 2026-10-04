@@ -82,8 +82,15 @@ internal sealed class BulkApproveStockIssuesCommandHandler(
 // "The LINQ expression 'i => i.Date' could not be translated" hatası verir.
 DateOnly maxIssueDate = ordered.Max(i => i.Date);
 
+        // IsDeleted filtresi ZORUNLUDUR. Silinen bir belgenin hareketleri
+        // soft-delete edilir ve stoğa geri döner; filtrelenmezse hareketler
+        // hem giriş hem çıkış olarak sayılır, mevcut stok yanlış (düşük)
+        // hesaplanır ve yeterli giriş varken belge reddedilir.
+        // StockIssueCostingHelper.LoadMovementsAsync da aynı filtreyi uygular.
         List<ProductMovement> existingMovements = await productMovementRepository.GetAll()
-            .Where(m => allProductIds.Contains(m.ProductId) && m.Date <= maxIssueDate)
+            .Where(m => allProductIds.Contains(m.ProductId)
+                        && m.Date <= maxIssueDate
+                        && !m.IsDeleted)
             .ToListAsync(cancellationToken);
 
         List<ChartOfAccount> accounts = await chartOfAccountRepository
@@ -94,7 +101,17 @@ DateOnly maxIssueDate = ordered.Max(i => i.Date);
                 .ToListAsync(cancellationToken))
             .ToDictionary(p => p.Id);
 
-        Dictionary<IdentityId, ChartOfAccount> accountMap = accounts.ToDictionary(a => a.Id);
+        Dictionary<IdentityId, ChartOfAccount> accountById = accounts.ToDictionary(a => a.Id);
+
+        // PlanStockEffects ürün kimliğiyle ürün hesabını eşler. Hesap kimliğiyle
+        // eşlenen sözlük verilirse ürün tarafındaki (15x) borç kaydı sessizce
+        // atlanır ve yevmiye tek taraflı kalır.
+        Dictionary<IdentityId, ChartOfAccount> productAccountMap = productMap
+            .Where(p => p.Value.ChartOfAccountId is not null
+                        && accountById.ContainsKey(new IdentityId(p.Value.ChartOfAccountId.Value)))
+            .ToDictionary(
+                p => p.Key,
+                p => accountById[new IdentityId(p.Value.ChartOfAccountId!.Value)]);
 
         // 1. AŞAMA — doğrulama. Hiçbir yazma yapılmadan, planlanmış çıkışlar
         // kümülatif stoktan düşülerek belgeler sırayla kontrol edilir.
@@ -106,11 +123,11 @@ DateOnly maxIssueDate = ordered.Max(i => i.Date);
                 .GroupBy(l => l.ProductId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
+            List<ProductMovement> pool = new(existingMovements);
+            pool.AddRange(accumulated);
+
             foreach (KeyValuePair<IdentityId, decimal> item in requested)
             {
-                List<ProductMovement> pool = new(existingMovements);
-                pool.AddRange(accumulated.Where(m => m.ProductId == item.Key));
-
                 decimal available = StockIssueCostingHelper.ComputeAvailableQuantity(
                     pool,
                     item.Key,
@@ -131,7 +148,17 @@ DateOnly maxIssueDate = ordered.Max(i => i.Date);
                 break;
             }
 
-            StockIssueStockPlan plan = StockIssueStockHelper.PlanStockEffects(issue, accountMap);
+            // Katman kırılımı havuzdaki birikmiş çıkışları da görmelidir;
+            // aksi hâlde belgeler aynı giriş katmanını defalarca tüketir.
+            // Satırlar önce havuzla eşitlenir; belgedeki kalem ile yazılacak
+            // hareketler tanım gereği aynı olur.
+            StockIssueStockHelper.SyncLinesWithFifo(issue, pool);
+
+            StockIssueStockPlan plan = StockIssueStockHelper.PlanStockEffects(
+                issue,
+                accountById.GetValueOrDefault(issue.TargetAccountId),
+                productAccountMap,
+                pool);
             accumulated.AddRange(plan.Movements);
         }
 
@@ -141,15 +168,30 @@ DateOnly maxIssueDate = ordered.Max(i => i.Date);
         }
 
         // 2. AŞAMA — yazma. TransactionBehavior tek SaveChangesAsync çağıracak.
+        // Havuz 1. aşamayla birebir aynı kurulur; planlar iki aşamada da aynı
+        // hareketleri üretir.
+        accumulated.Clear();
+
         foreach (StockIssue issue in ordered)
         {
-            StockIssueStockPlan plan = StockIssueStockHelper.PlanStockEffects(issue, accountMap);
+            List<ProductMovement> pool = new(existingMovements);
+            pool.AddRange(accumulated);
+
+            StockIssueStockHelper.SyncLinesWithFifo(issue, pool);
+
+            StockIssueStockPlan plan = StockIssueStockHelper.PlanStockEffects(
+                issue,
+                accountById.GetValueOrDefault(issue.TargetAccountId),
+                productAccountMap,
+                pool);
 
             await StockIssueStockHelper.WritePlanAsync(
                 plan,
                 productMovementRepository,
                 ledgerPoster,
                 cancellationToken);
+
+            accumulated.AddRange(plan.Movements);
 
             issue.Approve();
         }

@@ -92,8 +92,14 @@ protected override void ConfigureColumns()
             BaseGrid.LevelTree.Nodes.Add(levelNode);
         }
 
+protected override string DeleteItemLabel => "rol";
+
         protected override IRequest<Result<string>> BuildDeleteCommand(RoleDto item)
             => new RoleDeleteCommand(item.Id);
+
+        /// <summary>Seçili roller tek transaction'da silinir.</summary>
+        protected override IRequest<Result<string>>? BuildBulkDeleteCommand(IReadOnlyList<RoleDto> items)
+            => new BulkDeleteRolesCommand(items.Select(item => item.Id).ToList());
 
         protected override string GetDeleteSummary(RoleDto item) => item.Name;
     }

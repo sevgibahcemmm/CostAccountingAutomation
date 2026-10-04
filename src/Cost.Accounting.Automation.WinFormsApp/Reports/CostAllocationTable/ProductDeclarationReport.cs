@@ -8,6 +8,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
     public partial class ProductDeclarationReport : DevExpress.XtraReports.UI.XtraReport
     {
         private Dictionary<string, (decimal Quantity, decimal Total)> _workshopTotals = new();
+        private Dictionary<Guid, string> _workshopChiefs = new();
         private string _currentWorkshop = "";
 
         public ProductDeclarationReport()
@@ -17,6 +18,30 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             Detail.BeforePrint += Detail_BeforePrint;
             GroupFooter.BeforePrint += GroupFooter_BeforePrint;
         }
+
+        public void SetWorkshopChiefs(IReadOnlyDictionary<Guid, string> workshopChiefs)
+        {
+            _workshopChiefs = new Dictionary<Guid, string>(workshopChiefs);
+
+            // Şef adı raporda veri alanı olarak okunur (etiket `[WorkshopChiefName]`
+            // ifadesine bağlı); parametre grup bazlı değişemediği için satırlara
+            // yazılır. Aynı atölyenin satırları aynı şefi taşır.
+            if (DataSource is not IEnumerable<ProductDeclarationRowDto> rows)
+            {
+                return;
+            }
+
+            foreach (ProductDeclarationRowDto row in rows)
+            {
+                row.WorkshopChiefName =
+                    row.WorkshopId is Guid id && workshopChiefs.TryGetValue(id, out string? chief)
+                        ? chief
+                        : string.Empty;
+            }
+        }
+
+        /// <summary>Çözülen atölye şefi sayısı; imza uyarısında kullanılır.</summary>
+        public int WorkshopChiefCount => _workshopChiefs.Count;
 
         public void SetData(
             DateOnly startDate,
@@ -36,6 +61,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             Parameters["parameterPeriodText"].Value = period;
             Parameters["parameterCompanyName"].Value = companyName;
             Parameters["parameterEndDateText"].Value = endDate.ToString("dd.MM.yyyy");
+        }
+
+        /// <summary>Beyanda muhasebe yetkilisi yuvası yoktur; yalnızca memur basılır.</summary>
+        public void SetAccountingClerk(string accountingClerk)
+        {
+            SetParameter("MuhasebeMemuruAdi", accountingClerk);
+        }
+
+        private void SetParameter(string name, string value)
+        {
+            if (Parameters[name] is { } parameter)
+            {
+                parameter.Value = value;
+            }
         }
 
         private void Detail_BeforePrint(object? sender, CancelEventArgs e)

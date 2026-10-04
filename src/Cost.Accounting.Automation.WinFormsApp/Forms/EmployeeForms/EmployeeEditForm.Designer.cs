@@ -50,6 +50,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
         private DevExpress.XtraEditors.TextEdit txtPhone2;
         private DevExpress.XtraEditors.LabelControl lblEmail;
         private DevExpress.XtraEditors.TextEdit txtEmail;
+        private DevExpress.XtraEditors.LabelControl lblRegistryNumber;
+        private DevExpress.XtraEditors.TextEdit txtRegistryNumber;
         private DevExpress.XtraEditors.ToggleSwitch chkActive;
         private DevExpress.XtraEditors.SimpleButton btnAddDutyShortcut;
         private DevExpress.XtraEditors.LabelControl lblNote;
@@ -100,6 +102,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             btnAddDutyShortcut = new SimpleButton();
             chkActive = new ToggleSwitch();
             txtEmail = new TextEdit();
+            txtRegistryNumber = new TextEdit();
+            lblRegistryNumber = new LabelControl();
             lblIdentityHint = new LabelControl();
             lblEmail = new LabelControl();
             txtPhone2 = new TextEdit();
@@ -138,6 +142,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             tabPersonal.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtEmail.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)txtRegistryNumber.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtPhone2.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtPhone1.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtLastName.Properties).BeginInit();
@@ -231,6 +236,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             tabPersonal.Controls.Add(btnAddDutyShortcut);
             tabPersonal.Controls.Add(chkActive);
             tabPersonal.Controls.Add(txtEmail);
+            tabPersonal.Controls.Add(txtRegistryNumber);
+            tabPersonal.Controls.Add(lblRegistryNumber);
             tabPersonal.Controls.Add(lblIdentityHint);
             tabPersonal.Controls.Add(lblEmail);
             tabPersonal.Controls.Add(txtPhone2);
@@ -302,8 +309,32 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             txtEmail.Properties.Appearance.Options.UseFont = true;
             txtEmail.Properties.NullText = "ornek@kurum.gov.tr";
             txtEmail.Properties.Padding = new Padding(10, 5, 10, 5);
-            txtEmail.Size = new Size(672, 36);
+            txtEmail.Size = new Size(326, 36);
             txtEmail.TabIndex = 6;
+            // 
+            // txtRegistryNumber
+            // 
+            txtRegistryNumber.Location = new Point(370, 232);
+            txtRegistryNumber.Margin = new Padding(3, 2, 3, 2);
+            txtRegistryNumber.Name = "txtRegistryNumber";
+            txtRegistryNumber.Properties.Appearance.Font = new Font("Segoe UI", 10.5F);
+            txtRegistryNumber.Properties.Appearance.Options.UseFont = true;
+            txtRegistryNumber.Properties.MaxLength = 50;
+            txtRegistryNumber.Properties.NullText = "Kurum sicil numarasi (istege bagli)";
+            txtRegistryNumber.Properties.Padding = new Padding(10, 5, 10, 5);
+            txtRegistryNumber.Size = new Size(326, 36);
+            txtRegistryNumber.TabIndex = 13;
+            // 
+            // lblRegistryNumber
+            // 
+            lblRegistryNumber.Appearance.Font = new Font("Segoe UI Semibold", 9.5F);
+            lblRegistryNumber.Appearance.Options.UseFont = true;
+            lblRegistryNumber.Location = new Point(370, 214);
+            lblRegistryNumber.Margin = new Padding(3, 2, 3, 2);
+            lblRegistryNumber.Name = "lblRegistryNumber";
+            lblRegistryNumber.Size = new Size(74, 17);
+            lblRegistryNumber.TabIndex = 15;
+            lblRegistryNumber.Text = "Sicil No";
             // 
             // lblIdentityHint
             // 
@@ -707,6 +738,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.EmployeeForms
             tabPersonal.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtEmail.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)txtRegistryNumber.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtPhone2.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtPhone1.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtLastName.Properties).EndInit();

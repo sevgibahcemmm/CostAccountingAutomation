@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Employees;
 using Cost.Accounting.Automation.Infrastructure.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context;
@@ -24,6 +25,32 @@ internal sealed class EmployeeRepository : AuditableRepository<Employee, Applica
             .ThenInclude(d => d.Workshop)
             .Include(e => e.Duties)
             .ThenInclude(d => d.SigningRole);
+
+    /// <summary>
+    /// Sicil numarası benzersiz mi diye bakar. Karşılaştırma veritabanında
+    /// yapılır; kayıt sayısı çok olsa bile yalnızca varlık kontrolü (EXISTS)
+    /// çalıştığı için tüm kayıtlar belleğe alınmaz.
+    /// </summary>
+    public Task<bool> RegistryNumberExistsAsync(
+        string registryNumber,
+        Guid? excludeId = null,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<Employee> query = Context.Set<Employee>()
+            .IgnoreQueryFilters()
+            .Where(e => e.RegistryNumber == registryNumber);
+
+        // Id bir value-converter alanıdır; filtre koşulunda `.Value`
+        // özelliği kullanılamaz (SQL'e çevrilemez), nesnenin kendisi
+        // karşılaştırılır.
+        if (excludeId is Guid id)
+        {
+            IdentityId excluded = new(id);
+            query = query.Where(e => e.Id != excluded);
+        }
+
+        return query.AnyAsync(cancellationToken);
+    }
 }
 
 internal sealed class EmployeeDutyRepository : AuditableRepository<EmployeeDuty, ApplicationDbContext>, IEmployeeDutyRepository

@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.Products;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ internal sealed class CostSlipApproveCommandHandler(
     ICostSlipRepository costSlipRepository,
     IProductMovementRepository productMovementRepository,
     IProductRepository productRepository,
+    IChartOfAccountRepository chartOfAccountRepository,
     IChartOfAccountLedgerPoster ledgerPoster) : IRequestHandler<CostSlipApproveCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CostSlipApproveCommand request, CancellationToken cancellationToken)
@@ -47,12 +49,13 @@ internal sealed class CostSlipApproveCommandHandler(
             return Result<string>.Failure("Bu maliyet pusulası için stok hareketleri zaten kayıtlı.");
         }
 
-        Result<string> stockResult = await CostSlipStockHelper.ApplyStockEffectsAsync(
+Result<string> stockResult = await CostSlipStockHelper.ApplyStockEffectsAsync(
             slip,
             request.CostingMethod,
             productMovementRepository,
             ledgerPoster,
             productRepository,
+            chartOfAccountRepository,
             cancellationToken);
 
         if (!stockResult.IsSuccessful)

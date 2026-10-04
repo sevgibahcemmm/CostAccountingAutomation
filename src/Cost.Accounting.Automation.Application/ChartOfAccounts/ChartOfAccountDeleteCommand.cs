@@ -1,5 +1,5 @@
-using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using TS.MediatR;
@@ -49,33 +49,34 @@ internal sealed class ChartOfAccountDeleteCommandHandler(
             return Result<string>.Failure("Seçilen hesaplar silinecek durumda değil");
         }
 
-        AccountDeletionCheck check = await chartOfAccountRepository.GetDeletionCheckAsync(targets, cancellationToken);
-        if (check.MovementAccountIds.Count > 0)
+        // Alt hesaplar da hedefe dâhil olduğu için denetim tüm ağaç üzerinde
+        // yapılır; hesap başına ayrı sorgu atılmaz.
+        DeletionCheck check = await chartOfAccountRepository.GetDeletionCheckAsync(targets.ToList(), cancellationToken);
+        if (check.HasMovement)
         {
             string codes = string.Join(", ", all
-                .Where(a => check.MovementAccountIds.Contains(a.Id.Value))
+                .Where(a => check.MovementIds.Contains(a.Id.Value))
                 .Select(a => a.Code.Value)
                 .Take(5));
 
-            return Result<string>.Failure($"İşlem/hareket gören hesap(lar) silinemez: {codes}");
+            return Result<string>.Failure(DeletionMessages.MovementBlocked("hesap", check.MovementIds.Count, codes.Split(", ")));
         }
 
         ClearDeletedReferences(targets, all);
         chartOfAccountRepository.SoftDeleteRange(toDelete);
 
-        if (check.RelatedAccountIds.Count == 0)
+        if (!check.HasRelated)
         {
             return $"{toDelete.Count} hesap silindi (silinenler İçe Aktar ile yeniden yüklenebilir)";
         }
 
         string relatedCodes = string.Join(", ", all
-            .Where(a => check.RelatedAccountIds.Contains(a.Id.Value))
+            .Where(a => check.RelatedIds.Contains(a.Id.Value))
             .Select(a => a.Code.Value)
             .Take(5));
 
-        return DeleteWarnings.Compose(
-            $"{toDelete.Count} hesap silindi. NOT: {relatedCodes} kodlu hesaplar ilişkili kayıtlarda kullanılıyor; " +
-            $"hareket görmedikleri için silme gerçekleştirildi.");
+        return $"{toDelete.Count} hesap silindi. NOT: {relatedCodes} kodlu hesaplar ilişkili kayıtlarda kullanılıyor; " +
+               $"hareket görmedikleri için silme gerçekleştirildi.";
     }
 
     private static void CollectDescendants(Guid parentId, List<ChartOfAccount> all, HashSet<Guid> targets)

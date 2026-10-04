@@ -74,6 +74,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
     {
         void SetData(DateOnly startDate, DateOnly endDate, ExpenseDistributionReportResult result, string companyName = "", CostSlipType type = CostSlipType.Product);
 
+        void SetSignatoryNames(string accountingOfficer, string accountingClerk);
+
         void PrintReport();
     }
 

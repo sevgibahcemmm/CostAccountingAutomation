@@ -61,6 +61,22 @@ public sealed class Employee : Entity
     public string Email { get; private set; } = string.Empty;
 
     /// <summary>
+    /// Kurumun verdiği personel sicil numarası.
+    ///
+    /// <para>
+    /// T.C. Kimlik Numarası'ndan ayrı ve onun yerine geçmez: sicil numarası
+    /// kurum içi kayıt numarasıdır, bordro ve imza bloklarında referans olarak
+    /// kullanılır. Zorunlu değildir; alanı doldurulmamış eski personel
+    /// kayıtları geçerli kalır.
+    /// </para>
+    /// <para>
+    /// Dolu girildiğinde benzersizdir: aynı sicil numarası iki personele
+    /// verilemez.
+    /// </para>
+    /// </summary>
+    public string? RegistryNumber { get; private set; }
+
+    /// <summary>
     /// Personel fotoğrafının <see cref="Application.Services.IFileStorageService"/>
     /// köküne göreli yolu. Raporlarda fotoğraf basılmaz; kayıt ekranında önizleme
     /// ve listede avatar olarak kullanılır.
@@ -111,6 +127,12 @@ public sealed class Employee : Entity
     public void SetPhoneNumber2(string phoneNumber2) => PhoneNumber2 = phoneNumber2;
 
     public void SetEmail(string email) => Email = email;
+
+    /// <param name="registryNumber">Sicil numarası; boş bırakılırsa <c>null</c> olur.</param>
+    public void SetRegistryNumber(string? registryNumber)
+        => RegistryNumber = string.IsNullOrWhiteSpace(registryNumber)
+            ? null
+            : registryNumber.Trim();
 
     public void SetPhotoPath(string? photoPath) => PhotoPath = photoPath;
 

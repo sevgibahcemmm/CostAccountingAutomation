@@ -30,6 +30,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
             => Confirm(null, message, title);
 
         /// <summary>
+        /// Grid içindeki satırlar silinmeden önce ortak onay penceresi.
+        /// Düzenleme formlarındaki "Satır Sil" düğmeleri bu metodu kullanır;
+        /// böylece onay metni program genelinde aynıdır.
+        /// </summary>
+        public static DialogResult ConfirmRowDelete(int count, string itemLabel)
+        {
+            string message = count == 1
+                ? $"Seçili {itemLabel} satırı silinecek."
+                : $"{count} {itemLabel} satırı silinecek.";
+
+            return Confirm($"{message}\n\nEmin misiniz?", "Silme Onayı");
+        }
+
+        /// <summary>
         /// Yalnızca bilgi veren pencere. Onay bekleyen kayıt gibi "farkında olun"
         /// mesajları için kullanılır; Evet/Hayır sormaz.
         /// </summary>

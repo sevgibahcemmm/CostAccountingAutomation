@@ -1,6 +1,10 @@
 ﻿using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems;
+using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Domain.StockIssues;
 using Cost.Accounting.Automation.Infrastructure.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -130,5 +134,63 @@ internal sealed class ProductRepository : AuditableRepository<Product, Applicati
         return costs
             .Where(x => x.Quantity > 0)
             .ToDictionary(x => x.ProductId.Value, x => Math.Round(x.TotalCost / x.Quantity, 4));
+    }
+
+    /// <summary>
+    /// Seçilen ürünlerin tamamını <c>IN</c> listesiyle denetler. Stok hareketi
+    /// engelleyicidir; irsaliye satırı, maliyet pusulası, stok çıkışı satırı ve
+    /// yarı mamul bağlantısı yalnızca ilişkili referans sayılır.
+    /// </summary>
+    public async Task<DeletionCheck> GetDeletionCheckAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken = default)
+    {
+        List<Guid> keys = [.. productIds];
+        if (keys.Count == 0)
+        {
+            return DeletionCheck.Empty;
+        }
+
+        List<Guid?> nullableKeys = [.. productIds.Select(id => (Guid?)id)];
+
+        List<Guid> movementIds = await this.Context.Set<ProductMovement>()
+            .Where(m => keys.Contains(m.ProductId))
+            .Select(m => m.ProductId.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        List<Guid> invoiceIds = await this.Context.Set<InvoiceLine>()
+            .Where(l => keys.Contains(l.ProductId))
+            .Select(l => l.ProductId.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        List<Guid> producedIds = await this.Context.Set<CostSlip>()
+            .Where(c => c.ProducedProductId != null && nullableKeys.Contains(c.ProducedProductId))
+            .Select(c => c.ProducedProductId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        List<Guid> slipItemIds = await this.Context.Set<CostSlipItem>()
+            .Where(i => i.ProductId != null && nullableKeys.Contains(i.ProductId))
+            .Select(i => i.ProductId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        List<Guid> stockIssueIds = await this.Context.Set<StockIssueLine>()
+            .Where(l => keys.Contains(l.ProductId))
+            .Select(l => l.ProductId.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        List<Guid> linkedProductIds = await this.Context.Set<Product>()
+            .Where(p => p.SemiFinishedProductId != null && nullableKeys.Contains(p.SemiFinishedProductId))
+            .Select(p => p.SemiFinishedProductId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return new DeletionCheck(
+            movementIds,
+            [.. invoiceIds, .. producedIds, .. slipItemIds, .. stockIssueIds, .. linkedProductIds]);
     }
 }

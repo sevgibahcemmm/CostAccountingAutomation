@@ -1,7 +1,5 @@
-using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
-using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
 using TS.MediatR;
@@ -13,34 +11,26 @@ namespace Cost.Accounting.Automation.Application.Products.ProductUnitTypes;
 public sealed record ProductUnitTypeDeleteCommand(
     Guid Id) : IRequest<Result<string>>;
 
+/// <summary>
+/// Birim cinsi ürün/maliyet pusulası kayıtlarında kullanılıyorsa silme sonrası not üretir;
+/// engelleyici hareket yoktur.
+/// </summary>
 internal sealed class ProductUnitTypeDeleteCommandHandler(
-    IProductUnitTypeRepository unitTypeRepository,
-    IProductRepository productRepository,
-    ICostSlipRepository costSlipRepository) : IRequestHandler<ProductUnitTypeDeleteCommand, Result<string>>
+    IProductUnitTypeRepository unitTypeRepository)
+    : IRequestHandler<ProductUnitTypeDeleteCommand, Result<string>>
 {
-    public async Task<Result<string>> Handle(ProductUnitTypeDeleteCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(
+        ProductUnitTypeDeleteCommand request,
+        CancellationToken cancellationToken)
     {
-        var unitType = await unitTypeRepository.FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
-        if (unitType is null)
-        {
-            return Result<string>.Failure("Birim cinsi bulunamadı");
-        }
-
-        bool usedByProduct = await productRepository.AnyAsync(p => p.ProductUnitTypeId == request.Id, cancellationToken);
-        bool usedBySlipItem = await costSlipRepository.AnyAsync(
-            c => c.CostSlipItems.Any(i => i.ProductUnitTypeId == new IdentityId(request.Id)),
+        var runner = new BulkDeletionRunner<ProductUnitType>(
+            unitTypeRepository,
+            (ids, token) => unitTypeRepository.GetDeletionCheckAsync(ids, token));
+        Result<BulkDeletionOutcome> result = await runner.RunAsync(
+            [request.Id],
+            "birim cinsi",
             cancellationToken);
 
-        unitType.Delete();
-        unitTypeRepository.Update(unitType);
-
-        if (usedByProduct || usedBySlipItem)
-        {
-            return DeleteWarnings.Compose(
-                $"'{unitType.Name.Value}' birim cinsi silindi, ancak ilişkili kayıtlarda kullanıldığı için " +
-                $"ilgili ürün/maliyet pusulası kayıtlarının gözden geçirilmesi gerekir.");
-        }
-
-        return "Birim cinsi başarıyla silindi";
+        return BulkDeletionResult.ToMessage(result, "birim cinsi");
     }
 }

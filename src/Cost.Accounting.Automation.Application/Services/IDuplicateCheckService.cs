@@ -10,4 +10,11 @@ public interface IDuplicateCheckService
         bool includeDeleted = false,
         CancellationToken cancellationToken = default)
         where TEntity : Entity;
+
+    Task<TEntity?> FindMasterDuplicateAsync<TEntity>(
+        string? duplicateKey,
+        Guid? excludeId = null,
+        bool includeDeleted = false,
+        CancellationToken cancellationToken = default)
+        where TEntity : Entity;
 }

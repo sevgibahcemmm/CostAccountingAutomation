@@ -39,6 +39,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms
         private List<ChartOfAccountLookUpDto> _warehouses = [];
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
         private string? _lastAutoDescription;
+
+        /// <summary>
+        /// Fatura tipi değişikliği onaylanmadığında combo'yu geri almak için
+        /// olayı kapatır. Aksi hâlde geri alma, yeniden onay penceresini açar.
+        /// </summary>
+        private bool _suppressInvoiceTypeChange;
+
+        /// <summary>
+        /// Ekranda geçerli olan fatura tipi indeksi. Tip değişikliği onaylanırsa
+        /// güncellenir; onaylanmazsa combo bu değere geri alınır.
+        /// </summary>
+        private int _appliedTypeIndex;
+
         private bool _saved;
 
         private InvoiceType SelectedInvoiceType => cmbInvoiceType.SelectedIndex switch
@@ -391,7 +404,6 @@ catch (Exception ex)
         {
             Load += InvoiceEditForm_Load;
             cmbInvoiceType.SelectedIndexChanged += CmbInvoiceType_SelectedIndexChanged;
-            cmbInvoiceType.SelectedIndexChanged += (_, _) => RefreshForInvoiceTypeChange();
             btnAddLine.Click += (_, _) => AddEmptyLine();
             btnDeleteLine.Click += (_, _) => DeleteSelectedLine();
             btnAddProduct.Click += (_, _) => AddSelectedCatalogProduct();
@@ -440,8 +452,18 @@ catch (Exception ex)
                 : dtDate.DateTime.ToString("dd.MM.yyyy");
             string materialText = GetLineMaterialsText();
 
-            if (string.IsNullOrEmpty(accountName) && string.IsNullOrEmpty(invoiceNumber) && string.IsNullOrEmpty(materialText))
+            // Üretim için veri yoksa ekranda otomatik üretilmiş bir açıklama da kalmasın:
+            // eski tipin cümlesi (örn. "alınmıştır") yeni tipte yanlış olur.
+            // Kullanıcının elle yazdığı metin korunur.
+            if (string.IsNullOrEmpty(accountName) && string.IsNullOrEmpty(materialText))
             {
+                if (!string.IsNullOrEmpty(txtDescription.Text)
+                    && txtDescription.Text == _lastAutoDescription)
+                {
+                    txtDescription.Text = string.Empty;
+                    _lastAutoDescription = null;
+                }
+
                 return;
             }
 
@@ -614,28 +636,43 @@ catch (Exception ex)
             cmbCatalogWarehouseView.BestFitColumns();
         }
 
+        /// <summary>
+        /// Fatura tipi değiştiğinde ekranın yeni tipe uygun hale gelmesini
+        /// sağlar. Girilmiş veri varsa önce onay ister; onaylanırsa ekran
+        /// temizlenir, listeler yeniden yüklenir ve fatura numarası yeni tipin
+        /// numaralandırma kuralına göre yenilenir.
+        /// </summary>
         private void CmbInvoiceType_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            UpdateAccountDataSource();
-
-            if (_editing is null
-                && SelectedInvoiceType is InvoiceType.Sales or InvoiceType.SalesReturn
-                && string.IsNullOrWhiteSpace(txtInvoiceNumber.Text))
-            {
-                _ = TrySetNextSalesNumberAsync(SelectedInvoiceType);
-            }
-        }
-
-        private void RefreshForInvoiceTypeChange()
-        {
-            if (_editing is not null || !HasUnsavedEntry())
+            if (_suppressInvoiceTypeChange)
             {
                 return;
             }
 
-            _ = AskAndReloadLookUpsAsync(SelectedInvoiceType);
+            UpdateAccountDataSource();
+
+            if (_editing is not null)
+            {
+                return;
+            }
+
+            // Ekran boşsa temizlenecek veri yoktur; numara kuralı doğrudan
+            // uygulanır. Doluysa onay penceresi yolu işler.
+            if (!HasUnsavedEntry())
+            {
+                _appliedTypeIndex = cmbInvoiceType.SelectedIndex;
+                _ = ApplyInvoiceNumberForTypeAsync(SelectedInvoiceType);
+                return;
+            }
+
+            _ = AskAndReloadLookUpsAsync(SelectedInvoiceType, cmbInvoiceType.SelectedIndex);
         }
 
+        /// <summary>
+        /// Fatura numarası, açıklama, cari veya kalem girilmiş olup olmadığını
+        /// döndürür. Açıklama da dahildir: otomatik açıklama fatura tipinden
+        /// türetildiği için tip değişince kendiliğinden geçersizleşir.
+        /// </summary>
         private bool HasUnsavedEntry()
         {
             if (_lines.Any(l => l.ProductId != Guid.Empty))
@@ -648,10 +685,36 @@ catch (Exception ex)
                 return true;
             }
 
+            if (!string.IsNullOrWhiteSpace(txtDescription.Text))
+            {
+                return true;
+            }
+
             return !string.IsNullOrWhiteSpace(txtInvoiceNumber.Text);
         }
 
-        private async Task AskAndReloadLookUpsAsync(InvoiceType newType)
+        /// <summary>
+        /// Onaylanmayan tip değişikliğini geri alır. Aksi hâlde fatura tipi
+        /// yeni değere dönerken açıklama, kalemler ve numara eski tipte kalır;
+        /// otomatik açıklama eski tipin cümlesini (örn. "alınmıştır") yeni tipte
+        /// göstermeye devam eder.
+        /// </summary>
+        private void RevertInvoiceType()
+        {
+            _suppressInvoiceTypeChange = true;
+            try
+            {
+                cmbInvoiceType.SelectedIndex = _appliedTypeIndex;
+                UpdateAccountDataSource();
+                UpdateAutoDescription();
+            }
+            finally
+            {
+                _suppressInvoiceTypeChange = false;
+            }
+        }
+
+        private async Task AskAndReloadLookUpsAsync(InvoiceType newType, int newIndex)
         {
             DialogResult result = MsgBox.Confirm(
                 this,
@@ -660,13 +723,25 @@ catch (Exception ex)
 
             if (result != DialogResult.Yes)
             {
+                RevertInvoiceType();
                 return;
             }
+
+            _appliedTypeIndex = newIndex;
 
             txtDescription.Text = string.Empty;
             _lastAutoDescription = null;
             _lines.Clear();
             lookUpAccount.EditValue = null;
+
+            // Fatura numarası da eski tipin numaralandırmasındandır. Satış
+            // numarası "FAT2026..." gibi bir ön ekle başlar ve alış tarafında
+            // otomatik numara üretilmez; bu yüzden numara da temizlenir ve
+            // yeni tipin kuralı yeniden uygulanır. Aksi hâlde "girilen veriler
+            // temizlenecektir" uyarısına rağmen alış numarası satış faturasında
+            // kalır.
+            txtInvoiceNumber.Text = string.Empty;
+
             RecalculateTotals();
 
             try
@@ -696,11 +771,7 @@ catch (Exception ex)
                 gridCatalogView.BestFitColumns();
                 UpdateCatalogFeedback();
 
-                if (newType is InvoiceType.Sales or InvoiceType.SalesReturn
-                    && string.IsNullOrWhiteSpace(txtInvoiceNumber.Text))
-                {
-                    await TrySetNextSalesNumberAsync(newType);
-                }
+                await ApplyInvoiceNumberForTypeAsync(newType);
 
                 UpdateAutoDescription();
             }
@@ -710,7 +781,32 @@ catch (Exception ex)
             }
         }
 
-        private async Task TrySetNextSalesNumberAsync(InvoiceType type)
+        /// <summary>
+        /// Fatura numarasını seçili tipin numaralandırma kuralına göre yeniler.
+        ///
+        /// <para>
+        /// Otomatik numaralandırma yalnızca satış ve satıştan iade için
+        /// tanımlıdır; bu tiplerde sıradaki numara atanır. Alış ve alıştan
+        /// iade tipinde otomatik numara yoktur, alan boş bırakılır ve kullanıcı
+        /// kendi numarasını yazar.
+        /// </para>
+        /// </summary>
+        private async Task ApplyInvoiceNumberForTypeAsync(InvoiceType type)
+        {
+            if (type is not (InvoiceType.Sales or InvoiceType.SalesReturn))
+            {
+                txtInvoiceNumber.Text = string.Empty;
+                return;
+            }
+
+            await TrySetNextNumberAsync(type);
+        }
+
+        /// <summary>
+        /// Fatura tipine göre sıradaki numarayı atar. Yalnızca satış tarafında
+        /// çağrılır; alış tarafında otomatik numara üretilmez.
+        /// </summary>
+        private async Task TrySetNextNumberAsync(InvoiceType type)
         {
             try
             {
@@ -770,6 +866,7 @@ catch (Exception ex)
         private void PopulateExisting(InvoiceDto invoice)
         {
             cmbInvoiceType.SelectedIndex = IndexOf(invoice.InvoiceType);
+            _appliedTypeIndex = cmbInvoiceType.SelectedIndex;
             txtInvoiceNumber.Text = invoice.InvoiceNumber;
             dtDate.DateTime = invoice.Date.ToDateTime(TimeOnly.MinValue);
             lookUpAccount.EditValue = invoice.InvoiceType.IsSalesSide() ? invoice.CustomerId : invoice.SupplierId;
@@ -814,16 +911,23 @@ catch (Exception ex)
             gridLinesView.FocusedRowHandle = _lines.Count - 1;
         }
 
-        private void DeleteSelectedLine()
-        {
-            int rowHandle = gridLinesView.FocusedRowHandle;
-            if (rowHandle >= 0 && rowHandle < _lines.Count)
+private void DeleteSelectedLine()
             {
+                int rowHandle = gridLinesView.FocusedRowHandle;
+                if (rowHandle < 0 || rowHandle >= _lines.Count)
+                {
+                    return;
+                }
+
+                if (MsgBox.ConfirmRowDelete(1, "irsaliye") != DialogResult.Yes)
+                {
+                    return;
+                }
+
                 _lines.RemoveAt(rowHandle);
                 RecalculateTotals();
                 UpdateAutoDescription();
             }
-        }
 
         private void CmbCatalogWarehouse_CloseUp(object? sender, EventArgs e)
         {

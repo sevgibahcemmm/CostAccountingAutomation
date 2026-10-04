@@ -48,6 +48,7 @@ public sealed record EmployeeCreateCommand(
     string PhoneNumber1,
     string PhoneNumber2,
     string Email,
+    string? RegistryNumber,
     PhotoInput? Photo,
     bool IsActive,
     IReadOnlyList<EmployeeDutyInput> Duties) : IRequest<Result<Guid>>;
@@ -84,6 +85,11 @@ public sealed class EmployeeCreateCommandValidator : AbstractValidator<EmployeeC
 
         RuleFor(x => x.Email)
             .MaximumLength(200).WithMessage("E-posta en fazla 200 karakter olabilir");
+
+        // Sicil numarası isteğe bağlıdır; yalnızca uzunluk sınırlanır.
+        // Biçim kısıtı konmaz, sicil numaraları kuruma göre farklı yazılabilir.
+        RuleFor(x => x.RegistryNumber)
+            .MaximumLength(50).WithMessage(EmployeeMessages.RegistryNumberTooLong);
 
         RuleFor(x => x.Duties)
             .Must(d => d is { Count: > 0 })
@@ -152,6 +158,17 @@ internal sealed class EmployeeCreateCommandHandler(
             return Result<Guid>.Failure(EmployeeMessages.DuplicateIdentityNumber);
         }
 
+        // Sicil numarası doluysa benzersiz olmalıdır. Veritabanındaki filtreli
+        // benzersiz indeks son savunmadır; kullanıcıya anlaşılır bir mesaj
+        // dönmek için burada önceden denetlenir.
+        string? registryNumber = EmployeeRegistryNumber.Normalize(request.RegistryNumber);
+
+        if (registryNumber is not null && await employeeRepository.RegistryNumberExistsAsync(
+                registryNumber, excludeId: null, cancellationToken))
+        {
+            return Result<Guid>.Failure(EmployeeMessages.DuplicateRegistryNumber);
+        }
+
         // Fotoğraf önce diske yazılır: kayıt, dosya yazımı başarısız olursa
         // yarım (fotoğrafsız) bir personel bırakılmasın.
         string? photoPath = null;
@@ -175,6 +192,8 @@ internal sealed class EmployeeCreateCommandHandler(
             request.Email.Trim(),
             photoPath,
             request.IsActive);
+
+        employee.SetRegistryNumber(registryNumber);
 
         employee.ReplaceDuties(
             request.Duties.Select(d => new EmployeeDuty(

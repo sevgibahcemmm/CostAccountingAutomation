@@ -61,8 +61,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             ConfigureGrid();
 
             dtDate.DateTime = DateTime.Today;
+            // Maliyet yöntemi SABİTTİR: ilk giren ilk çıkar (FIFO).
+            // LIFO seçeneği kaldırıldı. Seçilebilir olması, çıkışın en yeni
+            // girişten alınmasına yol açıyordu; 144 @ 12,60 ve 500 @ 13,20
+            // girişleri varken 200 adetlik çıkışın tamamı 13,20'den yazılıyor,
+            // ilk giriş hiç kapanmıyordu.
             cmbCosting.Properties.Items.Add("FIFO");
-            cmbCosting.Properties.Items.Add("LIFO");
             cmbCosting.SelectedIndex = 0;
 
             if (_editing is not null)
@@ -361,7 +365,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
                 dtDate.DateTime = issue.Date.ToDateTime(TimeOnly.MinValue);
                 txtDocumentNumber.Text = issue.DocumentNumber;
-                cmbCosting.SelectedIndex = issue.CostingMethod == StockCostingMethod.Lifo ? 1 : 0;
+                cmbCosting.SelectedIndex = 0;
                 memoDescription.Text = issue.Description;
 
                 ChartOfAccountLookUpDto? warehouse = _accounts.FirstOrDefault(a => a.Id == issue.SourceWarehouseId);
@@ -399,16 +403,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             gridLinesView.FocusedRowHandle = _lines.Count - 1;
         }
 
-        private void DeleteSelectedLine()
-        {
-            int handle = gridLinesView.FocusedRowHandle;
-            if (handle >= 0 && handle < _lines.Count)
+private void DeleteSelectedLine()
             {
+                int handle = gridLinesView.FocusedRowHandle;
+                if (handle < 0 || handle >= _lines.Count)
+                {
+                    return;
+                }
+
+                if (MsgBox.ConfirmRowDelete(1, "stok belgesi") != DialogResult.Yes)
+                {
+                    return;
+                }
+
                 _lines.RemoveAt(handle);
                 UpdateTotal();
                 UpdateGeneralDescription();
             }
-        }
 
         /// <summary>
         /// Aynı ürün aynı transfer belgesinde yalnızca bir satırda kullanılabilir.
@@ -782,9 +793,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 return;
             }
 
-            StockCostingMethod costingMethod = cmbCosting.SelectedIndex == 1
-                ? StockCostingMethod.Lifo
-                : StockCostingMethod.Fifo;
+            // Yalnızca FIFO uygulanır; bkz. cmbCosting'in doldurulduğu yer.
+            const StockCostingMethod costingMethod = StockCostingMethod.Fifo;
+
+            // Kaydedilmiş bir taslak yeniden açıldığında gridde aynı ürün için birden
+            // fazla satır vardır (giriş katmanları: 144 @ 12,60 + 30 @ 13,20).
+            // Bu satırlar istemciye ürün başına TEK istek satırı olarak
+            // gönderilir; miktar toplanır, katman kırılımını sunucu yeniden
+            // hesaplar. Aksi hâlde sunucudaki "aynı ürün tek satırda" kuralı
+            // hata verirdi.
+            List<StockIssueCreateLine> requestLines = validLines
+                .GroupBy(l => l.ProductId)
+                .Select(g => new StockIssueCreateLine(
+                    g.Key,
+                    g.Sum(x => x.Quantity),
+                    string.Join(" ", g
+                        .Select(x => x.Description?.Trim())
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .Distinct(StringComparer.Ordinal))))
+                .ToList();
 
             StockIssueCreateCommand command = new(
                 IssueType: _issueType,
@@ -794,9 +821,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 DocumentNumber: documentNumber,
                 CostingMethod: costingMethod,
                 Description: memoDescription.Text.Trim(),
-                Lines: validLines
-                    .Select(l => new StockIssueCreateLine(l.ProductId, l.Quantity, l.Description))
-                    .ToList());
+                Lines: requestLines);
 
             btnSave.Enabled = false;
             try
@@ -807,6 +832,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 if (ok)
                 {
                     _saved = true;
+
+                    // Sunucu satırları giriş fiyatlarına göre KATMAN olarak
+                    // kaydetti (174 adet = 144 @ 12,60 + 30 @ 13,20). Grid
+                    // kaydedilen satırları göstermeli, elle tutulan ürün satırı
+                    // değil; aksi hâlde alt toplam ve fiş yanlış kalır.
+                    await ReloadLinesFromServerAsync();
+
                     btnPrintSlip.Enabled = true;
                     btnAddLine.Enabled = false;
                     btnDeleteLine.Enabled = false;
@@ -824,6 +856,69 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 {
                     btnSave.Enabled = true;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Kaydedilen belgenin satırlarını sunucudan yeniden okur.
+        /// </summary>
+        /// <para>
+        /// Belge satırları artık giriş fiyatı başına birer KATMAN olarak
+        /// saklanır. Kaydetmeden önce gridde kullanıcının girdiği ürün satırı
+        /// (ürün + toplam miktar) vardır; kaydettikten sonra gerçek kırılım
+        /// gelir: 174 adet Koli Bandı için <c>144 @ 12,60</c> ve
+        /// <c>30 @ 13,20</c> satırları. Alt toplam ve taşınır işlem fişi bu
+        /// satırlardan okunduğu için kaydetme sonrası ekranda gerçek maliyet
+        /// görünür.
+        /// </para>
+        /// </summary>
+        private async Task ReloadLinesFromServerAsync()
+        {
+            try
+            {
+                string documentNumber = txtDocumentNumber.Text.Trim();
+
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                var listResult = await mediator.Send(new StockIssueGetAllQuery(), CancellationToken.None);
+                StockIssueListDto? saved = listResult
+                    .FirstOrDefault(i => i.DocumentNumber == documentNumber);
+
+                if (saved is null)
+                {
+                    return;
+                }
+
+                var result = await mediator.Send(new StockIssueGetByIdQuery(saved.Id), CancellationToken.None);
+                StockIssueDto? issue = result.Data;
+                if (issue is null)
+                {
+                    return;
+                }
+
+                _lines.Clear();
+                foreach (StockIssueLineDto line in issue.Lines)
+                {
+                    _lines.Add(new LineRow
+                    {
+                        ProductId = line.ProductId,
+                        Quantity = line.Quantity,
+                        UnitCost = line.UnitCost,
+                        AvailableStock = _allProductsById.TryGetValue(line.ProductId, out ProductDto? product)
+                            ? product.StockQuantity
+                            : 0m,
+                        Description = line.Description
+                    });
+                }
+
+                UpdateTotal();
+                gridLinesView.RefreshData();
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("StockIssueEditForm.ReloadLines", ex);
+                ToastHelper.Show("Satırlar yenilenemedi, liste ekranından kontrol ediniz.", ToastType.Warning, 5000);
             }
         }
 
@@ -851,6 +946,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
             string targetName = GetSelectedTargetName();
             string targetCode = string.Empty;
+            Guid? workshopId = null;
             if (lookUpTarget.EditValue is Guid targetId)
             {
                 ChartOfAccountLookUpDto? target = _targetAccounts.FirstOrDefault(a => a.Id == targetId);
@@ -858,6 +954,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 {
                     targetCode = target.Code;
                     targetName = target.Name;
+
+                    // Atölye transferinde hedef bir atölyedir; teslim alan
+                    // kutusunun atölye şefiyle doldurulması için kimliği gerekir.
+                    if (!IsConsumption && target.Type == ChartOfAccountType.Workshop)
+                    {
+                        workshopId = targetId;
+                    }
                 }
             }
 
@@ -874,6 +977,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
                 DocumentNumber = txtDocumentNumber.Text.Trim(),
                 Date = dtDate.DateTime,
                 OperationType = IsConsumption ? "Tüketim" : "Atölye Transferi",
+                RecipientWorkshopId = workshopId,
                 SourceParty = warehouseName,
                 RecipientParty = targetName,
                 DestinationParty = string.IsNullOrWhiteSpace(targetCode) ? targetName : $"{targetCode} - {targetName}",

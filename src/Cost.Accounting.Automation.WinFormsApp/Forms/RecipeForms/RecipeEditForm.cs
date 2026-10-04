@@ -534,7 +534,7 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
             return;
         }
 
-        if (MsgBox.Confirm("Seçili malzeme satırı silinecek. Emin misiniz?", "Silme Onayı") != DialogResult.Yes)
+        if (MsgBox.ConfirmRowDelete(rows.Length, "malzeme") != DialogResult.Yes)
         {
             return;
         }

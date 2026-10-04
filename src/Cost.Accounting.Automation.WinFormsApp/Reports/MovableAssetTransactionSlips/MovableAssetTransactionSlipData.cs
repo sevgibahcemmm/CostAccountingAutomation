@@ -1,5 +1,28 @@
 namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransactionSlips
 {
+    /// <summary>
+    /// Taşınır işlem fişinin belgelediği işlem.
+    ///
+    /// <para>
+    /// Fısın "İŞLEM ÇEŞİDİ" alanında yazan metin bu değere dönüştürülür ve
+    /// imza kutularının hangilerinin doldurulacağı buna göre belirlenir:
+    /// giriş fişinde yalnızca kayıt yetkilisi, çıkış (tüketim) fişinde
+    /// yalnızca çıkış kaydı, atölye transferinde çıkış kaydı ve teslim alan
+    /// (atölye şefi) kutuları doldurulur.
+    /// </para>
+    /// </summary>
+    public enum MovableAssetTransactionSlipKind
+    {
+        /// <summary>Depoya giriş (satın alma faturası) kaydı.</summary>
+        Entry = 1,
+
+        /// <summary>Depodan çıkış / tüketim kaydı.</summary>
+        Exit = 2,
+
+        /// <summary>Depodan atölyeye taşınır transferi.</summary>
+        AtelierTransfer = 3
+    }
+
     public sealed class MovableAssetTransactionSlipRow
     {
         public int? RowNumber { get; set; }
@@ -67,6 +90,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         public DateTime? ReferenceDate { get; set; }
         public string ReferenceCode { get; set; } = string.Empty;
 
+/// <summary>
+        /// Fişin hangi işlemi belgelediği. <see cref="OperationType"/> yalnızca
+        /// basılacak metin olduğu için imza kutularının hangilerinin
+        /// doldurulacağı bu değere bakılarak belirlenir.
+        /// </summary>
+        public MovableAssetTransactionSlipKind Kind => ResolveKind(OperationType);
+
+        /// <summary>
+        /// Atölye transferinde taşınırın gittiği atölyenin kimliği.
+        /// Atölye transferinde teslim alan kutusunu atölye şefi doldurur;
+        /// bu görev atölyeye bağlı tanımlandığı için atölye bilgisi gerekir.
+        /// Tüketimde teslim alan muhasebe memurudur, o da kurum geneli bir
+        /// görev olduğu için bu alan boş kalır.
+        /// </summary>
+        public Guid? RecipientWorkshopId { get; set; }
+
         /// <summary>
         /// İmza bloğunda "Taşınır Kayıt ve Yetkilisi" satırına basılacak
         /// personelin adı soyadı. Görev tanımı veritabanında olduğu için
@@ -78,53 +117,65 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         public string SignatoryTitle { get; set; } = string.Empty;
 
         /// <summary>
-        /// Giriş kaydının imza kutusuna basılacak metin. Kutunun ilk satırı
-        /// ("GİRİŞ KAYDI YAPILMIŞTIR") şablonda hücrenin kendi metnidir; buraya
-        /// yalnızca yetkili satırları yazılır.
-        ///
-        /// <para>
-        /// Bu metin raporun kendisinde değil, belgenin verisiyle birlikte
-        /// hazırlanır. Böylece imza kutusunun satır dizilimi ve boşluk
-        /// doldurma kuralı tek yerde durur.
-        /// </para>
-        ///
-        /// <para>
-        /// İçinde <b>Tarih</b> satırı da bulunur: kayıt yetkilinin imza
-        /// tarihi belgenin kendi tarihidir; ayrı bir alan istenirse <see cref="Date"/>
-        /// değiştirilir.
-        /// </para>
-        ///
-        /// <para>
-        /// Satır sayısı, tarih satırı eklenmeden öncekiyle aynı tutulur.
-        /// İmza kutusunun yüksekliği şablonda sabit; fazladan bir satır
-        /// eklendiğinde kutu büyüyemediği için "İmzası" satırı taşıyordu.
-        /// </para>
-        ///
-        /// <para>
-        /// Yetkili bulunamazsa alan boş bırakılmaz; imza satırına noktalı
-        /// çizgi konur. Böylece "kim imzalayacak" sorusu belge üzerinde açık
-        /// kalır ve yanlış bir isim basılmaz.
-        /// </para>
+        /// "Teslim Alan" kutusunun "Adı Soyadı" satırına basılacak kişi.
+        /// Tüketim fişinde malzeme muhasebe birimine teslim edildiği için
+        /// teslimi <b>muhasebe memuru</b> alır; atölye transferinde ise
+        /// taşınırı alan atölyenin şefi yazılır. Giriş fişinde bu kutu
+        /// doldurulmaz.
         /// </summary>
-        public string EntrySignatureBlock => ComposeSignatureBlock();
+        public string RecipientSignatoryFullName { get; set; } = string.Empty;
 
-        /// <summary>Çıkış kaydının imza kutusuna basılacak metin.</summary>
-        public string ExitSignatureBlock => ComposeSignatureBlock();
+        /// <summary>Teslim alan kutusunun ünvan satırı.</summary>
+        public string RecipientSignatoryTitle { get; set; } = string.Empty;
 
-        private string ComposeSignatureBlock() => string.Join(
-            "\r\n",
-            string.Empty,
-            "  Taşınır Kayıt ve Yetkilisinin",
-            string.Empty,
-            $"Adı Soyadı : {ValueOrBlank(SignatoryFullName)}",
-            $"Ünvanı     : {ValueOrBlank(SignatoryTitle)}",
-            $"Tarih      : {Date.ToString("dd.MM.yyyy")}",
-            "İmzası     :",
-            string.Empty,
-            string.Empty);
+        /// <summary>
+        /// Kayıt yetkilisinin "Adı Soyadı" satırına basılacak metin.
+        /// Yetkili çözülemezse satır boş bırakılmaz, noktalı çizgi basılır:
+        /// "kim imzalayacak" sorusu belge üzerinde açık kalsın.
+        /// </summary>
+        public string SignatureName => ValueOrBlank(SignatoryFullName);
+
+        /// <summary>Kayıt yetkilisinin "Ünvanı" satırına basılacak metin.</summary>
+        public string SignatureTitle => ValueOrBlank(SignatoryTitle);
+
+        /// <summary>
+        /// "Tarih" satırına basılacak metin. Kayıt yetkilisinin imza tarihi
+        /// belgenin kendi tarihidir; ayrı bir alan istenirse <see cref="Date"/>
+        /// değiştirilir.
+        /// </summary>
+        public string SignatureDate => Date.ToString("dd.MM.yyyy");
+
+        /// <summary>Atölye şefinin teslim alan kutusundaki "Adı Soyadı" satırı.</summary>
+        public string RecipientSignatureName => ValueOrBlank(RecipientSignatoryFullName);
+
+        /// <summary>Atölye şefinin teslim alan kutusundaki "Ünvanı" satırı.</summary>
+        public string RecipientSignatureTitle => ValueOrBlank(RecipientSignatoryTitle);
+
+        /// <summary>
+        /// <see cref="OperationType"/> metnini fiş çeşidine çevirir.
+        /// Metinler belgeyi üreten formlarda yazıyla verilir; tanınmayan bir
+        /// metin (ör. gelecekte eklenen bir işlem çeşidi) giriş kutusuna
+        /// düşer, çünkü en az hasar gören davranış budur.
+        /// </summary>
+        private static MovableAssetTransactionSlipKind ResolveKind(string? operationType)
+        {
+            if (string.Equals(operationType, "Atölye Transferi", StringComparison.OrdinalIgnoreCase))
+            {
+                return MovableAssetTransactionSlipKind.AtelierTransfer;
+            }
+
+            if (string.Equals(operationType, "Tüketim", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(operationType, "Çıkış", StringComparison.OrdinalIgnoreCase))
+            {
+                return MovableAssetTransactionSlipKind.Exit;
+            }
+
+            return MovableAssetTransactionSlipKind.Entry;
+        }
 
         private static string ValueOrBlank(string? value)
             => string.IsNullOrWhiteSpace(value) ? "..............................." : value;
+
         public List<MovableAssetTransactionSlipRow> Rows { get; set; } = [];
 
         /// <summary>

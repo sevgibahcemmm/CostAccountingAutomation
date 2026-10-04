@@ -11,7 +11,14 @@ public sealed record ProductDeclarationReportQuery(
 
 public sealed class ProductDeclarationRowDto
 {
+    public Guid? WorkshopId { get; init; }
     public string WorkshopName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Atölyenin şefi. Beyan atölyeye göre gruplandığı için rapor bu alanı
+    /// veri alanı olarak okur; parametre grup bazlı değişemez.
+    /// </summary>
+    public string WorkshopChiefName { get; set; } = string.Empty;
     public string ProductName { get; init; } = string.Empty;
     public string ProductUnitTypeName { get; init; } = string.Empty;
     public int Quantity { get; init; }

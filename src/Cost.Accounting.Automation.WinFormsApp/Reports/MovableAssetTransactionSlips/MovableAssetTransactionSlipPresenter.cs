@@ -29,6 +29,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         /// </summary>
         private const string SignatoryRoleName = "Taşınır Kayıt Yetkilisi";
 
+        /// <summary>
+        /// Atölye transferinde teslim alan kutusunu dolduran görev.
+        /// Bu görev atölyeye bağlı tanımlandığı için çözümleme
+        /// <see cref="MovableAssetTransactionSlipData.RecipientWorkshopId"/>
+        /// üzerinden yapılır.
+        /// </summary>
+        private const string WorkshopChiefRoleName = "Atölye Şefi";
+
+        /// <summary>
+        /// Tüketim fişinde teslim alan kutusunu dolduran görev: malzeme
+        /// tüketim biriminden çıkıp muhasebe birimine teslim edildiği için
+        /// teslimi muhasebe memuru alır — muhasebe yetkilisi değil.
+        /// </summary>
+        private const string AccountingClerkRoleName = "Muhasebe Memuru";
+
         public static async Task<CompanyDto> LoadCompanyAsync()
         {
             try
@@ -132,9 +147,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         }
 
         /// <summary>
-        /// İmza bloğundaki "Taşınır Kayıt ve Yetkilisi" satırını personel
-        /// kayıtlarından doldurur: görev tanımı bulunur, o görevi taşıyan
-        /// aktif personelin adı soyadı ve ünvanı yazılır.
+        /// İmza bloklarının yetkililerini personel kayıtlarından doldurur.
+        ///
+        /// <para>
+        /// Çıkış tarafı her zaman "Taşınır Kayıt Yetkilisinin"dir: giriş
+        /// fişinde kayıt (giriş kutusu), tüketim ve atölye transferinde ise
+        /// çıkış kaydı ve teslim eden kutuları bu kişidir — taşınırcı
+        /// malzemeyi o imzalayarak teslim eder.
+        /// </para>
+        ///
+        /// <para>
+        /// Teslim alan kutusu fişin türüne göre değişir: tüketimde malzeme
+        /// muhasebe birimine teslim edildiği için teslimi oradaki
+        /// <b>muhasebe memuru</b> alır, atölye transferinde ise taşınırı
+        /// alan atölyenin şefi imzalar. Atölye transferinde atölye
+        /// bilinmiyorsa bu satırlar boş kalır — yanlış şef basmaktansa boş
+        /// kalmak yeğdir.
+        /// </para>
         /// </summary>
         public static async Task ApplySignatoryAsync(MovableAssetTransactionSlipData data)
         {
@@ -147,38 +176,63 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
                     (await mediator.Send(new EmployeeSigningRoleLookUpQuery(), CancellationToken.None))
                     .ToList();
 
-                EmployeeSigningRoleOption? role = roles.FirstOrDefault(
-                    r => string.Equals(r.Name, SignatoryRoleName, StringComparison.OrdinalIgnoreCase));
+                EmployeeSigningRoleOption? role = FindRole(roles, SignatoryRoleName);
 
                 if (role is null)
                 {
-                    CrashLog.Write(
-                        "SlipReport.Signatory",
-                        $"Görev tanımı bulunamadı: {SignatoryRoleName}");
-
                     return;
                 }
 
-                // Taşınır fişi bir atölyeye ait değildir; görev kurum geneli
-                // tanımlandığı için atölye bilgisi verilmez.
+                // Teslim alanın görevi ve gerekiyorsa atölye bağlamı
+                string? recipientRoleName = data.Kind switch
+                {
+                    MovableAssetTransactionSlipKind.AtelierTransfer => WorkshopChiefRoleName,
+                    MovableAssetTransactionSlipKind.Exit => AccountingClerkRoleName,
+                    _ => null
+                };
+
+                Guid? workshopId = data.Kind == MovableAssetTransactionSlipKind.AtelierTransfer
+                    ? data.RecipientWorkshopId
+                    : null;
+
+                EmployeeSigningRoleOption? recipientRole = recipientRoleName is null
+                    ? null
+                    : FindRole(roles, recipientRoleName);
+
+                List<SignatorySlot> slots = [new SignatorySlot(role.Id, "Taşınır Kayıt ve Yetkilisi")];
+
+                if (recipientRole is not null)
+                {
+                    slots.Add(new SignatorySlot(recipientRole.Id, recipientRoleName!));
+                }
+
+                // Atölye transferinde teslim alan kutusu için atölyeye özgü
+                // yetkili aranır; kayıt yetkilisi görevi kurum geneli
+                // tanımlandığı için bu aramada yine bulunur.
                 var signatories = await mediator.Send(
-                    new ReportSignatoryQuery(
-                        WorkshopId: null,
-                        Slots: [new SignatorySlot(role.Id, "Taşınır Kayıt ve Yetkilisi")]),
+                    new ReportSignatoryQuery(WorkshopId: workshopId, Slots: slots),
                     CancellationToken.None);
 
-                if (signatories.IsSuccessful
-                    && signatories.Data is not null
-                    && signatories.Data.TryGetValue(role.Id, out ReportSignatory? signatory))
+                if (signatories.IsSuccessful && signatories.Data is not null)
                 {
-                    data.SignatoryFullName = signatory.FullName;
-                    data.SignatoryTitle = signatory.Title;
-                }
-                else
-                {
-                    CrashLog.Write(
-                        "SlipReport.Signatory",
-                        $"'{role.Name}' görevini taşıyan aktif personel bulunamadı.");
+                    if (signatories.Data.TryGetValue(role.Id, out ReportSignatory? signatory))
+                    {
+                        data.SignatoryFullName = signatory.FullName;
+                        data.SignatoryTitle = signatory.Title;
+                    }
+                    else
+                    {
+                        CrashLog.Write(
+                            "SlipReport.Signatory",
+                            $"'{role.Name}' görevini taşıyan aktif personel bulunamadı.");
+                    }
+
+                    if (recipientRole is not null
+                        && signatories.Data.TryGetValue(recipientRole.Id, out ReportSignatory? recipient))
+                    {
+                        data.RecipientSignatoryFullName = recipient.FullName;
+                        data.RecipientSignatoryTitle = recipient.Title;
+                    }
                 }
             }
             catch (Exception ex)
@@ -186,6 +240,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
                 // İmza bilgisi belgeyi bozmaz; yalnızca alan boş kalır.
                 CrashLog.WriteException("SlipReport.Signatory", ex);
             }
+        }
+
+        private static EmployeeSigningRoleOption? FindRole(
+            List<EmployeeSigningRoleOption> roles,
+            string roleName)
+        {
+            EmployeeSigningRoleOption? role = roles.FirstOrDefault(
+                r => string.Equals(r.Name, roleName, StringComparison.OrdinalIgnoreCase));
+
+            if (role is null)
+            {
+                CrashLog.Write(
+                    "SlipReport.Signatory",
+                    $"Görev tanımı bulunamadı: {roleName}");
+            }
+
+            return role;
         }
 
         public static async Task ShowAsync(MovableAssetTransactionSlipData data)

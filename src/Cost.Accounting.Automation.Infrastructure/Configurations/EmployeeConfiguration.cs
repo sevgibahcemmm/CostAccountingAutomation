@@ -43,7 +43,29 @@ internal sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(e => e.Email).HasMaxLength(200);
         builder.Property(e => e.PhotoPath).HasMaxLength(500);
 
+        // Sicil numarası kurum içi kayıt numarasıdır; zorunlu değildir.
+        //
+        // DİKKAT: HasColumnType burada ZORUNLUDUR. ConfigureConventions
+        // (AuditedDbContext) tüm string alanlara "nvarchar(MAX)" uygular ve
+        // nvarchar(MAX) kolon SQL Server'da indekslenemez ("Column ... is of a
+        // type that is invalid for use as a key column in an index"). Bu yüzden
+        // benzersiz süzgeçli indeksten önce kolon tipi nvarchar(50) sabitlenir.
+        builder.Property(e => e.RegistryNumber)
+            .HasColumnName("RegistryNumber")
+            .HasColumnType("nvarchar(50)")
+            .HasMaxLength(50);
+
         builder.HasIndex(e => e.IdentityNumber).IsUnique();
+
+        // Sicil numarası dolu iken benzersizdir.
+        //
+        // DİKKAT: SQL Server benzersiz indekste NULL'u bir değer gibi sayar;
+        // süzgeç olmadan yalnızca BİR personelin sicil numarası boş
+        // kalabilirdi. İkinci personelin kaydı "UNIQUE KEY" hatasıyla
+        // reddedilirdi. HasFilter ile NULL satırlar indeksin dışında bırakılır.
+        builder.HasIndex(e => e.RegistryNumber)
+            .IsUnique()
+            .HasFilter("[RegistryNumber] IS NOT NULL");
         builder.HasIndex(e => e.CreatedBy);
         builder.HasIndex(e => e.UpdatedBy);
 

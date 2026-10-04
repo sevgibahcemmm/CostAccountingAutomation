@@ -64,11 +64,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             this.xrTableCell37 = new DevExpress.XtraReports.UI.XRTableCell();
             this.xrTableCell11 = new DevExpress.XtraReports.UI.XRTableCell();
             this.ReportFooter = new DevExpress.XtraReports.UI.ReportFooterBand();
-            this.xrLabel7 = new DevExpress.XtraReports.UI.XRLabel();
+            this.xrLabelMuhasebeYetkilisi = new DevExpress.XtraReports.UI.XRLabel();
+            this.xrLabelMuhasebeYetkilisiUnvani = new DevExpress.XtraReports.UI.XRLabel();
+            this.xrLabelMuhasebeMemuru = new DevExpress.XtraReports.UI.XRLabel();
+            this.xrLabelMuhasebeMemuruUnvani = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel8 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel6 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrLabel5 = new DevExpress.XtraReports.UI.XRLabel();
-            this.xrLabel4 = new DevExpress.XtraReports.UI.XRLabel();
             this.xrTable3 = new DevExpress.XtraReports.UI.XRTable();
             this.xrTableRow3 = new DevExpress.XtraReports.UI.XRTableRow();
             this.xrTableCell25 = new DevExpress.XtraReports.UI.XRTableCell();
@@ -95,6 +97,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             this.parameterGrandTotal = new DevExpress.XtraReports.Parameters.Parameter();
             this.parameterEndDateText = new DevExpress.XtraReports.Parameters.Parameter();
             this.parameterCompanyName = new DevExpress.XtraReports.Parameters.Parameter();
+            this.MuhasebeYetkilisiAdi = new DevExpress.XtraReports.Parameters.Parameter();
+            this.MuhasebeMemuruAdi = new DevExpress.XtraReports.Parameters.Parameter();
             this.PageFooter = new DevExpress.XtraReports.UI.PageFooterBand();
             this.xrLine1 = new DevExpress.XtraReports.UI.XRLine();
             this.xrPageInfo1 = new DevExpress.XtraReports.UI.XRPageInfo();
@@ -452,32 +456,75 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             // ReportFooter
             // 
             this.ReportFooter.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
-            this.xrLabel7,
+            this.xrLabelMuhasebeYetkilisi,
+            this.xrLabelMuhasebeYetkilisiUnvani,
+            this.xrLabelMuhasebeMemuru,
+            this.xrLabelMuhasebeMemuruUnvani,
             this.xrLabel8,
             this.xrLabel6,
             this.xrLabel5,
-            this.xrLabel4,
             this.xrTable3});
             this.ReportFooter.HeightF = 227.2917F;
             this.ReportFooter.Name = "ReportFooter";
             // 
-            // xrLabel7
+            // xrLabelMuhasebeYetkilisi
             // 
-            this.xrLabel7.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrLabel7.LocationFloat = new DevExpress.Utils.PointFloat(721.625F, 145.0417F);
-            this.xrLabel7.Multiline = true;
-            this.xrLabel7.Name = "xrLabel7";
-            this.xrLabel7.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrLabel7.SizeF = new System.Drawing.SizeF(275F, 23F);
-            this.xrLabel7.StylePriority.UseFont = false;
-            this.xrLabel7.StylePriority.UseTextAlignment = false;
-            this.xrLabel7.Text = "Adı Ve Soyadı";
-            this.xrLabel7.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.xrLabelMuhasebeYetkilisi.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MuhasebeYetkilisiAdi")});
+            this.xrLabelMuhasebeYetkilisi.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
+            this.xrLabelMuhasebeYetkilisi.LocationFloat = new DevExpress.Utils.PointFloat(688.9999F, 117.875F);
+            this.xrLabelMuhasebeYetkilisi.Multiline = true;
+            this.xrLabelMuhasebeYetkilisi.Name = "xrLabelMuhasebeYetkilisi";
+            this.xrLabelMuhasebeYetkilisi.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrLabelMuhasebeYetkilisi.SizeF = new System.Drawing.SizeF(275F, 23F);
+            this.xrLabelMuhasebeYetkilisi.StylePriority.UseFont = false;
+            this.xrLabelMuhasebeYetkilisi.StylePriority.UseTextAlignment = false;
+            this.xrLabelMuhasebeYetkilisi.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // xrLabelMuhasebeYetkilisiUnvani
+            // 
+            this.xrLabelMuhasebeYetkilisiUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
+            this.xrLabelMuhasebeYetkilisiUnvani.LocationFloat = new DevExpress.Utils.PointFloat(688.9999F, 94.87502F);
+            this.xrLabelMuhasebeYetkilisiUnvani.Multiline = true;
+            this.xrLabelMuhasebeYetkilisiUnvani.Name = "xrLabelMuhasebeYetkilisiUnvani";
+            this.xrLabelMuhasebeYetkilisiUnvani.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrLabelMuhasebeYetkilisiUnvani.SizeF = new System.Drawing.SizeF(275F, 23F);
+            this.xrLabelMuhasebeYetkilisiUnvani.StylePriority.UseFont = false;
+            this.xrLabelMuhasebeYetkilisiUnvani.StylePriority.UseTextAlignment = false;
+            this.xrLabelMuhasebeYetkilisiUnvani.Text = "Muhasebe Yetkilisi";
+            this.xrLabelMuhasebeYetkilisiUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // xrLabelMuhasebeMemuru
+            // 
+            this.xrLabelMuhasebeMemuru.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MuhasebeMemuruAdi")});
+            this.xrLabelMuhasebeMemuru.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
+            this.xrLabelMuhasebeMemuru.LocationFloat = new DevExpress.Utils.PointFloat(203.9167F, 117.875F);
+            this.xrLabelMuhasebeMemuru.Multiline = true;
+            this.xrLabelMuhasebeMemuru.Name = "xrLabelMuhasebeMemuru";
+            this.xrLabelMuhasebeMemuru.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrLabelMuhasebeMemuru.SizeF = new System.Drawing.SizeF(275F, 23F);
+            this.xrLabelMuhasebeMemuru.StylePriority.UseFont = false;
+            this.xrLabelMuhasebeMemuru.StylePriority.UseTextAlignment = false;
+            this.xrLabelMuhasebeMemuru.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            // 
+            // xrLabelMuhasebeMemuruUnvani
+            // 
+            this.xrLabelMuhasebeMemuruUnvani.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
+            this.xrLabelMuhasebeMemuruUnvani.LocationFloat = new DevExpress.Utils.PointFloat(203.9167F, 94.87495F);
+            this.xrLabelMuhasebeMemuruUnvani.Multiline = true;
+            this.xrLabelMuhasebeMemuruUnvani.Name = "xrLabelMuhasebeMemuruUnvani";
+            this.xrLabelMuhasebeMemuruUnvani.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
+            this.xrLabelMuhasebeMemuruUnvani.SizeF = new System.Drawing.SizeF(275F, 23F);
+            this.xrLabelMuhasebeMemuruUnvani.StylePriority.UseFont = false;
+            this.xrLabelMuhasebeMemuruUnvani.StylePriority.UseTextAlignment = false;
+            this.xrLabelMuhasebeMemuruUnvani.Text = "Muhasebe Memuru";
+            this.xrLabelMuhasebeMemuruUnvani.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             // 
             // xrLabel8
             // 
             this.xrLabel8.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrLabel8.LocationFloat = new DevExpress.Utils.PointFloat(721.625F, 168.0417F);
+            this.xrLabel8.LocationFloat = new DevExpress.Utils.PointFloat(203.9167F, 163.8749F);
             this.xrLabel8.Multiline = true;
             this.xrLabel8.Name = "xrLabel8";
             this.xrLabel8.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
@@ -505,7 +552,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             // xrLabel5
             // 
             this.xrLabel5.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrLabel5.LocationFloat = new DevExpress.Utils.PointFloat(191.4167F, 163.875F);
+            this.xrLabel5.LocationFloat = new DevExpress.Utils.PointFloat(688.9999F, 163.875F);
             this.xrLabel5.Multiline = true;
             this.xrLabel5.Name = "xrLabel5";
             this.xrLabel5.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
@@ -514,19 +561,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             this.xrLabel5.StylePriority.UseTextAlignment = false;
             this.xrLabel5.Text = "İmza";
             this.xrLabel5.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            // 
-            // xrLabel4
-            // 
-            this.xrLabel4.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrLabel4.LocationFloat = new DevExpress.Utils.PointFloat(191.4167F, 140.875F);
-            this.xrLabel4.Multiline = true;
-            this.xrLabel4.Name = "xrLabel4";
-            this.xrLabel4.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrLabel4.SizeF = new System.Drawing.SizeF(275F, 23F);
-            this.xrLabel4.StylePriority.UseFont = false;
-            this.xrLabel4.StylePriority.UseTextAlignment = false;
-            this.xrLabel4.Text = "Adı Ve Soyadı";
-            this.xrLabel4.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             // 
             // xrTable3
             // 
@@ -767,6 +801,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             this.parameterCompanyName.Name = "parameterCompanyName";
             this.parameterCompanyName.Visible = false;
             // 
+            // MuhasebeYetkilisiAdi
+            // 
+            this.MuhasebeYetkilisiAdi.Description = "Muhasebe Yetkilisi Adı Soyadı";
+            this.MuhasebeYetkilisiAdi.Name = "MuhasebeYetkilisiAdi";
+            this.MuhasebeYetkilisiAdi.Visible = false;
+            // 
+            // MuhasebeMemuruAdi
+            // 
+            this.MuhasebeMemuruAdi.Description = "Muhasebe Memuru Adı Soyadı";
+            this.MuhasebeMemuruAdi.Name = "MuhasebeMemuruAdi";
+            this.MuhasebeMemuruAdi.Visible = false;
+            // 
             // PageFooter
             // 
             this.PageFooter.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
@@ -774,7 +820,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             this.xrPageInfo1,
             this.xrPageInfo2,
             this.xrLabelFooter});
-            this.PageFooter.HeightF = 40F;
+            this.PageFooter.HeightF = 33.12505F;
             this.PageFooter.Name = "PageFooter";
             // 
             // xrLine1
@@ -786,10 +832,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             // xrPageInfo1
             // 
             this.xrPageInfo1.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrPageInfo1.LocationFloat = new DevExpress.Utils.PointFloat(0F, 8F);
+            this.xrPageInfo1.LocationFloat = new DevExpress.Utils.PointFloat(0F, 1.999982F);
             this.xrPageInfo1.Name = "xrPageInfo1";
             this.xrPageInfo1.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrPageInfo1.SizeF = new System.Drawing.SizeF(220F, 23F);
+            this.xrPageInfo1.SizeF = new System.Drawing.SizeF(200.2083F, 23F);
             this.xrPageInfo1.StylePriority.UseFont = false;
             this.xrPageInfo1.StylePriority.UseTextAlignment = false;
             this.xrPageInfo1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
@@ -798,7 +844,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             // xrPageInfo2
             // 
             this.xrPageInfo2.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
-            this.xrPageInfo2.LocationFloat = new DevExpress.Utils.PointFloat(880F, 9.999974F);
+            this.xrPageInfo2.LocationFloat = new DevExpress.Utils.PointFloat(880F, 2F);
             this.xrPageInfo2.Name = "xrPageInfo2";
             this.xrPageInfo2.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
             this.xrPageInfo2.PageInfo = DevExpress.XtraPrinting.PageInfo.DateTime;
@@ -810,12 +856,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             // 
             // xrLabelFooter
             // 
-            this.xrLabelFooter.Font = new DevExpress.Drawing.DXFont("Arial", 8F, DevExpress.Drawing.DXFontStyle.Bold);
-            this.xrLabelFooter.LocationFloat = new DevExpress.Utils.PointFloat(220F, 6.00001F);
+            this.xrLabelFooter.Font = new DevExpress.Drawing.DXFont("Arial", 6F, DevExpress.Drawing.DXFontStyle.Bold);
+            this.xrLabelFooter.LocationFloat = new DevExpress.Utils.PointFloat(220F, 1.999982F);
             this.xrLabelFooter.Multiline = true;
             this.xrLabelFooter.Name = "xrLabelFooter";
             this.xrLabelFooter.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrLabelFooter.SizeF = new System.Drawing.SizeF(610F, 30.00001F);
+            this.xrLabelFooter.SizeF = new System.Drawing.SizeF(610F, 28F);
             this.xrLabelFooter.StylePriority.UseFont = false;
             this.xrLabelFooter.StylePriority.UseTextAlignment = false;
             this.xrLabelFooter.Text = "© Yazılımcı Emrullah AKPINAR\nMuhasebe Yetkilisi";
@@ -855,7 +901,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             this.parameterTotal750_780,
             this.parameterGrandTotal,
             this.parameterEndDateText,
-            this.parameterCompanyName});
+            this.parameterCompanyName,
+            this.MuhasebeYetkilisiAdi,
+            this.MuhasebeMemuruAdi});
             this.ShowPrintMarginsWarning = false;
             this.Version = "25.2";
             ((System.ComponentModel.ISupportInitialize)(this.xrTable2)).EndInit();
@@ -915,11 +963,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
         private DevExpress.XtraReports.UI.XRTableCell xrTableCell33;
         private DevExpress.XtraReports.UI.XRTableCell xrTableCell36;
         private DevExpress.XtraReports.UI.XRTableCell xrTableCell39;
-        private DevExpress.XtraReports.UI.XRLabel xrLabel7;
         private DevExpress.XtraReports.UI.XRLabel xrLabel8;
         private DevExpress.XtraReports.UI.XRLabel xrLabel6;
         private DevExpress.XtraReports.UI.XRLabel xrLabel5;
-        private DevExpress.XtraReports.UI.XRLabel xrLabel4;
+        private DevExpress.XtraReports.UI.XRLabel xrLabelMuhasebeYetkilisiUnvani;
+        private DevExpress.XtraReports.UI.XRLabel xrLabelMuhasebeYetkilisi;
+        private DevExpress.XtraReports.UI.XRLabel xrLabelMuhasebeMemuruUnvani;
+        private DevExpress.XtraReports.UI.XRLabel xrLabelMuhasebeMemuru;
         private DevExpress.XtraReports.Parameters.Parameter parameterPeriodText;
         private DevExpress.XtraReports.Parameters.Parameter parameterTotal740_1;
         private DevExpress.XtraReports.Parameters.Parameter parameterTotal740_2;
@@ -933,6 +983,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
         private DevExpress.XtraReports.Parameters.Parameter parameterGrandTotal;
         private DevExpress.XtraReports.Parameters.Parameter parameterEndDateText;
         private DevExpress.XtraReports.Parameters.Parameter parameterCompanyName;
+        private DevExpress.XtraReports.Parameters.Parameter MuhasebeYetkilisiAdi;
+        private DevExpress.XtraReports.Parameters.Parameter MuhasebeMemuruAdi;
         private DevExpress.XtraReports.UI.XRLabel xrLabelPeriodValue;
         private DevExpress.XtraReports.UI.PageFooterBand PageFooter;
         private DevExpress.XtraReports.UI.XRLine xrLine1;

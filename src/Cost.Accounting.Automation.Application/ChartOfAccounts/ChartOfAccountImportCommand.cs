@@ -111,17 +111,17 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
                         && !a.IsDeleted)
             .ToList();
 
-        AccountDeletionCheck check = new([], []);
+        DeletionCheck check = DeletionCheck.Empty;
         if (toDelete.Count > 0)
         {
             check = await chartOfAccountRepository.GetDeletionCheckAsync(
                 toDelete.Select(a => a.Id.Value).ToList(),
                 cancellationToken);
 
-            if (check.MovementAccountIds.Count > 0)
+            if (check.MovementIds.Count > 0)
             {
                 string movedCodes = string.Join(", ", existing
-                    .Where(a => check.MovementAccountIds.Contains(a.Id.Value))
+                    .Where(a => check.MovementIds.Contains(a.Id.Value))
                     .Select(a => a.Code.Value)
                     .Take(5));
 
@@ -150,19 +150,18 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         string summary = $"Hesap planı başarıyla içe aktarıldı: {_nodes.Count} hesap " +
             $"({mainGroups} anagrup, {warehouses} depo, {categories} kategori, {workshops} atölye, {consumptionUnits} tüketim birimi, {linked} atölye 151/152 bağlantısı).";
 
-        if (check.RelatedAccountIds.Count == 0)
+        if (check.RelatedIds.Count == 0)
         {
             return summary;
         }
 
         string codes = string.Join(", ", existing
-            .Where(a => check.RelatedAccountIds.Contains(a.Id.Value))
+            .Where(a => check.RelatedIds.Contains(a.Id.Value))
             .Select(a => a.Code.Value)
             .Take(5));
 
-        return DeleteWarnings.Compose(
-            $"{summary} NOT: {codes} kodlu hesap(lar) ilişkili kayıtlarda kullanılıyor; " +
-            $"hareket görmedikleri için silme gerçekleştirildi.");
+        return $"{summary} NOT: {codes} kodlu hesap(lar) ilişkili kayıtlarda kullanılıyor; "
+               + $"hareket görmedikleri için silme gerçekleştirildi.";
     }
 
     private void LinkParents(Dictionary<string, ChartOfAccount> nodes)

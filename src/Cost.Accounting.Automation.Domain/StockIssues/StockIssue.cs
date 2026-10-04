@@ -78,6 +78,13 @@ public sealed class StockIssue : Entity, IHardDeletable
 
     public void SetDescription(Description description) => Description = description;
 
+    /// <summary>
+    /// Tüketim/transfer belgelerinde maliyetlendirme yöntemi kullanıcı seçimine
+    /// açık değildir; daima FIFO uygulanır. Yeniden oluşturulan (restore edilen)
+    /// bir belge eski LIFO değerini taşıyabildiği için yöntem burada sıfırlanır.
+    /// </summary>
+    public void UseFifoCosting() => CostingMethod = StockCostingMethod.Fifo;
+
     public void ReplaceLines(IEnumerable<StockIssueLine> lines)
     {
         if (Status == StockIssueStatus.Approved)

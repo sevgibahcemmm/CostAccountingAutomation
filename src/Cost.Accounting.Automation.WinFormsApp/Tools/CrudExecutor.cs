@@ -1,4 +1,3 @@
-using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using FluentValidation;
@@ -30,15 +29,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     return null;
                 }
 
-                string message = GetResultMessage(result.Data);
-                if (message.StartsWith(DeleteWarnings.Prefix, StringComparison.Ordinal))
-                {
-                    ToastHelper.Show(message[DeleteWarnings.Prefix.Length..], ToastType.Warning, 5000);
-                }
-                else
-                {
-                    ToastHelper.Show(message, ToastType.Success);
-                }
+                ToastHelper.Show(GetResultMessage(result.Data), ToastType.Success);
                 return result;
             }
             catch (ValidationException ex)
@@ -57,7 +48,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
         private static string GetResultMessage(object? data) => data switch
         {
             string s => s,
-            IResultMessage m => m.Message,
             _ => "İşlem başarılı"
         };
     }

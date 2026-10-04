@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
@@ -639,20 +640,38 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         protected override IRequest<Result<string>> BuildDeleteCommand(ProductDto item)
             => new ProductDeleteCommand(item.Id);
 
+        /// <summary>Seçili ürünler tek transaction'da silinir.</summary>
+        protected override IRequest<Result<string>>? BuildBulkDeleteCommand(IReadOnlyList<ProductDto> items)
+            => new BulkDeleteProductsCommand(items.Select(item => item.Id).ToList());
+
+        protected override string DeleteItemLabel => "ürün";
+
+        /// <summary>
+        /// Stok hareketi denetimi tek sorguda yapılır: seçili ürünler için
+        /// hareket görenler ürün repository'sinin silme denetim metoduyla bir
+        /// kerede çekilir.
+        /// </summary>
         protected override async Task<List<ProductDto>> GetUndeletableAsync(
             List<ProductDto> selected, CancellationToken cancellationToken)
         {
-            List<ProductDto> blocked = [];
-            using var scope = Program.Services.CreateScope();
-            IProductMovementRepository movements = scope.ServiceProvider.GetRequiredService<IProductMovementRepository>();
-            foreach (ProductDto item in selected)
+            if (selected.Count == 0)
             {
-                if (await movements.AnyAsync(m => m.ProductId == item.Id, cancellationToken))
-                {
-                    blocked.Add(item);
-                }
+                return [];
             }
-            return blocked;
+
+            HashSet<Guid> ids = selected.Select(item => item.Id).ToHashSet();
+
+            using var scope = Program.Services.CreateScope();
+            IProductRepository repository = scope.ServiceProvider.GetRequiredService<IProductRepository>();
+            DeletionCheck check = await repository.GetDeletionCheckAsync(ids, cancellationToken);
+
+            if (check.MovementIds.Count == 0)
+            {
+                return [];
+            }
+
+            HashSet<Guid> blocked = check.MovementIds.ToHashSet();
+            return selected.Where(item => blocked.Contains(item.Id)).ToList();
         }
 
         protected override string GetDeleteSummary(ProductDto item) => item.Name;

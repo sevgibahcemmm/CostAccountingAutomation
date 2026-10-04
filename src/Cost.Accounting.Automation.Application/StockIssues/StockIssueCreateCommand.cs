@@ -133,8 +133,11 @@ internal sealed class StockIssueCreateCommandHandler(
 
         Dictionary<Guid, Product> productMap = products.ToDictionary(p => p.Id.Value);
 
-        // Aynı ürün aynı belgede birden fazla satırda kullanılamaz. Satırlar
-        // sessizce birleştirilmez; kullanıcı hatalı satırı düzeltsin.
+        // İstek satırları ürün başına TEK satır olmalıdır. Kalem katmanları kayıtta
+        // üretilir (aşağıda), bu yüzden istekte aynı ürün iki kez gelirse
+        // satırlar sessizce birleştirilmez; kullanıcı hatalı satırı düzeltsin.
+        // Not: Kaydedilmiş bir taslak yeniden açılıp değiştirildiğinde istemci
+        // katman satırlarını ürün bazında birleştirip gönderir.
         List<IGrouping<Guid, StockIssueCreateLine>> duplicateLines = request.Lines
             .GroupBy(l => l.ProductId)
             .Where(g => g.Count() > 1)
@@ -196,17 +199,21 @@ internal sealed class StockIssueCreateCommandHandler(
             }
         }
 
-        Dictionary<IdentityId, decimal> costMap = StockIssueCostingHelper.BuildUnitCostMap(
-            movements,
-            requestedQuantities,
-            request.CostingMethod,
-            request.Date);
+        // Tüketim ve atölye transferi belgelerinde maliyet yöntemi daima FIFO'dur
+        // (bkz. StockIssueStockHelper.PlanStockEffects). İstekteki değer yok
+        // sayılır; böylece eski ekranlardan veya doğrudan çağrılardan gelen
+        // LIFO seçimi çıkışın en yeni girişten alınmasına yol açamaz.
+        const StockCostingMethod costingMethod = StockCostingMethod.Fifo;
 
         StockIssue issue;
         if (duplicate is not null)
         {
             duplicate.Restore();
             duplicate.SetDescription(new Description(request.Description?.Trim() ?? string.Empty));
+
+            // Yeniden oluşturulan belge eski LIFO değerini taşımasın: tüketim ve
+            // transfer belgelerinde maliyetlendirme daima FIFO'dur.
+            duplicate.UseFifoCosting();
             issue = duplicate;
         }
         else
@@ -217,10 +224,17 @@ internal sealed class StockIssueCreateCommandHandler(
                 date: request.Date,
                 sourceWarehouseId: new IdentityId(request.SourceWarehouseId),
                 targetAccountId: new IdentityId(request.TargetAccountId),
-                costingMethod: request.CostingMethod,
+                costingMethod: costingMethod,
                 description: new Description(request.Description?.Trim() ?? string.Empty));
         }
 
+        // KATMAN KIRILIMI BELGENİN KENDİSİNE YAZILIR. Belge satırı artık bir ürünün
+        // tek fiyatlı miktarı değil, GERÇEK bir giriş katmanıdır: 174 adetlik
+        // bir tüketim 144 @ 12,60 ve 30 @ 13,20 olmak üzere İKİ satır olarak
+        // kaydedilir. Onayda yazılacak stok hareketleriyle satırlar birebir aynı
+        // olduğundan belge, fiş, liste ve yevmiye tek bir gerçeği gösterir.
+        // Önceden satır miktarı ile katmanı tek fiyata (ilk giriş fiyatı)
+        // yuvarlanıyor, liste toplamı ve taşınır işlem fişi hatalı çıkıyordu.
         List<StockIssueLine> lines = [];
 
         List<StockIssueCreateLine> mergedLines = request.Lines
@@ -233,14 +247,27 @@ internal sealed class StockIssueCreateCommandHandler(
 
         foreach (StockIssueCreateLine line in mergedLines)
         {
-            decimal unitCost = costMap.TryGetValue(new IdentityId(line.ProductId), out decimal cost) ? cost : 0m;
+            IdentityId productId = new(line.ProductId);
 
-            lines.Add(new StockIssueLine(
-                stockIssueId: issue.Id,
-                productId: new IdentityId(line.ProductId),
-                quantity: line.Quantity,
-                unitCost: new Price(unitCost),
-                description: new Description(line.Description?.Trim() ?? string.Empty)));
+            List<(decimal Quantity, decimal UnitPrice)> layers =
+                StockIssueCostingHelper.BuildConsumptionLayers(
+                    movements, productId, line.Quantity, costingMethod, request.Date);
+
+            if (layers.Count == 0)
+            {
+                return Result<string>.Failure(
+                    $"'{GetProductName(productMap, productId)}' için tüketilecek giriş katmanı bulunamadı.");
+            }
+
+            foreach ((decimal layerQuantity, decimal layerUnitPrice) in layers)
+            {
+                lines.Add(new StockIssueLine(
+                    stockIssueId: issue.Id,
+                    productId: productId,
+                    quantity: layerQuantity,
+                    unitCost: new Price(layerUnitPrice),
+                    description: new Description(line.Description?.Trim() ?? string.Empty)));
+            }
         }
 
         issue.ReplaceLines(lines);
@@ -254,6 +281,12 @@ internal sealed class StockIssueCreateCommandHandler(
         // ONAYDA uretilir (StockIssueApproveCommand); boylece onaylanmamis bir
         // transfer/tuketim stogu etkilemez ve maliyet pusulasinda tuketilemez.
         string actionName = isConsumption ? "Tuketim" : "Atolye transferi";
-        return Result<string>.Succeed($"{actionName} belgesi taslak olarak kaydedildi.");
+        return Result<string>.Succeed(
+            $"{actionName} belgesi taslak olarak kaydedildi. Kalemler ({lines.Count}) giriş fiyatlarına göre kaydedildi.");
     }
+
+    private static string GetProductName(IReadOnlyDictionary<Guid, Product> productMap, IdentityId productId)
+        => productMap.TryGetValue(productId.Value, out Product? product)
+            ? product.Name.Value
+            : productId.Value.ToString();
 }

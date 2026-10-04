@@ -26,6 +26,7 @@ public sealed record EmployeeUpdateCommand(
     string PhoneNumber1,
     string PhoneNumber2,
     string Email,
+    string? RegistryNumber,
     PhotoInput? Photo,
     bool IsActive,
     IReadOnlyList<EmployeeDutyInput> Duties) : IRequest<Result<Guid>>;
@@ -65,6 +66,10 @@ public sealed class EmployeeUpdateCommandValidator : AbstractValidator<EmployeeU
 
         RuleFor(x => x.Email)
             .MaximumLength(200).WithMessage("E-posta en fazla 200 karakter olabilir");
+
+        // Sicil numarası isteğe bağlıdır; yalnızca uzunluk sınırlanır.
+        RuleFor(x => x.RegistryNumber)
+            .MaximumLength(50).WithMessage(EmployeeMessages.RegistryNumberTooLong);
 
         RuleFor(x => x.Duties)
             .Must(d => d is { Count: > 0 })
@@ -141,6 +146,16 @@ internal sealed class EmployeeUpdateCommandHandler(
             return Result<Guid>.Failure(EmployeeMessages.DuplicateIdentityNumber);
         }
 
+        // Sicil numarası doluysa başka bir personelde kullanılmamalıdır. Kaydın
+        // kendisi hariç tutulur; aksi hâlde kayıt kendi numarasıyla çakışır.
+        string? registryNumber = EmployeeRegistryNumber.Normalize(request.RegistryNumber);
+
+        if (registryNumber is not null && await employeeRepository.RegistryNumberExistsAsync(
+                registryNumber, excludeId: request.Id, cancellationToken))
+        {
+            return Result<Guid>.Failure(EmployeeMessages.DuplicateRegistryNumber);
+        }
+
         employee.SetFirstName(new FirstName(request.FirstName.Trim()));
         employee.SetLastName(new LastName(request.LastName.Trim()));
         employee.SetIdentityNumber(new TRIdentityNumber(identityNumber));
@@ -148,6 +163,7 @@ internal sealed class EmployeeUpdateCommandHandler(
         employee.SetPhoneNumber1(request.PhoneNumber1.Trim());
         employee.SetPhoneNumber2(request.PhoneNumber2.Trim());
         employee.SetEmail(request.Email.Trim());
+        employee.SetRegistryNumber(registryNumber);
 
         // Fotoğraf yalnızca yenisi seçildiyse değiştirilir; aksi hâlde
         // kayıtlı yol korunur. Fotoğrafın kaldırılması ayrı bir komutla yapılır.
@@ -202,10 +218,9 @@ internal sealed class EmployeeDeleteCommandHandler(
         employee.Delete();
         employeeRepository.Update(employee);
 
-        return DeleteWarnings.Compose(
-            $"'{employee.FullName}' personeli silindi. NOT: Onaylanmış belgelerin "
+        return $"'{employee.FullName}' personeli silindi. NOT: Onaylanmış belgelerin "
             + "imza bölümlerinde bu kişiye ait ad geçiyor olabilir; bu belgeler "
-            + "yeniden basılırsa imza alanı boş kalacaktır.");
+            + "yeniden basılırsa imza alanı boş kalacaktır.";
     }
 }
 

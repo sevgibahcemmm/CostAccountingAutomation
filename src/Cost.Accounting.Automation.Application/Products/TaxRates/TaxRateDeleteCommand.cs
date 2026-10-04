@@ -1,6 +1,5 @@
-using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Products;
+using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using TS.MediatR;
 using TS.Result;
@@ -11,30 +10,22 @@ namespace Cost.Accounting.Automation.Application.Products.TaxRates;
 public sealed record TaxRateDeleteCommand(
     Guid Id) : IRequest<Result<string>>;
 
+/// <summary>
+/// KDV oranı ürünlerde kullanılıyorsa silme sonrası not üretir; engelleyici hareket yoktur.
+/// </summary>
 internal sealed class TaxRateDeleteCommandHandler(
-    ITaxRateRepository taxRateRepository,
-    IProductRepository productRepository) : IRequestHandler<TaxRateDeleteCommand, Result<string>>
+    ITaxRateRepository taxRateRepository) : IRequestHandler<TaxRateDeleteCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(TaxRateDeleteCommand request, CancellationToken cancellationToken)
     {
-        var taxRate = await taxRateRepository.FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
-        if (taxRate is null)
-        {
-            return Result<string>.Failure("KDV oranı bulunamadı");
-        }
+        var runner = new BulkDeletionRunner<TaxRate>(
+            taxRateRepository,
+            (ids, token) => taxRateRepository.GetDeletionCheckAsync(ids, token));
+        Result<BulkDeletionOutcome> result = await runner.RunAsync(
+            [request.Id],
+            "KDV oranı",
+            cancellationToken);
 
-        bool usedByProduct = await productRepository.AnyAsync(p => p.TaxRateId == request.Id, cancellationToken);
-
-        taxRate.Delete();
-        taxRateRepository.Update(taxRate);
-
-        if (usedByProduct)
-        {
-            return DeleteWarnings.Compose(
-                $"'{taxRate.Name.Value}' KDV oranı silindi, ancak ilişkili ürün kayıtlarında kullanıldığı için " +
-                $"ilgili ürünlerin gözden geçirilmesi gerekir.");
-        }
-
-        return "KDV oranı başarıyla silindi";
+        return BulkDeletionResult.ToMessage(result, "KDV oranı");
     }
 }

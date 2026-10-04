@@ -54,12 +54,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
         };
 
         /// <summary>
+        /// En yeni stok hareketi üstte, ilk hareket altta. FIFO'da katman
+        /// sırası da hareket tarihine göre kurulduğu için liste sırası ile
+        /// tüketim sırası aynı yönde olmalıdır.
+        /// </summary>
+        protected override IEnumerable<ProductMovementListDto> ApplyDefaultOrder(IEnumerable<ProductMovementListDto> items)
+            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
+
+        /// <summary>
         /// Stok hareketi bu ekrandan üretilmez; hareketler fatura, stok çıkışı
         /// ve maliyet pusulası kayıtlarından doğar. Bu yüzden "Yeni" düğmesi
         /// gösterilmez.
         /// </summary>
         protected override bool AllowCreate => false;
 
+        /// <summary>
+        /// Stok hareketi ikincil kayıttır: fatura, stok çıkışı ve maliyet
+        /// pusulası kayıtlarından türetilir. Silme yeteneği hiç verilmediği için
+        /// bu ekranda "Sil" düğmesi hiç gösterilmez; düzeltme kaynak belge
+        /// üzerinden yapılır.
+        /// </summary>
         protected override bool AllowDelete => false;
 
         /// <summary>
@@ -114,9 +128,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
                 MovementType: _targetType,
                 WarehouseId: SelectedFilterGuid,
                 OnlyDeleted: ShowDeleted);
-
-        protected override IRequest<Result<string>> BuildDeleteCommand(ProductMovementListDto item)
-            => new ProductMovementDeleteCommand(item.Id);
 
         protected override string GetDeleteSummary(ProductMovementListDto item)
             => $"{item.ProductName} ({item.MovementTypeName} - {item.Quantity:n2})";

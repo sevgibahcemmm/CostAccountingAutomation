@@ -6,6 +6,7 @@ using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.StockIssues;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CostSlips;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
@@ -64,7 +65,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         private bool _saved;
         private string _autoDescription = string.Empty;
         private Guid? _semiFinishedProductId;
+
+        /// <summary>
+        /// Yarımamülün stoktaki MEVCUT miktar bakiyesi (bu pusulanın tükettiği
+        /// miktar dahil değildir). "Kalan" sütunu bunu kullanır.
+        /// </summary>
         private decimal _semiFinishedBalance;
+
+        /// <summary>
+        /// Yarımamülün tüketilmemiş giriş katmanları (FIFO sırasıyla). Kullanıcı
+        /// 151 kutusuna tutar girdiğinde miktar bu katmanlardan türetilir.
+        /// </summary>
+        private List<CostingLayer> _semiFinishedLayers = [];
+
+        /// <summary>
+        /// Yarımamül katmanlarının sıralanacağı yöntem. Bakiye sorgusundaki
+        /// yöntemle AYNI olmalıdır; aksi halde ekranda bulunan miktar onay
+        /// anındaki FIFO kırılımını vermez.
+        /// </summary>
+        private StockCostingMethod _semiFinishedCostingMethod = StockCostingMethod.Fifo;
 
         private sealed record WorkshopLink(string Code, Guid? SemiFinishedAccountId, Guid? FinishedAccountId);
 
@@ -337,10 +356,49 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             UpdateProducedProductAvailability();
             await LoadMaterialProductsAsync();
 
+            // Kaydedilmiş bir pusula açıldığında uyarı gösterilmez ama yarımamül
+            // katmanları yine yüklenir; aksi halde 151 kutusundaki tutar
+            // FIFO kırılımı olmadan miktara çevrilemez.
+            await LoadSemiFinishedLayersAsync();
+
             if (_editing is null)
             {
                 await AutoAssignNumberAsync();
             }
+        }
+
+        /// <summary>
+        /// Yarımamülün tüketilmemiş giriş katmanlarını bakiye sorgusundan alır.
+        /// Uyarı penceresi göstermez; yalnızca katman listesini hazırlar.
+        /// </summary>
+        private async Task LoadSemiFinishedLayersAsync()
+        {
+            Guid? semiId = ActiveSemiFinishedProductId;
+            if (semiId is null)
+            {
+                return;
+            }
+
+            if (SelectedWorkshopId is not Guid workshopId)
+            {
+                return;
+            }
+
+            CostSlipSemiFinishedBalanceDto? balance =
+                await GetSemiFinishedBalanceAsync(workshopId, semiId.Value);
+
+            if (balance is null)
+            {
+                return;
+            }
+
+            _semiFinishedLayers = balance.ToCostingLayers();
+
+            // "Kalan" sütunu bu pusulanın tükettiği miktarı kendisi düşsün diye
+            // mevcut bakiye tutulur; tüketilen miktar GetDisplayedAvailable
+            // içinde ayrıca hesaplanır.
+            _semiFinishedBalance = balance.Balance
+                + _lines.Where(l => l.ProductId == semiId).Sum(l => l.Quantity);
         }
 
         private static async Task<AppCostSlip?> FetchSlipAsync(Guid slipId)
@@ -483,10 +541,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             ProductCatalogDto? produced = _products.FirstOrDefault(p => p.Id == slip.ProducedProductId);
             if (produced?.SemiFinishedProductId is Guid semiId)
             {
+                // Yalnızca kimlik burada set edilir. Mevcut bakiye ve katman
+                // listesi LoadFormDataAsync sonunda stok hareketlerinden yüklenir;
+                // kayıttan türetmek taslakları da sayar ve stokla uyuşmazdı.
                 _semiFinishedProductId = semiId;
-                _semiFinishedBalance = _lines
-                    .Where(l => l.ProductId == semiId)
-                    .Sum(l => l.Quantity);
             }
 
             MigrateLegacySemiFinishedAccount();
@@ -506,22 +564,35 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLinesView.FocusedRowHandle = _lines.Count - 1;
         }
 
-        private void DeleteSelectedLine()
-        {
-            int rowHandle = gridLinesView.FocusedRowHandle;
-            if (rowHandle >= 0 && rowHandle < _lines.Count)
+private void DeleteSelectedLine()
             {
+                int rowHandle = gridLinesView.FocusedRowHandle;
+                if (rowHandle < 0 || rowHandle >= _lines.Count)
+                {
+                    return;
+                }
+
+                if (MsgBox.ConfirmRowDelete(1, "maliyet pusulası") != DialogResult.Yes)
+                {
+                    return;
+                }
+
                 bool removedSemi = _lines[rowHandle].ProductId == _semiFinishedProductId;
                 _lines.RemoveAt(rowHandle);
                 if (removedSemi)
                 {
                     _semiFinishedProductId = null;
+
+                    // Bakiye sıfırlanmaz; yalnızca katmanlar temizlenir. "Kalan"
+                    // sütunu mevcut stok miktarını göstermelidir, bu
+                    // pusulanın tükettiği miktarı değil.
+                    _semiFinishedLayers = [];
                     _semiFinishedBalance = 0m;
                 }
+
                 RefreshAvailableQuantities();
                 RecalculateTotals();
             }
-        }
 
         /// <summary>
         /// Yarımamül tüketimi eskiden 710 kalemi olarak kaydediliyordu, artık
@@ -718,7 +789,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             ProductCatalogDto? prod = _products.FirstOrDefault(p => p.Id == productId);
 
             _semiFinishedProductId = productId;
-            _semiFinishedBalance = balance.Balance;
+
+            // Katmanlar bakiyenin tek doğruluk kaynağıdır. Kullanıcı tutar
+            // girdiğinde miktar bu katmanlardan türetilir; ortalama birim
+            // maliyet yalnızca tam bakiye için tek satırlı gösterimde kullanılır.
+            _semiFinishedLayers = balance.ToCostingLayers();
+
+            decimal availableAmount = balance.AvailableAmount;
 
             IReadOnlyList<CostSlipExpenseBreakdownDto> parts = balance.ExpenseBreakdown.Count > 0
                 ? balance.ExpenseBreakdown
@@ -732,6 +809,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
             if (!_lines.Any(l => l.ProductId == productId && l.Quantity > 0))
             {
+                // "Yarımamülden gelen" tutarı katmanların toplamıdır; miktar da
+                // katmanlardan gelir. Böylece iki değer baştan tutarlıdır.
                 _lines.Add(new CostSlipItemEditDto
                 {
                     ProductId = productId,
@@ -740,30 +819,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     ProductUnitTypeName = prod?.ProductUnitTypeName ?? string.Empty,
                     ExpenseAccountType = ExpenseAccountHelper.SemiFinishedAccount,
                     Quantity = balance.Balance,
-                    UnitPrice = balance.UnitPrice,
+                    UnitPrice = balance.Balance > 0m
+                        ? Math.Round(availableAmount / balance.Balance, 4)
+                        : 0m,
                     Description = string.IsNullOrEmpty(breakdown)
                         ? "Yarımamül tüketimi"
                         : $"Yarımamül tüketimi ({breakdown})"
                 });
             }
 
-            // "Yarımamülden gelen" kutusu mevcut bakiye tutarıyla doldurulur;
-            // kullanıcı isterse kısmi tüketim için düşürebilir.
-            decimal availableAmount = Math.Round(balance.Balance * balance.UnitPrice, 2);
-            _accountAmounts[ExpenseAccountHelper.SemiFinishedAccount] = availableAmount;
-
-            if (_accountInputs.TryGetValue(ExpenseAccountHelper.SemiFinishedAccount, out TextEdit? semiInput))
-            {
-                _syncingTotals = true;
-                try
-                {
-                    semiInput.EditValue = availableAmount;
-                }
-                finally
-                {
-                    _syncingTotals = false;
-                }
-            }
+            // "Yarımamülden gelen" kutusu mevcut katman tutarıyla doldurulur;
+            // kullanıcı kısmi tüketim için düşürebilir.
+            SetSemiFinishedAccountAmount(availableAmount);
 
             UpdateMaterialProductDataSource();
             gridLinesView.RefreshData();
@@ -780,8 +847,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                 using var scope = Program.Services.CreateScope();
                 ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
+                // Katmanlar pusulanın tarihine kadar olan hareketlerden
+                // hesaplanır; onayda kullanılacak kırılımın aynısı böylece
+                // ekranda da görünür.
                 var result = await mediator.Send(
-                    new CostSlipSemiFinishedBalanceQuery(workshopId, productId),
+                    new CostSlipSemiFinishedBalanceQuery(
+                        workshopId,
+                        productId,
+                        CostDate: DateOnly.FromDateTime(dtCostDate.DateTime),
+                        CostingMethod: _semiFinishedCostingMethod),
                     CancellationToken.None);
 
                 return result.IsSuccessful ? result.Data : null;
@@ -1456,8 +1530,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
         /// <summary>
         /// "Yarımamülden gelen" kutusuna girilen TUTARDAN yarımamülün tüketilecek
-        /// MİKTARINI hesaplar ve stok düşüşünün doğru olması için grid satırının
-        /// miktarını günceller (birim maliyetten bölünür).
+        /// MİKTARINI hesaplar ve grid satırının miktarını günceller.
+        ///
+        /// <para>
+        /// Miktar ORTALAMA birim maliyetten bölünerek bulunamaz. Ortalama,
+        /// tutarın hangi girişten alınacağını söylemez; üstelik onay anında
+        /// yevmiye FIFO katman kırılımıyla yazıldığı için iki hesap birbirini
+        /// tutmaz. Bu yüzden miktar, <see cref="StockCostingLayers"/> üzerinde
+        /// TUTAR üzerinden yürütülerek türetilir: ilk giriş tamamen karşılanır,
+        /// kalan tutar sonraki girişten alınır.
+        /// </para>
         /// </summary>
         private void SyncSemiFinishedQuantityFromAmount()
         {
@@ -1468,25 +1550,145 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
 
             CostSlipItemEditDto? semiLine = _lines.FirstOrDefault(IsSemiFinishedLine);
-            if (semiLine is null || semiLine.UnitPrice <= 0m)
+            if (semiLine is null)
             {
                 return;
             }
 
             decimal amount = _accountAmounts.GetValueOrDefault(ExpenseAccountHelper.SemiFinishedAccount);
-            decimal quantity = Math.Round(amount / semiLine.UnitPrice, 4);
+            if (amount < 0m)
+            {
+                return;
+            }
 
-            if (semiLine.Quantity == quantity)
+            // Katman listesi yoksa FIFO kırılımı yapılamaz. Miktar sıfıra
+            // düşürülürse kayıt "Miktar sıfırdan büyük olmalıdır" hatasıyla
+            // reddedilir; bu yüzden eski davranışa (ortalama) düşülür ve
+            // kullanıcıya durum bildirilir.
+            if (_semiFinishedLayers.Count == 0)
+            {
+                decimal fallback = semiLine.UnitPrice > 0m
+                    ? StockCostingLayers.NormalizeQuantity(amount / semiLine.UnitPrice)
+                    : 0m;
+
+                if (fallback <= 0m || semiLine.Quantity == fallback)
+                {
+                    return;
+                }
+
+                semiLine.Quantity = fallback;
+                semiLine.TotalAmount = Math.Round(fallback * semiLine.UnitPrice, 2);
+                WarnSemiFinishedLayersMissing();
+
+                UpdateMaterialProductDataSource();
+                RefreshAvailableQuantities();
+                gridLinesView.RefreshData();
+                return;
+            }
+
+            decimal quantity = ResolveSemiFinishedQuantity(amount);
+            decimal realizedAmount = StockCostingLayers.TotalAmount(
+                StockCostingLayers.TakeByAmount(
+                    _semiFinishedLayers,
+                    amount,
+                    _semiFinishedCostingMethod));
+
+            // Girilen tutar mevcut katmanları aşıyorsa kırılım yalnızca
+            // mevcut tutarı karşılar. Fazlası sahte maliyet olurdu; bu yüzden
+            // tutar gerçekleşen değere indirilir ve kullanıcı bilgilendirilir.
+            if (amount - realizedAmount > 0.005m)
+            {
+                ToastHelper.Show(
+                    $"Yarımamül için kullanılabilecek tutar {realizedAmount:n2} TL. "
+                    + "Tutar buna indirildi.",
+                    ToastType.Warning,
+                    5000);
+
+                SetSemiFinishedAccountAmount(realizedAmount);
+                amount = realizedAmount;
+                quantity = ResolveSemiFinishedQuantity(amount);
+            }
+
+            decimal unitPrice = quantity > 0m
+                ? Math.Round(amount / quantity, 4)
+                : 0m;
+
+            if (semiLine.Quantity == quantity && semiLine.UnitPrice == unitPrice)
             {
                 return;
             }
 
             semiLine.Quantity = quantity;
-            semiLine.TotalAmount = Math.Round(quantity * semiLine.UnitPrice, 2);
-            _semiFinishedBalance = quantity;
+            semiLine.UnitPrice = unitPrice;
+            semiLine.TotalAmount = Math.Round(amount, 2);
 
             UpdateMaterialProductDataSource();
+            RefreshAvailableQuantities();
             gridLinesView.RefreshData();
+        }
+
+        /// <summary>
+        /// "Yarımamülden gelen" tutarını hem modelde hem kutuda günceller.
+        /// Kutunun <c>EditValueChanged</c> olayının yeniden tetiklenmesi
+        /// engellenir; aksi hâlde senkronizasyon özyinelemeli çalışır.
+        /// </summary>
+        private void SetSemiFinishedAccountAmount(decimal amount)
+        {
+            _accountAmounts[ExpenseAccountHelper.SemiFinishedAccount] = amount;
+
+            if (_accountInputs.TryGetValue(ExpenseAccountHelper.SemiFinishedAccount, out TextEdit? semiInput))
+            {
+                _syncingTotals = true;
+                try
+                {
+                    semiInput.EditValue = Math.Round(amount, 2);
+                }
+                finally
+                {
+                    _syncingTotals = false;
+                }
+            }
+        }
+
+        private bool _semiFinishedLayerWarningShown;
+
+        /// <summary>
+        /// Katman listesi yüklenemediğinde kullanıcıyı bilgilendirir: miktar
+        /// ortalamadan türetildiği için giriş bazında kırılım yapılamadı.
+        /// </summary>
+        private void WarnSemiFinishedLayersMissing()
+        {
+            if (_semiFinishedLayerWarningShown)
+            {
+                return;
+            }
+
+            _semiFinishedLayerWarningShown = true;
+            ToastHelper.Show(
+                "Yarımamül giriş katmanları okunamadı; miktar ortalama maliyetten hesaplandı. "
+                + "Katman bazlı (FIFO) tüketim için pusulayı yeniden açın.",
+                ToastType.Warning,
+                6000);
+        }
+
+        /// <summary>
+        /// Girilen tutarın FIFO/LIFO ile hangi giriş katmanlarından
+        /// karşılanacağını bulur ve tüketilecek miktarı döndürür. Mevcut
+        /// katmanların toplamından fazlası tüketilemez.
+        /// </summary>
+        private decimal ResolveSemiFinishedQuantity(decimal amount)
+        {
+            if (amount <= 0m || _semiFinishedLayers.Count == 0)
+            {
+                return 0m;
+            }
+
+            List<CostingLayer> taken = StockCostingLayers.TakeByAmount(
+                _semiFinishedLayers,
+                amount,
+                _semiFinishedCostingMethod);
+
+            return StockCostingLayers.TotalQuantity(taken);
         }
 
         /// <summary>
@@ -2165,7 +2367,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
                     ? _workshops.FirstOrDefault(w => w.Id == wid)?.Display ?? string.Empty
                     : _workshopName;
                 SetReportParam(report, "Workshop", workshopName);
-                SetReportParam(report, "Antet", company.Name);
+                SetReportParam(report, "Antet", company.Letterhead);
 
                 SetReportParam(report, "CiltNo", dtCostDate.DateTime.Year);
                 SetReportParam(report, "SerialNo", txtSlipNumber.Text.Trim());
@@ -2180,6 +2382,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
 
                 decimal grandTotal = _accountAmounts.Values.Sum();
                 SetReportParam(report, "Toplam", Math.Round(grandTotal, 2));
+
+                // Alt bilgi cümlesindeki birim maliyet ifade içinde hesaplanırsa
+                // miktar sıfırken bölme hatası boş metne yol açar; burada
+                // biçimlendirilmiş metin parametre olarak verilir.
+                SetReportParam(
+                    report,
+                    "BirimFiyat",
+                    FormatUnitPrice(int.TryParse(txtQuantity.Text.Trim(), out int previewQty) ? previewQty : 0, grandTotal));
+
+                // İmza kutuları (işyurdu müdürü, atölye şefi, taşınır kayıt
+                // yetkilisi) personel görev kayıtlarından çözümlenir. Atölye
+                // seçilmemişse atölye şefi kutusu boş basılır.
+                Guid? signatoryWorkshopId = lookUpWorkshop.EditValue is Guid swid && swid != Guid.Empty
+                    ? swid
+                    : null;
+                await CostSlipSignatoryHelper.ApplySignatoriesAsync(report, signatoryWorkshopId);
 
                 // Yalnızca belge üretimi bekleme penceresinin kapsamında; önizleme
                 // penceresi modal olduğu için bekleme kapandıktan sonra açılır.
@@ -2200,6 +2418,13 @@ await ReportPreviewHelper.PrintAsync(
             {
                 parameter.Value = value;
             }
+        }
+
+        private static string FormatUnitPrice(int quantity, decimal total)
+        {
+            return quantity <= 0
+                ? string.Empty
+                : (total / quantity).ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));
         }
 
         private async Task<CompanyDto> LoadCompanyAsync()

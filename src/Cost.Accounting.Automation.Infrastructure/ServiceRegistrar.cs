@@ -66,21 +66,12 @@ public static class ServiceRegistrar
             .WithScopedLifetime()
         );
 
-        // Scrutor taraması DbContext sınıflarını da arayüzleriyle kaydeder ve
-        // son eklenen kayıt kazanır. Bu yüzden birim işi kayıtları taramadan
-        // SONRA yapılır: yıl veritabanı işleri ApplicationDbContext, master
-        // veritabanı işleri MasterDbContext ile yazılmalıdır.
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IMasterUnitOfWork>(sp => sp.GetRequiredService<MasterDbContext>());
 
         return services;
     }
 
-    /// <summary>
-    /// Yıl veritabanı oluşturulurken ve geçici SQL hatalarında EF Core
-    /// "kullanıcı işlemi sırasında" hatası fırlatır. Yıl açma akışı bağlantı
-    /// kesintilerine açık olduğu için yeniden deneme açılır.
-    /// </summary>
     private static void UseSqlServerWithRetry(DbContextOptionsBuilder options, string connectionString)
     {
         options.UseSqlServer(
