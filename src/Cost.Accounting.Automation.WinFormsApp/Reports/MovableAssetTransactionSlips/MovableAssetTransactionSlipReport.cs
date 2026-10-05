@@ -144,9 +144,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
                     ? "DEPO TOPLAMI"
                     : $"{depot.WarehouseName} DEPO TOPLAMI";
 
+                // Etiket de sağa hizalı: rakamlar zaten sağa hizalı olduğu için
+                // başlık ile tutarları aynı hizada buluşur, toplam satırı
+                // okunur kalır.
                 rows.Add(MakeRow(
                     1D,
-                    MakeCell(5D, label, bold: true, header: true),
+                    MakeCell(5D, label, bold: true, header: true, align: TextAlignment.MiddleRight),
                     MakeCell(1D, depot.Quantity.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight),
                     MakeCell(1D, string.Empty, bold: true, header: true),
                     MakeCell(1D, depot.Amount.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight)));
@@ -154,7 +157,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.Reports
 
             rows.Add(MakeRow(
                 1D,
-                MakeCell(5D, "GENEL TOPLAM", bold: true, header: true),
+                MakeCell(5D, "GENEL TOPLAM", bold: true, header: true, align: TextAlignment.MiddleRight),
                 MakeCell(1D, data.GrandQuantity.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight),
                 MakeCell(1D, string.Empty, bold: true, header: true),
                 MakeCell(1D, data.GrandAmount.ToString("N2"), bold: true, header: true, align: TextAlignment.MiddleRight)));

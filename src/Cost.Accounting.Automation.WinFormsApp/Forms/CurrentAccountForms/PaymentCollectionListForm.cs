@@ -64,10 +64,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             return new(AccountType: null, CustomerId: null, SupplierId: null, OnlyDeleted: ShowDeleted, MovementTypes: types);
         }
 
-        /// <summary>En yeni tahsilat/ödeme üstte.</summary>
-        protected override IEnumerable<CurrentAccountMovementDto> ApplyDefaultOrder(IEnumerable<CurrentAccountMovementDto> items)
-            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
-
         protected override IRequest<Result<string>> BuildDeleteCommand(CurrentAccountMovementDto item)
             => new CurrentAccountMovementDeleteCommand(item.Id);
 

@@ -128,14 +128,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
             => new(IssueType: _issueType, OnlyDeleted: ShowDeleted);
 
         /// <summary>
-        /// En yeni stok belgesi üstte. Belge tarihi geçmişe dönük girilen
-        /// kayıtlarda kayıt zamanından önemlidir; varsayılan sıra son kaydedilen
-        /// üstte olduğu için tarih sırası burada geçersiz kılınır.
-        /// </summary>
-        protected override IEnumerable<StockIssueListDto> ApplyDefaultOrder(IEnumerable<StockIssueListDto> items)
-            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
-
-        /// <summary>
         /// Stok çıkışı/tüketim kaydı bu liste ekranından oluşturulmaz; belge
         /// ilgili menüden açılır. Bu yüzden "Yeni" düğmesi varsayılan olarak
         /// gösterilmez. Menüde ayrı bir "yeni belge" girdisi bulunmayan belgeler

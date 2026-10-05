@@ -545,7 +545,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             // xrLabelMuhasebeMemuru
             // 
             this.xrLabelMuhasebeMemuru.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "?MuhasebeMemuruAdi")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[Parameters.MuhasebeMemuruAdi]")});
             this.xrLabelMuhasebeMemuru.Font = new DevExpress.Drawing.DXFont("Arial", 8F);
             this.xrLabelMuhasebeMemuru.LocationFloat = new DevExpress.Utils.PointFloat(156F, 117.875F);
             this.xrLabelMuhasebeMemuru.Multiline = true;

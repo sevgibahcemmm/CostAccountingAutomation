@@ -1737,7 +1737,7 @@ xrSummary5.Func = DevExpress.XtraReports.UI.SummaryFunc.Sum;
             this.cellGroupGrandTotal.StylePriority.UsePadding = false;
             this.cellGroupGrandTotal.StylePriority.UseTextAlignment = false;
             this.cellGroupGrandTotal.Text = "TOPLAM";
-            this.cellGroupGrandTotal.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.cellGroupGrandTotal.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.cellGroupGrandTotal.Weight = 1D;
             // 
             // cellGroupTotal

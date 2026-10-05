@@ -54,10 +54,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms
         };
 
         /// <summary>
-        /// En yeni stok hareketi üstte, ilk hareket altta. FIFO'da katman
-        /// sırası da hareket tarihine göre kurulduğu için liste sırası ile
-        /// tüketim sırası aynı yönde olmalıdır.
+        /// En yeni stok hareketi üstte, ilk hareket altta.
         /// </summary>
+        /// <remarks>
+        /// Bu liste, genel "kayıt tarihine göre en son kaydedilen üstte" kuralının
+        /// bilinçli istisnasıdır. FIFO'da katman/tüketim sırası <b>hareket
+        /// tarihine</b> göre kurulduğu için liste sırası da hareket tarihine
+        /// göre olmalıdır; kayıt zamanına göre sıralanırsa denetim sırası ile
+        /// tüketim sırası ayrışır ve hangi girişten tüketildiği görülemez.
+        /// </remarks>
         protected override IEnumerable<ProductMovementListDto> ApplyDefaultOrder(IEnumerable<ProductMovementListDto> items)
             => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
 

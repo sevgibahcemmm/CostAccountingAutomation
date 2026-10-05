@@ -1201,11 +1201,17 @@ btnApprove.Enabled = SupportsApprove && !showDeleted && selected >= 1 && allAppr
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Varsayılan sıra <b>en son kaydedilen üstte</b>dir. Belge tarihi
-        /// olan listeler (fatura, maliyet pusulası, stok çıkışı, stok hareketi,
-        /// cari hareket) bu kuralı geçersiz kılar ve
-        /// <see cref="Utils.ListOrder.NewestDocumentFirst{T}"/> ile belge
-        /// tarihine göre sıralanır.
+        /// Varsayılan sıra <b>kayıt tarihine göre en son kaydedilen üstte</b>dir.
+        /// Tüm liste formları bu kuralı paylaşır; hiçbiri kendi sırasını
+        /// değiştirmez. Geçmiş tarihli bir belge bugün kaydedildiği için
+        /// listede en üstte görünür — listenin sırası "kim ne zaman kaydetti"
+        /// sorusunu yanıtlar, belge tarihine göre değil.
+        /// </para>
+        /// <para>
+        /// Tek istisna <b>stok hareketleri</b> listesidir: FIFO'da tüketim
+        /// sırası hareket tarihine göre kurulduğu için liste sırası da
+        /// hareket tarihine göre tutulur
+        /// (<see cref="Utils.ListOrder.NewestDocumentFirst{T}"/>).
         /// </para>
         /// <para>
         /// Sorgular çoğunlukla sırasız döndüğü için sıralama veri

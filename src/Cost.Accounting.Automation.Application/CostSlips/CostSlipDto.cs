@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CostSlips;
+using Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems;
 using Cost.Accounting.Automation.Domain.Products;
 
 namespace Cost.Accounting.Automation.Application.CostSlips;
@@ -142,21 +143,6 @@ public static class CostSlipExtensions
                 Quantity = s.Entity.Quantity,
                 GrandTotal = s.Entity.GrandTotal,
                 Description = s.Entity.Description.Value,
-                CostSlipItems = s.Entity.CostSlipItems
-                    .Select(i => new CostSlipItemDto
-                    {
-                        Id = i.Id,
-                        ProductId = i.ProductId == null ? null : i.ProductId.Value,
-                        ProductName = i.Product == null ? string.Empty : i.Product.Name.Value,
-                        ProductUnitTypeId = i.ProductUnitTypeId == null ? null : i.ProductUnitTypeId.Value,
-                        ProductUnitTypeName = i.ProductUnitType == null ? string.Empty : i.ProductUnitType.Name.Value,
-                        ExpenseAccountType = i.ExpenseAccountType,
-                        Quantity = i.Quantity,
-                        UnitPrice = i.UnitPrice,
-                        TotalAmount = i.TotalAmount,
-                        Description = i.Description.Value
-                    })
-                    .ToList(),
 
                 CreatedAt = s.Entity.CreatedAt,
                 CreatedBy = s.Entity.CreatedBy,
@@ -167,6 +153,36 @@ public static class CostSlipExtensions
                 UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
             })
             .AsQueryable();
+    }
+
+    /// <summary>
+    /// Pusula satırlarını liste DTO'suna çevirir.
+    /// </summary>
+    /// <remarks>
+    /// Satırlar liste projeksiyonu içinde değil, ayrı bir sorgudan gelir.
+    /// Projeksiyon içinde <c>ToList()</c> ile koleksiyon üzerilmesi EF'i
+    /// bölme (split) sorgusu üretmeye zorluyor ve liste 25 saniyeye
+    /// çıkıyordu; ayrı sorgu bu maliyeti tamamen ortadan kaldırır.
+    /// </remarks>
+    public static List<CostSlipItemDto> MapToList(this IEnumerable<CostSlipItem> items)
+    {
+        return items
+            .Select(l => new CostSlipItemDto
+            {
+                Id = l.Id,
+                ProductId = l.ProductId == null ? null : l.ProductId.Value,
+                ProductName = l.Product == null ? string.Empty : l.Product.Name.Value,
+                ProductUnitTypeId = l.ProductUnitTypeId == null ? null : l.ProductUnitTypeId.Value,
+                ProductUnitTypeName = l.ProductUnitType == null ? string.Empty : l.ProductUnitType.Name.Value,
+                ExpenseAccountType = l.ExpenseAccountType,
+                Quantity = l.Quantity,
+                UnitPrice = l.UnitPrice,
+                TotalAmount = l.TotalAmount,
+                Description = l.Description.Value
+            })
+            .OrderBy(x => (int)x.ExpenseAccountType)
+            .ThenBy(x => x.Id)
+            .ToList();
     }
 
     public static CostSlipDto ToDto(this CostSlip slip)

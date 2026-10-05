@@ -59,6 +59,41 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         private decimal _unitCost;
         private ExpenseAccountType? _roundingTargetAccount;
         private decimal _roundingDiff;
+
+        /// <summary>
+        /// Kullanıcının "İstenen Birim Maliyet" kutusuna girdiği değer.
+        /// Sıfır (veya boş kutu) otomatik yuvarlamanın kullanılacağı anlamına
+        /// gelir. Hesap paneli yeniden kurulduğunda kutunun değeri bu alandan
+        /// geri yüklenir, böylece pusula tipi değişince kaybolmaz.
+        /// </summary>
+        private decimal _desiredUnitCost;
+
+        /// <summary>
+        /// "İstenen Birim Maliyet" giriş kutusu. Hesap paneli
+        /// <see cref="RebuildAccountPanel"/> tarafından kurulur; 730-07 gibi
+        /// bir hesap KUTUSU DEĞİLDİR, bu yüzden <see cref="_accountInputs"/>
+        /// sözlüğüne eklenmez. Yalnızca <see cref="_accountInputList"/>'e
+        /// girer ki "İncele" modunda salt okunur olsun.
+        /// </summary>
+        private TextEdit _desiredUnitCostInput = default!;
+
+        /// <summary>
+        /// Girilen istenen birim maliyet, pusulanın mevcut toplam maliyetinden
+        /// düşük olduğunda true olur. Bu durumda amortisman giderine yazılacak
+        /// fark negatif olacağı için kayıt <see cref="SaveAsync"/> tarafından
+        /// engellenir.
+        /// </summary>
+        private bool _desiredUnitCostInvalid;
+
+        /// <summary>
+        /// <see cref="_desiredUnitCostInput"/> için skin varsayılan renkleri.
+        /// Geçersiz değerden sonra eski görünüme dönmek için saklanır.
+        /// </summary>
+        private Color _desiredUnitCostNormalBorder;
+
+        private Color _desiredUnitCostNormalBack;
+
+        private Color _desiredUnitCostNormalText;
         private List<ChartOfAccountLookUpDto> _workshops = [];
         private RepositoryItemSearchLookUpEdit _riProductLookUp = default!;
         private string _workshopName = string.Empty;
@@ -548,7 +583,40 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             }
 
             MigrateLegacySemiFinishedAccount();
+            RestoreDesiredUnitCost(slip);
             RecalculateTotals();
+        }
+
+        /// <summary>
+        /// Kaydedilmiş pusulanın birim maliyetini "İstenen Birim Maliyet"
+        /// kutusuna geri yükler.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Amaç, kaydı açıp hiçbir değişiklik yapmadan kaydettiğinizde toplam
+        /// maliyetin değişmemesidir. Kayıtlı toplam zaten farkı içerdiği için,
+        /// kutu bu değerle doldurulursa yeni fark sıfır çıkar.
+        /// </para>
+        /// <para>
+        /// Bölme tam temiz denk gelmiyorsa (eski veri, yuvarlanmamış toplam)
+        /// kutu bilerek BOŞ bırakılır: doldurulursa otomatik yuvarlama devreye
+        /// girer ve açılışta küçük bir fark daha eklenirdi.
+        /// </para>
+        /// </remarks>
+        private void RestoreDesiredUnitCost(AppCostSlip slip)
+        {
+            _desiredUnitCost = 0m;
+
+            if (slip.Quantity > 0 && slip.GrandTotal > 0m)
+            {
+                decimal candidate = Math.Ceiling(slip.GrandTotal / slip.Quantity * 100m) / 100m;
+                if (Math.Abs(Math.Round(candidate * slip.Quantity, 2) - slip.GrandTotal) <= 0.005m)
+                {
+                    _desiredUnitCost = candidate;
+                }
+            }
+
+            SyncDesiredUnitCostToInput();
         }
 
         private void AddEmptyLine()
@@ -794,6 +862,11 @@ private void DeleteSelectedLine()
             // girdiğinde miktar bu katmanlardan türetilir; ortalama birim
             // maliyet yalnızca tam bakiye için tek satırlı gösterimde kullanılır.
             _semiFinishedLayers = balance.ToCostingLayers();
+
+            // Miktar da atanmalıydı: hem "Kalan" sütunu hem de ürün seçim
+            // listesi bu alandan okuyor. Atanmadığında bakiye 0 görünüyor ve
+            // kullanıcı yarımamülün stokta olmadığını sanıyordu.
+            _semiFinishedBalance = balance.Balance;
 
             decimal availableAmount = balance.AvailableAmount;
 
@@ -1181,6 +1254,11 @@ private void DeleteSelectedLine()
                 {
                     AddAccountRow(account, rowWidth, labelWidth);
                 }
+
+                // "Yarımamülden gelen" (151) satırı GetFilteredAccounts içinde
+                // daima son kalem olarak eklenir; bu satır da hemen ardından
+                // geldiği için kutuyu 151'in yanına denk gelir.
+                AddDesiredUnitCostRow(rowWidth, labelWidth);
             }
             finally
             {
@@ -1267,6 +1345,119 @@ private void DeleteSelectedLine()
         }
 
         /// <summary>
+        /// Hesap alanına "İstenen Birim Maliyet" satırı ekler.
+        ///
+        /// <para>
+        /// Bu kutu bir <b>gider hesabı değildir</b>: tutarı hesap toplamına
+        /// yazılmaz, yalnızca birim maliyeti belirlemek için okunur. Farkı
+        /// <see cref="RecalculateGrandTotal"/> hesaplar ve amortisman gideri
+        /// kutusuna ekler.
+        /// </para>
+        /// <para>
+        /// Kutu boş bırakılırsa mevcut otomatik davranış korunur: birim
+        /// maliyet iki haneye yukarı yuvarlanır.
+        /// </para>
+        /// </summary>
+        private void AddDesiredUnitCostRow(int rowWidth, int labelWidth)
+        {
+            Label lbl = new()
+            {
+                Text = "İstenen Birim Maliyet",
+                Location = new Point(0, 3),
+                Size = new Size(labelWidth, 20),
+                AutoSize = false,
+                AutoEllipsis = true,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font("Segoe UI", 8.25F)
+            };
+
+            TextEdit input = new()
+            {
+                Location = new Point(labelWidth + 2, 1),
+                Size = new Size(rowWidth - labelWidth - 4, 24)
+            };
+            input.Properties.Mask.MaskType = DevExpress.XtraEditors.Mask.MaskType.Numeric;
+            input.Properties.Mask.EditMask = "n2";
+            input.Properties.Mask.UseMaskAsDisplayFormat = true;
+            input.Properties.DisplayFormat.FormatType = DevExpress.Utils.FormatType.Numeric;
+            input.Properties.DisplayFormat.FormatString = "n2";
+            input.Properties.NullValuePrompt = "Otomatik";
+            input.Properties.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Far;
+
+            // Girilen değer geçerli olduğunda kutu normal görünür; toplam
+            // maliyetten düşük bir değer girildiğinde kırmızıya döner.
+            // Varsayılan renkler Color.Empty'dir; skin devreye girer. Geçersiz
+            // durumdan dönüldüğünde Color.Empty'ye geri yüklenir.
+            _desiredUnitCostNormalBorder = input.Properties.Appearance.BorderColor;
+            _desiredUnitCostNormalBack = input.Properties.Appearance.BackColor;
+            _desiredUnitCostNormalText = input.Properties.Appearance.ForeColor;
+
+            Panel row = new()
+            {
+                Width = rowWidth,
+                Height = AccountRowHeight,
+                Margin = new Padding(0, 1, 0, 1),
+                Controls = { lbl, input }
+            };
+
+            flpAccounts.Controls.Add(row);
+
+            // Hesap sözlüklerine EKLENMEZ; yalnızca salt okunurluk listesine
+            // girer, "İncele" modunda da kilitlenebilsin diye.
+            _accountInputList.Add(input);
+            _desiredUnitCostInput = input;
+
+            SyncDesiredUnitCostToInput();
+
+            input.EditValueChanged += (_, _) =>
+            {
+                if (_syncingTotals)
+                {
+                    return;
+                }
+
+                _desiredUnitCost = ReadAmount(input);
+                RecalculateGrandTotal();
+            };
+
+            ToolTip tip = new();
+            tip.SetToolTip(
+                input,
+                "Birim maliyeti kendiniz belirlemek için değer girin. Girilen tutarın "
+                + "miktar ile çarpımı, toplam maliyetten farkı kadar amortisman giderine eklenir. "
+                + "Boş bırakırsanız birim maliyet iki haneye yukarı yuvarlanır.");
+        }
+
+        /// <summary>
+        /// <see cref="_desiredUnitCost"/> değerini kutuya yazar. Sıfır değer
+        /// "belirtilmedi" demektir ve kutu boş (null) bırakılır.
+        /// </summary>
+        private void SyncDesiredUnitCostToInput()
+        {
+            if (_desiredUnitCostInput is null)
+            {
+                return;
+            }
+
+            _syncingTotals = true;
+            try
+            {
+                _desiredUnitCostInput.EditValue = _desiredUnitCost > 0m ? _desiredUnitCost : null;
+            }
+            finally
+            {
+                _syncingTotals = false;
+            }
+        }
+
+        /// <summary>
+        /// Kutudan okunan istenen birim maliyet. Kutu boşsa veya sıfırsa 0 döner;
+        /// bu durumda otomatik yuvarlama kullanılır.
+        /// </summary>
+        private decimal DesiredUnitCost
+            => _desiredUnitCostInput is null ? 0m : ReadAmount(_desiredUnitCostInput);
+
+        /// <summary>
         /// Hesap alanı içeriğe göre büyür ve gövdenin altına yaslanır; arada
         /// boşluk kalmaz. Tüm kalemler tek alanda görünür, kaydırma çubuğu
         /// gerekmez. Form yetmezse kendini büyütür.
@@ -1280,7 +1471,10 @@ private void DeleteSelectedLine()
             }
 
             int columns = Math.Max(1, flpAccounts.ClientSize.Width / rowWidth);
-            int rowCount = (int)Math.Ceiling(_accountInputs.Count / (double)columns);
+
+            // +1: "İstenen Birim Maliyet" satırı _accountInputs'ta yoktur ama
+            // panelde yer kaplar; sayılmazsa son satır panelin dışında kalır.
+            int rowCount = (int)Math.Ceiling((_accountInputs.Count + 1) / (double)columns);
 
             int accountsHeight = AccountsTitleHeight
                 + (rowCount * (AccountRowHeight + AccountsRowGap))
@@ -1433,6 +1627,25 @@ private void DeleteSelectedLine()
 
                         AtelierTransferProductDto? transferInfo = GetTransferInfo(productId);
                         decimal newPrice = transferInfo?.UnitPrice ?? 0m;
+
+                        // Yarımamül pusulaya zaten "Yarımamülden gelen" olarak
+                        // dahil edildiyse ürün seçiminde tekrar sunulamaz.
+                        // Genel mükerrer kontrolü bunu yakalayamaz: yarımamül
+                        // satırının birim fiyatı transfer kaydından değil FIFO
+                        // katmanlarından türetilir, bu yüzden "aynı birim fiyat"
+                        // şartı tutmaz ve mükerrer satır açılırdı.
+                        if (ActiveSemiFinishedProductId is Guid semiId
+                            && productId == semiId
+                            && !IsSemiFinishedRow(line)
+                            && IsSemiFinishedIncluded())
+                        {
+                            ToastHelper.Show(
+                                $"'{prod.Name}' yarımamülü bu pusulaya zaten dahil edildi. "
+                                + "151 'Yarımamülden gelen' olarak maliyete yazıldığı için tekrar seçilemez.",
+                                ToastType.Warning);
+                            edit.EditValue = line.ProductId ?? (Guid?)null;
+                            return;
+                        }
 
                         CostSlipItemEditDto? duplicate = _lines.FirstOrDefault(l =>
                             !ReferenceEquals(l, line)
@@ -1711,6 +1924,32 @@ private void DeleteSelectedLine()
                 && line.ProductId is Guid productId
                 && productId == semiId;
 
+        /// <summary>
+        /// Satır, yarımamülün taşıyacağı özel satır mı? Grid'de hesap
+        /// sütunu düzenlenemediği için bu işaret yalnızca "Yarımamülden gelen"
+        /// satırında 151 olur. Satırın ürünü temizlendiğinde
+        /// <see cref="IsSemiFinishedLine"/> yanlış döner; bu yüzden ürün
+        /// seçimi kontrolünde bu işaret kullanılır.
+        /// </summary>
+        private static bool IsSemiFinishedRow(CostSlipItemEditDto line)
+            => line.ExpenseAccountType == ExpenseAccountHelper.SemiFinishedAccount;
+
+        /// <summary>
+        /// Yarımamül bu pusulanın maliyetine zaten girmiş mi?
+        /// </summary>
+        /// <remarks>
+        /// İki durum da "dahil" sayılır: yarımamülün grid'de tek satırı vardır
+        /// (normal akış) veya yalnızca 151 "Yarımamülden gelen" kutusunda tutar
+        /// bulunur (satırı taşınmamış eski kayıt). İkisinde de ürün seçiminde
+        /// tekrar sunulursa 151 hem satır hem kutu üzerinden iki kez maliyete
+        /// girer.
+        /// </remarks>
+        private bool IsSemiFinishedIncluded()
+            => ActiveSemiFinishedProductId is not null
+                && (_lines.Any(IsSemiFinishedLine)
+                    || Math.Abs(_accountAmounts.GetValueOrDefault(
+                        ExpenseAccountHelper.SemiFinishedAccount)) > 0.004m);
+
         private void RecalculateTotals()
         {
             foreach (var line in _lines)
@@ -1751,17 +1990,46 @@ private void DeleteSelectedLine()
             decimal reconciled = total;
             decimal diff = 0m;
             ExpenseAccountType? target = null;
+            bool invalid = false;
 
             if (qty > 0 && total > 0)
             {
-                // Birim maliyet virgülden sonra iki rakam olacak şekilde hep YUKARI yuvarlanır
-                // (en yakına yuvarlama aşağı değer üretip amortisman alanına eksi giriş ekleyebiliyor).
-                unitCost = Math.Ceiling(total / qty * 100m) / 100m;
-                reconciled = Math.Round(unitCost * qty, 2);
-                diff = Math.Round(reconciled - total, 2);
-                if (diff < 0m)
+                decimal desired = DesiredUnitCost;
+
+                if (desired > 0m)
                 {
-                    diff = 0m;
+                    // Kullanıcı birim maliyeti kendisi belirledi: girilen değer
+                    // olduğu gibi kullanılır, otomatik yuvarlama yapılmaz.
+                    // Ürün (151/152) bu tutarla değerlenir; gider tarafı ile
+                    // ürün değerini eşitlemek için fark amortisman giderine
+                    // eklenir.
+                    unitCost = desired;
+                    reconciled = Math.Round(unitCost * qty, 2);
+                    diff = Math.Round(reconciled - total, 2);
+
+                    // Girilen değer toplam maliyetten düşükse fark NEGATİF olur.
+                    // Kayıt yolu negatif kalemleri attığı için (amount <= 0
+                    // atlanır) böyle bir kayıtta toplam maliyet ile ürün
+                    // değeri tutmaz, defter dengesiz kalır. Bu yüzden fark
+                    // yazılmaz, kayıt engellenir ve kutu kırmızıya döner.
+                    invalid = diff < 0m;
+                    if (invalid)
+                    {
+                        diff = 0m;
+                    }
+                }
+                else
+                {
+                    // Kutu boş: birim maliyet virgülden sonra iki rakam olacak
+                    // şekilde hep YUKARI yuvarlanır (en yakına yuvarlama aşağı
+                    // değer üretip amortisman alanına eksi giriş ekleyebiliyor).
+                    unitCost = Math.Ceiling(total / qty * 100m) / 100m;
+                    reconciled = Math.Round(unitCost * qty, 2);
+                    diff = Math.Round(reconciled - total, 2);
+                    if (diff < 0m)
+                    {
+                        diff = 0m;
+                    }
                 }
 
                 target = CurrentType == CostSlipType.Service
@@ -1772,6 +2040,24 @@ private void DeleteSelectedLine()
             _unitCost = unitCost;
             _roundingDiff = diff;
             _roundingTargetAccount = target;
+            _desiredUnitCostInvalid = invalid;
+
+            // Geçersiz girişte ürün değeri olarak mutabakatsız bir tutar
+            // gösterilmez; toplam olduğu gibi bırakılır.
+            _grandTotal = invalid ? total : reconciled;
+
+            if (_desiredUnitCostInput is not null)
+            {
+                _desiredUnitCostInput.Properties.Appearance.BorderColor = invalid
+                    ? Color.FromArgb(180, 35, 24)
+                    : _desiredUnitCostNormalBorder;
+                _desiredUnitCostInput.Properties.Appearance.BackColor = invalid
+                    ? Color.FromArgb(254, 226, 226)
+                    : _desiredUnitCostNormalBack;
+                _desiredUnitCostInput.Properties.Appearance.ForeColor = invalid
+                    ? Color.FromArgb(180, 35, 24)
+                    : _desiredUnitCostNormalText;
+            }
 
             if (target is not null && _accountInputs.TryGetValue(target.Value, out TextEdit? targetInput))
             {
@@ -1792,7 +2078,6 @@ private void DeleteSelectedLine()
                 }
             }
 
-            _grandTotal = reconciled;
             gridLinesView.RefreshData();
         }
 
@@ -1972,6 +2257,34 @@ private void DeleteSelectedLine()
                 return;
             }
 
+            // Yarımamül yalnızca tek satır olarak maliyete girebilir: hem
+            // "Yarımamülden gelen" satırı hem de kutu tutarı 151'e yazıldığı
+            // için aynı ürünün ikinci satırı maliyeti iki kez sayar. Ürün
+            // seçimi zaten engelleniyor; bu, korumanın atlandığı durumlar
+            // (eski taslak, toplu düzenleme) için son savunmadır.
+            if (ActiveSemiFinishedProductId is Guid saveSemiId)
+            {
+                CostSlipItemEditDto[] semiLines = materialLines
+                    .Where(l => l.ProductId == saveSemiId)
+                    .ToArray();
+
+                if (semiLines.Length > 1)
+                {
+                    ToastHelper.Show(
+                        "Yarımamül maliyete yalnızca bir satır olarak eklenebilir. "
+                        + "Mükerrer yarımamül satırını silin.",
+                        ToastType.Warning);
+
+                    int semiRow = _lines.IndexOf(semiLines[1]);
+                    if (semiRow >= 0)
+                    {
+                        gridLinesView.FocusedRowHandle = semiRow;
+                    }
+
+                    return;
+                }
+            }
+
             if (SelectedWorkshopId is Guid saveWorkshopId
                 && _transferredByWorkshop.TryGetValue(saveWorkshopId, out List<AtelierTransferProductDto>? saveTransferred))
             {
@@ -2001,6 +2314,21 @@ private void DeleteSelectedLine()
 
             ExpenseAccountType derivedAccount = DerivedAccount;
             RecalculateTotals();
+
+            // İstenen birim maliyet toplam maliyetten düşükse amortisman
+            // giderine yazılacak fark negatif olur; kayıt yolu negatif kalemleri
+            // attığı için pusula toplamı ile ürün değeri tutmaz. Böyle bir
+            // kayıt oluşturulmaz.
+            if (_desiredUnitCostInvalid)
+            {
+                ToastHelper.Show(
+                    "İstenen birim maliyet, pusulanın toplam maliyetinden düşük olamaz.",
+                    ToastType.Warning,
+                    5000);
+                _desiredUnitCostInput?.Focus();
+                return;
+            }
+
             ApplyRoundingAdjustmentToAccounts();
 
             // Malzeme satırları türetilmiş hesaba (710) yazılır. Hesap bazlı

@@ -83,10 +83,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         protected override CurrentAccountMovementGetAllQuery BuildListQuery()
             => new(AccountType: _accountType, CustomerId: _customerId, SupplierId: _supplierId, OnlyDeleted: ShowDeleted);
 
-        /// <summary>En yeni cari hareket üstte, ilk hareket altta.</summary>
-        protected override IEnumerable<CurrentAccountMovementDto> ApplyDefaultOrder(IEnumerable<CurrentAccountMovementDto> items)
-            => Utils.ListOrder.NewestDocumentFirst(items, x => x.Date, x => x.CreatedAt, x => x.Id);
-
         protected override string GetDeleteSummary(CurrentAccountMovementDto item)
             => $"{item.CurrentAccountName} ({item.MovementTypeName} - {(item.Debit > 0 ? item.Debit : item.Credit):n2} ₺)";
 

@@ -147,10 +147,6 @@ protected override void ConfigureColumns()
 protected override CostSlipGetAllQuery BuildListQuery()
             => new(OnlyDeleted: ShowDeleted);
 
-        /// <summary>En yeni maliyet pusulası üstte (maliyet tarihine göre).</summary>
-        protected override IEnumerable<CostSlipListDto> ApplyDefaultOrder(IEnumerable<CostSlipListDto> items)
-            => Utils.ListOrder.NewestDocumentFirst(items, x => x.CostDate, x => x.CreatedAt, x => x.Id);
-
         protected override IRequest<Result<string>> BuildDeleteCommand(CostSlipListDto item)
             => new CostSlipDeleteCommand(item.Id);
 

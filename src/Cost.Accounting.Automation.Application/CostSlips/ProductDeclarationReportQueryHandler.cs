@@ -27,9 +27,15 @@ internal sealed class ProductDeclarationReportQueryHandler(
                     : s.ProducedProduct.ProductUnitType.Name.Value,
                 Quantity = s.Quantity,
                 UnitCost = s.Quantity > 0 ? s.GrandTotal / s.Quantity : 0m,
-                Total = s.GrandTotal
+                Total = s.GrandTotal,
+                CreatedAt = s.CreatedAt
             })
+            // Sıra kuralı: önce gruplar (atölye), sonra kayıt tarihleri.
+            // Aynı atölye içinde en son kaydedilen pusula üstte; saat çakışması
+            // olmayan kayıtlarda istenmeyen bir sıra oluşmasın diye belge
+            // numarası son çare anahtarıdır.
             .OrderBy(r => r.WorkshopName)
+            .ThenByDescending(r => r.CreatedAt)
             .ThenBy(r => r.ProductName)
             .ToListAsync(cancellationToken);
     }

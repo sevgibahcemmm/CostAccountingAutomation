@@ -6,24 +6,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils;
 public static class ListOrder
 {
     /// <summary>
-    /// Belge listeleri için istenen sıra: en yeni belge üstte, en eski altta.
+    /// Stok hareketi listesi için sıra: en yeni hareket üstte, en eski altta.
     /// </summary>
     /// <param name="items">Sıralanacak satırlar.</param>
-    /// <param name="documentDate">Belgenin kendi tarihi (tarih alanı olan her listede vardır).</param>
+    /// <param name="documentDate">Hareketin kendi tarihi.</param>
     /// <param name="createdAt">Kaydın sistemde oluşturulma zamanı.</param>
     /// <param name="id">Kayıt kimliği; son çare sıralama anahtarı.</param>
     /// <remarks>
     /// <para>
-    /// Sıralama <b>belge tarihine</b> göre yapılır, kayıt zamanına göre
-    /// değil. Kullanıcı bugünün tarihiyle geçmiş tarihli bir belge kaydederse
-    /// (geçmişe dönük fatura/stok çıkışı) belge, kaydedildiği gün en yeni
-    /// olduğu için <i>yanlışlıkla</i> listenin en üstünde görünürdü.
+    /// Genel liste kuralı <b>kayıt tarihine</b> göredir
+    /// (<c>CrudListFormBase.ApplyDefaultOrder</c>). Bu metot o kuralın tek
+    /// istisnasıdır ve yalnızca <b>stok hareketleri</b> listesinde kullanılır.
     /// </para>
     /// <para>
-    /// Aynı tarihli belgelerde <b>kaydedilme sırası korunur</b>: o gün önce
-    /// giren kayıt üstte, sonra giren altta. Yani "ilk giren altta kalır"
-    /// kuralı, belgeler arasında tarih, aynı gün içinde ise saat sırasıyla
-    /// uygulanır.
+    /// Gerekçe: FIFO'da tüketim sırası <b>hareket tarihine</b> göre kurulur.
+    /// Kullanıcı hareket listesini denetlerken gördüğü sıra ile malın
+    /// tüketileceği sıra aynı olmalıdır; aksi halde liste, katman kırılımının
+    /// gerçekten hangi girişten yapıldığını göstermez. Bu yüzden kayıt
+    /// zamanına göre sıralama burada yanlış okuma yaratır.
+    /// </para>
+    /// <para>
+    /// Aynı tarihli hareketlerde <b>kaydedilme sırası korunur</b>: o gün önce
+    /// giren kayıt üstte, sonra giren altta.
     /// </para>
     /// </remarks>
     public static IEnumerable<T> NewestDocumentFirst<T>(

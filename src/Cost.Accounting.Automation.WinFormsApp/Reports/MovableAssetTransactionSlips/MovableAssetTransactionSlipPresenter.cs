@@ -7,8 +7,6 @@ using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.Reports;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using DevExpress.Utils;
-using DevExpress.XtraReports.UI;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
 
@@ -263,25 +261,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.MovableAssetTransaction
         {
             try
             {
-                MovableAssetTransactionSlipReport report = new();
-
                 // Yetkili çözümlemesi veritabanına gider ve belge üretimi
                 // eşzamanlıdır; ikisi de bekleme penceresinin kapsamında olmalı.
                 // Aksi hâlde ekran saniyelerce donup kullanıcı hiçbir geri
                 // bildirim almaz.
                 await LoadingHelper.RunAsync(
-                    async () =>
-                    {
-                        await ApplySignatoryAsync(data);
-                        report = new(data);
-                        await Task.Run(report.CreateDocument);
-                    },
+                    () => ApplySignatoryAsync(data),
                     caption: "Fiş hazırlanıyor...",
                     description: "Lütfen bekleyin...");
 
-                using ReportPrintTool tool = new(report);
-                tool.PreviewRibbonForm.PrintControl.UseDirectXPaint = DefaultBoolean.True;
-                tool.ShowRibbonPreviewDialog();
+                // Belge üretimi ve önizleme ortak yardımcıya taşındı: DevExpress
+                // sahip verilmediğinde Form.ActiveForm'u seçiyor ve TopMost bir
+                // ToastForm önizlemeyi sahiplenip kendiliğinden kapatıyordu.
+                await ReportPreviewHelper.PrintAsync(
+                    new MovableAssetTransactionSlipReport(data),
+                    caption: "Fiş hazırlanıyor...",
+                    description: "Lütfen bekleyin...");
             }
             catch (Exception ex)
             {

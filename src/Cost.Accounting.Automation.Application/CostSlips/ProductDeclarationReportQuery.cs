@@ -24,4 +24,12 @@ public sealed class ProductDeclarationRowDto
     public int Quantity { get; init; }
     public decimal UnitCost { get; init; }
     public decimal Total { get; init; }
+
+    /// <summary>
+    /// Pusulanın sistemde kaydedildiği zaman. Beyanname satırları atölye
+    /// grubundan sonra bu alana göre sıralanır (en son kaydedilen üstte).
+    /// Gruba giren pusula adedini etkilediği için rapor satırlarında
+    /// gösterilmez; yalnızca sıralama anahtarıdır.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; }
 }
