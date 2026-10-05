@@ -19,6 +19,31 @@ public abstract class Entity
     public DateTimeOffset? DeletedAt { get; private set; }
     public IdentityId? DeletedBy { get; private set; }
 
+    /// <summary>
+    /// Eşzamanlı düzenleme koruması. Veritabanı tarafından üretilen sürüm
+    /// numarasıdır; her yazma işleminde kendiliğinden değişir.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Merkezi sunucuda aynı kayıt üzerinde birden fazla kişi çalışabilir.
+    /// Bu belirteç olmadan iki kişi aynı faturayı açtığında ikinci kaydeden
+    /// birincinin değişikliklerini <b>sessizce</b> ezer; kimse hata görmez.
+    /// </para>
+    /// <para>
+    /// Değer uygulama tarafından hiç okunmaz veya yazılmaz: sunucu üretir, EF
+    /// yalnızca karşılaştırır. Karşılaştırma tutmazsa
+    /// <c>DbUpdateConcurrencyException</c> fırlatılır ve
+    /// <c>TransactionBehavior</c> bunu kullanıcıya anlaşılır bir mesajla
+    /// dönüştürür ("Bu kaydı Ahmet Yılmaz değiştirdi").
+    /// </para>
+    /// <para>
+    /// Konfigürasyon <c>AuditedDbContext.ApplySharedModelConfiguration</c>
+    /// içindeki <c>RowVersion</c> kuralıyla yapılır; buradaki tek görev alanın
+    /// varlığıdır.
+    /// </para>
+    /// </remarks>
+    public byte[]? RowVersion { get; private set; }
+
     public void SetDuplicateKey(string? duplicateKey)
     {
         DuplicateKey = duplicateKey;

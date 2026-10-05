@@ -18,6 +18,9 @@ public sealed class UserDto : EntityDto
     [Column("TC Kimlik No", Width = 150, Order = 30, Alignment = "Center", Format = "###-####-####")]
     public string? TRIdentityNumber { get; set; }
 
+    [Column("Sicil No", Width = 110, Order = 35, Alignment = "Center")]
+    public string? RegistryNumber { get; set; }
+
     [Column("E-Posta", Width = 180, Order = 40)]
     public string Email { get; set; } = default!;
 
@@ -72,6 +75,7 @@ public static class UserExtensions
                 UpdatedBy = s.Entity.UpdatedBy != null ? s.Entity.UpdatedBy.Value : null,
                 UpdatedFullName = s.UpdatedUser != null ? s.UpdatedUser.FullName.Value : null,
                 TRIdentityNumber = s.Entity.TRIdentityNumber != null ? s.Entity.TRIdentityNumber.Value : null,
+                RegistryNumber = s.Entity.RegistryNumber,
                 PhotoCount = s.Entity.AvatarPath == null ? 0 : 1,
                 DefaultPhotoPath = s.Entity.AvatarPath,
             });

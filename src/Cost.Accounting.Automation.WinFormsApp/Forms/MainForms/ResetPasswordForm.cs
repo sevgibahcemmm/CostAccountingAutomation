@@ -9,7 +9,7 @@ using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
-    public partial class ResetPasswordForm : DevExpress.XtraEditors.XtraForm
+public partial class ResetPasswordForm : DevExpress.XtraEditors.XtraForm
     {
         private const string SuccessMessage = "Şifreniz başarıyla sıfırlandı. Yeni şifrenizle giriş yapabilirsiniz";
 
@@ -24,25 +24,37 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlNewPasswordBox.Paint += AuthFormStyles.RoundedField_Paint;
             txtNewPassword.Enter += AuthFormStyles.Field_Enter;
             txtNewPassword.Leave += AuthFormStyles.Field_Leave;
-            pnlConfirmBox.Paint += AuthFormStyles.RoundedField_Paint;
+pnlConfirmBox.Paint += AuthFormStyles.RoundedField_Paint;
             txtConfirmPassword.Enter += AuthFormStyles.Field_Enter;
             txtConfirmPassword.Leave += AuthFormStyles.Field_Leave;
-btnReset.Paint += AuthFormStyles.Button_Paint;
+            AuthFormStyles.ApplyButtonAppearance(btnReset);
         }
 
-        public void SetResetCode(Guid resetCode)
+/// <summary>
+        /// Formu doldurmaz; yalnızca odak başlangıcını ayarlar.
+        /// </summary>
+        /// <remarks>
+        /// Kod <b>kullanıcı tarafından yazılır</b>. Önceden doldurulması, kodun
+        /// talep eden kişinin kendi makinesinde otomatik bilinmesi anlamına
+        /// gelirdi; o zaman sıfırlama güvenliği tümüyle ortadan kalkardı. Kullanıcı
+        /// kodu sistem yöneticisinden alır ve buraya elle girer.
+        /// </remarks>
+        public void FocusResetCodeInput()
         {
-            txtResetCode.Text = resetCode.ToString("D");
-            txtNewPassword.Focus();
+            txtResetCode.Focus();
+            txtResetCode.SelectAll();
         }
 
         private async void BtnReset_Click(object? sender, EventArgs e)
         {
-            if (!Guid.TryParse(txtResetCode.Text.Trim(), out Guid resetCode))
+            string resetCode = txtResetCode.Text.Trim();
+
+            if (Guid.TryParse(resetCode, out _) == false)
             {
                 ToastHelper.Show("Geçerli bir sıfırlama kodu girin.", ToastType.Error);
                 return;
             }
+
 
             string newPassword = txtNewPassword.Text.Trim();
             string confirmPassword = txtConfirmPassword.Text.Trim();

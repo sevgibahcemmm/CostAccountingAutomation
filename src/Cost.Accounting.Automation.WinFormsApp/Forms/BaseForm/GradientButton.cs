@@ -25,7 +25,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
             if (!Enabled)
             {
-                using var disabledBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+                using var disabledBrush = new SolidBrush(AuthFormStyles.ButtonDisabledBack);
                 g.FillRectangle(disabledBrush, rect);
                 return;
             }

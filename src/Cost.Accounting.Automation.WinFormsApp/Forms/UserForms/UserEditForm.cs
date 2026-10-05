@@ -134,6 +134,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtUserName.Text = user.UserName;
             txtEmail.Text = user.Email;
             txtTcNo.Text = user.TRIdentityNumber ?? string.Empty;
+            txtRegistryNumber.Text = user.RegistryNumber ?? string.Empty;
             cmbCompany.EditValue = user.CompanyId;
             cmbRole.EditValue = user.RoleId;
             chkActive.IsOn = user.IsActive;
@@ -208,14 +209,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             string userName = txtUserName.Text.Trim();
             string email = txtEmail.Text.Trim();
             string tcNo = (txtTcNo.EditValue as string ?? txtTcNo.Text).Trim().Replace("-", "");
+            string registryNumber = (txtRegistryNumber.EditValue as string ?? txtRegistryNumber.Text).Trim();
             Guid? companyId = cmbCompany.EditValue as Guid?;
             Guid roleId = cmbRole.EditValue is Guid r ? r : Guid.Empty;
             bool isActive = chkActive.IsOn;
             List<PhotoInput> photos = _avatar is not null ? [_avatar] : [];
 
             IRequest<Result<string>> command = _editing is null
-                ? new UserCreateCommand(firstName, lastName, email, userName, companyId, roleId, isActive, tcNo, photos)
-                : new UserUpdateCommand(_editing.Id, firstName, lastName, email, userName, companyId, roleId, isActive, tcNo, photos);
+                ? new UserCreateCommand(firstName, lastName, email, userName, companyId, roleId, isActive, tcNo, registryNumber, photos)
+                : new UserUpdateCommand(_editing.Id, firstName, lastName, email, userName, companyId, roleId, isActive, tcNo, registryNumber, photos);
 
             if (!RunApplicationValidator(command))
             {
@@ -261,6 +263,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
                 (nameof(UserCommandFields.UserName), txtUserName),
                 (nameof(UserCommandFields.Email), txtEmail),
                 (nameof(UserCommandFields.TRIdentityNumber), txtTcNo),
+                (nameof(UserCommandFields.RegistryNumber), txtRegistryNumber),
                 (nameof(UserCommandFields.RoleId), cmbRole),
             ];
 
@@ -294,6 +297,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             public const string UserName = "UserName";
             public const string Email = "Email";
             public const string TRIdentityNumber = "TRIdentityNumber";
+            public const string RegistryNumber = "RegistryNumber";
             public const string RoleId = "RoleId";
         }
 
@@ -304,6 +308,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtUserName.ErrorText = string.Empty;
             txtEmail.ErrorText = string.Empty;
             txtTcNo.ErrorText = string.Empty;
+            txtRegistryNumber.ErrorText = string.Empty;
             cmbCompany.ErrorText = string.Empty;
             cmbRole.ErrorText = string.Empty;
         }

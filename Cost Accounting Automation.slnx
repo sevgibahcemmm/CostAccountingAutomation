@@ -3,6 +3,7 @@
     <Project Path="src/Cost.Accounting.Automation.Application/Cost.Accounting.Automation.Application.csproj" />
     <Project Path="src/Cost.Accounting.Automation.Domain/Cost.Accounting.Automation.Domain.csproj" />
     <Project Path="src/Cost.Accounting.Automation.Infrastructure/Cost.Accounting.Automation.Infrastructure.csproj" />
+    <Project Path="src/Cost.Accounting.Automation.Provisioning/Cost.Accounting.Automation.Provisioning.csproj" />
     <Project Path="src/Cost.Accounting.Automation.WinFormsApp/Cost.Accounting.Automation.WinFormsApp.csproj" />
   </Folder>
 </Solution>

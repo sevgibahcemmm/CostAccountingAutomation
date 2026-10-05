@@ -64,6 +64,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmPriceStockList = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmWorkshopStockReport = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             grpSystem = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            grpMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmCompanies = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmUsers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
@@ -157,7 +159,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // accordionControl
             //
             accordionControl.Dock = DockStyle.Left;
-            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHome, grpStockMaster, grpStockOperations, grpInvoices, grpCurrentAccounts, grpCosting, grpAccounting, grpReports, grpSystem, elmExit });
+            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHome, grpStockMaster, grpStockOperations, grpInvoices, grpCurrentAccounts, grpCosting, grpAccounting, grpReports, grpSystem, grpMessages, elmExit });
             accordionControl.Location = new Point(0, 58);
             accordionControl.Margin = new Padding(3, 2, 3, 2);
             accordionControl.Name = "accordionControl";
@@ -390,6 +392,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             grpSystem.Tag = 8;
             grpSystem.Text = "Sistem Yönetimi";
             //
+            // grpMessages
+            //
+            grpMessages.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmMessages });
+            grpMessages.Name = "grpMessages";
+            grpMessages.Tag = 9;
+            grpMessages.Text = "Mesajlaşma";
+            //
+            // elmMessages
+            //
+            elmMessages.Name = "elmMessages";
+            elmMessages.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmMessages.Tag = 9;
+            elmMessages.Text = "Mesajlar";
+            //
             // elmCompanies
             //
             elmCompanies.Name = "elmCompanies";
@@ -518,6 +534,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         // Sistem Yönetimi
         private DevExpress.XtraBars.Navigation.AccordionControlElement grpSystem;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpMessages;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmMessages;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmCompanies;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmUsers;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmRoles;

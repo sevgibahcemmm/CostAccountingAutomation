@@ -9,10 +9,13 @@ using Cost.Accounting.Automation.Domain.Shared;
 using Cost.Accounting.Automation.Domain.Users;
 using Cost.Accounting.Automation.Domain.Users.ValueObjects;
 using Cost.Accounting.Automation.Infrastructure.Context;
+using Cost.Accounting.Automation.Infrastructure.Options;
+using Cost.Accounting.Automation.Infrastructure.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Data;
 
 namespace Cost.Accounting.Automation.Infrastructure;
@@ -72,6 +75,19 @@ public static class DatabaseInitializer
     public static async Task<DatabaseFirstRunState> GetFirstRunStateAsync(
         IServiceProvider services)
     {
+        return (await ProbeAsync(services)).State;
+    }
+
+    /// <summary>
+    /// Ana veritabanının varlığını yoklar ve sonucu ayrıntısıyla döndürür.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="GetFirstRunStateAsync"/> yalnızca durumu döndürür. Açılış
+    /// ekranı ise kullanıcıya <b>neden</b> ulaşılamadığını göstermek zorunda
+    /// olduğu için hata metni de taşınır.
+    /// </remarks>
+    private static async Task<ProbeResult> ProbeAsync(IServiceProvider services)
+    {
         using var scope = services.CreateScope();
         IConfiguration configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
@@ -79,14 +95,15 @@ public static class DatabaseInitializer
 
         if (string.IsNullOrWhiteSpace(masterConnectionString))
         {
-            return DatabaseFirstRunState.Unreachable;
+            return ProbeResult.Unreachable(
+                "appsettings.json içinde ConnectionStrings:Master tanımlı değil.");
         }
 
         string databaseName = ServiceRegistrar.ReadDatabaseName(masterConnectionString);
 
         if (string.IsNullOrWhiteSpace(databaseName))
         {
-            return DatabaseFirstRunState.Unreachable;
+            return ProbeResult.Unreachable("Bağlantı dizesinde Initial Catalog boş.");
         }
 
         var builder = new SqlConnectionStringBuilder(masterConnectionString)
@@ -109,28 +126,151 @@ public static class DatabaseInitializer
             object? result = await command.ExecuteScalarAsync();
 
             return result is null
-                ? DatabaseFirstRunState.Missing
-                : DatabaseFirstRunState.Exists;
+                ? ProbeResult.Missing
+                : ProbeResult.Exists;
         }
         catch (Exception ex)
         {
-            // Sunucuya ulaşılamadı; kurulum penceresi bu durumu kendi ekranında
-            // göstereceği için yalnızca tanılayıcı bilgi düşülür.
             System.Diagnostics.Debug.WriteLine(
                 $"[DatabaseInitializer] Sunucuya ulaşılamadı: {ex.Message}");
 
-            return DatabaseFirstRunState.Unreachable;
+            return ProbeResult.Unreachable(ex.Message);
+        }
+    }
+
+    /// <summary>Yoklama sonucu; hata durumunda ayrıntıyı da taşır.</summary>
+    private sealed record ProbeResult(DatabaseFirstRunState State, string? Error)
+    {
+        public static ProbeResult Exists => new(DatabaseFirstRunState.Exists, null);
+
+        public static ProbeResult Missing => new(DatabaseFirstRunState.Missing, null);
+
+        public static ProbeResult Unreachable(string error) =>
+            new(DatabaseFirstRunState.Unreachable, error);
+    }
+
+    /// <summary>
+    /// Bağlantılı olunan veritabanının kullanıma hazır olup olmadığını
+    /// <b>hiçbir şey yazmadan</b> doğrular.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Bu metot merkezi sunucuya bağlanan istemcilerin açılış yoludur. Uygulama
+    /// açılırken veritabanını <em>değiştirmez</em>; yalnızca bekleyen migration
+    /// varsa bunu öğrenir ve ekranda yöneticiye ne yapılması gerektiğini söyler.
+    /// </para>
+    /// <para>
+    /// Kontrol iki aşamalıdır. Önce veritabanının varlığı <c>sys.databases</c>
+    /// üzerinden yoklanır (veritabanı yokken de bağlantı kurulabilmesi için
+    /// <c>master</c> kataloğuna bağlanılır). Sonra bekleyen migration'lar
+    /// okunur. İkinci adım yalnızca <c>__EFMigrationsHistory</c> tablosunu okur;
+    /// EF'nin <c>MigrateAsync</c>'i aksine hiçbir şema değişikliği yapmaz ve
+    /// geçmiş tablosuna satır eklemez. Bu yüzden kontrol güvenle her istemci
+    /// açılışında, hatta aynı anda N istemci açılışında çalıştırılabilir.
+    /// </para>
+    /// </remarks>
+    public static async Task<DatabaseSchemaCheckResult> CheckSchemaAsync(
+        IServiceProvider services,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = services.CreateScope();
+        IServiceProvider sp = scope.ServiceProvider;
+
+        IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+        string? masterConnectionString = configuration.GetConnectionString("Master");
+
+        if (string.IsNullOrWhiteSpace(masterConnectionString))
+        {
+            return DatabaseSchemaCheckResult.Unreachable(
+                "appsettings.json içinde ConnectionStrings:Master tanımlı değil.");
+        }
+
+        string databaseName = ServiceRegistrar.ReadDatabaseName(masterConnectionString);
+
+        ProbeResult probe = await ProbeAsync(services);
+
+        switch (probe.State)
+        {
+            case DatabaseFirstRunState.Missing:
+                return DatabaseSchemaCheckResult.DatabaseMissing(databaseName);
+
+            case DatabaseFirstRunState.Unreachable:
+                return DatabaseSchemaCheckResult.Unreachable(
+                    probe.Error ?? "Sunucuya ulaşılamadı.");
+        }
+
+        var options = sp.GetRequiredService<IOptions<DatabaseProvisioningOptions>>().Value;
+        var masterContext = sp.GetRequiredService<MasterDbContext>();
+
+        try
+        {
+            // Bekleyen migration sorgusu yalnızca okur; yine de kısa bir komut
+            // zaman aşımı uygulanır ki yavaş sunucuda giriş ekranı asılı kalmasın.
+            masterContext.Database.SetCommandTimeout(
+                Math.Max(1, options.SchemaCheckTimeoutSeconds));
+
+            var pendingMigrations = (await masterContext.Database
+                .GetPendingMigrationsAsync(cancellationToken))
+                .ToArray();
+
+            return pendingMigrations.Length == 0
+                ? DatabaseSchemaCheckResult.Ready()
+                : DatabaseSchemaCheckResult.SchemaOutdated(pendingMigrations);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[DatabaseInitializer] Şema kontrolü başarısız: {ex.Message}");
+
+            return DatabaseSchemaCheckResult.Unreachable(ex.Message);
         }
     }
 
     /// <summary>
+    /// Veritabanı hazırlık kilidinin kaynak adı.
+    /// </summary>
+    /// <remarks>
+    /// Master veritabanı adı kaynağa dâhil edilir: aynı SQL Server üzerinde
+    /// farklı ortamların (geliştirme / test / canlı) master veritabanları
+    /// farklıysa birbirlerini bekletmemeleri gerekir.
+    /// </remarks>
+    internal static string BuildLockName(string masterDatabaseName) =>
+        $"CAA:Provisioning:{masterDatabaseName}";
+
+    /// <summary>
     /// Veritabanını idempotent biçimde hazırlar: master migration'ları,
     /// tohumlama ve içinde bulunulan yılın iş veritabanları. Veriler zaten
-    /// hazırsa hiçbir şey yazmaz; bu yüzden her açılışta çağrılabilir.
+    /// hazırsa hiçbir şey yazmaz.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Bu metot şema değiştirir ve yalnızca yönetici tarafından çağrılmalıdır.</b>
+    /// Uygulama açılışında <see cref="CheckSchemaAsync"/> kullanılır.
+    /// </para>
+    /// <para>
+    /// Çağrılar arasında sunucu çapında bir kilit tutulur ve kilit alındıktan
+    /// <em>sonra</em> durum yeniden okunur. İkisi birden gereklidir:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>
+    /// Kilit olmadan iki yönetici aynı anda migration çalıştırırsa ikisi de
+    /// <c>__EFMigrationsHistory</c>'ye yazar ve biri diğerinin DDL'ini kilitli
+    /// bulup beklerken hata alır.
+    /// </item>
+    /// <item>
+    /// Kilit olmadan "şirket var mı?" kontrolü iki yöneticiye de "yok" der ve
+    /// ikisi de aynı şirketi, aynı rolü ve aynı kullanıcıyı ekler.
+    /// </item>
+    /// </list>
+    /// <para>
+    /// Kilitten sonraki yeniden kontrol, ikinci çağrının hiçbir şey yapmadan
+    /// çıkmasını sağlar; yalnızca kilitlemek yarışı engeller, tekrarı
+    /// engellemez.
+    /// </para>
+    /// </remarks>
     /// <param name="progress">
     /// Adım durumlarını arayüze iletir. Opsiyoneldir; verilmezse adımlar
-    /// sessizce çalışır (normal açılışta kurulum sihirbazı gösterilmez).
+    /// sessizce çalışır.
     /// </param>
     public static async Task InitializeAsync(
         IServiceProvider services,
@@ -140,15 +280,45 @@ public static class DatabaseInitializer
         using var scope = services.CreateScope();
         IServiceProvider sp = scope.ServiceProvider;
 
+        IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+        string? masterConnectionString = configuration.GetConnectionString("Master");
+
+        if (string.IsNullOrWhiteSpace(masterConnectionString))
+        {
+            throw new InvalidOperationException(
+                "appsettings.json içinde ConnectionStrings:Master tanımlı değil.");
+        }
+
+        string databaseName = ServiceRegistrar.ReadDatabaseName(masterConnectionString);
+
+        var provisioningOptions =
+            sp.GetRequiredService<IOptions<DatabaseProvisioningOptions>>().Value;
+
+        TimeSpan lockTimeout =
+            TimeSpan.FromSeconds(Math.Max(1, provisioningOptions.LockTimeoutSeconds));
+
+        await using var provisioningLock = await ProvisioningLock.AcquireAsync(
+            masterConnectionString,
+            BuildLockName(databaseName),
+            lockTimeout,
+            cancellationToken);
+
+        // Kilit artık elimizde: başka bir oturum bu noktadan sonra hazırlığa
+        // başlayamaz. Yapılacak işin kaldığını burada yeniden okuyarak
+        // "kontrol et ve sonra yaz" aralığını kapatıyoruz.
+        DatabaseSchemaCheckResult schemaCheck = await CheckSchemaAsync(services, cancellationToken);
+
+        if (schemaCheck.State is DatabaseSchemaState.Unreachable)
+        {
+            throw new InvalidOperationException(
+                $"Veritabanı sunucusuna ulaşılamadı: {schemaCheck.Detail}");
+        }
+
         var masterContext = sp.GetRequiredService<MasterDbContext>();
         var roleRepository = sp.GetRequiredService<IRoleRepository>();
         var permissionService = sp.GetRequiredService<PermissionService>();
         var databaseNameBuilder = sp.GetRequiredService<IDatabaseNameBuilder>();
         var provisioner = sp.GetRequiredService<IAccountingYearProvisioner>();
-
-        IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
-        string databaseName =
-            ServiceRegistrar.ReadDatabaseName(configuration.GetConnectionString("Master") ?? string.Empty);
 
         progress?.Report(new DatabaseProvisionProgress(
             DatabaseProvisionStep.ConnectServer,
@@ -366,6 +536,29 @@ public static class DatabaseInitializer
         await EnsureAdminRolePermissionsAsync(
             masterContext, permissionService, roleRepository, cancellationToken);
 
+        // Standart rollerin baslangic yetkileri (or. mesajlasma) tamamlanir.
+        // Yalnizca EKLER; yoneticinin rol ekranindaki tercihlerini degistirmez.
+        Guid? starterAdminId = await masterContext.Users
+            .AsNoTracking()
+            .Where(u => u.UserName.Value == "admin")
+            .Select(u => (Guid?)u.Id.Value)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (starterAdminId is not null)
+        {
+            masterContext.SetSeedAdminUserId(starterAdminId.Value);
+        }
+
+        try
+        {
+            await permissionService.EnsureStarterRolePermissionsAsync(
+                roleRepository, masterContext, cancellationToken);
+        }
+        finally
+        {
+            masterContext.ClearSeedAdminUserId();
+        }
+
         progress?.Report(new DatabaseProvisionProgress(
             DatabaseProvisionStep.SeedPermissions,
             DatabaseProvisionStepState.Completed,
@@ -373,12 +566,25 @@ public static class DatabaseInitializer
     }
 
     /// <summary>
-    /// İlk kurulumda, içinde bulunulan yılın kaydı olmayan her şirket için yılın
-    /// iş veritabanını açar. Böylece uygulama ilk açılışta giriş ekranında seçilebilir
-    /// bir yıl listesiyle karşılaşır. Kontrol şirket bazında yapılır: bir şirkette
-    /// yıl açılmış olması diğer şirketleri etkilemez. Sonraki yıllar
-    /// "Mali Yıl Aç" formundan açılır.
+    /// İçinde bulunulan mali yılın iş veritabanlarını tüm kurumlar için güncel
+    /// hale getirir.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Yıl kaydı olmayan kurum</b> için veritabanı açılır, tohumlanır ve
+    /// <c>CompanyYears</c> kaydı yazılır. <b>Yıl kaydı olan kurum</b> için yalnızca
+    /// bekleyen migration'lar uygulanır; tohumlama zaten dolu tablolarda
+    /// "atla" davranışı gösterir.
+    /// </para>
+    /// <para>
+    /// Kayıt olan kurumları da kapsamak bilinçlidir. Şema ilerlemesi
+    /// (örneğin eşzamanlılık belirteci eklenmesi) yalnızca yeni açılan
+    /// veritabanlarına uygulansaydı, <b>mevcut</b> kurumların veritabanları
+    /// geride kalır ve o kurumlar uygulamayı hiç açamazdı. Hazırlık komutunun
+    /// anlamı "her şeyi güncel tut" olduğu için var olan yıl veritabanları da
+    /// taranır.
+    /// </para>
+    /// </remarks>
     private static async Task EnsureCurrentYearAsync(
         MasterDbContext masterContext,
         IDatabaseNameBuilder databaseNameBuilder,
@@ -399,20 +605,21 @@ public static class DatabaseInitializer
             return;
         }
 
-        // Yıl kaydı olmayan şirketler belirlenir; var olan yıllara dokunulmaz.
         // Year ve IdentityId value converter ile eşlendiği için sorgu, alanların
         // .Value özelliklerine değil nesnelerin kendisine karşı yazılmalıdır.
-        var companiesWithCurrentYear = await masterContext.CompanyYears
+        var existingYears = await masterContext.CompanyYears
             .AsNoTracking()
             .Where(cy => cy.Year == new Year(currentYear))
-            .Select(cy => cy.CompanyId)
+            .Select(cy => new { cy.CompanyId, cy.DatabaseName })
             .ToListAsync(cancellationToken);
 
-        var pendingCompanies = companies
-            .Where(c => !companiesWithCurrentYear.Contains(new IdentityId(c.Id)))
-            .ToList();
+        var existingByCompany = existingYears
+            .GroupBy(y => y.CompanyId.Value)
+            .ToDictionary(g => g.Key, g => g.First());
 
-        if (pendingCompanies.Count == 0)
+        int newDatabaseCount = companies.Count(c => !existingByCompany.ContainsKey(c.Id));
+
+        if (newDatabaseCount == 0 && existingByCompany.Count == 0)
         {
             return;
         }
@@ -430,13 +637,20 @@ public static class DatabaseInitializer
         int chartOfAccountTotal = 0;
         int referenceTotal = 0;
         int sampleRecordTotal = 0;
+        int appliedMigrationTotal = 0;
 
         try
         {
-            foreach (var company in pendingCompanies)
+            foreach (var company in companies)
             {
-                string databaseName = await databaseNameBuilder
-                    .SuggestAvailableAsync(company.Name, currentYear, cancellationToken);
+                bool isNew = !existingByCompany.TryGetValue(company.Id, out var existingYear);
+
+                // Yeni yıl veritabanının adı şirkete göre üretilir; mevcut kaydın
+                // adı ise bellidir ve asla değiştirilmez (master'daki kayıtla
+                // eşleşmek zorunda).
+                string databaseName = isNew
+                    ? await databaseNameBuilder.SuggestAvailableAsync(company.Name, currentYear, cancellationToken)
+                    : existingYear!.DatabaseName.Value;
 
                 progress?.Report(new DatabaseProvisionProgress(
                     DatabaseProvisionStep.ProvisionYearDatabases,
@@ -453,6 +667,12 @@ public static class DatabaseInitializer
                 chartOfAccountTotal += result.SeededChartOfAccountCount;
                 referenceTotal += result.SeededReferenceCount;
                 sampleRecordTotal += result.SeededSampleRecordCount;
+                appliedMigrationTotal += result.AppliedMigrationCount;
+
+                if (!isNew)
+                {
+                    continue;
+                }
 
                 var companyYear = new CompanyYear(
                     new IdentityId(company.Id),
@@ -468,7 +688,9 @@ public static class DatabaseInitializer
             progress?.Report(new DatabaseProvisionProgress(
                 DatabaseProvisionStep.ProvisionYearDatabases,
                 DatabaseProvisionStepState.Completed,
-                $"{pendingCompanies.Count} kurum · {currentYear} mali yılı"));
+                newDatabaseCount > 0
+                    ? $"{newDatabaseCount} yeni veritabanı · {existingByCompany.Count} güncellendi · {appliedMigrationTotal} migration"
+                    : $"{existingByCompany.Count} veritabanı · {appliedMigrationTotal} migration"));
 
             ReportSeedTotal(progress, DatabaseProvisionStep.SeedChartOfAccounts, chartOfAccountTotal, "hesap");
             ReportSeedTotal(progress, DatabaseProvisionStep.SeedUnitsAndTaxRates, referenceTotal, "tanım");

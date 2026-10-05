@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context.Conventions;
 using GenericRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Cost.Accounting.Automation.Infrastructure.Context;
@@ -24,15 +25,51 @@ public abstract class AuditedDbContext(DbContextOptions options, IClaimContext c
         {
             var duplicateKeyProperty = entityType.FindProperty(nameof(Entity.DuplicateKey));
 
-            if (duplicateKeyProperty is null)
+            if (duplicateKeyProperty is not null)
             {
-                continue;
+                duplicateKeyProperty.SetMaxLength(DbConventionDefaults.DuplicateKeyMaxLength);
+                duplicateKeyProperty.SetColumnType(DbConventionDefaults.DuplicateKeyColumnType);
+                entityType.AddIndex(duplicateKeyProperty);
             }
 
-            duplicateKeyProperty.SetMaxLength(DbConventionDefaults.DuplicateKeyMaxLength);
-            duplicateKeyProperty.SetColumnType(DbConventionDefaults.DuplicateKeyColumnType);
-            entityType.AddIndex(duplicateKeyProperty);
+            ApplyRowVersion(entityType);
         }
+    }
+
+    /// <summary>
+    /// <see cref="Entity.RowVersion"/> alanını eşzamanlılık belirteci yapar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Kural <see cref="Entity"/> türevlerine uygulanır; alan adıyla seçilir.
+    /// <c>Properties&lt;byte[]&gt;()</c> tür geneli kullanılmaz çünkü projede
+    /// zaten var olan <c>PasswordHash</c> ve <c>PasswordSalt</c> alanları da
+    /// <c>byte[]</c> türündedir ve onları yanlışlıkla kapsama alırdı.
+    /// </para>
+    /// <para>
+    /// <c>rowversion</c> (<c>timestamp</c>) SQL Server tarafından üretilir:
+    /// satır her yazıldığında değer kendiliğinden değişir. EF yalnızca okur,
+    /// hiçbir zaman değer üretmez.
+    /// </para>
+    /// </remarks>
+    private static void ApplyRowVersion(IMutableEntityType entityType)
+    {
+        if (!typeof(Entity).IsAssignableFrom(entityType.ClrType))
+        {
+            return;
+        }
+
+        var rowVersionProperty = entityType.FindProperty(nameof(Entity.RowVersion));
+
+        if (rowVersionProperty is null)
+        {
+            return;
+        }
+
+        rowVersionProperty.IsConcurrencyToken = true;
+        rowVersionProperty.ValueGenerated = ValueGenerated.OnAddOrUpdate;
+        rowVersionProperty.SetColumnType(DbConventionDefaults.RowVersionColumnType);
+        rowVersionProperty.SetMaxLength(DbConventionDefaults.RowVersionLength);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

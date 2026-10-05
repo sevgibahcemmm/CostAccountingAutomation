@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Photos;
@@ -22,6 +22,7 @@ public sealed record UserUpdateCommand(
     Guid RoleId,
     bool IsActive,
     string? TRIdentityNumber = null,
+    string? RegistryNumber = null,
     List<PhotoInput>? Photos = null) : IRequest<Result<string>>;
 
 public sealed class UserUpdateCommandValidator : AbstractValidator<UserUpdateCommand>
@@ -38,6 +39,9 @@ public sealed class UserUpdateCommandValidator : AbstractValidator<UserUpdateCom
         RuleFor(p => p.TRIdentityNumber)
             .Matches("^[0-9]{11}$").WithMessage("Geçerli bir TC Kimlik No girin")
             .When(p => !string.IsNullOrWhiteSpace(p.TRIdentityNumber));
+
+        RuleFor(p => p.RegistryNumber)
+            .Must(UserRegistryNumber.IsValid).WithMessage(UserRegistryNumber.InvalidFormatMessage);
     }
 }
 
@@ -83,6 +87,19 @@ internal sealed class UserUpdateCommandHandler(
         {
             CompanyId = request.CompanyId.Value;
         }
+
+        string? registryNumber = UserRegistryNumber.Normalize(request.RegistryNumber);
+
+        if (registryNumber is not null && user.RegistryNumber != registryNumber)
+        {
+            bool registryExists = await userRepository.AnyAsync(
+                p => p.RegistryNumber == registryNumber, cancellationToken);
+
+            if (registryExists)
+            {
+                return Result<string>.Failure("Bu sicil numarası daha önce kullanılmış");
+            }
+        }
         FirstName firstName = new(request.FirstName);
         LastName lastName = new(request.LastName);
         Email email = new(request.Email);
@@ -99,6 +116,7 @@ internal sealed class UserUpdateCommandHandler(
         user.SetRoleId(roleId);
         user.SetStatus(request.IsActive);
         user.SetTRIdentityNumber(trIdentityNumber);
+        user.SetRegistryNumber(registryNumber);
 
         // Eski avatar yolu değişiklikten sonra silinecek.
         string? previousAvatarPath = user.AvatarPath;

@@ -23,12 +23,12 @@ partial class ForgotPasswordForm
             lblSubtitle = new DevExpress.XtraEditors.LabelControl();
             pnlEmailBox = new DevExpress.XtraEditors.PanelControl();
             txtEmail = new DevExpress.XtraEditors.TextEdit();
-            btnGenerate = new DevExpress.XtraEditors.SimpleButton();
+            btnGenerate = new Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm.GradientButton();
             lblCodeCaption = new DevExpress.XtraEditors.LabelControl();
             pnlCodeBox = new DevExpress.XtraEditors.PanelControl();
             txtResetCode = new DevExpress.XtraEditors.TextEdit();
             lblMessage = new DevExpress.XtraEditors.LabelControl();
-            btnContinue = new DevExpress.XtraEditors.SimpleButton();
+            btnContinue = new Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm.GradientButton();
             lnkBack = new DevExpress.XtraEditors.HyperlinkLabelControl();
             ((System.ComponentModel.ISupportInitialize)pnlEmailBox).BeginInit();
             pnlEmailBox.SuspendLayout();
@@ -67,7 +67,7 @@ partial class ForgotPasswordForm
             lblSubtitle.Name = "lblSubtitle";
             lblSubtitle.Size = new Size(400, 24);
             lblSubtitle.TabIndex = 1;
-            lblSubtitle.Text = "E-posta adresinizi girin, sıfırlama kodunuz oluşturulsun";
+            lblSubtitle.Text = "E-posta adresinizi girin, sıfırlama talebinizi iletin";
             //
             // pnlEmailBox
             //
@@ -115,7 +115,7 @@ partial class ForgotPasswordForm
             btnGenerate.Name = "btnGenerate";
             btnGenerate.Size = new Size(400, 48);
             btnGenerate.TabIndex = 3;
-            btnGenerate.Text = "Sıfırlama Kodu Oluştur";
+            btnGenerate.Text = "Sıfırlama Talebi Gönder";
             btnGenerate.ImageOptions.SvgImage = DxIcon.Key;
             btnGenerate.ImageOptions.SvgImageSize = new Size(18, 18);
             btnGenerate.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
@@ -132,7 +132,12 @@ partial class ForgotPasswordForm
             lblCodeCaption.Name = "lblCodeCaption";
             lblCodeCaption.Size = new Size(396, 18);
             lblCodeCaption.TabIndex = 4;
+
+            // Etiket, kod alanıyla birlikte gizlenir: eskiden kullanıcının kendi
+            // oluşturduğu kodu burada gösteriyordu. Artık kodu yönetici üretir ve
+            // kullanıcı yalnızca iletilen kodu "Yeni Şifre Belirle" ekranına yazar.
             lblCodeCaption.Text = "Oluşturulan Sıfırlama Kodu";
+            lblCodeCaption.Visible = false;
             //
             // pnlCodeBox
             //
@@ -198,7 +203,7 @@ partial class ForgotPasswordForm
             btnContinue.Name = "btnContinue";
             btnContinue.Size = new Size(400, 48);
             btnContinue.TabIndex = 7;
-            btnContinue.Text = "Şifreyi Sıfırlamaya Devam Et →";
+            btnContinue.Text = "Yeni Şifre Belirle →";
             btnContinue.Visible = false;
             btnContinue.ImageOptions.SvgImage = DxIcon.Next;
             btnContinue.ImageOptions.SvgImageSize = new Size(18, 18);
@@ -264,12 +269,12 @@ partial class ForgotPasswordForm
         private DevExpress.XtraEditors.LabelControl lblSubtitle;
         private DevExpress.XtraEditors.PanelControl pnlEmailBox;
         private DevExpress.XtraEditors.TextEdit txtEmail;
-        private DevExpress.XtraEditors.SimpleButton btnGenerate;
+        private Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm.GradientButton btnGenerate;
         private DevExpress.XtraEditors.LabelControl lblCodeCaption;
         private DevExpress.XtraEditors.PanelControl pnlCodeBox;
         private DevExpress.XtraEditors.TextEdit txtResetCode;
         private DevExpress.XtraEditors.LabelControl lblMessage;
-        private DevExpress.XtraEditors.SimpleButton btnContinue;
+        private Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm.GradientButton btnContinue;
         private DevExpress.XtraEditors.HyperlinkLabelControl lnkBack;
     }
 }

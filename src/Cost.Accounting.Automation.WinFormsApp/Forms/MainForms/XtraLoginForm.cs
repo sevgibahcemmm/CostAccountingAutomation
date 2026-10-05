@@ -28,7 +28,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private const string CompanyPlaceholder = "Kurum seçin";
         private const string YearPlaceholder = "Mali yıl seçin";
-        private const string ScopePendingText = "Kullanıcı adı girin";
+
+        /// <summary>
+        /// Kullanıcı adı girilmeden önce seçim kutularında görünen metin.
+        /// </summary>
+        /// <remarks>
+        /// Önceden yalnızca "Kullanıcı adı girin" yazıyordu; bu, özellikle Release
+        /// derlemesinde <i>veritabanında kurum yok</i> izlenimi veriyordu. Metin
+        /// artık eylemi ve <b>neden</b> gerektiğini birlikte söyler.
+        /// </remarks>
+        private const string ScopePendingText = "Önce kullanıcı adınızı yazın";
         private const string NoOpenYearText = "Açık mali yıl yok";
 
         /// <summary>Aktif mali yıl: içinde bulunulan takvim yılı.</summary>
@@ -39,6 +48,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private Bitmap? _leftBackground;
         private Task? _initTask;
         private bool _passwordVisible;
+
+        /// <summary>
+        /// Çözülen oturum kapsamının <c>sys_admin</c> olup olmadığı.
+        /// </summary>
+        private bool _isSysAdminScope;
         private Guid _captchaChallengeId;
         private List<LoginScopeCompanyDto> _companies = [];
 
@@ -253,21 +267,60 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ApplyScope(userScope);
         }
 
+        /// <summary>
+        /// Kullanıcı adı henüz girilmediği duruma döner: kurum ve mali yıl
+        /// listeleri <b>pasif</b> (açılamaz) yapılır.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Neden listeler boşaltılıp pasifleştiriliyor? Kullanıcı adı yazılmadan
+        /// hangi kurumların sistemde olduğu, kaç kullanıcı bulunduğu ya da
+        /// kullanıcının hangi kuruma bağlı olduğu <b>şifre doğrulanmadan</b>
+        /// söylenmemelidir; aksi halde biri rastgele adlar deneyerek sistemi
+        /// haritalayabilir.
+        /// </para>
+        /// <para>
+        /// Daha önce listeler boş bırakılıyordu. Bu, kullanıcıya "veritabanında
+        /// kurum yok" izlenimi veriyordu; oysa ekran açılışında hiç sorgu
+        /// yapılmamıştır. Pasifleştirmek hem bu yanılgıyı kaldırır hem de
+        /// güvenlik kararını korur: kullanıcı adı yazılınca liste açılır.
+        /// </para>
+        /// </remarks>
         private void ResetScope()
         {
             _companies = [];
-            lookUpCompany.ReadOnly = false;
+
+            lookUpCompany.Properties.DataSource = null;
             lookUpCompany.EditValue = null;
             lookUpCompany.Properties.NullText = ScopePendingText;
-            lookUpCompany.Properties.DataSource = null;
-            lookUpYear.EditValue = null;
+
             lookUpYear.Properties.DataSource = null;
+            lookUpYear.EditValue = null;
             lookUpYear.Properties.NullText = ScopePendingText;
+
+            SetScopeEnabled(false);
+        }
+
+        /// <summary>
+        /// Kurum ve mali yıl seçim kutularını açar veya kapatır.
+        /// </summary>
+        /// <remarks>
+        /// Normal kullanıcı kurumu listeden değiştiremez; yalnızca
+        /// <c>sys_admin</c> seçebilir. Bu yüzden asıl karar yetkiye aittir ve
+        /// <see cref="ApplyScope"/> içinde verilir; metot yalnızca
+        /// "kullanıcı adı girilene kadar hiç açılmasın" kuralını uygular.
+        /// </remarks>
+        private void SetScopeEnabled(bool enabled)
+        {
+            lookUpCompany.Enabled = enabled;
+            lookUpYear.Enabled = enabled;
+            lookUpCompany.ReadOnly = enabled == false || !IsSysAdminScope();
         }
 
         private void ApplyScope(LoginScopeDto userScope)
         {
             _companies = userScope.Companies;
+            _isSysAdminScope = userScope.IsSysAdmin;
 
             lookUpCompany.Properties.DataSource = _companies;
             lookUpCompany.Properties.ValueMember = nameof(LoginScopeCompanyDto.CompanyId);
@@ -294,12 +347,22 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lookUpYearView.BestFitColumns();
 
             // Normal kullanıcı listeden kurum seçemez; sys_admin seçebilir.
-            lookUpCompany.ReadOnly = !userScope.IsSysAdmin;
+            // Seçim kutuları yalnızca kapsam çözüldükten sonra açılır.
+            SetScopeEnabled(true);
 
             // Normal kullanıcının kurumu tekildir; sys_admin'de de kendi kurumu varsayılan gelir.
             lookUpCompany.EditValue = userScope.CompanyId;
             LoadYearsForSelectedCompany();
         }
+
+        /// <summary>
+        /// Çözülen kapsamın <c>sys_admin</c> olup olmadığı.
+        /// </summary>
+        /// <remarks>
+        /// <c>ApplyScope</c> çalışmadan önce <see langword="false"/> döner; böylece
+        /// kapsam yokken seçim kutusu yanlışlıkla açılmaz.
+        /// </remarks>
+        private bool IsSysAdminScope() => _isSysAdminScope;
 
         private void LoadYearsForSelectedCompany()
         {

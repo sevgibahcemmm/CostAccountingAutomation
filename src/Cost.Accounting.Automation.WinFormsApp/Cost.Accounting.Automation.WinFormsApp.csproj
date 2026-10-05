@@ -15,6 +15,10 @@
 	  <PackageReference Include="DevExpress.Win.Design" Version="25.2.3" />
 	  <PackageReference Include="DevExpress.Win.BonusSkins" Version="25.2.3" />
 
+	  <!-- Bağlantı dizeleri ve Jwt:SecretKey ortam değişkeninden gelir; bu paket
+	       olmadan ortam değişkenleri yapılandırmaya katılmaz. -->
+	  <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.12" />
+
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
@@ -29,6 +33,14 @@
 
   <ItemGroup>
     <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+
+    <!-- Makineye ozgu gizli ayarlar. Dosya yoksa hicbir sey kopyalanmaz ve
+         uygulama yalnizca ortam degiskenlerine guvenir.
+         .gitignore bu dosyayi izlemiyor. -->
+    <Content Include="appsettings.Local.json"
+             Condition="Exists('appsettings.Local.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

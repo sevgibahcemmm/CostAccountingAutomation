@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.AccountingYears;
 using Cost.Accounting.Automation.Domain.Roles;
 using Cost.Accounting.Automation.Domain.Users;
+using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 using TS.Result;
 
@@ -48,7 +49,50 @@ public sealed record LoginScopeYearDto
     public required bool IsClosed { get; init; }
 }
 
+/// <summary>
+/// Giriş ekranının kullanıcı adı ve e-posta karşılaştırmalarını veritabanı
+/// collation'ından bağımsız hâle getirir.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>Neden gerekli?</b> Doğrudan <c>p.UserName.Value == userName</c> yazıldığında
+/// duyarlılık tamamen veritabanının collation'ına bağlıdır. SQL Server'ın varsayılanı
+/// (<c>SQL_Latin1_General_CP1_CI_AS</c>) büyük/küçük harf duyarsızdır, ama sunucu
+/// <c>_CS</c> ile oluşturulmuşsa <c>Admin</c> ile <c>admin</c> eşleşmez ve kullanıcı
+/// "Kullanıcı bilgileri doğrulanamadı" hatası alır. Veritabanını kuran kişinin
+/// tercihi davranışı sessizce değiştirebilmemeli.
+/// </para>
+/// <para>
+/// <b>Neden <c>UPPER()</c> değil?</b> Kolon tarafında <c>UPPER()</c> çağırmak
+/// Türkçe I sorununu yaratır: sunucunun dili Türkçe olduğunda <c>UPPER('i')</c>
+/// sonucu <c>'İ'</c> olur, oysa .NET'in <c>ToUpperInvariant()</c> ile ürettiği
+/// değer <c>'I'</c>'dır. İki taraf örtüşmez ve giriş bozulur.
+/// </para>
+/// <para>
+/// <b>Çözüm.</b> Karşılaştırma tarafına açık bir <c>COLLATE</c> uygulanır. Bu,
+/// sunucuda tam eşleşme yapar, büyük/küçük harfe duyarsızdır, aksanlara duyarlıdır
+/// ve ne kolonun ne de veritabanının mevcut collation'ına bağlıdır. Türkçe'ye özgü
+/// <c>ı</c>/<c>I</c> çifti de doğru şekilde farklı harf olarak kalır.
+/// </para>
+/// </remarks>
+public static class LoginNameMatcher
+{
+    /// <summary>
+    /// Karşılaştırmada kullanılacak açık collation.
+    /// </summary>
+    /// <remarks>
+    /// <c>CI</c> = büyük/küçük harf duyarsız, <c>AS</c> = aksan duyarlı,
+    /// <c>KS</c> = yerel ayarlara duyarsız (Türkçe I sorunu oluşmaz).
+    /// </remarks>
+    public const string Collation = "Latin1_General_100_CI_AS_KS";
+
+    /// <summary>Girdi metnini karşılaştırma öncesi normalize eder.</summary>
+    public static string Clean(string? value)
+        => (value ?? string.Empty).Trim();
+}
+
 internal sealed class LoginScopeGetQueryHandler(
+
     IUserRepository userRepository,
     IRoleRepository roleRepository,
     IMasterCompanyNameLookup companyNameLookup,
@@ -58,7 +102,8 @@ internal sealed class LoginScopeGetQueryHandler(
         LoginScopeGetQuery request,
         CancellationToken cancellationToken)
     {
-        string userName = request.UserName.Trim();
+        // Eşleşme veritabanı collation'ına değil koda bağlıdır; bkz. LoginNameMatcher.
+        string userName = LoginNameMatcher.Clean(request.UserName);
 
         if (userName.Length == 0)
         {
@@ -66,8 +111,8 @@ internal sealed class LoginScopeGetQueryHandler(
         }
 
         var user = await userRepository.FirstOrDefaultAsync(p =>
-            p.Email.Value == userName
-            || p.UserName.Value == userName,
+            EF.Functions.Collate(p.UserName.Value, LoginNameMatcher.Collation) == userName
+            || EF.Functions.Collate(p.Email.Value, LoginNameMatcher.Collation) == userName,
             cancellationToken);
 
         if (user is null)

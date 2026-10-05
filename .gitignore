@@ -361,3 +361,20 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# --- Cost Accounting Automation: gizli yapilandirma -------------------------
+# appsettings.json izlenir ve yalnizca gelistirme varsayilanlarini icerir.
+# Ortam degiskenine yazilmayan gizli degerler ASLA buraya konmaz.
+# Asagidaki dosyalar makineye ozgudur ve paylasilmaz:
+
+# Ortam degiskeni yerine kullanilabilecek yerel ayar dosyalari
+appsettings.Local.json
+appsettings.*.local.json
+appsettings.Production.json
+appsettings.Staging.json
+.env
+.env.*
+
+# Uygulama calisma artiklari
+logs/
+*.log

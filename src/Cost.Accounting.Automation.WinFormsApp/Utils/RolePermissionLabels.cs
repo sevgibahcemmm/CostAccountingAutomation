@@ -29,6 +29,7 @@ public static class RolePermissionLabels
         ("stock_issue", "Stok Fişi"),
         ("invoice", "Fatura"),
         ("costslip", "Maliyet Pusulası"),
+        ("message", "Mesajlaşma"),
     ];
 
     private static readonly Dictionary<string, string> GroupCaptions =
@@ -50,6 +51,9 @@ public static class RolePermissionLabels
         ["import"] = "İçe Aktar",
         ["manage"] = "Yönet",
         ["update_permissions"] = "Yetkileri Güncelle",
+        ["reset_password"] = "Şifre Sıfırlama Kodu Üret",
+        ["send"] = "Mesaj Gönder",
+        ["announce"] = "Duyuru Gönder",
     };
 
     public static string GetGroup(string? permission)

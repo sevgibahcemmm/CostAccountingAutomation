@@ -10,6 +10,13 @@
   <ItemGroup>
 	  <PackageReference Include="FluentValidation" Version="12.1.1" />
 	  <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+
+	  <!-- Auth komutlarında EF.Functions.Collate kullanılır (kullanıcı adı
+	       eşleşmesini veritabanı collation'ından bağımsız kılmak için).
+	       Bu uzantı metotları Microsoft.EntityFrameworkCore.Relational
+	       derlemesindedir; Infrastructure'a özgü değildir, kimlik sorguları da
+	       burada yazılır. -->
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
 	  <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.12" />
 	  <PackageReference Include="TS.MediatR" Version="10.0.0" />
 	  <PackageReference Include="TS.Result" Version="10.0.0" />

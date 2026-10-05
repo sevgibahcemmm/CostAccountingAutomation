@@ -46,6 +46,29 @@ public sealed class User : Entity
     public TRIdentityNumber? TRIdentityNumber { get; private set; }
 
     /// <summary>
+    /// Kurum sicil numarası.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Personel kaydında <c>Employee.RegistryNumber</c> olarak da tutulur. Buraya
+    /// eklenmesinin nedeni: mesajlaşma <b>kullanıcılar</b> arasında olur ve
+    /// alıcının giriş ekranında bir kimlikle bulunabilmesi gerekir. Sicil
+    /// numarası, sistem kullanıcısı ile personel kaydının eşleştirilmesini sağlayan
+    /// doğal anahtardır.
+    /// </para>
+    /// <para>Zorunlu değildir; numarası olmayan kullanıcılar TC kimlik numarası ya da kullanıcı adıyla bulunur.</para>
+    /// </remarks>
+    public string? RegistryNumber { get; private set; }
+
+    /// <summary>Sicil numarasını kırpıp atar; boşsa <c>null</c> yapar.</summary>
+    public void SetRegistryNumber(string? registryNumber)
+    {
+        RegistryNumber = string.IsNullOrWhiteSpace(registryNumber)
+            ? null
+            : registryNumber.Trim();
+    }
+
+    /// <summary>
     /// Kullanıcı avatarının dosya depolama köküne göreli yolu.
     /// Kullanıcı verileri master veritabanında tutulduğundan avatar da
     /// <c>Photo</c> tablosunda değil, doğrudan bu alanda saklanır.
@@ -59,19 +82,68 @@ public sealed class User : Entity
         => SetDuplicateKey(BuildDuplicateKey(UserName.Value));
 
     #region Behaviors
-    public bool VerifyPasswordHash(string password)
-    {
-        using var hmac = new System.Security.Cryptography.HMACSHA512(Password.PasswordSalt);
-        var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-        return computedHash.SequenceEqual(Password.PasswordHash);
-    }
+    /// <summary>
+    /// Sıfırlama kodunun geçerli kalacağı süre.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Daha önce 24 saat idi ve bu çok uzun bir pencere: ele geçirilen bir kod
+    /// bir gün boyunca kullanılabiliyordu. Kurtarma kodları kısa ömürlü olmalıdır;
+    /// kullanıcı kodu yöneticiden alır ve hemen girer.
+    /// </para>
+    /// <para>
+    /// Tek bir kaynaktan okunur. Üç ayrı yerde <c>AddDays(1)</c> yazılıydı ve
+    /// birinin değiştirilip diğerlerinin unutulması kolaydı.
+    /// </para>
+    /// </remarks>
+    public static readonly TimeSpan PasswordResetCodeValidity = TimeSpan.FromMinutes(30);
 
-    public void CreateForgotPasswordId()
+    /// <summary>
+    /// Parolayı doğrular ve gerekiyorsa hash'i güncel biçime yükseltir.
+    /// </summary>
+    public PasswordVerification VerifyPassword(string password)
+        => Password.VerifyAndUpgradeIfNeeded(password);
+
+    /// <summary>
+    /// Sıfırlama talebinin sahibi olan kullanıcı için yeni kod üretir.
+    /// </summary>
+    public void CreatePasswordResetRequest()
     {
         ForgotPasswordCode = new(Guid.CreateVersion7());
         ForgotPasswordDate = new(DateTimeOffset.Now);
         IsForgotPasswordCompleted = new(false);
     }
+
+    /// <summary>
+    /// Üretilmiş sıfırlama kodunu geçersiz kılar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Bu çağrı zorunludur.</b> Kod üretildikten sonra işaretlenmiyorsa
+    /// <see cref="IsForgotPasswordCompleted"/> <c>false</c> kalmaya devam eder ve
+    /// aynı kod 24 saat boyunca sınırsız kez yeniden kullanılabilir. Sıfırlama
+    /// başarılı olduğunda kodun geçersizleştirilmesi, tek kullanımlılığı sağlar.
+    /// </para>
+    /// <para>
+    /// Kod alanı da temizlenir: artık geçersiz olan bir değer veritabanında
+    /// gereksiz yere durmasın.
+    /// </para>
+    /// </remarks>
+    public void MarkPasswordResetCompleted()
+    {
+        IsForgotPasswordCompleted = new(true);
+        ForgotPasswordCode = null;
+        ForgotPasswordDate = null;
+    }
+
+    /// <summary>
+    /// Sıfırlama kodu hâlâ geçerli mi?
+    /// </summary>
+    public bool IsPasswordResetCodeUsable() =>
+        ForgotPasswordCode is not null
+        && IsForgotPasswordCompleted.Value == false
+        && ForgotPasswordDate is not null
+        && DateTimeOffset.Now < ForgotPasswordDate.Value.Add(PasswordResetCodeValidity);
 
     public void SetFirstName(FirstName firstName)
     {

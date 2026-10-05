@@ -48,5 +48,7 @@ public sealed class SessionClaimContext : IClaimContext
     public string? GetUserFullName()
         => _userFullName ?? throw new InvalidOperationException("Oturum açık değil: kullanıcı adı bilgisi bulunamadı");
 
+    public string? GetUserFullNameOrDefault() => _userFullName;
+
     public Guid? GetUserIdOrDefault() => _userId;
 }

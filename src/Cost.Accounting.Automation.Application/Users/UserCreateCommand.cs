@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Photos;
@@ -20,6 +20,7 @@ public sealed record UserCreateCommand(
     Guid RoleId,
     bool IsActive,
     string? TRIdentityNumber = null,
+    string? RegistryNumber = null,
     List<PhotoInput>? Photos = null) : IRequest<Result<string>>;
 
 public sealed class UserCreateCommandValidator : AbstractValidator<UserCreateCommand>
@@ -36,6 +37,9 @@ public sealed class UserCreateCommandValidator : AbstractValidator<UserCreateCom
         RuleFor(p => p.TRIdentityNumber)
             .Matches("^[0-9]{11}$").WithMessage("Geçerli bir TC Kimlik No girin")
             .When(p => !string.IsNullOrWhiteSpace(p.TRIdentityNumber));
+
+        RuleFor(p => p.RegistryNumber)
+            .Must(UserRegistryNumber.IsValid).WithMessage(UserRegistryNumber.InvalidFormatMessage);
     }
 }
 
@@ -70,6 +74,19 @@ internal sealed class UserCreateCommandHandler(
             return Result<string>.Failure("Bu kullanıcı TC numarası daha önce kullanılmış");
         }
 
+        string? registryNumber = UserRegistryNumber.Normalize(request.RegistryNumber);
+
+        if (registryNumber is not null)
+        {
+            bool registryExists = await userRepository.AnyAsync(
+                p => p.RegistryNumber == registryNumber, cancellationToken);
+
+            if (registryExists)
+            {
+                return Result<string>.Failure("Bu sicil numarası daha önce kullanılmış");
+            }
+        }
+
 
         var CompanyId = claimContext.GetCompanyId();
         if (request.CompanyId is not null)
@@ -94,6 +111,9 @@ internal sealed class UserCreateCommandHandler(
             roleId,
             request.IsActive,
             trIdentityNumber);
+
+        user.SetRegistryNumber(registryNumber);
+
         userRepository.Add(user);
 
         if (request.Photos is { Count: > 0 })

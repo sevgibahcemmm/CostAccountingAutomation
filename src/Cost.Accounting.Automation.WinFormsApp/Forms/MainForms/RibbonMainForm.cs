@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.Messages;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Infrastructure.Services;
@@ -10,6 +11,7 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductMovementForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.RoleForms;
@@ -18,6 +20,7 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.SupplierForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.UserForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.WorkshopAnalysisForms;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.Utils.Svg;
 using DevExpress.XtraBars.Navigation;
@@ -53,7 +56,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             [5] = DxIcon.Calculator,   // Maliyet & Üretim
             [6] = DxIcon.ChartAccounts,// Muhasebe
             [7] = DxIcon.Report,       // Raporlar
-            [8] = DxIcon.Security      // Sistem Yönetimi
+            [8] = DxIcon.Security,     // Sistem Yönetimi
+            [9] = DxIcon.Mail          // Mesajlaşma
         };
 
         private const int HomeTag = 0;
@@ -109,7 +113,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmUsers"] = DxIcon.Users,                     // bo_user
             ["elmRoles"] = DxIcon.Roles,                      // bo_role
             ["elmEmployees"] = DxIcon.Employees,              // bo_contact
-            ["elmSigningRoles"] = DxIcon.IdCard              // security_personalid
+            ["elmSigningRoles"] = DxIcon.IdCard,             // security_personalid
+
+            // Mesajlaşma
+            ["elmMessages"] = DxIcon.At                // mail
         };
 
         public RibbonMainForm()
@@ -256,6 +263,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmProducts"] = () => MdiFormManager.Instance.OpenForm<ProductsListForm>(this, "Ürünler");
             _menuActions["elmUnitTypes"] = () => MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
             _menuActions["elmTaxRates"] = () => MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
+            _menuActions["elmMessages"] = () => OpenMessages();
+        }
+
+        /// <summary>
+        /// Mesaj ekranını açar ve kullanıcının yetkisi yoksa hiç açmaz.
+        /// </summary>
+        /// <remarks>
+        /// Kontrol burada da tekrarlanır; sunucu tarafındaki yetki denetimi tek
+        /// başına yeterlidir ama kullanıcıya işlevsiz bir menü girdisi
+        /// göstermektense hiç göstermemek doğrusudur.
+        /// </remarks>
+        private async void OpenMessages()
+        {
+            if (!await CurrentUserPermissions.HasAsync(MessagePermissions.View))
+            {
+                ToastHelper.Show("Mesajlaşma yetkiniz yok.", ToastType.Warning);
+                return;
+            }
+
+            MdiFormManager.Instance.OpenForm<MessagesListForm>(this, "Mesajlar");
         }
 
         private void HandleMenuClick(AccordionControlElement element)

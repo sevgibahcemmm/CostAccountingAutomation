@@ -14,5 +14,7 @@ internal sealed class DesignTimeClaimContext : IClaimContext
 
     public string GetRoleName() => string.Empty;
 
+    public string? GetUserFullNameOrDefault() => null;
+
     public Guid? GetUserIdOrDefault() => null;
 }

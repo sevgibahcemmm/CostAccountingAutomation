@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Cost.Accounting.Automation.Provisioning</RootNamespace>
+    <AssemblyName>caa-provision</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cost.Accounting.Automation.Infrastructure\Cost.Accounting.Automation.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bağlantı dizeleri ve JWT anahtarı bu dosyadan okunur. Verilen yol
+         appsettings.json dosyasının bulunduğu klasöre görelidir; sağlanmazsa
+         komut satırından verilen yol, yoksa araç klasörü kullanılır.
+         appsettings.Local.json aynı klasörde aranır. -->
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- Dosya yoksa hiçbir şey kopyalanmaz. .gitignore bu adı izlemiyor. -->
+    <Content Include="appsettings.Local.json"
+             CopyToOutputDirectory="PreserveNewest"
+             Condition="Exists('appsettings.Local.json')" />
+  </ItemGroup>
+
+</Project>

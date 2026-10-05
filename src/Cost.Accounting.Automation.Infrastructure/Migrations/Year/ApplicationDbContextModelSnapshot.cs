@@ -76,6 +76,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<int>("RecipesAdded")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<string>("SourceDatabaseName")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -158,6 +164,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<Guid?>("SemiFinishedAccountId")
                         .HasColumnType("uniqueidentifier");
 
@@ -221,6 +233,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<Guid?>("SourceId")
                         .HasColumnType("uniqueidentifier");
@@ -289,6 +307,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<string>("SlipNumber")
                         .IsRequired()
@@ -370,6 +394,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<decimal>("Quantity")
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("money");
 
@@ -444,6 +474,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<int>("MovementType")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<Guid?>("SupplierId")
                         .HasColumnType("uniqueidentifier");
 
@@ -502,6 +538,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -573,6 +615,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("RegistryNumber");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -626,6 +674,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<Guid>("SigningRoleId")
                         .HasColumnType("uniqueidentifier");
@@ -688,6 +742,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<bool>("RequiresWorkshop")
                         .HasColumnType("bit")
                         .HasColumnName("RequiresWorkshop");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int")
@@ -752,6 +812,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -828,6 +894,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<decimal>("Quantity")
                         .HasColumnType("decimal(18,4)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<decimal>("TaxAmount")
                         .HasColumnType("money");
@@ -907,6 +979,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<Guid?>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -978,6 +1056,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("QRCode");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<Guid?>("SemiFinishedProductId")
                         .HasColumnType("uniqueidentifier");
@@ -1070,6 +1154,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<string>("ReferenceNo")
                         .HasColumnType("nvarchar(MAX)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<Guid?>("StockIssueId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1132,6 +1222,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<Guid?>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
@@ -1177,6 +1273,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1221,6 +1323,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .HasColumnType("decimal(18,4)")
                         .HasColumnName("Rate");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1263,6 +1371,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -1314,6 +1428,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<Guid>("RecipeId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -1372,6 +1492,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<int>("IssueType")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<Guid>("SourceWarehouseId")
                         .HasColumnType("uniqueidentifier");
@@ -1438,6 +1564,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<decimal>("Quantity")
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
                     b.Property<Guid>("StockIssueId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1484,6 +1616,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");

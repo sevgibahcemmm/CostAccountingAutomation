@@ -29,7 +29,7 @@ partial class ResetPasswordForm
             txtConfirmPassword = new DevExpress.XtraEditors.TextEdit();
             chkLogoutAll = new DevExpress.XtraEditors.ToggleSwitch();
             lblMessage = new DevExpress.XtraEditors.LabelControl();
-            btnReset = new DevExpress.XtraEditors.SimpleButton();
+            btnReset = new Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm.GradientButton();
             lnkBack = new DevExpress.XtraEditors.HyperlinkLabelControl();
             ((System.ComponentModel.ISupportInitialize)pnlCodeBox).BeginInit();
             pnlCodeBox.SuspendLayout();
@@ -282,7 +282,7 @@ partial class ResetPasswordForm
         private DevExpress.XtraEditors.TextEdit txtConfirmPassword;
         private DevExpress.XtraEditors.ToggleSwitch chkLogoutAll;
         private DevExpress.XtraEditors.LabelControl lblMessage;
-        private DevExpress.XtraEditors.SimpleButton btnReset;
+        private Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm.GradientButton btnReset;
         private DevExpress.XtraEditors.HyperlinkLabelControl lnkBack;
     }
 }

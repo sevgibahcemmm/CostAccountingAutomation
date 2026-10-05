@@ -17,6 +17,7 @@ public static class ServiceRegistrar
     {
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<DatabaseNamingOptions>(configuration.GetSection(DatabaseNamingOptions.SectionName));
+        services.Configure<DatabaseProvisioningOptions>(configuration.GetSection(DatabaseProvisioningOptions.SectionName));
 
         string masterConnectionString = RequireConnectionString(configuration, "Master");
 

@@ -31,6 +31,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         // Sekme 2 - Hesap ve Yetkilendirme
         private DevExpress.XtraEditors.LabelControl lblTcNo;
         private DevExpress.XtraEditors.TextEdit txtTcNo;
+        private DevExpress.XtraEditors.LabelControl lblRegistryNumber;
+        private DevExpress.XtraEditors.TextEdit txtRegistryNumber;
         private DevExpress.XtraEditors.LabelControl lblCompany;
         private DevExpress.XtraEditors.SearchLookUpEdit cmbCompany;
         private DevExpress.XtraEditors.LabelControl lblRole;
@@ -91,6 +93,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 
             lblTcNo = new DevExpress.XtraEditors.LabelControl();
             txtTcNo = new DevExpress.XtraEditors.TextEdit();
+            lblRegistryNumber = new DevExpress.XtraEditors.LabelControl();
+            txtRegistryNumber = new DevExpress.XtraEditors.TextEdit();
             lblCompany = new DevExpress.XtraEditors.LabelControl();
             cmbCompany = new DevExpress.XtraEditors.SearchLookUpEdit();
             lblRole = new DevExpress.XtraEditors.LabelControl();
@@ -123,6 +127,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             ((System.ComponentModel.ISupportInitialize)txtUserName.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtEmail.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtTcNo.Properties).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)txtRegistryNumber.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbCompany.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbRole.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).BeginInit();
@@ -223,7 +228,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabPersonal.ImageOptions.SvgImage = DxIcon.User;
             tabPersonal.ImageOptions.SvgImageSize = new Size(16, 16);
             tabPersonal.Name = "tabPersonal";
-            tabPersonal.Size = new Size(474, 297);
+            tabPersonal.Size = new Size(474, 355);
             tabPersonal.Text = "Kişisel Bilgiler";
             //
             // lblFirstName
@@ -339,10 +344,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabAccount.Controls.Add(lblCompany);
             tabAccount.Controls.Add(txtTcNo);
             tabAccount.Controls.Add(lblTcNo);
+            tabAccount.Controls.Add(txtRegistryNumber);
+            tabAccount.Controls.Add(lblRegistryNumber);
             tabAccount.ImageOptions.SvgImage = DxIcon.Shield;
             tabAccount.ImageOptions.SvgImageSize = new Size(16, 16);
             tabAccount.Name = "tabAccount";
-            tabAccount.Size = new Size(474, 297);
+            tabAccount.Size = new Size(474, 355);
             tabAccount.Text = "Hesap ve Yetki";
             //
             // lblTcNo
@@ -373,22 +380,48 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtTcNo.Size = new Size(434, 26);
             txtTcNo.TabIndex = 1;
             //
+            // lblRegistryNumber
+            //
+            lblRegistryNumber.Appearance.Font = new Font("Segoe UI", 8.5F);
+            lblRegistryNumber.Appearance.ForeColor = Color.FromArgb(100, 106, 116);
+            lblRegistryNumber.Appearance.Options.UseFont = true;
+            lblRegistryNumber.Appearance.Options.UseForeColor = true;
+            lblRegistryNumber.Location = new Point(20, 76);
+            lblRegistryNumber.Margin = new Padding(3, 2, 3, 2);
+            lblRegistryNumber.Name = "lblRegistryNumber";
+            lblRegistryNumber.Size = new Size(80, 14);
+            lblRegistryNumber.TabIndex = 2;
+            lblRegistryNumber.Text = "Sicil Numarası";
+            lblRegistryNumber.ToolTip = "Personel kaydıyla eşleştirmek için kullanılan sicil numarası.\r\nMesajlaşmada alıcı bu numarayla aranabilir.";
+            //
+            // txtRegistryNumber
+            //
+            txtRegistryNumber.Location = new Point(20, 94);
+            txtRegistryNumber.Margin = new Padding(3, 2, 3, 2);
+            txtRegistryNumber.Name = "txtRegistryNumber";
+            txtRegistryNumber.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
+            txtRegistryNumber.Properties.Appearance.Options.UseFont = true;
+            txtRegistryNumber.Properties.NullText = "Örn. 7788";
+            txtRegistryNumber.Properties.Padding = new Padding(26, 2, 2, 2);
+            txtRegistryNumber.Size = new Size(434, 26);
+            txtRegistryNumber.TabIndex = 3;
+            //
             // lblCompany
             //
             lblCompany.Appearance.Font = new Font("Segoe UI", 8.5F);
             lblCompany.Appearance.ForeColor = Color.FromArgb(100, 106, 116);
             lblCompany.Appearance.Options.UseFont = true;
             lblCompany.Appearance.Options.UseForeColor = true;
-            lblCompany.Location = new Point(20, 80);
+            lblCompany.Location = new Point(20, 134);
             lblCompany.Margin = new Padding(3, 2, 3, 2);
             lblCompany.Name = "lblCompany";
             lblCompany.Size = new Size(28, 14);
-            lblCompany.TabIndex = 2;
+            lblCompany.TabIndex = 5;
             lblCompany.Text = "Şirket";
             //
             // cmbCompany
             //
-            cmbCompany.Location = new Point(20, 98);
+            cmbCompany.Location = new Point(20, 152);
             cmbCompany.Margin = new Padding(3, 2, 3, 2);
             cmbCompany.Name = "cmbCompany";
             cmbCompany.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
@@ -398,7 +431,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             cmbCompany.Properties.PopupFilterMode = DevExpress.XtraEditors.PopupFilterMode.Contains;
             cmbCompany.Properties.Padding = new Padding(26, 2, 2, 2);
             cmbCompany.Size = new Size(434, 26);
-            cmbCompany.TabIndex = 3;
+            cmbCompany.TabIndex = 4;
             //
             // lblRole
             //
@@ -406,16 +439,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblRole.Appearance.ForeColor = Color.FromArgb(100, 106, 116);
             lblRole.Appearance.Options.UseFont = true;
             lblRole.Appearance.Options.UseForeColor = true;
-            lblRole.Location = new Point(20, 138);
+            lblRole.Location = new Point(20, 192);
             lblRole.Margin = new Padding(3, 2, 3, 2);
             lblRole.Name = "lblRole";
             lblRole.Size = new Size(15, 14);
-            lblRole.TabIndex = 4;
+            lblRole.TabIndex = 6;
             lblRole.Text = "Rol";
             //
             // cmbRole
             //
-            cmbRole.Location = new Point(20, 156);
+            cmbRole.Location = new Point(20, 210);
             cmbRole.Margin = new Padding(3, 2, 3, 2);
             cmbRole.Name = "cmbRole";
             cmbRole.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
@@ -425,11 +458,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             cmbRole.Properties.PopupFilterMode = DevExpress.XtraEditors.PopupFilterMode.Contains;
             cmbRole.Properties.Padding = new Padding(26, 2, 2, 2);
             cmbRole.Size = new Size(434, 26);
-            cmbRole.TabIndex = 5;
+            cmbRole.TabIndex = 7;
             //
             // chkActive
             //
-            chkActive.Location = new Point(20, 196);
+            chkActive.Location = new Point(20, 250);
             chkActive.Margin = new Padding(3, 2, 3, 2);
             chkActive.Name = "chkActive";
             chkActive.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
@@ -439,7 +472,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             chkActive.Properties.OffText = "Pasif";
             chkActive.ToolTip = "Aktif Kullanıcı";
             chkActive.Size = new Size(160, 21);
-            chkActive.TabIndex = 6;
+            chkActive.TabIndex = 8;
             //
             // lblPasswordNote
             //
@@ -447,11 +480,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             lblPasswordNote.Appearance.ForeColor = Color.FromArgb(130, 138, 150);
             lblPasswordNote.Appearance.Options.UseFont = true;
             lblPasswordNote.Appearance.Options.UseForeColor = true;
-            lblPasswordNote.Location = new Point(20, 226);
+            lblPasswordNote.Location = new Point(20, 280);
             lblPasswordNote.Margin = new Padding(3, 2, 3, 2);
             lblPasswordNote.Name = "lblPasswordNote";
             lblPasswordNote.Size = new Size(87, 14);
-            lblPasswordNote.TabIndex = 7;
+            lblPasswordNote.TabIndex = 9;
             lblPasswordNote.Text = "İlk giriş şifresi: 123";
             //
             // lblIconFirstName
@@ -539,7 +572,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabPhotos.ImageOptions.SvgImage = DxIcon.Photo;
             tabPhotos.ImageOptions.SvgImageSize = new Size(16, 16);
             tabPhotos.Name = "tabPhotos";
-            tabPhotos.Size = new Size(474, 297);
+            tabPhotos.Size = new Size(474, 355);
             tabPhotos.Text = "Fotoğraflar";
             //
             // picPhoto
@@ -640,7 +673,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             //
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(480, 446);
+            ClientSize = new Size(480, 504);
             Controls.Add(tabMain);
             Controls.Add(pnlFooter);
             Controls.Add(pnlHeader);
@@ -665,6 +698,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             tabAccount.ResumeLayout(false);
             tabAccount.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)txtTcNo.Properties).EndInit();
+        ((System.ComponentModel.ISupportInitialize)txtRegistryNumber.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbCompany.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbRole.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)chkActive.Properties).EndInit();
