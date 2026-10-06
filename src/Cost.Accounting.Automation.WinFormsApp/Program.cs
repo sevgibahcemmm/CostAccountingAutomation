@@ -84,6 +84,13 @@ namespace Cost.Accounting.Automation.WinFormsApp
             services.AddSingleton<SessionClaimContext>();
             services.AddSingleton<IClaimContext>(sp => sp.GetRequiredService<SessionClaimContext>());
 
+            // Canlı mesajlaşma motoru. Uygulama ömrü boyunca yaşar ve RibbonMainForm
+            // tarafından girişte başlatılır, çıkışta durdurulur. Singleton olması
+            // zorunludur: bu işi yapan zamanlayıcı bir ekrana ait olsaydı, o ekran
+            // kapatıldığında çevrimiçi bilgisi ve yeni mesaj bildirimleri kaybolurdu.
+            services.AddSingleton<LiveMessagingService>();
+            services.AddSingleton<MessagingNotifier>();
+
             services.AddForms();
 
             Services = services.BuildServiceProvider();

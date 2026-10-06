@@ -17,6 +17,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Data;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Cost.Accounting.Automation.Infrastructure;
 
@@ -33,9 +35,22 @@ public static class DatabaseInitializer
 {
     /// <summary>
     /// Açılışta "veritabanı var mı" yoklamasının bağlantı ve komut zaman aşımı.
-    /// Kısa tutulur: yoklama yalnızca bir varlık kontrolüdür, veri taşımaz.
     /// </summary>
-    private const int ProbeTimeoutSeconds = 5;
+    /// <remarks>
+    /// 15 saniye: LocalDB'nin soğuk başlatması için yeterli, hata durumunda kullanıcı
+    /// yine de kabul edilebilir sürede geri bildirim alır.
+    /// </remarks>
+    private const int ProbeTimeoutSeconds = 15;
+
+    /// <summary>
+    /// Yoklama başarısız olursa bir kez yeniden denemeden önce beklenecek süre.
+    /// </summary>
+    private static readonly TimeSpan ProbeRetryDelay = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// Maksimum yoklama deneme sayısı.
+    /// </summary>
+    private const int MaxProbeAttempts = 2;
 
     /// <summary>
     /// İlk kurulum sihirbazının ekrana basacağı adımların sırası.
@@ -88,54 +103,86 @@ public static class DatabaseInitializer
     /// </remarks>
     private static async Task<ProbeResult> ProbeAsync(IServiceProvider services)
     {
-        using var scope = services.CreateScope();
-        IConfiguration configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        Exception? lastException = null;
 
-        string? masterConnectionString = configuration.GetConnectionString("Master");
-
-        if (string.IsNullOrWhiteSpace(masterConnectionString))
+        for (int attempt = 1; attempt <= MaxProbeAttempts; attempt++)
         {
-            return ProbeResult.Unreachable(
-                "appsettings.json içinde ConnectionStrings:Master tanımlı değil.");
+            using var scope = services.CreateScope();
+            IConfiguration configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+            string? masterConnectionString = configuration.GetConnectionString("Master");
+
+            if (string.IsNullOrWhiteSpace(masterConnectionString))
+            {
+                return ProbeResult.Unreachable(
+                    "appsettings.json içinde ConnectionStrings:Master tanımlı değil.");
+            }
+
+            string databaseName = ServiceRegistrar.ReadDatabaseName(masterConnectionString);
+
+            if (string.IsNullOrWhiteSpace(databaseName))
+            {
+                return ProbeResult.Unreachable("Bağlantı dizesinde Initial Catalog boş.");
+            }
+
+            var builder = new SqlConnectionStringBuilder(masterConnectionString)
+            {
+                InitialCatalog = "master",
+                ConnectTimeout = ProbeTimeoutSeconds,
+                CommandTimeout = ProbeTimeoutSeconds
+            };
+
+            try
+            {
+                await using var connection = new SqlConnection(builder.ConnectionString);
+
+                await connection.OpenAsync();
+
+                await using SqlCommand command = connection.CreateCommand();
+                command.CommandText = "SELECT 1 FROM sys.databases WHERE name = @name";
+                command.Parameters.Add("@name", SqlDbType.NVarChar, 128).Value = databaseName;
+
+                object? result = await command.ExecuteScalarAsync();
+
+                if (result is not null)
+                {
+                    return ProbeResult.Exists;
+                }
+
+                return ProbeResult.Missing;
+            }
+            catch (Exception ex) when (attempt < MaxProbeAttempts)
+            {
+                lastException = ex;
+                
+                // Kısa bir gecikme sonra tekrar dene
+                await Task.Delay(ProbeRetryDelay);
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+            }
         }
 
-        string databaseName = ServiceRegistrar.ReadDatabaseName(masterConnectionString);
-
-        if (string.IsNullOrWhiteSpace(databaseName))
-        {
-            return ProbeResult.Unreachable("Bağlantı dizesinde Initial Catalog boş.");
-        }
-
-        var builder = new SqlConnectionStringBuilder(masterConnectionString)
-        {
-            InitialCatalog = "master",
-            ConnectTimeout = ProbeTimeoutSeconds,
-            CommandTimeout = ProbeTimeoutSeconds
-        };
-
+        // Tüm denemeler başarısız oldu
+        string errorMessage = lastException?.Message ?? "Bilinmeyen hata";
+        
+        // Hata log dosyasına da yaz (debugger olmadan da görülebilir)
+        string logMessage = $"[DatabaseInitializer] Sunucuya ulaşılamadı ({MaxProbeAttempts} deneme sonrası): {errorMessage}";
+        System.Diagnostics.Debug.WriteLine(logMessage);
+        
         try
         {
-            await using var connection = new SqlConnection(builder.ConnectionString);
-
-            await connection.OpenAsync();
-
-            await using SqlCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT 1 FROM sys.databases WHERE name = @name";
-            command.Parameters.Add("@name", SqlDbType.NVarChar, 128).Value = databaseName;
-
-            object? result = await command.ExecuteScalarAsync();
-
-            return result is null
-                ? ProbeResult.Missing
-                : ProbeResult.Exists;
+            string logPath = Path.Combine(AppContext.BaseDirectory, "logs", "crash.log");
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+            File.AppendAllText(logPath, $"[{DateTimeOffset.Now:O}] {logMessage}{Environment.NewLine}");
         }
-        catch (Exception ex)
+        catch
         {
-            System.Diagnostics.Debug.WriteLine(
-                $"[DatabaseInitializer] Sunucuya ulaşılamadı: {ex.Message}");
-
-            return ProbeResult.Unreachable(ex.Message);
+            // Log yazma hatası yutulur; ana hata yine de kullanıcıya gösterilir
         }
+
+        return ProbeResult.Unreachable(errorMessage);
     }
 
     /// <summary>Yoklama sonucu; hata durumunda ayrıntıyı da taşır.</summary>

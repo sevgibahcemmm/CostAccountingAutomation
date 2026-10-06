@@ -62,8 +62,19 @@ public sealed record ProvisioningLockAttempt(
 /// </para>
 /// <para>
 /// Kilit <b>oturum</b> kapsamlıdır (<c>@LockOwner = 'Session'</c>). Bu
-/// bilinçli bir seçimdir: kilidi tutan bağlantı ayrı ve uzun ömürlüdür, iş
-/// bittikten sonra kapatılır. Böylece işlem çökse bile "ölmüş" kilit kalmaz.
+/// bilinçli bir seçimdir: kilit, iş bittikten sonra otomatik olarak serbest
+/// kalır ve süreç çökse bile "ölmüş" kilit kalmaz.
+/// </para>
+/// <para>
+/// <b>Serbest bırakma</b> bu yüzden açıkça yapılmalıdır. Oturum kapsamlı kilit,
+/// bağlantı <c>Dispose</c> edildiğinde değil, <b>fiziksel bağlantı kapandığında</b>
+/// bırakılır. Bağlantı havuzu varsayılan olarak açık olduğu için
+/// <c>SqlConnection.Dispose()</c> soketi kapatmaz, bağlantıyı havuza iade
+/// eder; oturum yaşamaya devam eder ve kilit elde kalır. Bu, uygulamanın
+/// bütün ömrü boyunca kurulum kilidini tutması ve ikinci bir örneğin
+/// <see cref="ProvisioningLockTimeoutException"/> ile dakikalarca beklemesi
+/// anlamına gelirdi. Bu nedenle bağlantı havuz dışı açılır ve kilit ayrıca
+/// <c>sp_releaseapplock</c> ile serbest bırakılır.
 /// </para>
 /// </remarks>
 public sealed class ProvisioningLock : IAsyncDisposable
@@ -72,11 +83,13 @@ public sealed class ProvisioningLock : IAsyncDisposable
     private const int SqlTimeoutReturnCode = -1;
 
     private readonly SqlConnection _connection;
+    private readonly string _resourceName;
     private bool _disposed;
 
-    private ProvisioningLock(SqlConnection connection)
+    private ProvisioningLock(SqlConnection connection, string resourceName)
     {
         _connection = connection;
+        _resourceName = resourceName;
     }
 
     /// <summary>
@@ -100,7 +113,12 @@ public sealed class ProvisioningLock : IAsyncDisposable
     {
         var builder = new SqlConnectionStringBuilder(connectionString)
         {
-            InitialCatalog = "master"
+            InitialCatalog = "master",
+
+            // Kilit bağlantısı havuza girmez. Oturum kapsamlı kilit yalnızca
+            // fiziksel bağlantı kapanınca serbest kalır; havuzda kalan bir
+            // bağlantı kilidi uygulama kapanana kadar tutmaya devam eder.
+            Pooling = false
         };
 
         // Kilit alma işleminin kendisi uzun sürebilir (bekleme). Bu yüzden
@@ -137,7 +155,7 @@ public sealed class ProvisioningLock : IAsyncDisposable
             {
                 return new ProvisioningLockAttempt(
                     ProvisioningLockOutcome.Acquired,
-                    Acquired(connection));
+                    new ProvisioningLock(connection, resourceName));
             }
 
             await connection.DisposeAsync().ConfigureAwait(false);
@@ -155,9 +173,6 @@ public sealed class ProvisioningLock : IAsyncDisposable
             throw;
         }
     }
-
-    private static ProvisioningLock Acquired(SqlConnection connection) =>
-        new(connection);
 
     /// <summary>
     /// Kurulum kilidini alır; alınamazsa açıklayıcı bir hata fırlatır.
@@ -202,6 +217,18 @@ public sealed class ProvisioningLock : IAsyncDisposable
     /// <summary>
     /// Kilit bağlantısını kapatır ve sunucudaki kilidi serbest bırakır.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Serbest bırakma önce <c>sp_releaseapplock</c> ile yapılır, bağlantı
+    /// sonra kapanır. Ters sıra hatalıdır: bağlantı bir kez kapandığında
+    /// oturum kapsamlı kilit zaten kendiliğinden bırakılır ve
+    /// <c>sp_releaseapplock</c> çağrısının yapılacağı bir oturum kalmaz.
+    /// </para>
+    /// <para>
+    /// Bağlantı zaten havuz dışı açıldığı için kapatma işlemi oturumu da
+    /// sonlandırır; serbest bırakma başarısız olsa bile kilit kalmaz.
+    /// </para>
+    /// </remarks>
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -211,6 +238,30 @@ public sealed class ProvisioningLock : IAsyncDisposable
 
         _disposed = true;
 
-        await _connection.DisposeAsync().ConfigureAwait(false);
+        try
+        {
+            await using SqlCommand release = _connection.CreateCommand();
+
+            release.CommandText = """
+                EXEC sys.sp_releaseapplock
+                     @Resource = @resource,
+                     @LockOwner = 'Session';
+                """;
+
+            release.Parameters.Add("@resource", SqlDbType.NVarChar, 255).Value = _resourceName;
+
+            await release.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[ProvisioningLock] Kilit açıkça serbest bırakılamadı: {ex.Message}");
+
+            // Yutulur: bağlantının kapanması da kilidi bırakacaktır.
+        }
+        finally
+        {
+            await _connection.DisposeAsync().ConfigureAwait(false);
+        }
     }
 }

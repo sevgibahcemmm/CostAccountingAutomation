@@ -66,11 +66,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             //
             // pnlHeader
             //
-            pnlHeader.Dock = DockStyle.Top;
+pnlHeader.Dock = DockStyle.Top;
             pnlHeader.Location = new Point(0, 0);
             pnlHeader.Name = "pnlHeader";
             pnlHeader.Padding = new Padding(16, 12, 16, 12);
-            pnlHeader.Size = new Size(880, 62);
+            pnlHeader.Size = new Size(460, 62);
             pnlHeader.TabIndex = 0;
             //
             // lblTitle
@@ -90,9 +90,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             lblSubtitle.Appearance.Options.UseTextOptions = true;
             lblSubtitle.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblSubtitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblSubtitle.Location = new Point(20, 34);
+lblSubtitle.Location = new Point(20, 34);
             lblSubtitle.Name = "lblSubtitle";
-            lblSubtitle.Size = new Size(760, 18);
+            lblSubtitle.Size = new Size(420, 18);
             lblSubtitle.TabIndex = 1;
             lblSubtitle.Text = string.Empty;
             //
@@ -116,15 +116,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             txtSearch.Properties.Appearance.Options.UseFont = true;
             txtSearch.Properties.NullText = "Sicil numarası, TC kimlik numarası, ad soyad veya kullanıcı adı yazın";
             txtSearch.Properties.Padding = new Padding(26, 2, 2, 2);
-            txtSearch.Size = new Size(840, 26);
+txtSearch.Size = new Size(420, 26);
             txtSearch.TabIndex = 1;
             //
             // gridRecipients
             //
-            gridRecipients.Location = new Point(20, 128);
+gridRecipients.Location = new Point(20, 128);
             gridRecipients.MainView = viewRecipients;
             gridRecipients.Name = "gridRecipients";
-            gridRecipients.Size = new Size(840, 250);
+            gridRecipients.Size = new Size(420, 250);
             gridRecipients.TabIndex = 2;
             gridRecipients.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { viewRecipients });
             //
@@ -144,17 +144,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             lblSelection.Appearance.Options.UseTextOptions = true;
             lblSelection.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblSelection.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblSelection.Location = new Point(20, 384);
+lblSelection.Location = new Point(20, 384);
             lblSelection.Name = "lblSelection";
-            lblSelection.Size = new Size(560, 18);
+            lblSelection.Size = new Size(280, 18);
             lblSelection.TabIndex = 3;
             lblSelection.Text = "Kimse seçilmedi";
             //
             // btnClearSelection
             //
-            btnClearSelection.Location = new Point(690, 382);
+btnClearSelection.Location = new Point(310, 382);
             btnClearSelection.Name = "btnClearSelection";
-            btnClearSelection.Size = new Size(170, 26);
+            btnClearSelection.Size = new Size(130, 26);
             btnClearSelection.TabIndex = 4;
             btnClearSelection.Text = "Seçimi Temizle";
             //
@@ -178,7 +178,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             txtSubject.Properties.Appearance.Options.UseFont = true;
             txtSubject.Properties.NullText = "Konu (isteğe bağlı)";
             txtSubject.Properties.Padding = new Padding(26, 2, 2, 2);
-            txtSubject.Size = new Size(840, 26);
+txtSubject.Size = new Size(420, 26);
             txtSubject.TabIndex = 6;
             //
             // lblBody
@@ -201,29 +201,29 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             txtBody.Properties.Appearance.Options.UseFont = true;
             txtBody.Properties.NullText = "Mesajınızı yazın...";
             txtBody.Properties.Padding = new Padding(4, 4, 4, 4);
-            txtBody.Size = new Size(840, 110);
+txtBody.Size = new Size(420, 110);
             txtBody.TabIndex = 8;
             //
             // btnSend
             //
             btnSend.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnSend.Location = new Point(690, 610);
+btnSend.Location = new Point(300, 610);
             btnSend.Name = "btnSend";
-            btnSend.Size = new Size(170, 36);
+            btnSend.Size = new Size(140, 36);
             btnSend.TabIndex = 9;
             btnSend.Text = "Gönder";
             //
             // btnCancel
             //
-            btnCancel.Location = new Point(600, 610);
+            btnCancel.Location = new Point(202, 610);
             btnCancel.Name = "btnCancel";
-            btnCancel.Size = new Size(80, 36);
+            btnCancel.Size = new Size(90, 36);
             btnCancel.TabIndex = 10;
             btnCancel.Text = "Vazgeç";
             //
             // NewMessageForm
             //
-            ClientSize = new Size(880, 660);
+            ClientSize = new Size(460, 660);
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(lblSubtitle);
             Controls.Add(gridRecipients);
@@ -238,7 +238,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             Controls.Add(btnSend);
             Controls.Add(btnCancel);
             Controls.Add(pnlHeader);
-            MinimumSize = new Size(700, 560);
+            MinimumSize = new Size(400, 620);
             Name = "NewMessageForm";
             ShowInTaskbar = false;
             Text = "Yeni Mesaj";

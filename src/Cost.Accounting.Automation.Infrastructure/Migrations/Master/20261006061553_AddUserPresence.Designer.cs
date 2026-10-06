@@ -4,6 +4,7 @@ using Cost.Accounting.Automation.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    partial class MasterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261006061553_AddUserPresence")]
+    partial class AddUserPresence
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,9 +172,6 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeliveredAt")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DuplicateKey")
                         .HasMaxLength(512)

@@ -35,7 +35,25 @@ public sealed class MessageDto
     /// <summary>Mesaj alıcı tarafından okunmuş mu.</summary>
     public bool IsRead { get; set; }
 
+    /// <summary>Mesaj alıcının ekranında gösterilmiş mi (teslim edildi).</summary>
+    public bool IsDelivered { get; set; }
+
     public DateTimeOffset SentAt { get; set; }
+
+    /// <summary>
+    /// Mesajın durum tiki. Karşı taraftan gelen mesajlarda boştur — tik
+    /// yalnızca gönderdiğimiz mesajlar için anlamlıdır.
+    /// </summary>
+    /// <remarks>
+    /// WhatsApp'taki gösterimle aynı: tek tik gönderildi, gri çift tik teslim
+    /// edildi, mavi çift tik okundu.
+    /// </remarks>
+    public string DeliveryMark => !SentByCurrentUser
+        ? string.Empty
+        : IsRead ? "✓✓" : IsDelivered ? "✓✓" : "✓";
+
+    /// <summary>Tik rengi: okunduğunda mavi, teslim edildiğinde gri.</summary>
+    public bool DeliveryIsRead => SentByCurrentUser && IsRead;
 }
 
 internal sealed class MessageConversationQueryHandler(
@@ -79,6 +97,7 @@ internal sealed class MessageConversationQueryHandler(
                 Body = m.Body.Value,
                 IsAnnouncement = m.IsAnnouncement,
                 IsRead = m.ReadState.Value,
+                IsDelivered = m.DeliveredAt is not null,
                 SentAt = m.CreatedAt
             })
             .ToList();

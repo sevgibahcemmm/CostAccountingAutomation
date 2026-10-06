@@ -30,7 +30,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
     /// okunma durumu kişi bazında izlenebilir.
     /// </para>
     /// </remarks>
-    public sealed partial class NewMessageForm : XtraForm
+    public sealed partial class NewMessageForm : XtraFormMdiBase
     {
         /// <summary>Arama kutusu boşaltıldıktan sonra bekleme süresi.</summary>
         private const int SearchDebounceMilliseconds = 300;
@@ -46,7 +46,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
 
         private System.Windows.Forms.Timer? _searchTimer;
 
-        public NewMessageForm(bool announcement)
+        public NewMessageForm(bool announcement) : base("Yeni Mesaj")
         {
             _announcement = announcement;
 
@@ -87,6 +87,9 @@ ConfigureGrid();
             btnSend.Click += async (_, _) => await SendAsync();
             txtSearch.TextChanged += TxtSearch_TextChanged;
             txtBody.KeyDown += TxtBody_KeyDown;
+
+            // Konu alanından da Enter ile gönderilebilir.
+            txtSubject.KeyDown += TxtBody_KeyDown;
             viewRecipients.SelectionChanged += (_, _) => UpdateSelectionLabel();
             FormClosed += (_, _) => _completed.TrySetResult();
         }
@@ -167,6 +170,10 @@ ConfigureGrid();
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+
+            // Yazma ekranı da konuşma ekranı gibi ekranı kaplamaz; MDI alanının
+            // ortasında dar bir kart olarak açılır.
+            CenterInMdiClient();
 
             // Alıcı listesi ilk açılışta bir kez yüklenir. Daha önce
             // OnShow/Shown yerine OnLoad kullanılmıyordu: yazma ekranı MDI
@@ -267,14 +274,28 @@ ConfigureGrid();
             btnClearSelection.Enabled = selected.Count > 0;
         }
 
-        /// <summary>Ctrl+Enter ile gönderme kısayolu.</summary>
+        /// <summary>
+        /// <b>Enter</b> gönderir; <b>Shift+Enter</b> satır atlar.
+        /// </summary>
+        /// <remarks>
+        /// Konuşma penceresiyle aynı davranış. Alıcı seçilmemişse gönderme
+        /// düğmesi pasif olduğu için Enter da bir şey yapmaz.
+        /// </remarks>
         private async void TxtBody_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.Control && e.KeyCode == Keys.Enter && btnSend.Enabled)
+            if (e.KeyCode != Keys.Enter || e.Shift)
             {
-                e.SuppressKeyPress = true;
-                await SendAsync();
+                return;
             }
+
+            if (!btnSend.Enabled)
+            {
+                return;
+            }
+
+            e.SuppressKeyPress = true;
+
+            await SendAsync();
         }
 
         private async Task SendAsync()

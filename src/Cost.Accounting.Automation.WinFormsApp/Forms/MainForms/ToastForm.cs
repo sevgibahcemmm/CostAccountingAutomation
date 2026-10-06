@@ -50,6 +50,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private int _durationMs;
         private int _progressStartWidth;
         private Point _targetLocation;
+        private Point? _anchor;
+
+        /// <summary>Baloncuğa basıldığında çalışacak iş (bildirim tıklanabilir).</summary>
+        private Action? _onClick;
 
         public ToastForm()
         {
@@ -63,6 +67,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _btnClose.MouseLeave += (_, _) => _btnClose.Appearance.ForeColor = SkinTheme.HighContrastText;
             _btnClose.Appearance.ForeColor = SkinTheme.HighContrastText;
 
+            // "Ahmet size mesaj gönderdi" baloncuğuna basmak, o konuşmayı
+            // doğrudan açar. Kapat düğmesi hariç tüm yüzey tıklanabilir; alt
+            // denetimler tıklamayı yuttuğu için üzerindeki metin, ikon ve
+            // içerik paneline de dinleyici bağlanır.
+            Click += (_, _) => InvokeClick();
+            _pnlContentArea.Click += (_, _) => InvokeClick();
+            _lblIcon.Click += (_, _) => InvokeClick();
+            _lblTitle.Click += (_, _) => InvokeClick();
+            _lblMessage.Click += (_, _) => InvokeClick();
+
             _timer = new System.Windows.Forms.Timer();
             _timer.Tick += OnAnimationTick;
         }
@@ -70,7 +84,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         /// <summary>
         /// Belirtilen mesaj ve tip ile toast bildirimi ekrana getirir.
         /// </summary>
-        public void ShowToast(string message, ToastType type, int durationMs = 3000)
+        /// <param name="anchor">
+        /// Bildirimin çıkacağı ekran noktası. Verilirse baloncuk o noktanın
+        /// (örneğin durum çubuğundaki çevrimiçi göstergesinin) hemen üstünden
+        /// yükselir; verilmezse sağ üst köşeden kayar.
+        /// </param>
+        /// <param name="onClick">
+        /// Baloncuğa basıldığında çalışacak iş. Bildirimlerin "tıkla ve aç"
+        /// davranışı için kullanılır; örneğin bir mesaj bildirimi ilgili
+        /// konuşmayı açar. <c>null</c> ise baloncuk tıklanamaz.
+        /// </param>
+        public void ShowToast(string message, ToastType type, int durationMs = 3000, Point? anchor = null, Action? onClick = null)
         {
             Color accentColor = GetThemeColor(type);
 
@@ -108,7 +132,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _progressStartWidth = _progressTrack.Width;
             _durationMs = Math.Max(600, durationMs);
 
-            PositionTopRight();
+            _onClick = onClick;
+
+            System.Windows.Forms.Cursor cursor = onClick is null ? System.Windows.Forms.Cursors.Default : System.Windows.Forms.Cursors.Hand;
+            Cursor = cursor;
+            _pnlContentArea.Cursor = cursor;
+            _lblIcon.Cursor = cursor;
+            _lblTitle.Cursor = cursor;
+            _lblMessage.Cursor = cursor;
+
+            PositionTopRight(anchor);
             Opacity = 0;
 
             if (!IsHandleCreated)
@@ -158,27 +191,44 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Region = new Region(AuthFormStyles.GetRoundedRectPath(new Rectangle(0, 0, Width, Height), CornerRadius));
         }
 
-        private void PositionTopRight()
+        private void PositionTopRight(Point? anchor)
         {
             ActiveToasts.Add(this);
             FormClosed += OnToastClosed;
+            _anchor = anchor;
 
+            _targetLocation = CalculateTarget(ActiveToasts.Count - 1);
+            Location = new Point(_targetLocation.X + SlideDistance, _targetLocation.Y);
+        }
+
+        /// <summary>
+        /// Verilen çapaya göre bildirimin yerleşimini hesaplar.
+        /// </summary>
+        /// <remarks>
+        /// Çapa varsa baloncuk, çapa noktasının (durum çubuğu göstergesi) soluna
+        /// ve üstüne yerleşir; yığın yukarı doğru büyür. Çapa yoksa eski davranış
+        /// korunur: sağ üst köşe ve aşağı doğru yığın.
+        /// </remarks>
+        private Point CalculateTarget(int index)
+        {
             Rectangle workingArea = Screen.PrimaryScreen!.WorkingArea;
-            int index = ActiveToasts.Count - 1;
 
-            _targetLocation = new Point(
+            if (_anchor is { } origin)
+            {
+                int x = Math.Max(workingArea.Left, origin.X - Width - Offset);
+                int y = origin.Y - 12 - ((index + 1) * (Height + StackSpacing));
+
+                return new Point(x, Math.Max(workingArea.Top + 4, y));
+            }
+
+            return new Point(
                 workingArea.Right - Width - Offset,
                 workingArea.Top + Offset + index * (Height + StackSpacing));
-
-            Location = new Point(_targetLocation.X + SlideDistance, _targetLocation.Y);
         }
 
         private void Reposition(int index)
         {
-            Rectangle workingArea = Screen.PrimaryScreen!.WorkingArea;
-            _targetLocation = new Point(
-                workingArea.Right - Width - Offset,
-                workingArea.Top + Offset + index * (Height + StackSpacing));
+            _targetLocation = CalculateTarget(index);
             Location = _targetLocation;
         }
 
@@ -243,6 +293,36 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 _exitWatch.Restart();
                 _timer.Interval = 10;
             }
+        }
+
+        /// <summary>
+        /// Tıklanan bildirimin eylemini tetikler ve baloncuğu kapatır.
+        /// </summary>
+        /// <remarks>
+        /// Eylem yalnızca bir kez çalıştırılır (ikinci tıklamada baloncuk
+        /// zaten çıkış hâlindedir). Dinleyici başka bir biçimde çökerse
+        /// bildirim buna takılmadan kaybolur.
+        /// </remarks>
+        private void InvokeClick()
+        {
+            if (_onClick is null || _phase == ToastPhase.Exit)
+            {
+                return;
+            }
+
+            Action? action = _onClick;
+            _onClick = null;
+
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                Tools.CrashLog.WriteException("ToastForm.InvokeClick", ex);
+            }
+
+            Dismiss();
         }
 
         private void OnToastClosed(object? sender, FormClosedEventArgs e)

@@ -10,7 +10,20 @@ using TS.Result;
 
 namespace Cost.Accounting.Automation.Application.Messages;
 
-/// <summary>Kullanıcının konuşma listesi (gelen kutusu).</summary>
+/// <summary>Kullanıcının konuşma listesi (gelen + giden).</summary>
+/// <remarks>
+/// <para>
+/// Konuşma listesi <b>her iki yönü</b> kapsar. Yalnızca gelen kutusu okunursa
+/// kullanıcı birine ilk mesajı gönderdiğinde listede hiçbir şey görünmez ve
+/// karşı taraf cevap verene kadar da görünmez. Sohbet uygulamalarında yazdığın
+/// kişi <b>anında</b> listede belirir; son mesajın önizlemesi de her iki yönden
+/// gelen en güncel satırdır.
+/// </para>
+/// <para>
+/// Okunmamış sayısı yalnızca <b>alınan</b> mesajları sayar. Gönderdiğiniz
+/// mesajlar okunmamış sayısına girmez.
+/// </para>
+/// </remarks>
 [Permission(MessagePermissions.View)]
 public sealed record MessageInboxQuery : IRequest<Result<List<ConversationDto>>>;
 
@@ -42,8 +55,23 @@ public sealed class ConversationDto
 
     public DateTimeOffset LastMessageAt { get; set; }
 
-    /// <summary>Bu konuşmada okunmamış mesaj sayısı.</summary>
+    /// <summary>Bu konuşmada bana gelen okunmamış mesaj sayısı.</summary>
     public int UnreadCount { get; set; }
+
+    /// <summary>
+    /// Son mesajı <b>ben</b> mi gönderdim? Önizlemede "siz:" ön eki ve
+    /// teslim/okunma tiki için gereklidir.
+    /// </summary>
+    public bool LastMessageIsMine { get; set; }
+
+    /// <summary>
+    /// Son mesaj teslim edildi mi? Yalnızca benim gönderdiğim mesajlar için
+    /// anlamlıdır.
+    /// </summary>
+    public bool LastMessageDelivered { get; set; }
+
+    /// <summary>Son mesaj okundu mu? (yalnızca benim gönderdiğim mesaj için)</summary>
+    public bool LastMessageRead { get; set; }
 
     /// <summary>Karşı tarafın duyuruları mı? Duyurular ayrı başlıkta toplanır.</summary>
     public bool IsAnnouncementChannel { get; set; }
@@ -75,15 +103,20 @@ internal sealed class MessageInboxQueryHandler(
     {
         var me = new IdentityId(claimContext.GetUserId());
 
-        var inbox = await messageRepository.GetInboxAsync(me, cancellationToken);
+        // Gelen + giden birlikte. Gelen kutusu tek başına kullanılırsa kullanıcı
+        // ilk mesajı gönderdiği kişiyi listede göremez.
+        var conversation = await messageRepository.GetConversationsAsync(me, cancellationToken);
 
-        if (inbox.Count == 0)
+        if (conversation.Count == 0)
         {
             return new List<ConversationDto>();
         }
 
         // Karşı tarafların kimliği tek sorguda çözülür.
-        var counterpartIds = inbox.Select(m => m.SenderId).Distinct().ToArray();
+        var counterpartIds = conversation
+            .Select(m => m.SenderId.Value == me.Value ? m.RecipientId : m.SenderId)
+            .Distinct()
+            .ToArray();
 
         var counterpartNames = await userRepository
             .Where(u => counterpartIds.Contains(u.Id))
@@ -104,13 +137,20 @@ internal sealed class MessageInboxQueryHandler(
 
         var users = counterpartNames.ToDictionary(u => u.Id.Value);
 
-        // Konuşma başına gruplama: aynı gönderenden gelen mesajlar tek listede
-        // birleşir. Duyurular ayrı kanal olarak tutulur, çünkü gönderenle
-        // birebir yazışma ile herkese duyuru farklı bir konuşmadır.
-        var conversations = new List<ConversationDto>();
+        List<ConversationDto> conversations = new();
 
-        foreach (var group in inbox.GroupBy(m => m.SenderId))
+        // Konuşma başına gruplama: aynı karşı tarafla paylaşılan mesajlar tek
+        // satırda birleşir. Duyurular ayrı kanal olarak tutulur, çünkü yönetici
+        // duyuruları ile birebir yazışma farklı bir konuşmadır.
+        foreach (var group in conversation.GroupBy(m => m.SenderId.Value == me.Value
+            ? m.RecipientId.Value
+            : m.SenderId.Value))
         {
+            if (!users.TryGetValue(group.Key, out var counterpart))
+            {
+                continue;
+            }
+
             List<UserMessage> ordered = group
                 .OrderByDescending(m => m.CreatedAt)
                 .ThenByDescending(m => m.Id.Value)
@@ -118,34 +158,67 @@ internal sealed class MessageInboxQueryHandler(
 
             UserMessage last = ordered[0];
 
-            bool isAnnouncement = ordered.All(m => m.IsAnnouncement);
-
-            if (!users.TryGetValue(group.Key.Value, out var counterpart))
+            // Aynı kişiye hem duyuru hem özel mesaj gitmiş olabilir. İkisi tek
+            // başlık altında birleşirse duyurular kişisel konuşma kanalında
+            // kaybolur; bu yüzden kanal başına ayrı satır üretilir.
+            foreach (var channel in SplitByChannel(ordered))
             {
-                continue;
+                UserMessage channelLast = channel[0];
+
+                conversations.Add(new ConversationDto
+                {
+                    CounterpartId = counterpart.Id.Value,
+                    CounterpartFullName = counterpart.FullName,
+                    CounterpartRegistryNumber = counterpart.RegistryNumber,
+                    CounterpartTcNo = string.IsNullOrWhiteSpace(counterpart.TcNo) ? null : counterpart.TcNo,
+                    CounterpartUserName = counterpart.UserName,
+                    CounterpartCompanyName = companyNames.GetValueOrDefault(counterpart.CompanyId.Value),
+                    LastSubject = channelLast.Subject?.Value,
+                    LastPreview = Preview(channelLast.Body.Value),
+                    LastMessageId = channelLast.Id.Value,
+                    LastMessageAt = channelLast.CreatedAt,
+
+                    // Okunmamış yalnızca bana gelenlerdir; kendi gönderdiğim
+                    // mesajlar sayılmaz.
+                    UnreadCount = channel.Count(m =>
+                        m.RecipientId.Value == me.Value && m.ReadState.Value == false),
+
+                    LastMessageIsMine = channelLast.SenderId.Value == me.Value,
+                    LastMessageDelivered = channelLast.DeliveredAt is not null,
+                    LastMessageRead = channelLast.ReadState.Value,
+                    IsAnnouncementChannel = channel.All(m => m.IsAnnouncement)
+                });
             }
-
-            conversations.Add(new ConversationDto
-            {
-                CounterpartId = counterpart.Id.Value,
-                CounterpartFullName = counterpart.FullName,
-                CounterpartRegistryNumber = counterpart.RegistryNumber,
-                CounterpartTcNo = string.IsNullOrWhiteSpace(counterpart.TcNo) ? null : counterpart.TcNo,
-                CounterpartUserName = counterpart.UserName,
-                CounterpartCompanyName = companyNames.GetValueOrDefault(counterpart.CompanyId.Value),
-                LastSubject = last.Subject?.Value,
-                LastPreview = Preview(last.Body.Value),
-                LastMessageId = last.Id.Value,
-                LastMessageAt = last.CreatedAt,
-                UnreadCount = ordered.Count(m => m.ReadState.Value == false),
-                IsAnnouncementChannel = isAnnouncement
-            });
         }
 
         return conversations
             .OrderByDescending(c => c.LastMessageAt)
             .ThenByDescending(c => c.LastMessageId)
             .ToList();
+    }
+
+    /// <summary>
+    /// Aynı karşı tarafın mesajlarını kanala göre böler: duyuru ve kişisel
+    /// mesajlar ayrı listeler hâlinde döner. Her liste yeniden eskiye sıralıdır.
+    /// </summary>
+    private static List<List<UserMessage>> SplitByChannel(List<UserMessage> orderedMessages)
+    {
+        List<UserMessage> announcements = orderedMessages.Where(m => m.IsAnnouncement).ToList();
+        List<UserMessage> personal = orderedMessages.Where(m => !m.IsAnnouncement).ToList();
+
+        List<List<UserMessage>> channels = [];
+
+        if (personal.Count > 0)
+        {
+            channels.Add(personal);
+        }
+
+        if (announcements.Count > 0)
+        {
+            channels.Add(announcements);
+        }
+
+        return channels;
     }
 
     private async Task<Dictionary<Guid, string>> LoadCompanyNamesAsync(

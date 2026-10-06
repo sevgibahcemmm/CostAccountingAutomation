@@ -6,25 +6,33 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
         private DevExpress.XtraEditors.LabelControl lblTitle = null!;
         private DevExpress.XtraEditors.LabelControl lblSubtitle = null!;
         private DevExpress.XtraEditors.PanelControl pnlToolbar = null!;
-        private DevExpress.XtraEditors.SimpleButton btnNewMessage = null!;
         private DevExpress.XtraEditors.SimpleButton btnAnnouncement = null!;
-        private DevExpress.XtraEditors.SimpleButton btnRefresh = null!;
-        private DevExpress.XtraEditors.SimpleButton btnClosePage = null!;
-        private DevExpress.XtraEditors.CheckButton btnUnreadOnly = null!;
-        private DevExpress.XtraGrid.GridControl gridConversations = null!;
-        private DevExpress.XtraGrid.Views.Grid.GridView viewConversations = null!;
+        private DevExpress.XtraEditors.CheckButton btnSound = null!;
+        private DevExpress.XtraEditors.PanelControl pnlContacts = null!;
+        private DevExpress.XtraEditors.PanelControl pnlContactsHeader = null!;
+        private DevExpress.XtraEditors.LabelControl lblContactsTitle = null!;
+        private DevExpress.XtraEditors.LabelControl lblContactsCount = null!;
+        private DevExpress.XtraEditors.TextEdit txtContactSearch = null!;
+        private DevExpress.XtraGrid.GridControl gridUsers = null!;
+        private DevExpress.XtraGrid.Views.Grid.GridView viewUsers = null!;
+        private DevExpress.XtraEditors.PanelControl pnlConversations = null!;
+        private DevExpress.XtraTab.XtraTabControl tabConversations = null!;
         private DevExpress.XtraEditors.LabelControl lblEmpty = null!;
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                gridConversations?.Dispose();
-                btnNewMessage?.Dispose();
+                gridUsers?.Dispose();
+                txtContactSearch?.Dispose();
+                lblContactsCount?.Dispose();
+                lblContactsTitle?.Dispose();
+                pnlContacts?.Dispose();
+                pnlContactsHeader?.Dispose();
+                pnlConversations?.Dispose();
+                tabConversations?.Dispose();
                 btnAnnouncement?.Dispose();
-                btnRefresh?.Dispose();
-                btnClosePage?.Dispose();
-                btnUnreadOnly?.Dispose();
+                btnSound?.Dispose();
                 lblTitle?.Dispose();
                 lblSubtitle?.Dispose();
                 lblEmpty?.Dispose();
@@ -38,16 +46,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             lblTitle = new DevExpress.XtraEditors.LabelControl();
             lblSubtitle = new DevExpress.XtraEditors.LabelControl();
             pnlToolbar = new DevExpress.XtraEditors.PanelControl();
-            btnNewMessage = new DevExpress.XtraEditors.SimpleButton();
             btnAnnouncement = new DevExpress.XtraEditors.SimpleButton();
-            btnRefresh = new DevExpress.XtraEditors.SimpleButton();
-            btnUnreadOnly = new DevExpress.XtraEditors.CheckButton();
-            btnClosePage = new DevExpress.XtraEditors.SimpleButton();
-            gridConversations = new DevExpress.XtraGrid.GridControl();
-            viewConversations = new DevExpress.XtraGrid.Views.Grid.GridView();
+            btnSound = new DevExpress.XtraEditors.CheckButton();
+            pnlContacts = new DevExpress.XtraEditors.PanelControl();
+            pnlContactsHeader = new DevExpress.XtraEditors.PanelControl();
+            lblContactsTitle = new DevExpress.XtraEditors.LabelControl();
+            lblContactsCount = new DevExpress.XtraEditors.LabelControl();
+            txtContactSearch = new DevExpress.XtraEditors.TextEdit();
+            gridUsers = new DevExpress.XtraGrid.GridControl();
+            viewUsers = new DevExpress.XtraGrid.Views.Grid.GridView();
+            pnlConversations = new DevExpress.XtraEditors.PanelControl();
+            tabConversations = new DevExpress.XtraTab.XtraTabControl();
             lblEmpty = new DevExpress.XtraEditors.LabelControl();
             ((System.ComponentModel.ISupportInitialize)pnlHeader).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pnlToolbar).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)txtContactSearch.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pnlContactsHeader).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pnlContacts).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)viewUsers).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridUsers).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pnlConversations).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)tabConversations).BeginInit();
             SuspendLayout();
             //
             // pnlHeader
@@ -56,7 +75,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             pnlHeader.Location = new Point(0, 0);
             pnlHeader.Name = "pnlHeader";
             pnlHeader.Padding = new Padding(16, 12, 16, 12);
-            pnlHeader.Size = new Size(944, 62);
+            pnlHeader.Size = new Size(1080, 62);
             pnlHeader.TabIndex = 0;
             //
             // lblTitle
@@ -78,7 +97,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             lblSubtitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
             lblSubtitle.Location = new Point(20, 34);
             lblSubtitle.Name = "lblSubtitle";
-            lblSubtitle.Size = new Size(700, 18);
+            lblSubtitle.Size = new Size(860, 18);
             lblSubtitle.TabIndex = 1;
             lblSubtitle.Text = "Yükleniyor...";
             //
@@ -88,73 +107,127 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             pnlToolbar.Location = new Point(0, 62);
             pnlToolbar.Name = "pnlToolbar";
             pnlToolbar.Padding = new Padding(14, 8, 14, 8);
-            pnlToolbar.Size = new Size(944, 52);
+            pnlToolbar.Size = new Size(1080, 52);
             pnlToolbar.TabIndex = 1;
-            //
-            // btnNewMessage
-            //
-            btnNewMessage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnNewMessage.Location = new Point(14, 8);
-            btnNewMessage.Name = "btnNewMessage";
-            btnNewMessage.Size = new Size(130, 34);
-            btnNewMessage.TabIndex = 0;
-            btnNewMessage.Text = "Yeni Mesaj";
             //
             // btnAnnouncement
             //
             btnAnnouncement.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnAnnouncement.Location = new Point(152, 8);
+            btnAnnouncement.Location = new Point(14, 8);
             btnAnnouncement.Name = "btnAnnouncement";
             btnAnnouncement.Size = new Size(160, 34);
-            btnAnnouncement.TabIndex = 1;
+            btnAnnouncement.TabIndex = 0;
             btnAnnouncement.Text = "Duyuru Gönder";
-            btnAnnouncement.ToolTip = "Seçili kullanıcılara duyuru olarak gönderir.";
+            btnAnnouncement.ToolTip = "Şirket geneline duyuru iletir (her çalışanın kutusuna ayrı satır düşer).";
             //
-            // btnRefresh
+            // btnSound
             //
-            btnRefresh.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnRefresh.Location = new Point(320, 8);
-            btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(100, 34);
-            btnRefresh.TabIndex = 2;
-            btnRefresh.Text = "Yenile";
+            btnSound.Location = new Point(182, 8);
+            btnSound.Name = "btnSound";
+            btnSound.Size = new Size(150, 34);
+            btnSound.TabIndex = 1;
+            btnSound.Text = "Sesli Bildirim";
+            btnSound.ToolTip = "Biri oturum açtığında ve yeni mesaj geldiğinde ses çalınır.";
             //
-            // btnUnreadOnly
+            // pnlContacts
             //
-            btnUnreadOnly.Location = new Point(428, 8);
-            btnUnreadOnly.Name = "btnUnreadOnly";
-            btnUnreadOnly.Text = "Sadece Okunmamışlar";
-            btnUnreadOnly.Size = new Size(170, 34);
-            btnUnreadOnly.TabIndex = 3;
+            pnlContacts.Dock = DockStyle.Left;
+            pnlContacts.Location = new Point(0, 114);
+            pnlContacts.Name = "pnlContacts";
+            pnlContacts.Padding = new Padding(0, 0, 1, 0);
+            pnlContacts.Size = new Size(380, 486);
+            pnlContacts.TabIndex = 2;
             //
-            // btnClosePage
+            // pnlContactsHeader
             //
-            btnClosePage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnClosePage.Location = new Point(606, 8);
-            btnClosePage.Name = "btnClosePage";
-            btnClosePage.Size = new Size(100, 34);
-            btnClosePage.TabIndex = 4;
-            btnClosePage.Text = "Kapat";
+            // Başlık ve arama kutusu, alttaki Dock=Fill grid'in örtmemesi için
+            // üst kenara yaslanmış ayrı bir panelde durur.
+            pnlContactsHeader.Dock = DockStyle.Top;
+            pnlContactsHeader.Location = new Point(0, 0);
+            pnlContactsHeader.Name = "pnlContactsHeader";
+            pnlContactsHeader.Size = new Size(380, 78);
+            pnlContactsHeader.TabIndex = 0;
             //
-            // gridConversations
+            // lblContactsTitle
             //
-            gridConversations.Dock = DockStyle.Fill;
-            gridConversations.Location = new Point(0, 114);
-            gridConversations.MainView = viewConversations;
-            gridConversations.Name = "gridConversations";
-            gridConversations.Size = new Size(944, 480);
-            gridConversations.TabIndex = 2;
-            gridConversations.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { viewConversations });
+            lblContactsTitle.Appearance.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblContactsTitle.Appearance.Options.UseFont = true;
+            lblContactsTitle.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
+            lblContactsTitle.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            lblContactsTitle.Location = new Point(14, 12);
+            lblContactsTitle.Name = "lblContactsTitle";
+            lblContactsTitle.Size = new Size(190, 18);
+            lblContactsTitle.TabIndex = 0;
+            lblContactsTitle.Text = "Aktif Kullanıcılar";
             //
-            // viewConversations
+            // lblContactsCount
             //
-            viewConversations.GridControl = gridConversations;
-            viewConversations.Name = "viewConversations";
-            viewConversations.OptionsBehavior.Editable = false;
-            viewConversations.OptionsSelection.MultiSelect = false;
-            viewConversations.OptionsView.ShowGroupPanel = false;
-            viewConversations.OptionsView.ShowIndicator = false;
-            viewConversations.OptionsView.ColumnAutoWidth = false;
+            lblContactsCount.Appearance.Font = new Font("Segoe UI", 9F);
+            lblContactsCount.Appearance.Options.UseFont = true;
+            lblContactsCount.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
+            lblContactsCount.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
+            // Sağ kenara sabitlenir: "3 / 12" gibi bir sayaç panel daraldığında
+            // sola yapışıp başlığın üstüne binmemelidir.
+            lblContactsCount.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblContactsCount.Location = new Point(180, 12);
+            lblContactsCount.Name = "lblContactsCount";
+            lblContactsCount.Size = new Size(186, 18);
+            lblContactsCount.TabIndex = 1;
+            lblContactsCount.Text = string.Empty;
+            //
+            // txtContactSearch
+            //
+            txtContactSearch.Location = new Point(12, 40);
+            txtContactSearch.Name = "txtContactSearch";
+            txtContactSearch.Properties.NullText = "Ad, kullanıcı adı veya sicil no ara...";
+            txtContactSearch.Properties.Padding = new Padding(26, 4, 26, 4);
+            txtContactSearch.Size = new Size(356, 30);
+            txtContactSearch.TabIndex = 2;
+            //
+            // gridUsers
+            //
+            gridUsers.Dock = DockStyle.Fill;
+            gridUsers.Location = new Point(0, 78);
+            gridUsers.MainView = viewUsers;
+            gridUsers.Name = "gridUsers";
+            gridUsers.Size = new Size(379, 408);
+            gridUsers.TabIndex = 1;
+            gridUsers.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { viewUsers });
+            //
+            // viewUsers
+            //
+            viewUsers.GridControl = gridUsers;
+            viewUsers.Name = "viewUsers";
+            viewUsers.OptionsBehavior.Editable = false;
+            viewUsers.OptionsSelection.MultiSelect = false;
+            viewUsers.OptionsView.ShowGroupPanel = false;
+            viewUsers.OptionsView.ShowIndicator = false;
+            viewUsers.OptionsView.ColumnAutoWidth = false;
+            //
+            // pnlConversations
+            //
+            // Sağ yarı çoklu sohbet alanıdır: her konuşma bir sekmeye açılır ve
+            // sekmeler üstte yan yana sıralanır; biri açıkken diğeri kapanmaz.
+            // Konuşma açık değilken lblEmpty görünür.
+            pnlConversations.Dock = DockStyle.Fill;
+            pnlConversations.Location = new Point(380, 114);
+            pnlConversations.Name = "pnlConversations";
+            pnlConversations.Padding = new Padding(0, 0, 1, 0);
+            pnlConversations.Size = new Size(700, 486);
+            pnlConversations.TabIndex = 3;
+            //
+            // tabConversations
+            //
+            tabConversations.Dock = DockStyle.Fill;
+            tabConversations.HeaderLocation = DevExpress.XtraTab.TabHeaderLocation.Top;
+            // Çok fazla açık konuşma olduğunda başlıklar alt satıra sarar; böylece
+            // tek kaydırma şeridinde kaybolmaz, hepsi yan yana görünür kalır.
+            tabConversations.MultiLine = DevExpress.Utils.DefaultBoolean.True;
+            tabConversations.Location = new Point(0, 0);
+            tabConversations.Name = "tabConversations";
+            tabConversations.Size = new Size(699, 486);
+            tabConversations.TabIndex = 0;
+            tabConversations.Visible = false;
             //
             // lblEmpty
             //
@@ -163,38 +236,47 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             lblEmpty.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblEmpty.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblEmpty.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblEmpty.Location = new Point(20, 300);
+            lblEmpty.Dock = DockStyle.Fill;
+            lblEmpty.Location = new Point(0, 0);
             lblEmpty.Name = "lblEmpty";
-            lblEmpty.Size = new Size(904, 60);
-            lblEmpty.TabIndex = 5;
-            lblEmpty.Text = "Henüz mesajınız yok.\r\n\"Yeni Mesaj\" ile bir kullanıcıya yazabilir, \"Duyuru Gönder\" ile şirket geneline duyuru iletebilirsiniz.";
+            lblEmpty.Size = new Size(699, 486);
+            lblEmpty.TabIndex = 1;
+            lblEmpty.Text = "Soldaki listeden bir kullanıcı seçin.\r\nSohbetler bu alanda sekmeler hâlinde açılır.";
             //
             // MessagesListForm
             //
-            ClientSize = new Size(944, 594);
-            // Panel içindeki kontroller önce kendi paneline eklenir, sonra
-            // paneller forma eklenir. Bu sıra önemlidir: Dock yerleşimi ekleme
-            // sırasına göre çözülür ve başlık ile araç çubuğu grid'in üstünde
-            // kalmalıdır.
+            ClientSize = new Size(960, 560);
+            // EKLEME SIRASI ÖNEMLİDİR: Dock=Fill denetimler önce, üst/alt kenara
+            // yaslanan (Dock=Top/Bottom) denetimler sonra eklenir. Ters sırada
+            // yaslanan panel, kendisinden önce çözülen Fill panelin altında
+            // kalır ve içerik görünmez.
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(lblSubtitle);
-            pnlToolbar.Controls.Add(btnNewMessage);
             pnlToolbar.Controls.Add(btnAnnouncement);
-            pnlToolbar.Controls.Add(btnRefresh);
-            pnlToolbar.Controls.Add(btnUnreadOnly);
-            pnlToolbar.Controls.Add(btnClosePage);
-            Controls.Add(gridConversations);
+            pnlToolbar.Controls.Add(btnSound);
+            pnlContactsHeader.Controls.Add(lblContactsTitle);
+            pnlContactsHeader.Controls.Add(lblContactsCount);
+            pnlContactsHeader.Controls.Add(txtContactSearch);
+            pnlContacts.Controls.Add(gridUsers);
+            pnlContacts.Controls.Add(pnlContactsHeader);
+            pnlConversations.Controls.Add(lblEmpty);
+            pnlConversations.Controls.Add(tabConversations);
+            Controls.Add(pnlConversations);
+            Controls.Add(pnlContacts);
             Controls.Add(pnlToolbar);
             Controls.Add(pnlHeader);
-            Controls.Add(lblEmpty);
-            MinimumSize = new Size(720, 420);
+            MinimumSize = new Size(800, 440);
             Name = "MessagesListForm";
             ShowInTaskbar = false;
             Text = "Mesajlar";
             ((System.ComponentModel.ISupportInitialize)pnlHeader).EndInit();
             ((System.ComponentModel.ISupportInitialize)pnlToolbar).EndInit();
-            ((System.ComponentModel.ISupportInitialize)viewConversations).EndInit();
-            ((System.ComponentModel.ISupportInitialize)gridConversations).EndInit();
+            ((System.ComponentModel.ISupportInitialize)txtContactSearch.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pnlContactsHeader).EndInit();
+            ((System.ComponentModel.ISupportInitialize)viewUsers).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridUsers).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pnlConversations).EndInit();
+            ((System.ComponentModel.ISupportInitialize)tabConversations).EndInit();
             ResumeLayout(false);
         }
     }

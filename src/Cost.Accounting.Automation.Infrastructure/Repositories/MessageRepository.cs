@@ -86,6 +86,24 @@ internal sealed class MessageRepository : MasterAuditableRepository<UserMessage>
             .AsNoTracking()
             .CountAsync(m => m.RecipientId == recipientId && m.ReadState.Value == false, cancellationToken);
 
+    public Task<List<UserMessage>> GetUnreadAsync(
+        IdentityId recipientId,
+        CancellationToken cancellationToken = default)
+        => this.Context.Set<UserMessage>()
+            .AsNoTracking()
+            .Where(m => m.RecipientId == recipientId && m.ReadState.Value == false)
+            .OrderByDescending(m => m.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+    public Task<List<UserMessage>> GetConversationsAsync(
+        IdentityId userId,
+        CancellationToken cancellationToken = default)
+        => this.Context.Set<UserMessage>()
+            .AsNoTracking()
+            .Where(m => m.SenderId == userId || m.RecipientId == userId)
+            .OrderByDescending(m => m.CreatedAt)
+            .ToListAsync(cancellationToken);
+
     public async Task<bool> MarkAsReadAsync(
         Guid messageId,
         IdentityId recipientId,
@@ -136,4 +154,83 @@ internal sealed class MessageRepository : MasterAuditableRepository<UserMessage>
                 m => (m.SenderId == currentUserId && m.RecipientId == counterpartId)
                      || (m.SenderId == counterpartId && m.RecipientId == currentUserId),
                 cancellationToken);
+
+    /// <summary>
+    /// Karşı tarafın bana gönderdiği okunmamış mesajları okundu sayar ve
+    /// işaretlenen satır sayısını döndürür.
+    /// </summary>
+    /// <remarks>
+    /// Yalnızca <b>bana gelen</b> mesajlar işaretlenir; gönderdiğim mesajların
+    /// okunma durumunu yalnızca alıcının istemcisi yazabilir. İki yönü birden
+    /// işaretlemek, kendi gönderdiğim mesajı anında "okundu" göstermenin
+    /// ötesinde şu hataya da yol açar: gönderdiğim satır aynı zamanda alıcının
+    /// okunmamış kutusundaki satırdır; onu okundu yapınca alıcı tarafında hiç
+    /// bildirim tetiklenmez.
+    /// </remarks>
+    public async Task<int> MarkConversationAsReadAsync(
+        IdentityId recipientId,
+        IdentityId counterpartId,
+        bool announcementScope = false,
+        CancellationToken cancellationToken = default)
+    {
+        // Kanal ayrımı burada gerekmez: duyuru da karşı taraftan bana gelen bir
+        // satırdır ve okunma durumu aynı biçimde belirlenir.
+        List<UserMessage> unread = await this.Context.Set<UserMessage>()
+            .Where(m => m.SenderId == counterpartId
+                && m.RecipientId == recipientId
+                && m.ReadState.Value == false)
+            .ToListAsync(cancellationToken);
+
+        if (unread.Count == 0)
+        {
+            return 0;
+        }
+
+        DateTimeOffset now = DateTimeOffset.Now;
+
+        foreach (UserMessage message in unread)
+        {
+            message.MarkAsRead(now);
+        }
+
+        await Context.SaveChangesAsync(cancellationToken);
+
+        return unread.Count;
+    }
+
+    public async Task<int> MarkConversationAsDeliveredAsync(
+        IdentityId recipientId,
+        IdentityId counterpartId,
+        bool announcementScope = false,
+        CancellationToken cancellationToken = default)
+    {
+        // Yalnızca bana gelenler işaretlenir; gönderdiğim mesajların teslim
+        // durumunu alıcının istemcisi belirler, benim tarafım yazamaz.
+        //
+        // Kanal ayrımı burada gerekmez: duyuru da karşı taraftan bana gelen bir
+        // satırdır ve teslim durumu aynı biçimde belirlenir. Her iki kanal için
+        // aynı sorgu doğrudur.
+        List<UserMessage> pending = await this.Context.Set<UserMessage>()
+            .Where(m => m.SenderId == counterpartId
+                && m.RecipientId == recipientId
+                && m.DeliveredAt == null
+                && m.ReadState.Value == false)
+            .ToListAsync(cancellationToken);
+
+        if (pending.Count == 0)
+        {
+            return 0;
+        }
+
+        DateTimeOffset now = DateTimeOffset.Now;
+
+        foreach (UserMessage message in pending)
+        {
+            message.MarkDelivered(now);
+        }
+
+        await Context.SaveChangesAsync(cancellationToken);
+
+        return pending.Count;
+    }
 }

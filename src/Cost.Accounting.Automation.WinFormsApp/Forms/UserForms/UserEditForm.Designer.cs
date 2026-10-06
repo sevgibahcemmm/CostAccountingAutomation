@@ -401,7 +401,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             txtRegistryNumber.Name = "txtRegistryNumber";
             txtRegistryNumber.Properties.Appearance.Font = new Font("Segoe UI", 9.5F);
             txtRegistryNumber.Properties.Appearance.Options.UseFont = true;
-            txtRegistryNumber.Properties.NullText = "Örn. 7788";
+            txtRegistryNumber.Properties.NullText = "Örn. ab12244";
             txtRegistryNumber.Properties.Padding = new Padding(26, 2, 2, 2);
             txtRegistryNumber.Size = new Size(434, 26);
             txtRegistryNumber.TabIndex = 3;

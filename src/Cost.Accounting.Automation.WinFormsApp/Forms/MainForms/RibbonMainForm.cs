@@ -31,6 +31,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -41,6 +42,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private readonly Dictionary<string, Action> _menuActions = new(StringComparer.OrdinalIgnoreCase);
         private System.Windows.Forms.Timer? _clockTimer;
         private DateTime _tokenExpiry;
+
+        /// <summary>
+        /// Mesaj bildirim bildirimi (sepetteki ürün sayacı gibi).
+        /// </summary>
+        private int _unreadMessageCount;
 
         /// <summary>
         /// Grup ikonları. Anahtar, Designer'da atanan grup Tag'idir (1..8).
@@ -144,7 +150,169 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             xtraTabbedMdiManager.ClosePageButtonShowMode = ClosePageButtonShowMode.InTabControlHeader;
             LoadSessionInfoToStatusBar();
             StartClock();
+            StartLiveMessaging();
             OpenDashboard();
+
+            // Durum çubuğundaki çevrimiçi göstergesi artık bir kısayoldur:
+            // tıklanınca Mesajlar sayfası açılır, bildirim baloncukları da
+            // tam buradan (sağ alt köşeden) yükselir.
+            barButtonItemLiveMessaging.Hint =
+                "Çevrimiçi kullanıcılar — tıklayınca Mesajlar sayfası açılır.";
+            barButtonItemLiveMessaging.ItemClick += (_, _) => OpenMessages();
+            ToastHelper.AnchorProvider = GetLiveStatusAnchor;
+
+            // Bildirim baloncukları artık tıklanabilir: mesaj bildiriminde o
+            // konuşma, diğer bildirimlerde Mesajlar sayfası açılır.
+            ToastHelper.OpenMessages = OpenMessages;
+            ToastHelper.OpenConversation = OpenConversationFromNotification;
+        }
+
+        /// <summary>
+        /// Bildirim baloncuklarının çıkacağı ekran noktası.
+        /// </summary>
+        /// <remarks>
+        /// Nokta, durum çubuğunun sağ (çevrimiçi göstergesi, tarih ve saatin
+        /// durduğu) üst köşesidir. ToastForm bu noktanın soluna ve üstüne
+        /// yerleşerek bildirimin "oradan geldiği" hissini verir.
+        /// </remarks>
+        private Point? GetLiveStatusAnchor()
+        {
+            if (IsDisposed || !ribbonStatusBar.IsHandleCreated)
+            {
+                return null;
+            }
+
+            return ribbonStatusBar.PointToScreen(new Point(ribbonStatusBar.Width, 0));
+        }
+
+        /// <summary>
+        /// Canlı mesajlaşma motorunu başlatır.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Burada başlatılır çünkü oturum bağlamı ancak girişten sonra doludur ve
+        /// motor o bilgiye ihtiyaç duyar.
+        /// </para>
+        /// <para>
+        /// Yetki kontrolü bilinçlidir: mesajlaşma yetkisi olmayan kullanıcı için
+        /// motor çalıştırılmaz. Aksi hâlde "oturum açan kullanıcı" bildirimleri
+        /// ekranda belirecek ama kullanıcı mesaj göndersem bile o bildirimler
+        /// işe yaramayacaktır.
+        /// </para>
+        /// </remarks>
+        private async void StartLiveMessaging()
+        {
+            try
+            {
+                if (!await CurrentUserPermissions.HasAsync(MessagePermissions.View))
+                {
+                    barButtonItemLiveMessaging.Caption = "Mesajlaşma kapalı";
+                    return;
+                }
+
+                LiveMessagingService live =
+                    Program.Services.GetRequiredService<LiveMessagingService>();
+
+                // Bildirimleri gösteren dinleyiciyi çözümlemek yeterlidir:
+                // yapıcısı servise abone olur ve singleton olduğu için uygulama
+                // ömrü boyunca yaşar.
+                _ = Program.Services.GetRequiredService<MessagingNotifier>();
+
+                live.Start(_session.GetUserId());
+
+                live.Polled += LiveMessaging_Polled;
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("RibbonMainForm.StartLiveMessaging", ex);
+            }
+        }
+
+        /// <summary>Durum çubuğundaki çevrimiçi ve okunmamış göstergelerini tazeler.</summary>
+        private void LiveMessaging_Polled(object? sender, EventArgs e)
+        {
+            LiveMessagingService live = Program.Services.GetRequiredService<LiveMessagingService>();
+
+            live.PostToUi(() =>
+            {
+                if (IsDisposed || Disposing)
+                {
+                    return;
+                }
+
+                _unreadMessageCount = live.UnreadTotal;
+
+                // Badge güncelleme (sepetteki ürün sayacı gibi)
+                UpdateMessageBadge(_unreadMessageCount);
+
+                barButtonItemLiveMessaging.Caption =
+                    $"💬  Çevrimiçi: {live.OnlineUserCount}"
+                    + (live.UnreadTotal > 0 ? $"  •  Yeni mesaj: {live.UnreadTotal}" : string.Empty);
+
+                // "Kim yazdı, önizleme ne" bildirimi ve ses, kimliği bilinerek
+                // MessagingNotifier'da gösterilir; burada tekrar toast açılmaz.
+            });
+        }
+
+        private async Task StopLiveMessagingAsync()
+        {
+            LiveMessagingService live =
+                Program.Services.GetRequiredService<LiveMessagingService>();
+
+            live.Polled -= LiveMessaging_Polled;
+
+            await live.StopAsync();
+        }
+
+        /// <summary>
+        /// Canlı mesajlaşma motorunu durdurur ve çıkış bildirimini gönderir.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Çağıran, oturum bağlamını sıfırlamadan önce bu metodu çağırmak zorundadır.
+        /// </para>
+        /// <para>
+        /// Bekleme <c>Task.Run</c> içinde yapılır. Asenkron devam arayüz iş
+        /// parçacığına bağlansaydı, arayüz iş parçacığında beklediğimiz için
+        /// kilitlenme olurdu; <see cref="Task.Run"/> beklemenin güvenli olmasını
+        /// sağlar. Bekleme yalnızca birkaç yüz milisaniyelik bir veritabanı
+        /// turudur ve çıkış anındadır.
+        /// </para>
+        /// </remarks>
+        private void StopLiveMessaging()
+        {
+            try
+            {
+                Task.Run(StopLiveMessagingAsync).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("RibbonMainForm.StopLiveMessaging", ex);
+            }
+        }
+
+        /// <summary>
+        /// Mesaj butonundaki rozet/sayacı günceller (sepetteki ürün sayacı gibi).
+        /// </summary>
+        private void UpdateMessageBadge(int count)
+        {
+            if (IsDisposed || Disposing)
+            {
+                return;
+            }
+
+            if (count > 0)
+            {
+                barButtonItemLiveMessaging.Caption = $"💬 {count}";
+                barButtonItemLiveMessaging.Appearance.ForeColor = Color.FromArgb(255, 68, 68); // Kırmızı
+                barButtonItemLiveMessaging.Appearance.Options.UseForeColor = true;
+            }
+            else
+            {
+                barButtonItemLiveMessaging.Caption = "💬";
+                barButtonItemLiveMessaging.Appearance.ForeColor = Color.Empty;
+                barButtonItemLiveMessaging.Appearance.Options.UseForeColor = false;
+            }
         }
 
         private static Image NormalizeIcon(SvgImage svg, int canvasSize, int innerSize)
@@ -285,7 +453,40 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             MdiFormManager.Instance.OpenForm<MessagesListForm>(this, "Mesajlar");
         }
 
-        private void HandleMenuClick(AccordionControlElement element)
+        /// <summary>
+        /// "X size mesaj gönderdi" bildirimine basıldığında mesaj ekranını açar
+        /// ve o konuşmayı ekranın sağ alanında başlatır.
+        /// </summary>
+        /// <remarks>
+        /// Mesaj ekranı kapalıysa açılır; sohbet burada okunan taraf tarafından
+        /// baloncuklar hâlinde göründükten sonra okunmuş sayılır — gönderende
+        /// mavi "Okundu" tiki ancak alıcı konuşmayı gerçekten açtığında görünür.
+        /// Bildirimin kendisi asla okundu yazmaz.
+        /// </remarks>
+        private void OpenConversationFromNotification(Guid senderId, string senderName)
+        {
+            try
+            {
+                MessagesListForm page = MdiFormManager.Instance.OpenForm<MessagesListForm>(
+                    this, "Mesajlar");
+
+                page.OpenConversationFromNotification(senderId, senderName);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("RibbonMainForm.OpenConversationFromNotification", ex);
+                OpenMessages();
+            }
+        }
+
+        /// <summary>
+        /// Menü öğesi tıklamasını işler. Yetki denetimi varsa öğenin modül
+        /// yetkisinden önce yapılır: kullanıcının görüntüleme yetkisi yoksa
+        /// sayfa hiç açılmaz, yalnızca "yetkiniz yok" bildirimi gösterilir.
+        /// Dashboard ve Çıkış bu denetime takılmaz; Dashboard her kullanıcıya
+        /// açıktır.
+        /// </summary>
+        private async void HandleMenuClick(AccordionControlElement element)
         {
             if (element.Tag is not int index)
             {
@@ -300,6 +501,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 case HomeTag:
                     OpenDashboard();
                     return;
+            }
+
+            if (ModulePermissionCatalog.TryGetMenuViewPermission(element.Name, out string viewPermission)
+                && !await CurrentUserPermissions.HasAsync(viewPermission))
+            {
+                ToastHelper.Show("Bu sayfayı görüntüleme yetkiniz yok.", ToastType.Warning);
+                return;
             }
 
             if (!string.IsNullOrEmpty(element.Name) && _menuActions.TryGetValue(element.Name, out Action? open))
@@ -453,6 +661,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             _restartingToLogin = true;
             _clockTimer?.Stop();
+
+            // Çıkış bildirimi oturum bağlamı hâlâ doluyken gönderilmelidir.
+            // Aksi hâlde komut kimliği okuyamaz ve kullanıcı, kendi çıkışını
+            // yaptığını göremeden "Çevrimiçi" görünmeye devam eder.
+            StopLiveMessaging();
+
             _session.Clear();
 
             XtraLoginForm login = Program.Services.GetRequiredService<XtraLoginForm>();
@@ -506,6 +720,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private void RibbonMainForm_FormClosed(object? sender, FormClosedEventArgs e)
         {
+            // Program kapanıyor. Bu çağrı, çıkışta zaten yapıldıysa hiçbir şey
+            // yapmaz: StopAsync kendi durumunu korur ve ikinci çağrıda çıkar.
+            StopLiveMessaging();
+
             if (_restartingToLogin)
             {
                 return;

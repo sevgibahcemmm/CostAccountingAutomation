@@ -26,6 +26,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemCompanyName = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemUserName = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemRoleName = new DevExpress.XtraBars.BarButtonItem();
+            barButtonItemLiveMessaging = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemLongDate = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemTime = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemExpTime = new DevExpress.XtraBars.BarButtonItem();
@@ -83,6 +84,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ribbonStatusBar.ItemLinks.Add(barButtonItemCompanyName);
             ribbonStatusBar.ItemLinks.Add(barButtonItemUserName);
             ribbonStatusBar.ItemLinks.Add(barButtonItemRoleName);
+            ribbonStatusBar.ItemLinks.Add(barButtonItemLiveMessaging);
             ribbonStatusBar.ItemLinks.Add(barButtonItemLongDate);
             ribbonStatusBar.ItemLinks.Add(barButtonItemTime);
             ribbonStatusBar.ItemLinks.Add(barButtonItemExpTime);
@@ -109,6 +111,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemRoleName.Caption = " ";
             barButtonItemRoleName.Id = 3;
             barButtonItemRoleName.Name = "barButtonItemRoleName";
+            //
+            // barButtonItemLiveMessaging
+            //
+            barButtonItemLiveMessaging.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
+            barButtonItemLiveMessaging.Caption = " ";
+            barButtonItemLiveMessaging.Id = 7;
+            barButtonItemLiveMessaging.Name = "barButtonItemLiveMessaging";
             //
             // barButtonItemLongDate
             //
@@ -138,10 +147,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ribbon.EmptyAreaImageOptions.ImagePadding = new Padding(26, 24, 26, 24);
             ribbon.ExpandCollapseItem.Id = 0;
             ribbon.ImageAlignment = DevExpress.Utils.HorzAlignment.Center;
-            ribbon.Items.AddRange(new DevExpress.XtraBars.BarItem[] { skinRibbonGalleryBarItem1, ribbon.ExpandCollapseItem, barButtonItemCompanyName, barButtonItemUserName, barButtonItemRoleName, barButtonItemLongDate, barButtonItemTime, barButtonItemExpTime });
+            ribbon.Items.AddRange(new DevExpress.XtraBars.BarItem[] { skinRibbonGalleryBarItem1, ribbon.ExpandCollapseItem, barButtonItemCompanyName, barButtonItemUserName, barButtonItemRoleName, barButtonItemLiveMessaging, barButtonItemLongDate, barButtonItemTime, barButtonItemExpTime });
             ribbon.Location = new Point(0, 0);
             ribbon.Margin = new Padding(3, 2, 3, 2);
-            ribbon.MaxItemId = 8;
+            ribbon.MaxItemId = 9;
             ribbon.Name = "ribbon";
             ribbon.OptionsMenuMinWidth = 283;
             ribbon.OptionsSearchMenu.SearchItemPosition = DevExpress.XtraBars.Ribbon.SearchItemPosition.PageHeader;
@@ -479,6 +488,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.BarButtonItem barButtonItemCompanyName;
         private DevExpress.XtraBars.BarButtonItem barButtonItemUserName;
         private DevExpress.XtraBars.BarButtonItem barButtonItemRoleName;
+        private DevExpress.XtraBars.BarButtonItem barButtonItemLiveMessaging;
         private DevExpress.XtraBars.BarButtonItem barButtonItemLongDate;
         private DevExpress.XtraBars.BarButtonItem barButtonItemTime;
         private DevExpress.XtraBars.BarButtonItem barButtonItemExpTime;

@@ -66,6 +66,26 @@ public sealed class UserMessage : Entity
     public DateTimeOffset? ReadAt { get; private set; }
 
     /// <summary>
+    /// Alıcının mesajı gördüğü an. Henüz görülmediyse <c>null</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// WhatsApp'taki teslim/okunma ayrımının karşılığıdır. Üç durum vardır:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><b>Gönderildi</b>: kayıt yazıldı (<see cref="Entity.CreatedAt"/>).</item>
+    /// <item><b>Teslim edildi</b>: alıcının istemcisi mesajı ekranda gösterdi
+    /// (<see cref="DeliveredAt"/>).</item>
+    /// <item><b>Okundu</b>: alıcı konuşmayı açtı (<see cref="ReadAt"/>).</item>
+    /// </list>
+    /// <para>
+    /// Gönderen için "teslim" anlamı vardır, gönderilmemiş bir mesajda
+    /// <c>null</c> kalır.
+    /// </para>
+    /// </remarks>
+    public DateTimeOffset? DeliveredAt { get; private set; }
+
+    /// <summary>
     /// Mesajı okundu olarak işaretler.
     /// </summary>
     /// <remarks>
@@ -75,6 +95,10 @@ public sealed class UserMessage : Entity
     /// </remarks>
     public void MarkAsRead(DateTimeOffset now)
     {
+        // Okunan mesaj aynı zamanda teslim edilmiş sayılır. Aksi hâlde alıcı
+        /// mesajı okumuş ama gönderende hâlâ "teslim edilmedi" görünürdü.
+        MarkDelivered(now);
+
         if (ReadState.Value)
         {
             return;
@@ -82,6 +106,24 @@ public sealed class UserMessage : Entity
 
         ReadState = new MessageReadState(true);
         ReadAt = now;
+    }
+
+    /// <summary>
+    /// Mesajı teslim edilmiş olarak işaretler.
+    /// </summary>
+    /// <remarks>
+    /// Zaten teslim edilmişse hiçbir şey değiştirmez. Zaten okunmuşsa da
+    /// değiştirmez: okunma teslimin üstündedir ve okunma zamanı teslim zamanını
+    /// da belirler.
+    /// </remarks>
+    public void MarkDelivered(DateTimeOffset now)
+    {
+        if (DeliveredAt is not null || ReadAt is not null)
+        {
+            return;
+        }
+
+        DeliveredAt = now;
     }
 
     /// <summary>
