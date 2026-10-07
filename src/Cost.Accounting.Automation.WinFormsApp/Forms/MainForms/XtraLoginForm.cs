@@ -103,8 +103,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
 #if DEBUG
             // Yalnızca geliştirme kolaylığı; Release derlemesinde alanlar boş gelir.
-            txtUserName.EditValue = "Admin";
-            txtPassword.EditValue = "1";
+           // txtUserName.EditValue = "sevgibahcemm";
+          //  txtPassword.EditValue = "61785";
 #endif
         }
 
@@ -408,7 +408,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 _captchaChallengeId = result.Data.ChallengeId;
                 lblCaptchaQuestion.Text = result.Data.Question;
-                txtCaptchaResult.Text = AutoSolveCaptcha(result.Data.Question);
+               // txtCaptchaResult.Text = AutoSolveCaptcha(result.Data.Question);
             }
         }
 

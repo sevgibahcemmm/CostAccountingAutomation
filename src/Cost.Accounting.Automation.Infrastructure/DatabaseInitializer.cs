@@ -341,33 +341,33 @@ public static class DatabaseInitializer
                 new AccountingUnit("DEMİRCİ MAL MÜDÜRLÜĞÜ", "45103"),
                 true);
 
-            var focaCompany = new Company(
-                new Name("Foça Açık Ceza İnfaz Kurumu İşyurdu Müdürlüğü"),
-                new TaxOffice("İzmir"),
-                new TaxNumber("4567890123"),
-                new Description("İzmir"),
-                new Invoiceinformation("İzmir"),
-                new Letterhead("İzmir"),
-                new CompanyPrefix("08691234"),
-                new Address("İzmir", "Çankaya", "Kızılay"),
-                new Contact("03124567890", "", "izmir@merkez.com"),
-                new ExpenditureUnit("ANADOLU HARCAMA BİRİMİ", "2.2.2.2"),
-                new AccountingUnit("ANADOLU MUHASEBE BİRİMİ", "2002"),
-                true);
+            //var focaCompany = new Company(
+            //    new Name("Foça Açık Ceza İnfaz Kurumu İşyurdu Müdürlüğü"),
+            //    new TaxOffice("İzmir"),
+            //    new TaxNumber("4567890123"),
+            //    new Description("İzmir"),
+            //    new Invoiceinformation("İzmir"),
+            //    new Letterhead("İzmir"),
+            //    new CompanyPrefix("08691234"),
+            //    new Address("İzmir", "Çankaya", "Kızılay"),
+            //    new Contact("03124567890", "", "izmir@merkez.com"),
+            //    new ExpenditureUnit("ANADOLU HARCAMA BİRİMİ", "2.2.2.2"),
+            //    new AccountingUnit("ANADOLU MUHASEBE BİRİMİ", "2002"),
+            //    true);
 
-            var canakkaleCompany = new Company(
-                new Name("Çanakkale Açık Ceza İnfaz Kurumu İşyurdu Müdürlüğü"),
-                new TaxOffice("Çanakkale"),
-                new TaxNumber("7890123456"),
-                new Description("Çanakkale"),
-                new Invoiceinformation("Çanakkale"),
-                new Letterhead("Çanakkale"),
-                new CompanyPrefix("08691234"),
-                new Address("Çanakkale", "Konak", "Alsancak"),
-                new Contact("02327894561", "", "canakkale@merkez.com"),
-                new ExpenditureUnit("Çanakkale HARCAMA BİRİMİ", "3.3.3.3"),
-                new AccountingUnit("Çanakkale MUHASEBE BİRİMİ", "3003"),
-                true);
+            //var canakkaleCompany = new Company(
+            //    new Name("Çanakkale Açık Ceza İnfaz Kurumu İşyurdu Müdürlüğü"),
+            //    new TaxOffice("Çanakkale"),
+            //    new TaxNumber("7890123456"),
+            //    new Description("Çanakkale"),
+            //    new Invoiceinformation("Çanakkale"),
+            //    new Letterhead("Çanakkale"),
+            //    new CompanyPrefix("08691234"),
+            //    new Address("Çanakkale", "Konak", "Alsancak"),
+            //    new Contact("02327894561", "", "canakkale@merkez.com"),
+            //    new ExpenditureUnit("Çanakkale HARCAMA BİRİMİ", "3.3.3.3"),
+            //    new AccountingUnit("Çanakkale MUHASEBE BİRİMİ", "3003"),
+            //    true);
 
             var sysAdminRole = new Role(new Name("sys_admin"), true);
             var accountingManagerRole = new Role(new Name("muhasebe_muduru"), true);
@@ -376,13 +376,13 @@ public static class DatabaseInitializer
             var adminUser = new User(
                 firstName: new FirstName("Emrullah"),
                 lastName: new LastName("AKPINAR"),
-                email: new Email("admin@test.com"),
-                userName: new UserName("admin"),
-                password: new Password("1"),
+                email: new Email("sevgibahcemm45@gmail.com"),
+                userName: new UserName("sevgibahcemm"),
+                password: new Password("61785"),
                 companyId: demirciCompany.Id,
                 roleId: sysAdminRole.Id,
                 isActive: true,
-                tRIdentityNumber: new TRIdentityNumber("11111111110")
+                tRIdentityNumber: new TRIdentityNumber("27070677444")
             );
 
             // Sicil numarasını "AB" ile başlatacak şekilde atıyoruz[cite: 1]
@@ -392,41 +392,41 @@ public static class DatabaseInitializer
 
             try
             {
-                masterContext.Companies.AddRange(demirciCompany, focaCompany, canakkaleCompany);
+                masterContext.Companies.AddRange(demirciCompany);
                 masterContext.Roles.AddRange(sysAdminRole, accountingManagerRole, accountantRole);
                 masterContext.Users.Add(adminUser);
 
                 await masterContext.SaveChangesAsync();
 
-                (string UserName, string Email, IdentityId CompanyId, IdentityId RoleId, string RegistryNumber, string TCIdentity)[] sampleUsers =
-                [
-                    ("orhan", "orhan@test.com", demirciCompany.Id, accountingManagerRole.Id, "AB1002", "22222222220"),
-                    ("ramazan", "ramazan@test.com", demirciCompany.Id, accountantRole.Id, "AB1003", "33333333330"),
-                    ("serif", "serif@test.com", focaCompany.Id, accountantRole.Id, "AB1004", "44444444440"),
-                    ("nurcan", "nurcan@test.com", canakkaleCompany.Id, accountantRole.Id, "AB1005", "55555555550"),
-                ];
+                //(string UserName, string Email, IdentityId CompanyId, IdentityId RoleId, string RegistryNumber, string TCIdentity)[] sampleUsers =
+                //[
+                //    ("aaa", "aaa@test.com", demirciCompany.Id, accountingManagerRole.Id, "AB1002", "22222222220"),
+                //    ("bbb", "bbb@test.com", demirciCompany.Id, accountantRole.Id, "AB1003", "33333333330"),
+                //    ("ccc", "ccc@test.com", demirciCompany.Id, accountantRole.Id, "AB1004", "44444444440"),
+                //    ("ddd", "ddd@test.com", demirciCompany.Id, accountantRole.Id, "AB1005", "55555555550"),
+                //];
 
-                foreach (var sample in sampleUsers)
-                {
-                    string firstName = char.ToUpperInvariant(sample.UserName[0]) + sample.UserName[1..];
+                //foreach (var sample in sampleUsers)
+                //{
+                //    string firstName = char.ToUpperInvariant(sample.UserName[0]) + sample.UserName[1..];
 
-                    var user = new User(
-                        firstName: new FirstName(firstName),
-                        lastName: new LastName("Soyad"),
-                        email: new Email(sample.Email),
-                        userName: new UserName(sample.UserName),
-                        password: new Password("1"),
-                        companyId: sample.CompanyId,
-                        roleId: sample.RoleId,
-                        isActive: true,
-                        tRIdentityNumber: new TRIdentityNumber(sample.TCIdentity)
-                    );
+                //    var user = new User(
+                //        firstName: new FirstName(firstName),
+                //        lastName: new LastName("Soyad"),
+                //        email: new Email(sample.Email),
+                //        userName: new UserName(sample.UserName),
+                //        password: new Password("1"),
+                //        companyId: sample.CompanyId,
+                //        roleId: sample.RoleId,
+                //        isActive: true,
+                //        tRIdentityNumber: new TRIdentityNumber(sample.TCIdentity)
+                //    );
 
                     // Sicil numarasını "AB" ile başlatacak şekilde atıyoruz[cite: 1]
-                    user.SetRegistryNumber(sample.RegistryNumber);
+                    //user.SetRegistryNumber(sample.RegistryNumber);
 
-                    masterContext.Users.Add(user);
-                }
+                    //masterContext.Users.Add(user);
+                //}
 
                 await masterContext.SaveChangesAsync();
             }
@@ -471,7 +471,7 @@ public static class DatabaseInitializer
 
         Guid? starterAdminId = await masterContext.Users
             .AsNoTracking()
-            .Where(u => u.UserName.Value == "admin")
+            .Where(u => u.UserName.Value == "sevgibahcemm")
             .Select(u => (Guid?)u.Id.Value)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -538,7 +538,7 @@ public static class DatabaseInitializer
 
         Guid? adminId = await masterContext.Users
             .AsNoTracking()
-            .Where(u => u.UserName.Value == "admin")
+            .Where(u => u.UserName.Value == "sevgibahcemm")
             .Select(u => (Guid?)u.Id.Value)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -634,7 +634,7 @@ public static class DatabaseInitializer
     {
         Guid? adminId = await masterContext.Users
             .AsNoTracking()
-            .Where(u => u.UserName.Value == "admin")
+            .Where(u => u.UserName.Value == "sevgibahcemm")
             .Select(u => (Guid?)u.Id.Value)
             .FirstOrDefaultAsync(cancellationToken);
 
