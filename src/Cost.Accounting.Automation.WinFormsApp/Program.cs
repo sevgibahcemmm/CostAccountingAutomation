@@ -91,6 +91,9 @@ namespace Cost.Accounting.Automation.WinFormsApp
             services.AddSingleton<LiveMessagingService>();
             services.AddSingleton<MessagingNotifier>();
 
+            // Açılışta yayın sunucusundaki sürüm manifestosunu okuyan servis.
+            services.AddSingleton<UpdateChecker>();
+
             services.AddForms();
 
             Services = services.BuildServiceProvider();
@@ -108,6 +111,8 @@ namespace Cost.Accounting.Automation.WinFormsApp
                 return;
             }
 
+            CheckForUpdates();
+
             var loginForm = Services.GetRequiredService<XtraLoginForm>();
             CrashLog.Write("Main", "After loginForm");
             CrashLog.Write("Main", "Before Application.Run");
@@ -122,6 +127,41 @@ namespace Cost.Accounting.Automation.WinFormsApp
                 throw;
             }
             CrashLog.Write("Main", "After Application.Run");
+        }
+
+        /// <summary>
+        /// Yayın sunucusundaki sürüm manifestosunu kontrol eder; yeni sürüm
+        /// varsa kullanıcıya bildirim penceresi gösterir.
+        /// </summary>
+        /// <remarks>
+        /// Kontrol hiçbir koşulda uygulamanın açılmasını engellememelidir: ağ
+        /// yoksa, adres hatalıysa veya manifesto bozuksa sessizce atlanır ve
+        /// hata yalnızca günlüğe yazılır.
+        /// </remarks>
+        private static void CheckForUpdates()
+        {
+            try
+            {
+                var checker = Services.GetRequiredService<UpdateChecker>();
+
+                UpdateManifest? manifest = checker
+                    .CheckAsync()
+                    .GetAwaiter()
+                    .GetResult();
+
+                if (manifest is null)
+                {
+                    return;
+                }
+
+                using var updateForm = new UpdateAvailableForm(manifest);
+
+                updateForm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("Main.UpdateCheck", ex);
+            }
         }
 
         /// <summary>
