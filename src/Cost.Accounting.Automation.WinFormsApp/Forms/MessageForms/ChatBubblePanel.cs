@@ -1,35 +1,12 @@
 using System.Drawing.Drawing2D;
 using System.Globalization;
+using System.IO;
 using Cost.Accounting.Automation.Application.Messages;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
 {
-    /// <summary>
-    /// Sohbet uygulamalarındaki gibi baloncuk tabanlı mesaj yüzeyi.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Mesajlar ızgara satırı değil, <b>baloncuk</b> olarak çizilir: kendi
-    /// mesajlarınız sağda ve konuşma renginde, karşı tarafın mesajları solda
-    /// ve yüzey renginde. Her baloncuğun sağ altında saat ile durum tiki
-    /// durur — tek tik gönderildi, gri çift tik teslim edildi, mavi çift tik
-    /// okundu.
-    /// </para>
-    /// <para>
-    /// Baloncuklar ayrı denetim (control) olarak oluşturulmaz; yüzlerce
-    /// mesajda binlerce denetim hem yavaş hem bellek düşmanıdır. Yerleşim
-    /// yalnızca ölçü değiştiğinde (mesaj kümesi ya da pencere boyutu)
-    /// yeniden hesaplanır ve her şey <see cref="OnPaint(PaintEventArgs)"/>
-    /// içinde çizilir.
-    /// </para>
-    /// <para>
-    /// Tekerlek olayı WinForms'ta odak alan denetime gider; kullanıcı yazı
-    /// kutusundayken üzerine geldiği sohbet alanını kaydırabilmesi için
-    /// panel kendisi bir mesaj filtresi kurar ve imleç üzerindeyken
-    /// kaydırmayı üstlenir.
-    /// </para>
-    /// </remarks>
+
     internal sealed class ChatBubblePanel : Panel, IMessageFilter
     {
         private const int WmMouseWheel = 0x020A;
@@ -43,6 +20,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
         private const int MetaGap = 3;
         private const int BubbleRadius = 10;
 
+        /// <summary>Resim ekinin baloncuk içindeki en büyük yüksekliği.</summary>
+        private const int ImageMaxHeight = 200;
+
+        /// <summary>Dosya çipinin (ad + boyut) yatay/dikey iç payı.</summary>
+        private const int ChipPadX = 10;
+        private const int ChipPadY = 6;
+
+        /// <summary>Bir sohbet için bellekte tutulan en fazla önizleme sayısı.</summary>
+        private const int MaxCachedImages = 64;
+
         /// <summary>Her tekerlek tıklamasında kaydırılacak piksel.</summary>
         private const int WheelStepPixels = 48;
 
@@ -51,9 +38,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
         private readonly Font _metaFont = new("Segoe UI", 7.75F);
         private readonly Font _dayFont = new("Segoe UI", 8.25F, FontStyle.Bold);
         private readonly Font _emptyFont = new("Segoe UI", 10F);
+        private readonly Font _chipFont = new("Segoe UI", 9F);
 
         private IReadOnlyList<MessageDto> _messages = [];
         private List<BubbleEntry> _entries = [];
+
+        /// <summary>
+        /// Resim ekleri için baloncuk başına önbellek. Anahtar göreli depo
+        /// yoludur; değer <c>null</c> ise dosya bulunamadı/açılamadı ve çip
+        /// çizilir. Önbellek panelle birlikte ölür.
+        /// </summary>
+        private readonly Dictionary<string, Bitmap?> _attachmentImages = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Kullanıcı bir eke (resme ya da dosya çipine) tıkladığında çağrılır;
+        /// dosyayı açma işlemi sahibi formun sorumluluğundadır.
+        /// </summary>
+        public event Action<MessageDto>? AttachmentOpenRequested;
 
         /// <summary>İçeriğin toplam yüksekliği (kaydırma menzili).</summary>
         private int _contentHeight;
@@ -88,7 +89,34 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
         /// yeri sıfırlamaz.
         /// </remarks>
         public void SetMessages(IReadOnlyList<MessageDto> messages)
+            => SetMessages(messages, preserveTopAnchor: false);
+
+        /// <summary>
+        /// Mesajları yerleştirir; <paramref name="preserveTopAnchor"/>
+        /// <c>true</c> ise eski mesajlar üstten eklendikten sonra daha önce
+        /// en üstte görünen mesaj aynı ekran yerinde kalır (kullanıcı
+        /// "daha eskilerini yüklerken" konumu kaybolmaz).
+        /// </summary>
+        public void SetMessages(IReadOnlyList<MessageDto> messages, bool preserveTopAnchor)
         {
+            Guid? anchorId = null;
+            int anchorScreenTop = 0;
+
+            if (preserveTopAnchor && _entries.Count > 0)
+            {
+                int scrollBefore = -AutoScrollPosition.Y;
+
+                foreach (BubbleEntry entry in _entries)
+                {
+                    if (entry.Message is not null && entry.Bounds.Bottom > scrollBefore)
+                    {
+                        anchorId = entry.Message.Id;
+                        anchorScreenTop = entry.Bounds.Top - scrollBefore;
+                        break;
+                    }
+                }
+            }
+
             bool wasAtBottom = IsAtBottom();
             Guid? previousLastId = _messages.Count == 0 ? null : _messages[^1].Id;
 
@@ -98,7 +126,16 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
 
             Guid? lastId = messages.Count == 0 ? null : messages[^1].Id;
 
-            if (!_hasRendered || wasAtBottom || lastId != previousLastId)
+            if (anchorId is { } id && FindEntry(id) is { } anchor)
+            {
+                int target = Math.Clamp(
+                    anchor.Bounds.Top - anchorScreenTop,
+                    0,
+                    Math.Max(0, _contentHeight - ClientSize.Height));
+
+                AutoScrollPosition = new Point(0, target);
+            }
+            else if (!_hasRendered || wasAtBottom || lastId != previousLastId)
             {
                 ScrollToEnd();
             }
@@ -106,6 +143,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             _hasRendered = true;
 
             Invalidate();
+        }
+
+        /// <summary>Verilen mesaja karşılık gelen yerleşim kaydı.</summary>
+        private BubbleEntry? FindEntry(Guid messageId)
+        {
+            foreach (BubbleEntry entry in _entries)
+            {
+                if (entry.Message is not null && entry.Message.Id == messageId)
+                {
+                    return entry;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>Verilen piksel kadar yukarı/aşağı kaydırır.</summary>
@@ -243,13 +294,54 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                     ? null
                     : message.Subject;
 
-                Size bodySize = TextRenderer.MeasureText(
-                    message.Body, _bodyFont, new Size(maxWidth, int.MaxValue), TextFormatFlags.WordBreak);
+                Size bodySize = message.Body.Length == 0
+                    ? Size.Empty
+                    : TextRenderer.MeasureText(
+                        message.Body, _bodyFont, new Size(maxWidth, int.MaxValue), TextFormatFlags.WordBreak);
 
                 Size subjectSize = subject is null
                     ? Size.Empty
                     : TextRenderer.MeasureText(
                         subject, _subjectFont, new Size(maxWidth, int.MaxValue), TextFormatFlags.WordBreak);
+
+                // Ek: resimse ölçeklenmiş önizleme, diğer dosyalar ad + boyut
+                // çipi. Her iki durumda da blok metin bloğu gibi sola dayanır.
+                Bitmap? attachmentImage = null;
+                Size attachmentSize = Size.Empty;
+
+                if (message.AttachmentPath is not null)
+                {
+                    if (message.AttachmentIsImage)
+                    {
+                        attachmentImage = GetAttachmentImage(message);
+                    }
+
+                    if (attachmentImage is not null)
+                    {
+                        double scale = Math.Min(
+                            1.0,
+                            Math.Min(
+                                (double)maxWidth / attachmentImage.Width,
+                                (double)ImageMaxHeight / attachmentImage.Height));
+
+                        attachmentSize = new Size(
+                            Math.Max(1, (int)(attachmentImage.Width * scale)),
+                            Math.Max(1, (int)(attachmentImage.Height * scale)));
+                    }
+                    else
+                    {
+                        string chipText = ChipTextOf(message);
+                        Size chipTextSize = TextRenderer.MeasureText(
+                            chipText,
+                            _chipFont,
+                            new Size(maxWidth - ChipPadX * 2, int.MaxValue),
+                            TextFormatFlags.WordBreak | TextFormatFlags.NoPadding);
+
+                        attachmentSize = new Size(
+                            Math.Min(maxWidth, chipTextSize.Width + ChipPadX * 2),
+                            chipTextSize.Height + ChipPadY * 2);
+                    }
+                }
 
                 string time = TimeOf(message);
                 string tick = TickOf(message);
@@ -262,12 +354,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                 int metaWidth = timeSize.Width
                     + (tick.Length == 0 ? 0 : tickSize.Width + 4);
 
-                int innerWidth = Math.Max(Math.Max(bodySize.Width, subjectSize.Width), metaWidth);
+                int innerWidth = Math.Max(
+                    Math.Max(Math.Max(bodySize.Width, subjectSize.Width), metaWidth),
+                    attachmentSize.Width);
                 int bubbleWidth = innerWidth + BubblePadX * 2;
                 int bubbleHeight = BubblePadY
                     + (subject is null ? 0 : subjectSize.Height + 3)
-                    + bodySize.Height
-                    + MetaGap
+                    + (attachmentSize.IsEmpty ? 0 : attachmentSize.Height + MetaGap)
+                    + (bodySize.IsEmpty ? 0 : bodySize.Height + MetaGap)
                     + _metaFont.Height
                     + BubblePadY;
 
@@ -289,8 +383,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                     cursorY += subjectSize.Height + 3;
                 }
 
-                var bodyRect = new Rectangle(textX, cursorY, textWidth, bodySize.Height);
-                cursorY += bodySize.Height + MetaGap;
+                var attachmentRect = Rectangle.Empty;
+
+                if (!attachmentSize.IsEmpty)
+                {
+                    attachmentRect = new Rectangle(textX, cursorY, attachmentSize.Width, attachmentSize.Height);
+                    cursorY += attachmentSize.Height + MetaGap;
+                }
+
+                var bodyRect = Rectangle.Empty;
+
+                if (!bodySize.IsEmpty)
+                {
+                    bodyRect = new Rectangle(textX, cursorY, textWidth, bodySize.Height);
+                    cursorY += bodySize.Height + MetaGap;
+                }
 
                 var metaRect = new Rectangle(textX, cursorY, textWidth, _metaFont.Height);
 
@@ -299,6 +406,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                     Message = message,
                     Bounds = bounds,
                     SubjectRectangle = subjectRect,
+                    AttachmentRectangle = attachmentRect,
                     BodyRectangle = bodyRect,
                     MetaRectangle = metaRect
                 });
@@ -423,16 +531,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                     TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis);
             }
 
-            Rectangle bodyRect = entry.BodyRectangle;
-            bodyRect.Offset(offset);
+            if (entry.AttachmentRectangle != Rectangle.Empty)
+            {
+                Rectangle attachmentRect = entry.AttachmentRectangle;
+                attachmentRect.Offset(offset);
 
-            TextRenderer.DrawText(
-                graphics,
-                message.Body,
-                _bodyFont,
-                bodyRect,
-                textColor,
-                TextFormatFlags.WordBreak);
+                DrawAttachment(graphics, entry, palette, attachmentRect, bubbleColor, textColor, borderColor);
+            }
+
+            if (entry.BodyRectangle != Rectangle.Empty)
+            {
+                Rectangle bodyRect = entry.BodyRectangle;
+                bodyRect.Offset(offset);
+
+                TextRenderer.DrawText(
+                    graphics,
+                    message.Body,
+                    _bodyFont,
+                    bodyRect,
+                    textColor,
+                    TextFormatFlags.WordBreak);
+            }
 
             // Saat ve tik, baloncuğun sağ altına hizalanır. DrawString'in
             // hizalama bayrağı kullanılır: iki metnin genişliğini ayrı ayrı
@@ -473,6 +592,64 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
 
                 graphics.DrawString(time, _metaFont, metaBrush, timeRect, format);
             }
+        }
+
+        /// <summary>
+        /// Ek dosyayı çizer: resimse baloncuğun köşelerine yuvarlatılmış
+        /// şekilde önizleme, değilse ad + boyut çipi. Her iki durumda da alana
+        /// tıklanınca dosya açılır (bkz. <see cref="AttachmentOpenRequested"/>).
+        /// </summary>
+        private void DrawAttachment(
+            Graphics graphics,
+            BubbleEntry entry,
+            Palette palette,
+            Rectangle attachmentRect,
+            Color bubbleColor,
+            Color textColor,
+            Color borderColor)
+        {
+            MessageDto message = entry.Message!;
+
+            Bitmap? image = message.AttachmentIsImage ? GetAttachmentImage(message) : null;
+
+            if (image is not null)
+            {
+                using GraphicsPath clip = Rounded(attachmentRect, BubbleRadius);
+                GraphicsState state = graphics.Save();
+
+                graphics.SetClip(clip);
+                graphics.DrawImage(image, attachmentRect);
+                graphics.Restore(state);
+
+                using var border = new Pen(borderColor, 1F);
+                graphics.DrawPath(border, clip);
+                return;
+            }
+
+            // Resim değil ya da açılamadı: dosya adı + boyut çipi.
+            Rectangle chipBounds = attachmentRect;
+            int radius = Math.Min(BubbleRadius - 2, Math.Max(4, Math.Min(chipBounds.Width, chipBounds.Height) / 2 - 1));
+
+            using GraphicsPath chipPath = Rounded(chipBounds, radius);
+            Color chipFill = SkinTheme.Blend(bubbleColor, textColor, 0.14F);
+
+            using (var chipBrush = new SolidBrush(chipFill))
+            using (var chipBorder = new Pen(borderColor, 1F))
+            {
+                graphics.FillPath(chipBrush, chipPath);
+                graphics.DrawPath(chipBorder, chipPath);
+            }
+
+            Rectangle textRect = chipBounds;
+            textRect.Inflate(-ChipPadX, -ChipPadY);
+
+            TextRenderer.DrawText(
+                graphics,
+                ChipTextOf(message),
+                _chipFont,
+                textRect,
+                textColor,
+                TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
         }
 
         // ----------------------------------------------------------------
@@ -559,6 +736,114 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
 
         private static string TimeOf(MessageDto message)
             => message.SentAt.ToLocalTime().ToString("HH:mm", CultureInfo.CurrentCulture);
+
+        /// <summary>
+        /// Resim ekini önbellekten okur. Dosya yok/açılamaz ise <c>null</c>
+        /// döner ve çizerken çip'e düşülür. Önbellek panel ömrü kadardır ve
+        /// belirli bir sayıyı aşınca boşaltılır.
+        /// </summary>
+        private Bitmap? GetAttachmentImage(MessageDto message)
+        {
+            string key = message.AttachmentPath ?? string.Empty;
+
+            if (key.Length == 0)
+            {
+                return null;
+            }
+
+            if (_attachmentImages.TryGetValue(key, out Bitmap? cached))
+            {
+                return cached;
+            }
+
+            if (_attachmentImages.Count >= MaxCachedImages)
+            {
+                foreach (Bitmap? stale in _attachmentImages.Values)
+                {
+                    stale?.Dispose();
+                }
+
+                _attachmentImages.Clear();
+            }
+
+            Bitmap? bitmap = null;
+            string? fullPath = message.AttachmentFullPath;
+
+            if (!string.IsNullOrWhiteSpace(fullPath))
+            {
+                try
+                {
+                    if (File.Exists(fullPath))
+                    {
+                        // Image.FromFile dosyayı kilitler; kopyaya alınıp
+                        // önbelleğe öyle konur ve kilit hemen bırakılır.
+                        using Image original = Image.FromFile(fullPath);
+                        bitmap = ScaleToFit(original, 960, 600);
+                    }
+                }
+                catch
+                {
+                    // Bozuk ya da erişilemeyen resim uygulamayı düşürmez;
+                    // çip olarak gösterilir.
+                    bitmap = null;
+                }
+            }
+
+            _attachmentImages[key] = bitmap;
+            return bitmap;
+        }
+
+        /// <summary>
+        /// Görseli verilen kutuya sığdırıp küçültülmüş bir kopya üretir;
+        /// bellekte orijinal boyutla (25 MB'a kadar fotoğraf) durmaz.
+        /// </summary>
+        private static Bitmap ScaleToFit(Image image, int maxWidth, int maxHeight)
+        {
+            double scale = Math.Min(
+                1.0,
+                Math.Min((double)maxWidth / image.Width, (double)maxHeight / image.Height));
+
+            int width = Math.Max(1, (int)(image.Width * scale));
+            int height = Math.Max(1, (int)(image.Height * scale));
+
+            var target = new Bitmap(width, height);
+
+            using Graphics graphics = Graphics.FromImage(target);
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.DrawImage(image, 0, 0, width, height);
+
+            return target;
+        }
+
+        /// <summary>Çip metni: dosya adı ve boyutu, örn. "rapor.pdf (1,2 MB)".</summary>
+        internal static string ChipTextOf(MessageDto message)
+        {
+            string name = string.IsNullOrWhiteSpace(message.AttachmentFileName)
+                ? "Dosya"
+                : message.AttachmentFileName;
+
+            string size = message.AttachmentSize is { } bytes
+                ? $" ({FormatSize(bytes)})"
+                : string.Empty;
+
+            return name + size;
+        }
+
+        /// <summary>İnsan okunur dosya boyutu (1,2 MB / 45,3 KB / 320 B).</summary>
+        internal static string FormatSize(long bytes)
+        {
+            if (bytes >= 1024L * 1024)
+            {
+                return $"{(bytes / (1024d * 1024)).ToString("N1", CultureInfo.CurrentCulture)} MB";
+            }
+
+            if (bytes >= 1024)
+            {
+                return $"{(bytes / 1024d).ToString("N1", CultureInfo.CurrentCulture)} KB";
+            }
+
+            return $"{bytes} B";
+        }
 
         /// <summary>Gün ayırıcısının metni: "Bugün", "Dün" ya da tarih.</summary>
         private static string DayLabel(DateTime day)
@@ -679,6 +964,56 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             return true;
         }
 
+        /// <summary>
+        /// Eke tıklanınca dosya açma isteği sahibi forma iletilir; panel
+        /// kendisi dosya açmaz (yol çözümü, hata bildirimi ve yetki oradadır).
+        /// </summary>
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            base.OnMouseClick(e);
+
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            if (HitAttachment(e.Location)?.Message is { } message)
+            {
+                AttachmentOpenRequested?.Invoke(message);
+            }
+        }
+
+        /// <summary>İmleç ek üzerindeyken el imleci; tıklamanın açılabilir olduğunu gösterir.</summary>
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            Cursor = HitAttachment(e.Location) is not null ? Cursors.Hand : Cursors.Default;
+        }
+
+        /// <summary>Tıklama/imleç konumunun altında kalan ek kaydı (yoksa <c>null</c>).</summary>
+        private BubbleEntry? HitAttachment(Point clientPoint)
+        {
+            // AutoScrollPosition negatiftir; içerik koordinatına çevirmek için
+            // konumdan çıkarılır.
+            var location = new Point(
+                clientPoint.X - AutoScrollPosition.X,
+                clientPoint.Y - AutoScrollPosition.Y);
+
+            for (int i = _entries.Count - 1; i >= 0; i--)
+            {
+                BubbleEntry entry = _entries[i];
+
+                if (entry.AttachmentRectangle != Rectangle.Empty
+                    && entry.AttachmentRectangle.Contains(location))
+                {
+                    return entry;
+                }
+            }
+
+            return null;
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -688,6 +1023,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                 _metaFont.Dispose();
                 _dayFont.Dispose();
                 _emptyFont.Dispose();
+                _chipFont.Dispose();
+
+                foreach (Bitmap? bitmap in _attachmentImages.Values)
+                {
+                    bitmap?.Dispose();
+                }
+
+                _attachmentImages.Clear();
             }
 
             base.Dispose(disposing);
@@ -708,6 +1051,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
             public Rectangle Bounds { get; init; }
 
             public Rectangle SubjectRectangle { get; init; }
+
+            /// <summary>Resim/çip bloğu; boş ise ek yoktur.</summary>
+            public Rectangle AttachmentRectangle { get; init; }
 
             public Rectangle BodyRectangle { get; init; }
 

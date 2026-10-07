@@ -62,6 +62,9 @@ internal sealed class DirectoryRow
 
     public string? RegistryNumber => User.RegistryNumber;
 
+    /// <summary>Profil fotoğrafının göreli yolu; yoksa baş harf avatarı çizilir.</summary>
+    public string? AvatarPath => User.AvatarPath;
+
     public string? CompanyName => User.CompanyName;
 
     public string RoleName => User.RoleName;

@@ -122,7 +122,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmSigningRoles"] = DxIcon.IdCard,             // security_personalid
 
             // Mesajlaşma
-            ["elmMessages"] = DxIcon.At                // mail
+            ["elmMessages"] = DxIcon.WhatsApp        // yeşil konuşma balonu
         };
 
         public RibbonMainForm()

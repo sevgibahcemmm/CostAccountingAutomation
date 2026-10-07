@@ -9,5 +9,5 @@ public sealed class DatabaseNamingOptions
     public const string SectionName = "DatabaseNaming";
 
     /// <summary>Her yıl veritabanı adının başında yer alan kısa ön ek.</summary>
-    public string Prefix { get; set; } = "CAA";
+    public string Prefix { get; set; } = "EA";
 }

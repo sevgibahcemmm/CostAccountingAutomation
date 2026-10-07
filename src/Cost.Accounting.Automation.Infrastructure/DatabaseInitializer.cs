@@ -22,24 +22,8 @@ using System.Threading.Tasks;
 
 namespace Cost.Accounting.Automation.Infrastructure;
 
-/// <summary>
-/// Uygulama açılışında master (merkezi) veritabanını hazırlar ve master'ı tohumlar.
-///
-/// Tek istisna içinde bulunulan yılın açılmasıdır: giriş ekranında seçilebilir bir
-/// yıl listesi oluşsun diye, yıl kaydı olmayan şirketler için yılın iş veritabanı
-/// <see cref="IAccountingYearProvisioner"/> üzerinden açılır. Sonraki yıllar
-/// "Mali Yıl Aç" formundan açılır ve başlangıçta hiçbir yıl veritabanına
-/// dokunulmaz.
-/// </summary>
 public static class DatabaseInitializer
 {
-    /// <summary>
-    /// Açılışta "veritabanı var mı" yoklamasının bağlantı ve komut zaman aşımı.
-    /// </summary>
-    /// <remarks>
-    /// 15 saniye: LocalDB'nin soğuk başlatması için yeterli, hata durumunda kullanıcı
-    /// yine de kabul edilebilir sürede geri bildirim alır.
-    /// </remarks>
     private const int ProbeTimeoutSeconds = 15;
 
     /// <summary>
@@ -69,38 +53,12 @@ public static class DatabaseInitializer
         DatabaseProvisionStep.SeedSampleRecords
     ];
 
-    /// <summary>
-    /// Ana veritabanının var olup olmadığını sunucuya sorar.
-    ///
-    /// <para>
-    /// Sorgu <c>master</c> kataloğuna bağlanıp <c>sys.databases</c> üzerinde
-    /// yapılır; böylece veritabanı yokken bile bağlantı kurulabilir.
-    /// </para>
-    ///
-    /// <para>
-    /// <b>Zaman aşımı bilinçli olarak kısadır.</b> Bağlantı dizesindeki
-    /// <c>Connect Timeout = 30</c> değeri kullanılmaz; yoklama
-    /// <see cref="ProbeTimeoutSeconds"/> saniye ile sınırlıdır. Bu sorgu
-    /// uygulama açılışında "veritabanı var mı" sorusuna yanıt arar — sunucu
-    /// kapalıysa kullanıcı 30 saniye donmuş ekran beklemek yerine birkaç
-    /// saniyede anlaşılır bir hata görmelidir. Asıl veri işlemleri kendi
-    /// zaman aşımlarını kendi bağlantı dizelerinde kullanmaya devam eder.
-    /// </para>
-    /// </summary>
     public static async Task<DatabaseFirstRunState> GetFirstRunStateAsync(
         IServiceProvider services)
     {
         return (await ProbeAsync(services)).State;
     }
 
-    /// <summary>
-    /// Ana veritabanının varlığını yoklar ve sonucu ayrıntısıyla döndürür.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="GetFirstRunStateAsync"/> yalnızca durumu döndürür. Açılış
-    /// ekranı ise kullanıcıya <b>neden</b> ulaşılamadığını göstermek zorunda
-    /// olduğu için hata metni de taşınır.
-    /// </remarks>
     private static async Task<ProbeResult> ProbeAsync(IServiceProvider services)
     {
         Exception? lastException = null;
@@ -154,8 +112,7 @@ public static class DatabaseInitializer
             catch (Exception ex) when (attempt < MaxProbeAttempts)
             {
                 lastException = ex;
-                
-                // Kısa bir gecikme sonra tekrar dene
+
                 await Task.Delay(ProbeRetryDelay);
             }
             catch (Exception ex)
@@ -164,13 +121,11 @@ public static class DatabaseInitializer
             }
         }
 
-        // Tüm denemeler başarısız oldu
         string errorMessage = lastException?.Message ?? "Bilinmeyen hata";
-        
-        // Hata log dosyasına da yaz (debugger olmadan da görülebilir)
+
         string logMessage = $"[DatabaseInitializer] Sunucuya ulaşılamadı ({MaxProbeAttempts} deneme sonrası): {errorMessage}";
         System.Diagnostics.Debug.WriteLine(logMessage);
-        
+
         try
         {
             string logPath = Path.Combine(AppContext.BaseDirectory, "logs", "crash.log");
@@ -179,13 +134,12 @@ public static class DatabaseInitializer
         }
         catch
         {
-            // Log yazma hatası yutulur; ana hata yine de kullanıcıya gösterilir
+            // Log yazma hatası yutulur
         }
 
         return ProbeResult.Unreachable(errorMessage);
     }
 
-    /// <summary>Yoklama sonucu; hata durumunda ayrıntıyı da taşır.</summary>
     private sealed record ProbeResult(DatabaseFirstRunState State, string? Error)
     {
         public static ProbeResult Exists => new(DatabaseFirstRunState.Exists, null);
@@ -196,26 +150,6 @@ public static class DatabaseInitializer
             new(DatabaseFirstRunState.Unreachable, error);
     }
 
-    /// <summary>
-    /// Bağlantılı olunan veritabanının kullanıma hazır olup olmadığını
-    /// <b>hiçbir şey yazmadan</b> doğrular.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Bu metot merkezi sunucuya bağlanan istemcilerin açılış yoludur. Uygulama
-    /// açılırken veritabanını <em>değiştirmez</em>; yalnızca bekleyen migration
-    /// varsa bunu öğrenir ve ekranda yöneticiye ne yapılması gerektiğini söyler.
-    /// </para>
-    /// <para>
-    /// Kontrol iki aşamalıdır. Önce veritabanının varlığı <c>sys.databases</c>
-    /// üzerinden yoklanır (veritabanı yokken de bağlantı kurulabilmesi için
-    /// <c>master</c> kataloğuna bağlanılır). Sonra bekleyen migration'lar
-    /// okunur. İkinci adım yalnızca <c>__EFMigrationsHistory</c> tablosunu okur;
-    /// EF'nin <c>MigrateAsync</c>'i aksine hiçbir şema değişikliği yapmaz ve
-    /// geçmiş tablosuna satır eklemez. Bu yüzden kontrol güvenle her istemci
-    /// açılışında, hatta aynı anda N istemci açılışında çalıştırılabilir.
-    /// </para>
-    /// </remarks>
     public static async Task<DatabaseSchemaCheckResult> CheckSchemaAsync(
         IServiceProvider services,
         CancellationToken cancellationToken = default)
@@ -251,8 +185,6 @@ public static class DatabaseInitializer
 
         try
         {
-            // Bekleyen migration sorgusu yalnızca okur; yine de kısa bir komut
-            // zaman aşımı uygulanır ki yavaş sunucuda giriş ekranı asılı kalmasın.
             masterContext.Database.SetCommandTimeout(
                 Math.Max(1, options.SchemaCheckTimeoutSeconds));
 
@@ -273,52 +205,9 @@ public static class DatabaseInitializer
         }
     }
 
-    /// <summary>
-    /// Veritabanı hazırlık kilidinin kaynak adı.
-    /// </summary>
-    /// <remarks>
-    /// Master veritabanı adı kaynağa dâhil edilir: aynı SQL Server üzerinde
-    /// farklı ortamların (geliştirme / test / canlı) master veritabanları
-    /// farklıysa birbirlerini bekletmemeleri gerekir.
-    /// </remarks>
     internal static string BuildLockName(string masterDatabaseName) =>
         $"CAA:Provisioning:{masterDatabaseName}";
 
-    /// <summary>
-    /// Veritabanını idempotent biçimde hazırlar: master migration'ları,
-    /// tohumlama ve içinde bulunulan yılın iş veritabanları. Veriler zaten
-    /// hazırsa hiçbir şey yazmaz.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>Bu metot şema değiştirir ve yalnızca yönetici tarafından çağrılmalıdır.</b>
-    /// Uygulama açılışında <see cref="CheckSchemaAsync"/> kullanılır.
-    /// </para>
-    /// <para>
-    /// Çağrılar arasında sunucu çapında bir kilit tutulur ve kilit alındıktan
-    /// <em>sonra</em> durum yeniden okunur. İkisi birden gereklidir:
-    /// </para>
-    /// <list type="bullet">
-    /// <item>
-    /// Kilit olmadan iki yönetici aynı anda migration çalıştırırsa ikisi de
-    /// <c>__EFMigrationsHistory</c>'ye yazar ve biri diğerinin DDL'ini kilitli
-    /// bulup beklerken hata alır.
-    /// </item>
-    /// <item>
-    /// Kilit olmadan "şirket var mı?" kontrolü iki yöneticiye de "yok" der ve
-    /// ikisi de aynı şirketi, aynı rolü ve aynı kullanıcıyı ekler.
-    /// </item>
-    /// </list>
-    /// <para>
-    /// Kilitten sonraki yeniden kontrol, ikinci çağrının hiçbir şey yapmadan
-    /// çıkmasını sağlar; yalnızca kilitlemek yarışı engeller, tekrarı
-    /// engellemez.
-    /// </para>
-    /// </remarks>
-    /// <param name="progress">
-    /// Adım durumlarını arayüze iletir. Opsiyoneldir; verilmezse adımlar
-    /// sessizce çalışır.
-    /// </param>
     public static async Task InitializeAsync(
         IServiceProvider services,
         IProgress<DatabaseProvisionProgress>? progress = null,
@@ -350,9 +239,6 @@ public static class DatabaseInitializer
             lockTimeout,
             cancellationToken);
 
-        // Kilit artık elimizde: başka bir oturum bu noktadan sonra hazırlığa
-        // başlayamaz. Yapılacak işin kaldığını burada yeniden okuyarak
-        // "kontrol et ve sonra yaz" aralığını kapatıyoruz.
         DatabaseSchemaCheckResult schemaCheck = await CheckSchemaAsync(services, cancellationToken);
 
         if (schemaCheck.State is DatabaseSchemaState.Unreachable)
@@ -403,7 +289,6 @@ public static class DatabaseInitializer
         await EnsureCurrentYearAsync(masterContext, databaseNameBuilder, provisioner, progress, cancellationToken);
     }
 
-    /// <summary>Ana veritabanındaki tablo sayısı; kurulum ilerlemesinde raporlanır.</summary>
     private static async Task<int> CountMasterTablesAsync(
         MasterDbContext masterContext,
         CancellationToken cancellationToken)
@@ -418,8 +303,6 @@ public static class DatabaseInitializer
         }
         catch (Exception ex)
         {
-            // Sayaç yalnızca bilgilendirme amaçlıdır; başarısız olması
-            // kurulumu durdurmamalıdır.
             System.Diagnostics.Debug.WriteLine(
                 $"[DatabaseInitializer] Tablo sayısı okunamadı: {ex.Message}");
 
@@ -427,10 +310,6 @@ public static class DatabaseInitializer
         }
     }
 
-    /// <summary>
-    /// Master'da şirket yoksa ilk kurulumdur: örnek şirketler, roller ve
-    /// kullanıcılar tohumlanır. Ardından sys_admin rolüne yeni yetkiler eklenir.
-    /// </summary>
     private static async Task SeedMasterAsync(
         MasterDbContext masterContext,
         PermissionService permissionService,
@@ -448,7 +327,7 @@ public static class DatabaseInitializer
 
         if (!await masterContext.Companies.AnyAsync(cancellationToken))
         {
-            var merkezCompany = new Company(
+            var demirciCompany = new Company(
                 new Name("Demirci Açık Ceza İnfaz Kurumu İşyurdu Müdürlüğü"),
                 new TaxOffice("DEMİRCİ"),
                 new TaxNumber("1234567890"),
@@ -462,32 +341,32 @@ public static class DatabaseInitializer
                 new AccountingUnit("DEMİRCİ MAL MÜDÜRLÜĞÜ", "45103"),
                 true);
 
-            var anadoluCompany = new Company(
-                new Name("Anadolu Şube"),
-                new TaxOffice("Ankara"),
-                new TaxNumber("4567890123"),
-                new Description("Ankara"),
-                new Invoiceinformation("Ankara"),
-                new Letterhead("Ankara"),
-                new CompanyPrefix("08691234"),
-                new Address("Ankara", "Çankaya", "Kızılay"),
-                new Contact("03124567890", "", "ankara@merkez.com"),
-                new ExpenditureUnit("ANADOLU HARCAMA BİRİMİ", "2.2.2.2"),
-                new AccountingUnit("ANADOLU MUHASEBE BİRİMİ", "2002"),
-                true);
-
-            var egeCompany = new Company(
-                new Name("Ege Şube"),
+            var focaCompany = new Company(
+                new Name("Foça Açık Ceza İnfaz Kurumu İşyurdu Müdürlüğü"),
                 new TaxOffice("İzmir"),
-                new TaxNumber("7890123456"),
+                new TaxNumber("4567890123"),
                 new Description("İzmir"),
                 new Invoiceinformation("İzmir"),
                 new Letterhead("İzmir"),
                 new CompanyPrefix("08691234"),
-                new Address("İzmir", "Konak", "Alsancak"),
-                new Contact("02327894561", "", "izmir@merkez.com"),
-                new ExpenditureUnit("EGE HARCAMA BİRİMİ", "3.3.3.3"),
-                new AccountingUnit("EGE MUHASEBE BİRİMİ", "3003"),
+                new Address("İzmir", "Çankaya", "Kızılay"),
+                new Contact("03124567890", "", "izmir@merkez.com"),
+                new ExpenditureUnit("ANADOLU HARCAMA BİRİMİ", "2.2.2.2"),
+                new AccountingUnit("ANADOLU MUHASEBE BİRİMİ", "2002"),
+                true);
+
+            var canakkaleCompany = new Company(
+                new Name("Çanakkale Açık Ceza İnfaz Kurumu İşyurdu Müdürlüğü"),
+                new TaxOffice("Çanakkale"),
+                new TaxNumber("7890123456"),
+                new Description("Çanakkale"),
+                new Invoiceinformation("Çanakkale"),
+                new Letterhead("Çanakkale"),
+                new CompanyPrefix("08691234"),
+                new Address("Çanakkale", "Konak", "Alsancak"),
+                new Contact("02327894561", "", "canakkale@merkez.com"),
+                new ExpenditureUnit("Çanakkale HARCAMA BİRİMİ", "3.3.3.3"),
+                new AccountingUnit("Çanakkale MUHASEBE BİRİMİ", "3003"),
                 true);
 
             var sysAdminRole = new Role(new Name("sys_admin"), true);
@@ -495,51 +374,58 @@ public static class DatabaseInitializer
             var accountantRole = new Role(new Name("muhasebe_elemani"), true);
 
             var adminUser = new User(
-                new FirstName("Emrullah"),
-                new LastName("AKPINAR"),
-                new Email("admin@test.com"),
-                new UserName("admin"),
-                new Password("1"),
-                merkezCompany.Id,
-                sysAdminRole.Id,
-                true);
+                firstName: new FirstName("Emrullah"),
+                lastName: new LastName("AKPINAR"),
+                email: new Email("admin@test.com"),
+                userName: new UserName("admin"),
+                password: new Password("1"),
+                companyId: demirciCompany.Id,
+                roleId: sysAdminRole.Id,
+                isActive: true,
+                tRIdentityNumber: new TRIdentityNumber("11111111110")
+            );
 
-            // CreatedBy alanı NOT NULL ve GetAllWithAudit, CreatedBy üzerinden
-            // Users'a inner-join yapar. Tohumlanan tüm kayıtların CreatedBy'si
-            // bu yüzden admin kullanıcının gerçek Id'sine bağlanmalı.
+            // Sicil numarasını "AB" ile başlatacak şekilde atıyoruz[cite: 1]
+            adminUser.SetRegistryNumber("AB1001");
+
             masterContext.SetSeedAdminUserId(adminUser.Id.Value);
 
             try
             {
-                masterContext.Companies.AddRange(merkezCompany, anadoluCompany, egeCompany);
+                masterContext.Companies.AddRange(demirciCompany, focaCompany, canakkaleCompany);
                 masterContext.Roles.AddRange(sysAdminRole, accountingManagerRole, accountantRole);
                 masterContext.Users.Add(adminUser);
 
                 await masterContext.SaveChangesAsync();
 
-                (string UserName, string Email, IdentityId CompanyId, IdentityId RoleId)[] sampleUsers =
+                (string UserName, string Email, IdentityId CompanyId, IdentityId RoleId, string RegistryNumber, string TCIdentity)[] sampleUsers =
                 [
-                    ("ahmet.yilmaz", "ahmet@test.com", merkezCompany.Id, accountingManagerRole.Id),
-                    ("ayse.kaya", "ayse@test.com", anadoluCompany.Id, accountantRole.Id),
-                    ("mehmet.demir", "mehmet@test.com", anadoluCompany.Id, accountantRole.Id),
-                    ("fatma.celik", "fatma@test.com", egeCompany.Id, accountantRole.Id),
+                    ("orhan", "orhan@test.com", demirciCompany.Id, accountingManagerRole.Id, "AB1002", "22222222220"),
+                    ("ramazan", "ramazan@test.com", demirciCompany.Id, accountantRole.Id, "AB1003", "33333333330"),
+                    ("serif", "serif@test.com", focaCompany.Id, accountantRole.Id, "AB1004", "44444444440"),
+                    ("nurcan", "nurcan@test.com", canakkaleCompany.Id, accountantRole.Id, "AB1005", "55555555550"),
                 ];
 
-                foreach ((string userName, string email, IdentityId companyId, IdentityId roleId) in sampleUsers)
+                foreach (var sample in sampleUsers)
                 {
-                    string firstName = char.ToUpperInvariant(userName[0])
-                        + userName.Substring(1, userName.IndexOf('.') - 1);
+                    string firstName = char.ToUpperInvariant(sample.UserName[0]) + sample.UserName[1..];
 
-                    masterContext.Users.Add(
-                        new User(
-                            new FirstName(firstName),
-                            new LastName("Soyad"),
-                            new Email(email),
-                            new UserName(userName),
-                            new Password("1"),
-                            companyId,
-                            roleId,
-                            true));
+                    var user = new User(
+                        firstName: new FirstName(firstName),
+                        lastName: new LastName("Soyad"),
+                        email: new Email(sample.Email),
+                        userName: new UserName(sample.UserName),
+                        password: new Password("1"),
+                        companyId: sample.CompanyId,
+                        roleId: sample.RoleId,
+                        isActive: true,
+                        tRIdentityNumber: new TRIdentityNumber(sample.TCIdentity)
+                    );
+
+                    // Sicil numarasını "AB" ile başlatacak şekilde atıyoruz[cite: 1]
+                    user.SetRegistryNumber(sample.RegistryNumber);
+
+                    masterContext.Users.Add(user);
                 }
 
                 await masterContext.SaveChangesAsync();
@@ -583,8 +469,6 @@ public static class DatabaseInitializer
         await EnsureAdminRolePermissionsAsync(
             masterContext, permissionService, roleRepository, cancellationToken);
 
-        // Standart rollerin baslangic yetkileri (or. mesajlasma) tamamlanir.
-        // Yalnizca EKLER; yoneticinin rol ekranindaki tercihlerini degistirmez.
         Guid? starterAdminId = await masterContext.Users
             .AsNoTracking()
             .Where(u => u.UserName.Value == "admin")
@@ -600,6 +484,9 @@ public static class DatabaseInitializer
         {
             await permissionService.EnsureStarterRolePermissionsAsync(
                 roleRepository, masterContext, cancellationToken);
+
+            await permissionService.EnsureAnnouncementOnlyForAdminAsync(
+                roleRepository, masterContext, cancellationToken);
         }
         finally
         {
@@ -612,26 +499,6 @@ public static class DatabaseInitializer
             "yönetici yetkileri tanımlandı"));
     }
 
-    /// <summary>
-    /// İçinde bulunulan mali yılın iş veritabanlarını tüm kurumlar için güncel
-    /// hale getirir.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>Yıl kaydı olmayan kurum</b> için veritabanı açılır, tohumlanır ve
-    /// <c>CompanyYears</c> kaydı yazılır. <b>Yıl kaydı olan kurum</b> için yalnızca
-    /// bekleyen migration'lar uygulanır; tohumlama zaten dolu tablolarda
-    /// "atla" davranışı gösterir.
-    /// </para>
-    /// <para>
-    /// Kayıt olan kurumları da kapsamak bilinçlidir. Şema ilerlemesi
-    /// (örneğin eşzamanlılık belirteci eklenmesi) yalnızca yeni açılan
-    /// veritabanlarına uygulansaydı, <b>mevcut</b> kurumların veritabanları
-    /// geride kalır ve o kurumlar uygulamayı hiç açamazdı. Hazırlık komutunun
-    /// anlamı "her şeyi güncel tut" olduğu için var olan yıl veritabanları da
-    /// taranır.
-    /// </para>
-    /// </remarks>
     private static async Task EnsureCurrentYearAsync(
         MasterDbContext masterContext,
         IDatabaseNameBuilder databaseNameBuilder,
@@ -652,8 +519,6 @@ public static class DatabaseInitializer
             return;
         }
 
-        // Year ve IdentityId value converter ile eşlendiği için sorgu, alanların
-        // .Value özelliklerine değil nesnelerin kendisine karşı yazılmalıdır.
         var existingYears = await masterContext.CompanyYears
             .AsNoTracking()
             .Where(cy => cy.Year == new Year(currentYear))
@@ -671,8 +536,6 @@ public static class DatabaseInitializer
             return;
         }
 
-        // CompanyYears kaydının CreatedBy alanı NOT NULL; açılışta oturum olmadığı
-        // için admin kullanıcısı tohumlayıcı olarak işaretlenir.
         Guid? adminId = await masterContext.Users
             .AsNoTracking()
             .Where(u => u.UserName.Value == "admin")
@@ -692,9 +555,6 @@ public static class DatabaseInitializer
             {
                 bool isNew = !existingByCompany.TryGetValue(company.Id, out var existingYear);
 
-                // Yeni yıl veritabanının adı şirkete göre üretilir; mevcut kaydın
-                // adı ise bellidir ve asla değiştirilmez (master'daki kayıtla
-                // eşleşmek zorunda).
                 string databaseName = isNew
                     ? await databaseNameBuilder.SuggestAvailableAsync(company.Name, currentYear, cancellationToken)
                     : existingYear!.DatabaseName.Value;
@@ -749,11 +609,6 @@ public static class DatabaseInitializer
         }
     }
 
-    /// <summary>
-    /// Tohum alt adımları yıl veritabanı sağlayıcısı tarafından kurum bazında
-    /// bildirilir; burada kurumların toplamı bir kez daha raporlanır. Böylece
-    /// ekranda satır başına tek bir tik kalır ve tutarlar tüm kurumları kapsar.
-    /// </summary>
     private static void ReportSeedTotal(
         IProgress<DatabaseProvisionProgress>? progress,
         DatabaseProvisionStep step,
@@ -788,7 +643,6 @@ public static class DatabaseInitializer
             return;
         }
 
-        // Yeni yetki kayıtlarının CreatedBy alanı da admin'i işaretlemeli.
         masterContext.SetSeedAdminUserId(adminId.Value);
         try
         {

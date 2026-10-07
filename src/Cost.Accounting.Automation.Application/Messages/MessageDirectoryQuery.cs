@@ -31,9 +31,9 @@ namespace Cost.Accounting.Automation.Application.Messages;
 /// </para>
 /// <para>
 /// Sorgu tek bir ekranda gösterilecek bütün alanları bir arada getirir: kim, hangi
-/// kurumda, şu an çevrimiçi mi, kaç okunmamış mesajı var. Alanları ayrı ayrı
-/// sorgulamak yerine tek listede birleştirmek, liste 10 saniyede bir tazelendiği
-/// için veritabanına gereksiz tur atmaz.
+/// kurumda, fotoğrafı var mı, şu an çevrimiçi mi, kaç okunmamış mesajı var. Alanları
+/// ayrı ayrı sorgulamak yerine tek listede birleştirmek, liste 10 saniyede bir
+/// tazelendiği için veritabanına gereksiz tur atmaz.
 /// </para>
 /// </remarks>
 [Permission(MessagePermissions.View)]
@@ -52,6 +52,12 @@ public sealed class MessageDirectoryDto
     public string? RegistryNumber { get; set; }
 
     public string? TcNo { get; set; }
+
+    /// <summary>
+    /// Kullanıcının profil fotoğrafının göreli yolu; yoksa listede ad-soyaddan
+    /// üretilen baş harf avatarı gösterilir.
+    /// </summary>
+    public string? AvatarPath { get; set; }
 
     public string? CompanyName { get; set; }
 
@@ -101,6 +107,7 @@ internal sealed class MessageDirectoryQueryHandler(
         string UserName,
         string? RegistryNumber,
         string? TcNo,
+        string? AvatarPath,
         Guid CompanyId,
         Guid RoleId);
 
@@ -131,6 +138,7 @@ internal sealed class MessageDirectoryQueryHandler(
                 u.UserName.Value,
                 u.RegistryNumber,
                 u.TRIdentityNumber!.Value,
+                u.AvatarPath,
                 u.CompanyId.Value,
                 u.RoleId.Value))
             .ToListAsync(cancellationToken);
@@ -168,6 +176,7 @@ internal sealed class MessageDirectoryQueryHandler(
                 UserName = u.UserName,
                 RegistryNumber = string.IsNullOrWhiteSpace(u.RegistryNumber) ? null : u.RegistryNumber,
                 TcNo = string.IsNullOrWhiteSpace(u.TcNo) ? null : u.TcNo,
+                AvatarPath = string.IsNullOrWhiteSpace(u.AvatarPath) ? null : u.AvatarPath,
                 CompanyName = companyNames.GetValueOrDefault(u.CompanyId),
                 RoleName = roleNames.GetValueOrDefault(u.RoleId, string.Empty),
                 IsOnline = isOnline,

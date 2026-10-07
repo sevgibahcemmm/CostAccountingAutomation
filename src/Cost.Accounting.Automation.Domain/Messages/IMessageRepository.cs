@@ -22,19 +22,61 @@ public interface IMessageRepository : IRepository<UserMessage>
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// İki kullanıcı arasındaki tüm mesajların geçmişi (her iki yön).
+    /// İki kullanıcı arasındaki mesaj geçmişi (her iki yön).
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Gönderilen ve alınan mesajlar birlikte, tarih sırasına göre döner.
     /// <paramref name="announcementScope"/> <c>true</c> ise karşılıklı tüm mesajlar
     /// yerine yalnızca karşı tarafın gönderdiği duyurular döner; böylece bir
     /// kullanıcının kendi duyuruları kendi konuşma penceresinde tek bir başlık
     /// altında toplanır.
+    /// </para>
+    /// <para>
+    /// <b>Sayfalama:</b> <paramref name="limit"/>&#160;&gt;&#160;0 ise yalnızca en
+    /// yeni o kadar satır döner (eskiler değil) ve sonuç eskiden yeniye
+    /// sıralanır. <paramref name="before"/> verilirse yalnızca o andan önceki
+    /// mesajlar döner; böylece "daha eskilerini yükle" aynı pencereden devam
+    /// eder. <paramref name="limit"/>&#160;=&#160;0 (varsayılan) tüm geçmişi döner.
+    /// </para>
+    /// <para>
+    /// <paramref name="visibleAfter"/> verilirse yalnızca o andan sonraki
+    /// mesajlar döner; bu, kullanıcının kendi konuşma görünümünü temizleme
+    /// (bkz. <see cref="ConversationClear"/>) filtresidir.
+    /// </para>
     /// </remarks>
     Task<List<UserMessage>> GetConversationAsync(
         IdentityId currentUserId,
         IdentityId counterpartId,
         bool announcementScope = false,
+        int limit = 0,
+        DateTimeOffset? before = null,
+        DateTimeOffset? visibleAfter = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Kullanıcının bu konuşma için temizleme (görünüm gizleme) anını döndürür.
+    /// </summary>
+    /// <returns>Temizleme yoksa <c>null</c>.</returns>
+    Task<DateTimeOffset?> GetClearedAtAsync(
+        IdentityId userId,
+        IdentityId counterpartId,
+        bool announcementScope = false,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Kullanıcının bu konuşma için temizleme anını yazar ya da kaldırır.
+    /// </summary>
+    /// <remarks>
+    /// Yalnızca <paramref name="userId"/>ye ait görünüm tercihini değiştirir;
+    /// mesajlara ve karşı tarafa dokunmaz. <paramref name="clearedAt"/>
+    /// <c>null</c> ise satır fiziksel olarak silinir (geçmiş yeniden görünür).
+    /// </remarks>
+    Task SetClearedAsync(
+        IdentityId userId,
+        IdentityId counterpartId,
+        bool announcementScope,
+        DateTimeOffset? clearedAt,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -103,6 +145,24 @@ public interface IMessageRepository : IRepository<UserMessage>
     Task<bool> SoftDeleteAsync(
         Guid messageId,
         IdentityId senderId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Mesaj gövdesini yalnızca sahibinin değiştirmesine izin verir.
+    /// </summary>
+    /// <remarks>
+    /// Duyuru mesajları kapsam dışındadır: bir duyuru N alıcıya N satır olarak
+    /// yazıldığı için tek satırın düzenlenmesi yalnızca o alıcının kopyasını
+    /// değiştirirdi.
+    /// </remarks>
+    /// <returns>
+    /// Yeni düzenleme damgası; mesaj yoksa, sahibi değilse ya da duyuru ise
+    /// <c>null</c>.
+    /// </returns>
+    Task<DateTimeOffset?> EditBodyAsync(
+        Guid messageId,
+        IdentityId senderId,
+        string newBody,
         CancellationToken cancellationToken = default);
 
     /// <summary>Bir kullanıcının mesaj gönderme yetkisi var mı diye bakmadan önce hedefi doğrular.</summary>

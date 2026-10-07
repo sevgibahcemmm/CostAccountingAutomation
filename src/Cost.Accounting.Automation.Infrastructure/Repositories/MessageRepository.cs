@@ -47,6 +47,9 @@ internal sealed class MessageRepository : MasterAuditableRepository<UserMessage>
         IdentityId currentUserId,
         IdentityId counterpartId,
         bool announcementScope = false,
+        int limit = 0,
+        DateTimeOffset? before = null,
+        DateTimeOffset? visibleAfter = null,
         CancellationToken cancellationToken = default)
     {
         var messages = this.Context.Set<UserMessage>().AsNoTracking();
@@ -59,15 +62,97 @@ internal sealed class MessageRepository : MasterAuditableRepository<UserMessage>
                 (m.SenderId == currentUserId && m.RecipientId == counterpartId)
                 || (m.SenderId == counterpartId && m.RecipientId == currentUserId));
 
-        // Yalnizca CreatedAt ile siralanir. Id (Guid v7) uzerinden bir esitlik
-        // kirici eklenmez: SQL Server uniqueidentifier degerlerini kronolojik
-        // degil, ic bayt siralamasiyla karsilastirir; Guid v7 olsa bile bu
-        // siralama zaman sirasi vermez ve konusma gecmisiyanlis gosterilir.
-        // CreatedAt datetimeoffset(7) cozunurlugu 100 nanosaniye oldugu icin
-        // iki mesajin ayni anda kaydedilmesi pratikte olusmaz.
-        return await query
-            .OrderBy(m => m.CreatedAt)
+        // Kullanıcının kendi temizlediği görünüm: temizleme anından önceki
+        // mesajlar bu kullanıcıya gösterilmez (bkz. ConversationClear).
+        if (visibleAfter is { } visibleFrom)
+        {
+            query = query.Where(m => m.CreatedAt > visibleFrom);
+        }
+
+        // "Daha eskilerini yükle": istenen andan önceki mesajlar.
+        if (before is { } cutoff)
+        {
+            query = query.Where(m => m.CreatedAt < cutoff);
+        }
+
+        if (limit <= 0)
+        {
+            // Yalnizca CreatedAt ile siralanir. Id (Guid v7) uzerinden bir esitlik
+            // kirici eklenmez: SQL Server uniqueidentifier degerlerini kronolojik
+            // degil, ic bayt siralamasiyla karsilastirir; siralama yanlis olur.
+            // CreatedAt datetimeoffset(7) cozunurlugu 100 nanosaniye oldugu icin
+            // iki mesajin ayni anda kaydedilmesi pratikte olusmaz.
+            return await query
+                .OrderBy(m => m.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
+
+        // En yeni N satır alınır, sonra ters çevrilerek eskiden yeniye verilir;
+        // böylece hem son mesajlar yüklenir hem de baloncuk sırası korunur.
+        List<UserMessage> page = await query
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(limit)
             .ToListAsync(cancellationToken);
+
+        page.Reverse();
+
+        return page;
+    }
+
+    public async Task<DateTimeOffset?> GetClearedAtAsync(
+        IdentityId userId,
+        IdentityId counterpartId,
+        bool announcementScope = false,
+        CancellationToken cancellationToken = default)
+    {
+        ConversationClear? row = await this.Context.Set<ConversationClear>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                c => c.UserId == userId
+                     && c.CounterpartId == counterpartId
+                     && c.IsAnnouncementChannel == announcementScope,
+                cancellationToken);
+
+        return row?.ClearedAt;
+    }
+
+    public async Task SetClearedAsync(
+        IdentityId userId,
+        IdentityId counterpartId,
+        bool announcementScope,
+        DateTimeOffset? clearedAt,
+        CancellationToken cancellationToken = default)
+    {
+        var set = this.Context.Set<ConversationClear>();
+
+        ConversationClear? existing = await set.FirstOrDefaultAsync(
+            c => c.UserId == userId
+                 && c.CounterpartId == counterpartId
+                 && c.IsAnnouncementChannel == announcementScope,
+            cancellationToken);
+
+        if (clearedAt is null)
+        {
+            // Geçmiş yeniden gösterilecek: satır fiziksel olarak kalkar. Bu satırlar
+            // yumuşak silinemez — özindeks (kullanıcı + karşı taraf + kanal) eski
+            // satırla çakışırdı ve yeni temizleme kaydı engellenirdi.
+            if (existing is not null)
+            {
+                set.Remove(existing);
+            }
+        }
+        else if (existing is null)
+        {
+            await set.AddAsync(
+                new ConversationClear(userId, counterpartId, announcementScope, clearedAt.Value),
+                cancellationToken);
+        }
+        else
+        {
+            existing.SetClearedAt(clearedAt.Value);
+        }
+
+        await Context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<List<UserMessage>> GetSentAsync(
@@ -142,6 +227,31 @@ internal sealed class MessageRepository : MasterAuditableRepository<UserMessage>
         await Context.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    public async Task<DateTimeOffset?> EditBodyAsync(
+        Guid messageId,
+        IdentityId senderId,
+        string newBody,
+        CancellationToken cancellationToken = default)
+    {
+        var message = await this.Context.Set<UserMessage>()
+            .FirstOrDefaultAsync(m => m.Id == new IdentityId(messageId), cancellationToken);
+
+        // Gönderen denetimi burada da uygulanır: arayüzden gelen istek
+        // başkasının mesajını değiştiremez. Duyurular (N satır) kapalıdır.
+        if (message is null
+            || message.SenderId.Value != senderId.Value
+            || message.IsAnnouncement)
+        {
+            return null;
+        }
+
+        DateTimeOffset editedAt = DateTimeOffset.Now;
+        message.EditBody(new MessageBody(newBody), editedAt);
+        await Context.SaveChangesAsync(cancellationToken);
+
+        return editedAt;
     }
 
     public Task<bool> AnyConversationWithAsync(

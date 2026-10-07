@@ -1,0 +1,22 @@
+1. Master migration'ı
+
+Add-Migration InitialMaster -Context MasterDbContext -OutputDir Migrations/Master -Project Cost.Accounting.Automation.Infrastructure -StartupProject Cost.Accounting.Automation.WinFormsApp
+
+
+2. Yıl migration'ı (önce ortam değişkenini ayarlayın)
+
+$env:CAA_ALLOW_YEAR_DESIGN_TIME = "1"
+Add-Migration InitialYear -Context ApplicationDbContext -OutputDir Migrations/Year -Project Cost.Accounting.Automation.Infrastructure -StartupProject Cost.Accounting.Automation.WinFormsApp
+
+
+3. Ortam değişkenini kaldırın
+Remove-Item Env:CAA_ALLOW_YEAR_DESIGN_TIME
+
+
+
+4. Kontrol
+
+Add-Migration CheckMaster -Context MasterDbContext -Project Cost.Accounting.Automation.Infrastructure -StartupProject Cost.Accounting.Automation.WinFormsApp
+
+
+  Remove-Migration -Context MasterDbContext -Project Cost.Accounting.Automation.Infrastructure -StartupProject Cost.Accounting.Automation.WinFormsApp
