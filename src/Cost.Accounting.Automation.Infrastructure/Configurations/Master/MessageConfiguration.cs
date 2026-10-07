@@ -49,6 +49,12 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<UserMessag
             read.Property(r => r.Value).HasColumnName("ReadState_Value");
         });
 
+        // Ek dosya: tabloda yalnızca yol, gönderenin verdiği ad ve boyut tutulur.
+        // Dosyanın kendisi dosya deposunda yaşar (MessageFiles klasörü).
+        builder.Property(m => m.AttachmentPath).HasMaxLength(400);
+        builder.Property(m => m.AttachmentFileName).HasMaxLength(260);
+        builder.Property(m => m.AttachmentSize);
+
         // Gelen kutusu her zaman "bana gelenler" ile baslar; okunmus/okunmamis
         // filtresi bu daraltilmis kume uzerinde uygulanir. Sahip olunan bir
         // navigasyon indeksin parcasi olamaz, bu yuzden ReadState indekse girmez.

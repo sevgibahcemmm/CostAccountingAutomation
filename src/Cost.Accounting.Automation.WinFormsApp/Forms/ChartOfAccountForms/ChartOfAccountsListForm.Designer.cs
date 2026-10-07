@@ -14,7 +14,6 @@ private PanelControl _pnlHeader = null!;
     private LabelControl _lblTitle = null!;
     private LabelControl _lblSub = null!;
     private PictureEdit _picHeaderIcon = null!;
-    private SimpleButton _btnClosePage = null!;
 
     private PanelControl _pnlToolbar = null!;
     private SimpleButton _btnManualAdd = null!;
@@ -38,7 +37,6 @@ private SimpleButton _btnClearSelection = null!;
         _lblTitle = new LabelControl();
         _lblSub = new LabelControl();
         _picHeaderIcon = new PictureEdit();
-        _btnClosePage = new SimpleButton();
 
         _pnlToolbar = new PanelControl();
         _btnManualAdd = new SimpleButton();
@@ -102,24 +100,9 @@ private SimpleButton _btnClearSelection = null!;
         _picHeaderIcon.Properties.ShowMenu = false;
         _picHeaderIcon.SvgImage = DxIcon.ChartAccounts;
 
-        //
-        // _btnClosePage
-        //
-        _btnClosePage.Text = "Kapat";
-        _btnClosePage.Size = new Size(94, 36);
-        _btnClosePage.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        _btnClosePage.Location = new Point(1170, 37);
-        _btnClosePage.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-        _btnClosePage.Appearance.Options.UseFont = true;
-        _btnClosePage.ImageOptions.SvgImage = DxIcon.Close;
-        _btnClosePage.ImageOptions.SvgImageSize = new Size(16, 16);
-        _btnClosePage.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
-        _btnClosePage.Click += BtnClosePage_Click;
-
         _pnlHeader.Controls.Add(_picHeaderIcon);
         _pnlHeader.Controls.Add(_lblTitle);
         _pnlHeader.Controls.Add(_lblSub);
-        _pnlHeader.Controls.Add(_btnClosePage);
 
         //
         // _pnlToolbar

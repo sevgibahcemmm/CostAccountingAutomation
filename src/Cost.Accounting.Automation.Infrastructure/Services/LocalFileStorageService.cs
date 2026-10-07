@@ -32,13 +32,21 @@ internal sealed class LocalFileStorageService : IFileStorageService
         return Path.Combine(RootPath, normalized);
     }
 
-    public async Task<string> SaveAsync(
+    public Task<string> SaveAsync(
         byte[] content, string fileName, string folder, CancellationToken cancellationToken = default)
+        => SaveAsync(content, fileName, folder, allowAnyExtension: false, cancellationToken);
+
+    public async Task<string> SaveAsync(
+        byte[] content,
+        string fileName,
+        string folder,
+        bool allowAnyExtension,
+        CancellationToken cancellationToken = default)
     {
         if (content is null || content.Length == 0)
             throw new ArgumentException("Dosya içeriği boş olamaz.", nameof(content));
 
-        string safeExtension = SanitizeExtension(Path.GetExtension(fileName));
+        string safeExtension = SanitizeExtension(Path.GetExtension(fileName), allowAnyExtension);
         string uniqueFileName = $"{Guid.NewGuid():N}{safeExtension}";
 
         string targetDirectory = Path.Combine(RootPath, folder);
@@ -88,10 +96,29 @@ internal sealed class LocalFileStorageService : IFileStorageService
         return AppContext.BaseDirectory;
     }
 
-    private static string SanitizeExtension(string extension)
+    private static string SanitizeExtension(string extension, bool allowAnyExtension)
     {
-        string[] allowed = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"];
         string ext = extension?.ToLowerInvariant() ?? string.Empty;
-        return allowed.Contains(ext) ? ext : ".png";
+
+        if (!allowAnyExtension)
+        {
+            string[] allowed = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"];
+            return allowed.Contains(ext) ? ext : ".png";
+        }
+
+        // Her tür uzantıya izin verilir (sohbet eki); yalnızca dosya sistemini
+        // bozabilecek karakterler ayıklanır. Uzantı appederken nokta dâhil
+        // tutulur: ".pdf" gibi.
+        if (ext.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        char[] chars = [.. ext.Where(c => char.IsLetterOrDigit(c) || c == '.')];
+        string cleaned = new(chars);
+
+        return cleaned.Length is 0 or > 12 || cleaned == "."
+            ? string.Empty
+            : cleaned;
     }
 }

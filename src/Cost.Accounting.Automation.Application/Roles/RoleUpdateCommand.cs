@@ -67,6 +67,10 @@ internal sealed class RoleUpdateCommandHandler(
 
         roleRepository.Update(role);
 
+        // Yetki denetimi önbelleği bu rolün izinlerini taşıyor olabilir;
+        // değişikliğin bu süreçte anında geçerli olması için düşürülür.
+        RoleAccessCache.InvalidateRole(role.Id);
+
         return "Rol başarıyla güncellendi";
     }
 }

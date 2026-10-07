@@ -34,7 +34,10 @@ public sealed class UserMessage : Entity
         IdentityId recipientId,
         MessageBody body,
         MessageSubject? subject = null,
-        bool isAnnouncement = false)
+        bool isAnnouncement = false,
+        string? attachmentPath = null,
+        string? attachmentFileName = null,
+        long? attachmentSize = null)
     {
         SenderId = senderId;
         RecipientId = recipientId;
@@ -42,7 +45,28 @@ public sealed class UserMessage : Entity
         Subject = subject;
         IsAnnouncement = isAnnouncement;
         ReadState = new MessageReadState(false);
+        AttachmentPath = attachmentPath;
+        AttachmentFileName = attachmentFileName;
+        AttachmentSize = attachmentSize;
     }
+
+    /// <summary>
+    /// Ek dosyanın depodaki göreli yolu (ör. <c>MessageFiles\xxx.pdf</c>).
+    /// Ek yoksa <c>null</c>.
+    /// </summary>
+    /// <remarks>
+    /// Dosyanın kendisi dosya deposunda yaşar; tabloda yalnızca yol, gönderenin
+    /// verdiği ad ve boyut tutulur. Depo yolu uygulama tarafından üretilir
+    /// (benzersiz ad), bu yüzden kullanıcı verdiği adı ne olursa olsun tabloda
+    /// yalnızca görüntüleme amaçlı saklanır.
+    /// </remarks>
+    public string? AttachmentPath { get; private set; }
+
+    /// <summary>Gönderenin verdiği dosya adı (ekranada böyle görünür).</summary>
+    public string? AttachmentFileName { get; private set; }
+
+    /// <summary>Dosya boyutu (bayt). Ek yoksa <c>null</c>.</summary>
+    public long? AttachmentSize { get; private set; }
 
     /// <summary>Gönderen kullanıcı.</summary>
     public IdentityId SenderId { get; private set; } = default!;
@@ -86,6 +110,11 @@ public sealed class UserMessage : Entity
     public DateTimeOffset? DeliveredAt { get; private set; }
 
     /// <summary>
+    /// Mesajın son düzenleme anı; hiç düzenlendiyse <c>null</c>.
+    /// </summary>
+    public DateTimeOffset? EditedAt { get; private set; }
+
+    /// <summary>
     /// Mesajı okundu olarak işaretler.
     /// </summary>
     /// <remarks>
@@ -124,6 +153,27 @@ public sealed class UserMessage : Entity
         }
 
         DeliveredAt = now;
+    }
+
+    /// <summary>
+    /// Mesaj gövdesini yeni metinle değiştirir.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Yalnızca gönderen kendi mesajını düzenleyebilir; denetim uygulama
+    /// katmanında ve depoda yapılır. Sıra değişmez: <see cref="Entity.CreatedAt"/>
+    /// korunur, yalnızca gövde ve <see cref="EditedAt"/> damgası güncellenir.
+    /// </para>
+    /// <para>
+    /// Alıcı düzenlemeyi görür: arayüz <see cref="EditedAt"/> doluysa saat
+    /// yanında "düzenlendi" notu gösterir. Silme ve temizlemeden bağımsızdır;
+    /// bkz. <see cref="MarkAsDeleted"/> ve ConversationClear.
+    /// </para>
+    /// </remarks>
+    public void EditBody(MessageBody newBody, DateTimeOffset editedAt)
+    {
+        Body = newBody;
+        EditedAt = editedAt;
     }
 
     /// <summary>

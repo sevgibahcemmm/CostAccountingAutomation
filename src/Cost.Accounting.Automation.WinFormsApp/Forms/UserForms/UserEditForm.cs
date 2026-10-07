@@ -1,19 +1,15 @@
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.Roles;
 using Cost.Accounting.Automation.Application.Users;
-using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MainForms;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
-using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 using DevExpress.XtraEditors.Controls;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Grid;
 using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 using TS.MediatR;
 using TS.Result;
 
@@ -24,6 +20,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
         private readonly UserDto? _editing;
         private List<RoleDto> _roles = [];
         private PhotoInput? _avatar;
+
+        /// <summary>
+        /// Form kapatıldıktan sonra <see cref="UserEditForm_Load"/> akışının
+        /// sürdürülmesini engeller. Lookup sorguları geç dönerse kullanıcı
+        /// formu kapatabiliyor; devam eden akış dispose edilmiş denetimlere
+        /// (DevExpress <c>SearchLookUpEdit</c> görünümüne) değer bağlayınca
+        /// <see cref="NullReferenceException"/> üretiliyordu.
+        /// </summary>
+        private bool _closing;
 
         public UserEditForm() : this(null)
         {
@@ -57,12 +62,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             }
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (!e.Cancel)
+            {
+                _closing = true;
+            }
+        }
+
         private async void UserEditForm_Load(object? sender, EventArgs e)
         {
             btnSave.Enabled = false;
             try
             {
                 await LoadLookupsAsync();
+                if (_closing || IsDisposed)
+                {
+                    return;
+                }
+
                 if (_editing is not null)
                 {
                     Populate(_editing);
@@ -74,12 +93,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             }
             catch (Exception ex)
             {
+                if (_closing || IsDisposed)
+                {
+                    return;
+                }
+
                 ToastHelper.Show("Şirket/rol listesi yüklenemedi: " + ex.Message, ToastType.Error, 4000);
                 Close();
             }
             finally
             {
-                btnSave.Enabled = true;
+                if (!_closing && !IsDisposed)
+                {
+                    btnSave.Enabled = true;
+                }
             }
         }
 
@@ -103,8 +130,41 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             using var scope = Program.Services.CreateScope();
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            _roles = (await mediator.Send(new RoleGetAllQuery(), CancellationToken.None)).ToList();
-            List<CompanyDto> companies = (await mediator.Send(new CompanyGetAllQuery(), CancellationToken.None)).ToList();
+            IQueryable<RoleDto> rolesQuery = await mediator.Send(new RoleGetAllQuery(), CancellationToken.None);
+            if (_closing || IsDisposed)
+            {
+                return;
+            }
+
+            IQueryable<CompanyDto> companiesQuery = await mediator.Send(new CompanyGetAllQuery(), CancellationToken.None);
+            if (_closing || IsDisposed)
+            {
+                return;
+            }
+
+            // Handler'lar IQueryable döndürdüğü için SQL round-trip'ini
+            // ToList çalıştırdığınız thread yapar. await sonrası devam eden
+            // kod WinForms senkron bağlamında, yani arayüz thread'inde olduğu
+            // için sorgu (ve tanılama logu) arayüzü dondururdu. Threadpool'a
+            // taşıyarak pencere açılması sırasında arayüz kesintisiz kalır.
+            // İki sorgu aynı DbContext'i (aynı scope) paylaştığı için tek
+            // görevde, sırayla çalıştırılır.
+            (List<RoleDto> roles, List<CompanyDto> companies) = await Task.Run(() =>
+            {
+                List<RoleDto> loadedRoles = rolesQuery.ToList();
+                List<CompanyDto> loadedCompanies = companiesQuery.ToList();
+                return (loadedRoles, loadedCompanies);
+            });
+
+            // Sorgular geç döndüğünde kullanıcı formu kapatmış olabilir;
+            // dispose edilmiş denetimlere DataSource bağlamak DevExpress'te
+            // NullReferenceException üretiyordu.
+            if (_closing || IsDisposed)
+            {
+                return;
+            }
+
+            _roles = roles;
 
             ConfigureLookUp(cmbRole, _roles, nameof(RoleDto.Id), nameof(RoleDto.Name), "Rol");
             ConfigureLookUp(cmbCompany, companies, nameof(CompanyDto.Id), nameof(CompanyDto.Name), "Şirket");

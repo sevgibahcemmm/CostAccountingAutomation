@@ -15,7 +15,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
         private DevExpress.XtraEditors.PictureEdit picHeader;
         private DevExpress.XtraEditors.LabelControl lblHeaderTitle;
         private DevExpress.XtraEditors.LabelControl lblHeaderSub;
-        private DevExpress.XtraEditors.SimpleButton btnClose;
         private DevExpress.XtraEditors.PanelControl headerDivider;
         private DevExpress.XtraEditors.PanelControl summaryPanel;
         private System.Windows.Forms.TableLayoutPanel summaryCards;
@@ -101,7 +100,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
             this.lblHeaderSub = new DevExpress.XtraEditors.LabelControl();
             this.lblHeaderTitle = new DevExpress.XtraEditors.LabelControl();
             this.picHeader = new DevExpress.XtraEditors.PictureEdit();
-            this.btnClose = new DevExpress.XtraEditors.SimpleButton();
             this.headerDivider = new DevExpress.XtraEditors.PanelControl();
             this.summaryPanel = new DevExpress.XtraEditors.PanelControl();
             this.summaryCards = new System.Windows.Forms.TableLayoutPanel();
@@ -198,7 +196,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
             this.headerPanel.Controls.Add(this.lblHeaderSub);
             this.headerPanel.Controls.Add(this.lblHeaderTitle);
             this.headerPanel.Controls.Add(this.picHeader);
-            this.headerPanel.Controls.Add(this.btnClose);
             this.headerPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.headerPanel.Location = new System.Drawing.Point(0, 8);
             this.headerPanel.Margin = new System.Windows.Forms.Padding(0);
@@ -245,21 +242,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms
             this.picHeader.Size = new System.Drawing.Size(36, 36);
             this.picHeader.TabIndex = 0;
             this.picHeader.SvgImage = DxIcon.Restore;
-            //
-            // btnClose
-            //
-            this.btnClose.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            this.btnClose.Appearance.Options.UseFont = true;
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right))));
-            this.btnClose.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            this.btnClose.ImageOptions.SvgImage = DxIcon.Close;
-            this.btnClose.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnClose.Location = new System.Drawing.Point(892, 21);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(92, 34);
-            this.btnClose.TabIndex = 3;
-            this.btnClose.Text = "Kapat";
             //
             // headerDivider
             //

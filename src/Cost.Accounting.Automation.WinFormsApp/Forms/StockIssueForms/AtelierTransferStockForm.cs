@@ -24,7 +24,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.StockIssueForms
 
             Load += AtelierTransferStockForm_Load;
             btnRefresh.Click += async (_, _) => await LoadDataAsync();
-            btnClose.Click += (_, _) => Close();
         }
 
         private void ConfigureGrid()

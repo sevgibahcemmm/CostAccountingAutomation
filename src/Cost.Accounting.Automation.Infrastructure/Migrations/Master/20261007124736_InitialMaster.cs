@@ -41,7 +41,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -67,7 +68,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -103,11 +105,29 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Roles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserPresences",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CompanyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SessionStartedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    LastHeartbeatAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    LoggedOutAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    MachineName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserPresences", x => x.UserId);
                 });
 
             migrationBuilder.CreateTable(
@@ -122,12 +142,14 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                     UserName_Value = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
                     Password_PasswordHash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     Password_PasswordSalt = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    Password_HashIterations = table.Column<int>(type: "int", nullable: false),
                     ForgotPasswordCode_Value = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ForgotPasswordDate_Value = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     IsForgotPasswordCompleted_Value = table.Column<bool>(type: "bit", nullable: false),
                     CompanyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TcNo_Value = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
+                    RegistryNumber = table.Column<string>(type: "nvarchar(MAX)", maxLength: 50, nullable: true),
                     AvatarPath = table.Column<string>(type: "nvarchar(MAX)", maxLength: 500, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     DuplicateKey = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
@@ -137,7 +159,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -170,6 +193,88 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ConversationClears",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CounterpartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IsAnnouncementChannel = table.Column<bool>(type: "bit", nullable: false),
+                    ClearedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DuplicateKey = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConversationClears", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConversationClears_Users_CounterpartId",
+                        column: x => x.CounterpartId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ConversationClears_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AttachmentPath = table.Column<string>(type: "nvarchar(MAX)", maxLength: 400, nullable: true),
+                    AttachmentFileName = table.Column<string>(type: "nvarchar(MAX)", maxLength: 260, nullable: true),
+                    AttachmentSize = table.Column<long>(type: "bigint", nullable: true),
+                    SenderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RecipientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Subject_Value = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
+                    Body_Value = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
+                    IsAnnouncement = table.Column<bool>(type: "bit", nullable: false),
+                    ReadState_Value = table.Column<bool>(type: "bit", nullable: false),
+                    ReadAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    DeliveredAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    EditedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DuplicateKey = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_RecipientId",
+                        column: x => x.RecipientId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_SenderId",
+                        column: x => x.SenderId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Companies_DuplicateKey",
                 table: "Companies",
@@ -193,9 +298,50 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                 column: "DuplicateKey");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ConversationClears_CounterpartId",
+                table: "ConversationClears",
+                column: "CounterpartId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConversationClears_DuplicateKey",
+                table: "ConversationClears",
+                column: "DuplicateKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConversationClears_User_Counterpart_Channel",
+                table: "ConversationClears",
+                columns: new[] { "UserId", "CounterpartId", "IsAnnouncementChannel" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_DuplicateKey",
+                table: "Messages",
+                column: "DuplicateKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_Recipient_Sender_CreatedAt",
+                table: "Messages",
+                columns: new[] { "RecipientId", "SenderId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_RecipientId",
+                table: "Messages",
+                column: "RecipientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_Sender_Recipient_CreatedAt",
+                table: "Messages",
+                columns: new[] { "SenderId", "RecipientId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Roles_DuplicateKey",
                 table: "Roles",
                 column: "DuplicateKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPresences_LastHeartbeatAt",
+                table: "UserPresences",
+                column: "LastHeartbeatAt");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_CompanyId",
@@ -215,10 +361,19 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                 name: "CompanyYears");
 
             migrationBuilder.DropTable(
+                name: "ConversationClears");
+
+            migrationBuilder.DropTable(
                 name: "LoginTokens");
 
             migrationBuilder.DropTable(
+                name: "Messages");
+
+            migrationBuilder.DropTable(
                 name: "Permission");
+
+            migrationBuilder.DropTable(
+                name: "UserPresences");
 
             migrationBuilder.DropTable(
                 name: "Users");

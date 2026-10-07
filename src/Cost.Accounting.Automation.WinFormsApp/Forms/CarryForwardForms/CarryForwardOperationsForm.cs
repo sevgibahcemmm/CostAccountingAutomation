@@ -40,7 +40,6 @@ public sealed partial class CarryForwardOperationsForm : XtraFormMdiBase
         chkRecipes.IsOn = true;
         chkChartBalances.IsOn = true;
 
-        btnClose.Click += (_, _) => Close();
         btnStart.Click += BtnStart_Click;
         btnRefresh.Click += async (_, _) => await RefreshPreviewAsync();
 

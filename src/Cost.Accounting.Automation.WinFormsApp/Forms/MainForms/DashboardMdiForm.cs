@@ -16,7 +16,7 @@ using TS.MediatR;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
-    public partial class DashboardMdiForm : XtraFormMdiBase
+    public partial class DashboardMdiForm : XtraFormMdiBase, IMdiTabCloseDisabled
     {
         private const int DashboardAutoRefreshIntervalMs = 30_000;
 

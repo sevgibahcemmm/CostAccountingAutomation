@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using DevExpress.Images;
 using DevExpress.Utils.Svg;
 
@@ -8,6 +10,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
     internal static class DxIcon
     {
         private static readonly Dictionary<string, SvgImage> _cache = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Gömülü SVG'den üretilen mesajlaşma ikonu (tek seferlik).</summary>
+        private static SvgImage? _whatsApp;
 
         private static SvgImage Icon(string resourceKey)
         {
@@ -64,6 +69,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         // Actions
         public static SvgImage Save => Icon("devav/actions/save.svg");
         public static SvgImage Print => Icon("svgimages/icon%20builder/actions_print.svg");
+
+        /// <summary>
+        /// Mesajlaşma modülü ikonu: WhatsApp'a benzeyen yeşil konuşma balonu
+        /// içinde beyaz telefon ahizesi. DevExpress kaynaklarında hazır
+        /// karşılığı olmadığı için SVG metni gömülü olarak üretilir ve
+        /// ilk kullanımda bir kez ayrıştırılır.
+        /// </summary>
+        public static SvgImage WhatsApp => _whatsApp ??= SvgImage.FromStream(
+            new MemoryStream(Encoding.UTF8.GetBytes("""
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="#25D366" d="M12 2.002c-5.514 0-9.998 4.484-9.998 9.998 0 1.762.459 3.486 1.331 5.005L2 22l5.148-1.348a9.955 9.955 0 0 0 4.852 1.244c5.514 0 9.998-4.484 9.998-9.999S17.514 2.002 12 2.002z"/>
+                  <path fill="#FFFFFF" d="M16.58 14.317c-.236-.118-1.393-.686-1.609-.764-.216-.079-.373-.118-.53.118-.158.236-.609.764-.747.922-.138.158-.276.177-.512.059-.236-.118-.996-.367-1.897-1.17-.701-.624-1.174-1.396-1.312-1.632-.138-.236-.015-.364.103-.481.106-.105.236-.273.354-.41.118-.137.158-.236.236-.394.079-.158.04-.296-.02-.414-.059-.118-.53-1.277-.726-1.748-.191-.459-.386-.397-.53-.404l-.453-.008c-.158 0-.414.059-.629.296-.216.236-.824.806-.824 1.966s.845 2.281.963 2.439c.118.158 1.663 2.54 4.033.562.564.243 1.004.388 1.347.497.566.18 1.081.155 1.489.094.455-.068 1.393-.569 1.59-1.118.196-.549.196-1.02.137-1.117-.058-.098-.216-.158-.452-.276z"/>
+                </svg>
+                """)));
+
 
         // Module icons
         public static SvgImage Home => Icon("svgimages/icon%20builder/actions_home.svg");

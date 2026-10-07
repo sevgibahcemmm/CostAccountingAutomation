@@ -73,10 +73,7 @@ public partial class WorkshopAnalysisForm : DevExpress.XtraEditors.XtraForm
 private void BtnRefresh_Click(object? sender, EventArgs e)
             => _ = ReloadAsync();
 
-        private void BtnClosePage_Click(object? sender, EventArgs e)
-            => Close();
-
-        private async Task ReloadAsync()
+private async Task ReloadAsync()
         {
             if (dtFrom.EditValue is not DateTime fromDate || dtTo.EditValue is not DateTime toDate)
             {
@@ -201,7 +198,7 @@ private void BtnRefresh_Click(object? sender, EventArgs e)
 DashboardChartLoader.LoadDoughnutValues(chartExpense, expensePoints);
         }
 
-        private static string Truncate(string value, int max)
+private static string Truncate(string value, int max)
         {
             if (string.IsNullOrEmpty(value))
             {
@@ -209,11 +206,6 @@ DashboardChartLoader.LoadDoughnutValues(chartExpense, expensePoints);
             }
 
             return value.Length <= max ? value : value[..(max - 1)] + "…";
-        }
-
-        private void simpleButton1_Click(object sender, EventArgs e)
-        {
-            this.Close();   
         }
     }
 }

@@ -46,7 +46,6 @@ partial class WorkshopAnalysisForm
             lblSubtitle = new DevExpress.XtraEditors.LabelControl();
             lblTitle = new DevExpress.XtraEditors.LabelControl();
             lblHeaderIcon = new DevExpress.XtraEditors.LabelControl();
-            btnClosePage = new DevExpress.XtraEditors.SimpleButton();
             pnlFilter = new DevExpress.XtraEditors.PanelControl();
             lblSummary = new DevExpress.XtraEditors.LabelControl();
             fltFilter = new FlowLayoutPanel();
@@ -136,7 +135,6 @@ partial class WorkshopAnalysisForm
             pnlHeader.Controls.Add(lblSubtitle);
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(lblHeaderIcon);
-            pnlHeader.Controls.Add(btnClosePage);
             pnlHeader.Dock = DockStyle.Top;
             pnlHeader.Location = new Point(0, 0);
             pnlHeader.Margin = new Padding(3, 2, 3, 2);
@@ -178,22 +176,6 @@ partial class WorkshopAnalysisForm
             lblHeaderIcon.Name = "lblHeaderIcon";
             lblHeaderIcon.Size = new Size(30, 30);
             lblHeaderIcon.TabIndex = 2;
-            // 
-            // btnClosePage
-            // 
-            btnClosePage.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnClosePage.Appearance.Options.UseFont = true;
-            btnClosePage.Dock = DockStyle.Right;
-            btnClosePage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnClosePage.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("btnClosePage.ImageOptions.SvgImage");
-            btnClosePage.ImageOptions.SvgImageSize = new Size(16, 16);
-            btnClosePage.Location = new Point(974, 0);
-            btnClosePage.Margin = new Padding(3, 2, 3, 2);
-            btnClosePage.Name = "btnClosePage";
-            btnClosePage.Size = new Size(81, 49);
-            btnClosePage.TabIndex = 3;
-            btnClosePage.Text = "Kapat";
-            btnClosePage.Click += BtnClosePage_Click;
             // 
             // pnlFilter
             // 
@@ -831,7 +813,6 @@ partial class WorkshopAnalysisForm
         #endregion
 
         private DevExpress.XtraEditors.PanelControl pnlHeader;
-        private DevExpress.XtraEditors.SimpleButton btnClosePage;
         private DevExpress.XtraEditors.LabelControl lblHeaderIcon;
         private DevExpress.XtraEditors.LabelControl lblTitle;
         private DevExpress.XtraEditors.LabelControl lblSubtitle;

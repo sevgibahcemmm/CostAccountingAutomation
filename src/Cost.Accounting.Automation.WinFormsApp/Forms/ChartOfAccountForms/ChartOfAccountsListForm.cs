@@ -285,11 +285,6 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         }
     }
 
-    private void BtnClosePage_Click(object? sender, EventArgs e)
-    {
-        Close();
-    }
-
     private async void BtnRefresh_Click(object? sender, EventArgs e)
     {
         await ReloadAsync();

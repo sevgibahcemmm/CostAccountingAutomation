@@ -122,12 +122,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmSigningRoles"] = DxIcon.IdCard,             // security_personalid
 
             // Mesajlaşma
-            ["elmMessages"] = DxIcon.At                // mail
+            ["elmMessages"] = DxIcon.WhatsApp        // yeşil konuşma balonu
         };
 
         public RibbonMainForm()
         {
             InitializeComponent();
+
+            // Kapatma (×) düğmesi her MDI sekmesinin başlığında, adının
+            // sağında gösterilsin. Bu ayarlar MDI kapsayıcısı bağlanmadan ve
+            // herhangi bir sekme oluşmadan önce yapılmalıdır.
+            xtraTabbedMdiManager.ClosePageButtonShowMode = ClosePageButtonShowMode.InAllTabPageHeaders;
+            xtraTabbedMdiManager.MdiParent = this;
 
             _session = Program.Services.GetRequiredService<SessionClaimContext>();
             MdiFormManager.Instance.Initialize(xtraTabbedMdiManager);
@@ -146,8 +152,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private void RibbonMainForm_Load(object? sender, EventArgs e)
         {
-            xtraTabbedMdiManager.MdiParent = this;
-            xtraTabbedMdiManager.ClosePageButtonShowMode = ClosePageButtonShowMode.InTabControlHeader;
             LoadSessionInfoToStatusBar();
             StartClock();
             StartLiveMessaging();

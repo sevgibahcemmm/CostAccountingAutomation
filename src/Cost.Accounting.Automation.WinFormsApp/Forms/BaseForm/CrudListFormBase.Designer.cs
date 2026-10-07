@@ -11,7 +11,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private DevExpress.XtraEditors.PanelControl headerDivider;
         private DevExpress.XtraEditors.LabelControl lblTitle;
         private DevExpress.XtraEditors.LabelControl lblSub;
-        private DevExpress.XtraEditors.SimpleButton btnClosePage;
         private DevExpress.XtraEditors.PanelControl pnlToolbar;
         /// <summary>Türetilmiş formların kendi butonlarını ekleyebilmesi için korunur.</summary>
         protected System.Windows.Forms.FlowLayoutPanel flpToolbar;
@@ -31,7 +30,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private DevExpress.XtraEditors.LabelControl lblFilter;
         private DevExpress.XtraEditors.SearchLookUpEdit cmbFilter;
         private DevExpress.XtraGrid.Views.Grid.GridView cmbFilterView;
-        private DevExpress.XtraEditors.TextEdit txtSearch;
         private DevExpress.XtraGrid.GridControl gridControl;
         private DevExpress.XtraGrid.Views.Grid.GridView gridView;
         private DevExpress.XtraEditors.PictureEdit picModuleIcon;
@@ -60,7 +58,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             headerDivider = new DevExpress.XtraEditors.PanelControl();
             lblTitle = new DevExpress.XtraEditors.LabelControl();
             lblSub = new DevExpress.XtraEditors.LabelControl();
-            btnClosePage = new DevExpress.XtraEditors.SimpleButton();
             pnlToolbar = new DevExpress.XtraEditors.PanelControl();
             flpToolbar = new System.Windows.Forms.FlowLayoutPanel();
             btnRefresh = new DevExpress.XtraEditors.SimpleButton();
@@ -79,7 +76,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             lblFilter = new DevExpress.XtraEditors.LabelControl();
             cmbFilter = new DevExpress.XtraEditors.SearchLookUpEdit();
             cmbFilterView = new DevExpress.XtraGrid.Views.Grid.GridView();
-            txtSearch = new DevExpress.XtraEditors.TextEdit();
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             picModuleIcon = new DevExpress.XtraEditors.PictureEdit();
@@ -88,7 +84,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             pnlHeader.SuspendLayout();
             pnlToolbar.SuspendLayout();
             slipMenu.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)txtSearch.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbFilter.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)cmbFilterView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridControl).BeginInit();
@@ -99,7 +94,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // pnlHeader
             // 
             pnlHeader.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            pnlHeader.Controls.Add(btnClosePage);
             pnlHeader.Controls.Add(lblSub);
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(picModuleIcon);
@@ -176,20 +170,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             slipMenu.Name = "slipMenu";
             slipMenu.Size = new System.Drawing.Size(211, 48);
             // 
-            // btnClosePage
-            // 
-            btnClosePage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            btnClosePage.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            btnClosePage.Appearance.Options.UseFont = true;
-            btnClosePage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            btnClosePage.ImageOptions.SvgImage = DxIcon.Close;
-            btnClosePage.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            btnClosePage.Location = new System.Drawing.Point(1170, 37);
-            btnClosePage.Name = "btnClosePage";
-            btnClosePage.Size = new System.Drawing.Size(94, 36);
-            btnClosePage.TabIndex = 2;
-            btnClosePage.Text = "Kapat";
-            // 
             // pnlToolbar
             // 
             // Zemin bilerek şeffaf bırakılır: butonların arkasında ayrı bir renk
@@ -198,7 +178,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             pnlToolbar.Appearance.Options.UseBackColor = true;
             pnlToolbar.BackColor = System.Drawing.Color.Transparent;
             pnlToolbar.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            pnlToolbar.Controls.Add(txtSearch);
             pnlToolbar.Controls.Add(cmbFilter);
             pnlToolbar.Controls.Add(lblFilter);
             pnlToolbar.Controls.Add(flpToolbar);
@@ -385,8 +364,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // 
             // flpToolbar
             // 
-            flpToolbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
-            flpToolbar.AutoScroll = true;
+            flpToolbar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            flpToolbar.AutoScroll = false;
             flpToolbar.BackColor = System.Drawing.Color.Transparent;
             flpToolbar.Controls.Add(btnNew);
             flpToolbar.Controls.Add(btnEdit);
@@ -405,7 +385,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             flpToolbar.Controls.Add(btnRestore);
             flpToolbar.Location = new System.Drawing.Point(16, 10);
             flpToolbar.Name = "flpToolbar";
-            flpToolbar.Size = new System.Drawing.Size(830, 36);
+            flpToolbar.Size = new System.Drawing.Size(1248, 36);
             flpToolbar.TabIndex = 12;
             flpToolbar.WrapContents = false;
             // 
@@ -414,7 +394,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             lblFilter.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
             lblFilter.Appearance.Options.UseFont = true;
             lblFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            lblFilter.Location = new System.Drawing.Point(850, 18);
+            lblFilter.Location = new System.Drawing.Point(1040, 18);
             lblFilter.Name = "lblFilter";
             lblFilter.Size = new System.Drawing.Size(46, 19);
             lblFilter.Text = "Filtre:";
@@ -423,7 +403,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             // cmbFilter
             // 
             cmbFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            cmbFilter.Location = new System.Drawing.Point(902, 13);
+            cmbFilter.Location = new System.Drawing.Point(1094, 13);
             cmbFilter.Name = "cmbFilter";
             cmbFilter.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
@@ -433,17 +413,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             cmbFilter.Size = new System.Drawing.Size(170, 30);
             cmbFilter.TabIndex = 8;
             cmbFilter.Visible = false;
-            // 
-            // txtSearch
-            // 
-            txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            txtSearch.Location = new System.Drawing.Point(1082, 13);
-            txtSearch.Name = "txtSearch";
-            txtSearch.Properties.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F);
-            txtSearch.Properties.Appearance.Options.UseFont = true;
-            txtSearch.Properties.NullText = "Ara...";
-            txtSearch.Size = new System.Drawing.Size(182, 30);
-            txtSearch.TabIndex = 4;
             // 
             // gridControl
             // 
@@ -475,7 +444,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             pnlHeader.ResumeLayout(false);
             pnlHeader.PerformLayout();
             pnlToolbar.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)txtSearch.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbFilter.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)cmbFilterView).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridControl).EndInit();

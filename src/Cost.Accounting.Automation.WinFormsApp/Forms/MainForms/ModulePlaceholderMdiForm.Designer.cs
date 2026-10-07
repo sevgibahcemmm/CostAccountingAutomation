@@ -9,7 +9,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
         private PanelControl pnlHeader;
         private DevExpress.XtraEditors.PictureEdit picIcon;
-        private DevExpress.XtraEditors.SimpleButton btnClosePage;
         private LabelControl lblTitle;
         private LabelControl lblSub;
         private PanelControl pnlBody;
@@ -31,7 +30,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             this.lblSub = new LabelControl();
             this.lblTitle = new LabelControl();
             this.picIcon = new DevExpress.XtraEditors.PictureEdit();
-            btnClosePage = new DevExpress.XtraEditors.SimpleButton();
             this.pnlBody = new PanelControl();
             this.lblNote = new LabelControl();
             this.lblDesc = new LabelControl();
@@ -45,7 +43,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             this.pnlHeader.Controls.Add(this.lblSub);
             this.pnlHeader.Controls.Add(this.lblTitle);
             this.pnlHeader.Controls.Add(this.picIcon);
-            this.pnlHeader.Controls.Add(this.btnClosePage);
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Name = "pnlHeader";
@@ -83,20 +80,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             this.picIcon.Properties.SvgImageColorizationMode = DevExpress.Utils.SvgImageColorizationMode.Default;
             this.picIcon.Size = new System.Drawing.Size(72, 72);
             this.picIcon.TabIndex = 0;
-            // 
-            // btnClosePage
-            // 
-            this.btnClosePage.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnClosePage.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnClosePage.Appearance.Options.UseFont = true;
-            this.btnClosePage.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            this.btnClosePage.ImageOptions.SvgImage = DxIcon.Close;
-            this.btnClosePage.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnClosePage.Location = new System.Drawing.Point(916, 37);
-            this.btnClosePage.Name = "btnClosePage";
-            this.btnClosePage.Size = new System.Drawing.Size(92, 36);
-            this.btnClosePage.TabIndex = 3;
-            this.btnClosePage.Text = "Kapat";
             // 
             // pnlBody
             // 

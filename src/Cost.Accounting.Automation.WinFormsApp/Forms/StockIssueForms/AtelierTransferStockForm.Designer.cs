@@ -15,7 +15,6 @@ sealed partial class AtelierTransferStockForm
         private DevExpress.XtraGrid.GridControl gridMasters;
         private DevExpress.XtraGrid.Views.Grid.GridView gridMastersView;
         private DevExpress.XtraEditors.SimpleButton btnRefresh;
-        private DevExpress.XtraEditors.SimpleButton btnClose;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -45,7 +44,6 @@ sealed partial class AtelierTransferStockForm
             this.gridMasters = new DevExpress.XtraGrid.GridControl();
             this.gridMastersView = new DevExpress.XtraGrid.Views.Grid.GridView();
             this.btnRefresh = new DevExpress.XtraEditors.SimpleButton();
-            this.btnClose = new DevExpress.XtraEditors.SimpleButton();
             ((System.ComponentModel.ISupportInitialize)this.gridMasters).BeginInit();
             ((System.ComponentModel.ISupportInitialize)this.gridMastersView).BeginInit();
             this.SuspendLayout();
@@ -103,18 +101,6 @@ sealed partial class AtelierTransferStockForm
             this.btnRefresh.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
             this.btnRefresh.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
-            // btnClose
-            // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(946, 640);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(110, 30);
-            this.btnClose.TabIndex = 3;
-            this.btnClose.Text = "Kapat";
-            this.btnClose.ImageOptions.SvgImage = DxIcon.Close;
-            this.btnClose.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnClose.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
-            // 
             // AtelierTransferStockForm
             // 
             this.ClientSize = new System.Drawing.Size(1080, 700);
@@ -122,7 +108,6 @@ sealed partial class AtelierTransferStockForm
             this.Controls.Add(this.gridMasters);
             this.Controls.Add(this.lblSummary);
             this.Controls.Add(this.lblTitle);
-            this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnRefresh);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;

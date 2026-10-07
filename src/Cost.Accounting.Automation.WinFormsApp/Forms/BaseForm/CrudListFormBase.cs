@@ -584,25 +584,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         /// </summary>
         private void ClampToolbarWidth()
         {
-            Control[] rightSide = [lblFilter, cmbFilter, txtSearch];
+            // Sağ taraftaki filtre kontrolleri görünürse çubuk onların soluna
+            // kadar kısalır; görünmüyorsa panelin kullanılabilir genişliğini
+            // tamamen kaplar. Böylece butonlar sıkışıp üst üste binmez.
+            Control[] rightSide = [lblFilter, cmbFilter];
 
+            int panelRight = pnlToolbar.ClientSize.Width - pnlToolbar.Padding.Right;
             int limit = rightSide
                 .Where(c => c.Visible)
                 .Select(c => c.Left)
-                .DefaultIfEmpty(int.MaxValue)
+                .DefaultIfEmpty(panelRight)
                 .Min();
-
-            if (limit == int.MaxValue)
-            {
-                return;
-            }
 
             flpToolbar.Width = Math.Max(200, limit - 8 - flpToolbar.Left);
         }
 
         private void WireEvents()
         {
-            btnClosePage.Click += (_, _) => Close();
             btnNew.Click += async (_, _) => await RunEditorAsync(null);
             btnEdit.Click += async (_, _) =>
             {
@@ -640,7 +638,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             btnApprove.Click += BtnApprove_Click;
             btnDeleted.CheckedChanged += BtnDeleted_CheckedChanged;
             btnRestore.Click += BtnRestore_Click;
-            txtSearch.EditValueChanged += TxtSearch_EditValueChanged;
             cmbFilter.EditValueChanged += CmbFilter_EditValueChanged;
             gridView.DoubleClick += GridView_DoubleClick;
             gridView.SelectionChanged += GridView_SelectionChanged;
@@ -649,7 +646,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
         private void SetupGrid()
         {
             gridView.OptionsBehavior.AutoPopulateColumns = false;
-            gridView.OptionsView.ShowGroupPanel = false;
+
+            // Grup paneli her listede görünür. Arama kutusu araç çubuğundan
+            // kaldırıldı; DevExpress'in modern Find paneli doğrudan grup
+            // panelinin içine yerleştirilir ve tüm kolonlarda anlık arama yapar.
+            gridView.OptionsView.ShowGroupPanel = true;
+            gridView.OptionsFind.AlwaysVisible = true;
+            gridView.OptionsFind.FindPanelLocation = GridFindPanelLocation.GroupPanel;
+            gridView.OptionsFind.FindNullPrompt = "Ara...";
+            gridView.OptionsFind.ShowFindButton = false;
+            gridView.OptionsFind.ShowFindButton = false;
+            gridView.OptionsFind.ShowClearButton = true;
+
+            // Liste, aranacak alanları kısıtlıyorsa Find paneli yalnızca bu
+            // alanlarda arar; kısıt yoksa tüm kolonlarda arar.
+            if (SearchFieldNames.Length > 0)
+            {
+                gridView.OptionsFind.FindFilterColumns = string.Join(";", SearchFieldNames);
+            }
+
             gridView.OptionsSelection.MultiSelect = true;
             gridView.OptionsSelection.MultiSelectMode = GridMultiSelectMode.CheckBoxRowSelect;
             gridView.OptionsBehavior.Editable = false;
@@ -688,7 +703,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             SetButtonIcon(btnDeleted, DxIcon.Delete, 18);
             SetButtonIcon(btnRestore, DxIcon.Restore, 18);
             SetButtonIcon(btnApprove, DxIcon.Check, 18);
-            SetButtonIcon(btnClosePage, DxIcon.Close, 16);
             AutoSizeToolbarButtons();
         }
 
@@ -1387,20 +1401,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
                     ToastHelper.Show("Form hatası: " + ex.Message, ToastType.Error, 8000);
                 }
             }
-        }
-
-        private void TxtSearch_EditValueChanged(object? sender, EventArgs e)
-        {
-            string term = (txtSearch.Text ?? string.Empty).Trim();
-            if (term.Length == 0 || SearchFieldNames.Length == 0)
-            {
-                gridView.ActiveFilterString = "";
-                return;
-            }
-
-            string safe = term.Replace("'", "''");
-            string filter = string.Join(" OR ", SearchFieldNames.Select(field => $"[{field}] LIKE '%{safe}%'"));
-            gridView.ActiveFilterString = filter;
         }
 
         private async void GridView_DoubleClick(object? sender, EventArgs e)

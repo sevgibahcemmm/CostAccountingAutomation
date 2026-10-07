@@ -4,26 +4,7 @@ using System.Text;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Tools;
 
-/// <summary>
-/// Mesajlaşma sesli bildirimlerini tek yerden yönetir.
-/// </summary>
-/// <remarks>
-/// <para>
-/// Sesler kurulum klasörüne bir dosya koymadan, çalışma anında sentezlenir:
-/// kısa bir WAV tamponu üretilir ve <see cref="SoundPlayer"/> ile çalınır.
-/// Böylece projeye medya eklenmez, kurulum kopyalaması yapılmaz ve ses
-/// her makinede aynı çıkardı.
-/// </para>
-/// <para>
-/// Yeni mesaj sesi yükselen üç notalı bir "bip" (mesajlaşma uygulamalarındaki
-/// bildirim gibi), oturum açma sesi ise daha yumuşak iki notadır. Ses
-/// kartı ya da codec hatası durumunda sessizce sistem sesine düşülür;
-/// uygulama hiçbir koşulda bu nedenle düşmez.
-/// </para>
-/// <para>
-/// Bildirim sesi kullanıcı tarafından kapatılabilir (<see cref="IsEnabled"/>).
-/// </para>
-/// </remarks>
+
 public static class SoundHelper
 {
     private static int _muted;

@@ -24,7 +24,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
 
             pnlBody.Resize += (s, e) => CenterContent();
-            btnClosePage.Click += (_, _) => Close();
+
             CenterContent();
         }
 

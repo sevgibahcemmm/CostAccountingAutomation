@@ -31,7 +31,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -79,11 +80,104 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Customers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DevirLogs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SourceYear = table.Column<int>(type: "int", nullable: false),
+                    TargetYear = table.Column<int>(type: "int", nullable: false),
+                    SourceDatabaseName = table.Column<string>(type: "nvarchar(MAX)", maxLength: 128, nullable: false),
+                    TargetDatabaseName = table.Column<string>(type: "nvarchar(MAX)", maxLength: 128, nullable: false),
+                    ChartOfAccountsAdded = table.Column<int>(type: "int", nullable: false),
+                    ChartOfAccountsSkipped = table.Column<int>(type: "int", nullable: false),
+                    CustomersAdded = table.Column<int>(type: "int", nullable: false),
+                    SuppliersAdded = table.Column<int>(type: "int", nullable: false),
+                    ProductsAdded = table.Column<int>(type: "int", nullable: false),
+                    ProductPricesAdded = table.Column<int>(type: "int", nullable: false),
+                    ProductPhotosAdded = table.Column<int>(type: "int", nullable: false),
+                    RecipesAdded = table.Column<int>(type: "int", nullable: false),
+                    CurrentAccountBalancesAdded = table.Column<int>(type: "int", nullable: false),
+                    StockBalancesAdded = table.Column<int>(type: "int", nullable: false),
+                    ChartBalancesAdded = table.Column<int>(type: "int", nullable: false),
+                    TotalAdded = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DuplicateKey = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DevirLogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Employees",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(MAX)", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(MAX)", maxLength: 100, nullable: false),
+                    IdentityNumber = table.Column<string>(type: "nvarchar(11)", maxLength: 11, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(MAX)", maxLength: 200, nullable: false),
+                    PhoneNumber1 = table.Column<string>(type: "nvarchar(MAX)", maxLength: 50, nullable: false),
+                    PhoneNumber2 = table.Column<string>(type: "nvarchar(MAX)", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(MAX)", maxLength: 200, nullable: false),
+                    RegistryNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    PhotoPath = table.Column<string>(type: "nvarchar(MAX)", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DuplicateKey = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Employees", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EmployeeSigningRoles",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(MAX)", maxLength: 120, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(MAX)", maxLength: 500, nullable: false),
+                    RequiresWorkshop = table.Column<bool>(type: "bit", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DuplicateKey = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmployeeSigningRoles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -100,7 +194,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -130,7 +225,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -152,7 +248,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -177,7 +274,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -198,6 +296,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     IssueType = table.Column<int>(type: "int", nullable: false),
                     DocumentNumber = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Date = table.Column<DateOnly>(type: "date", nullable: false),
+                    Status = table.Column<byte>(type: "tinyint", nullable: false),
                     SourceWarehouseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TargetAccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CostingMethod = table.Column<int>(type: "int", nullable: false),
@@ -210,7 +309,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -227,6 +327,48 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         principalTable: "ChartOfAccounts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EmployeeDuties",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SigningRoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WorkshopId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DuplicateKey = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmployeeDuties", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EmployeeDuties_ChartOfAccounts_WorkshopId",
+                        column: x => x.WorkshopId,
+                        principalTable: "ChartOfAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_EmployeeDuties_EmployeeSigningRoles_SigningRoleId",
+                        column: x => x.SigningRoleId,
+                        principalTable: "EmployeeSigningRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_EmployeeDuties_Employees_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -253,7 +395,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -297,7 +440,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -363,7 +507,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -411,7 +556,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -458,7 +604,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -495,7 +642,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -531,7 +679,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -562,7 +711,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -589,7 +739,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -620,7 +771,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -659,7 +811,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -700,7 +853,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", maxLength: 8, rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -863,6 +1017,69 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
             migrationBuilder.CreateIndex(
                 name: "IX_Customers_DuplicateKey",
                 table: "Customers",
+                column: "DuplicateKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DevirLogs_DuplicateKey",
+                table: "DevirLogs",
+                column: "DuplicateKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DevirLogs_TargetYear",
+                table: "DevirLogs",
+                column: "TargetYear");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmployeeDuties_DuplicateKey",
+                table: "EmployeeDuties",
+                column: "DuplicateKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmployeeDuties_EmployeeId",
+                table: "EmployeeDuties",
+                column: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmployeeDuties_SigningRoleId",
+                table: "EmployeeDuties",
+                column: "SigningRoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmployeeDuties_WorkshopId",
+                table: "EmployeeDuties",
+                column: "WorkshopId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_CreatedBy",
+                table: "Employees",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_DuplicateKey",
+                table: "Employees",
+                column: "DuplicateKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_IdentityNumber",
+                table: "Employees",
+                column: "IdentityNumber",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_RegistryNumber",
+                table: "Employees",
+                column: "RegistryNumber",
+                unique: true,
+                filter: "[RegistryNumber] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_UpdatedBy",
+                table: "Employees",
+                column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmployeeSigningRoles_DuplicateKey",
+                table: "EmployeeSigningRoles",
                 column: "DuplicateKey");
 
             migrationBuilder.CreateIndex(
@@ -1115,6 +1332,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                 name: "CurrentAccountMovements");
 
             migrationBuilder.DropTable(
+                name: "DevirLogs");
+
+            migrationBuilder.DropTable(
+                name: "EmployeeDuties");
+
+            migrationBuilder.DropTable(
                 name: "InvoiceLines");
 
             migrationBuilder.DropTable(
@@ -1134,6 +1357,12 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
             migrationBuilder.DropTable(
                 name: "CostSlips");
+
+            migrationBuilder.DropTable(
+                name: "EmployeeSigningRoles");
+
+            migrationBuilder.DropTable(
+                name: "Employees");
 
             migrationBuilder.DropTable(
                 name: "Invoices");

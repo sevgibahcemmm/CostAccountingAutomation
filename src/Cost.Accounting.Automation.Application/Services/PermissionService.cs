@@ -1,5 +1,6 @@
 using System.Reflection;
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Messages;
 using Cost.Accounting.Automation.Domain.Roles;
 using GenericRepository;
 using Microsoft.EntityFrameworkCore;
@@ -56,8 +57,10 @@ public sealed class PermissionService
         new(StringComparer.OrdinalIgnoreCase)
         {
             // Mesajlaşma: kullanıcılar kendi aralarında yazabilir ve okuyabilir.
-            // Muhasebe müdürü ayrıca duyuru gönderebilir.
-            ["muhasebe_muduru"] = ["message:view", "message:send", "message:announce"],
+            // Duyuru bu yetkilere dâhil DEĞİLDİR: duyuru herkesin kutusuna
+            // düştüğü için yalnızca yöneticiye aittir (bkz.
+            // EnsureAnnouncementOnlyForAdminAsync).
+            ["muhasebe_muduru"] = ["message:view", "message:send"],
             ["muhasebe_elemani"] = ["message:view", "message:send"],
         };
 
@@ -124,6 +127,73 @@ public sealed class PermissionService
             }
 
             role.SetPermissions(merged.Select(p => new Permission(p)));
+            roleRepository.Update(role);
+            changed.Add(role);
+        }
+
+        if (changed.Count > 0)
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Duyuru yetkisinin (<c>message:announce</c>) yalnızca <c>sys_admin</c>
+    /// rolünde kalmasını sağlar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Duyuru, seçilen her kullanıcının kutusuna ayrı satır düşüren ve
+    /// tüm kurumu ilgilendiren daha güçlü bir işlemdir; bu yüzden yetkisi
+    /// bilinçli olarak yönetime ayrılmıştır. Başlangıç listesinden
+    /// çıkarılması yalnızca yeni kurulumlar için yeterlidir: daha önce bu
+    /// yetkiyi almış roller veritabanında durur ve yetkileri değişmeden
+    /// kalırdı.
+    /// </para>
+    /// <para>
+    /// Bu yüzden her açılışta, kaynak rol ekranından gelmiş olsa bile bu
+    /// yetki yönetici dışındaki rollerden alınır. Sonuç öngörülebilirdir:
+    /// duyuru her zaman yalnızca yönetici tarafından gönderilir.
+    /// </para>
+    /// </remarks>
+    public async Task EnsureAnnouncementOnlyForAdminAsync(
+        IRoleRepository roleRepository,
+        IMasterUnitOfWork unitOfWork,
+        CancellationToken cancellationToken = default)
+    {
+        // Roller tek tek ve izlenerek çekilir; bkz.
+        // EnsureStarterRolePermissionsAsync açıklaması (izlenmeyen koleksiyon
+        // üzerindeki çıkarma kaydedilemez).
+        List<string> roleNames = await roleRepository
+            .Where(r => r.Name.Value != "sys_admin")
+            .Select(r => r.Name.Value)
+            .ToListAsync(cancellationToken);
+
+        var changed = new List<Role>();
+
+        foreach (string roleName in roleNames)
+        {
+            Role? role = await roleRepository
+                .FirstOrDefaultAsync(r => r.Name.Value == roleName, cancellationToken);
+
+            if (role is null)
+            {
+                continue;
+            }
+
+            bool hasAnnounce = role.Permissions.Any(p =>
+                string.Equals(p.Value, MessagePermissions.Announce, StringComparison.OrdinalIgnoreCase));
+
+            if (!hasAnnounce)
+            {
+                continue;
+            }
+
+            role.SetPermissions(role.Permissions
+                .Where(p => !string.Equals(
+                    p.Value, MessagePermissions.Announce, StringComparison.OrdinalIgnoreCase))
+                .Select(p => new Permission(p.Value)));
+
             roleRepository.Update(role);
             changed.Add(role);
         }

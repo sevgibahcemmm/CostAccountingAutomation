@@ -13,7 +13,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
         private DevExpress.XtraEditors.PictureEdit picHeader;
         private DevExpress.XtraEditors.LabelControl lblTitle;
         private DevExpress.XtraEditors.LabelControl lblSub;
-        private DevExpress.XtraEditors.SimpleButton btnClose;
         private DevExpress.XtraEditors.PanelControl pnlToolbar;
         private DevExpress.XtraEditors.SimpleButton btnRefresh;
         private DevExpress.XtraEditors.SimpleButton btnDebtors;
@@ -47,7 +46,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.picHeader = new DevExpress.XtraEditors.PictureEdit();
             this.lblTitle = new DevExpress.XtraEditors.LabelControl();
             this.lblSub = new DevExpress.XtraEditors.LabelControl();
-            this.btnClose = new DevExpress.XtraEditors.SimpleButton();
             this.pnlToolbar = new DevExpress.XtraEditors.PanelControl();
             this.btnRefresh = new DevExpress.XtraEditors.SimpleButton();
             this.btnDebtors = new DevExpress.XtraEditors.SimpleButton();
@@ -69,7 +67,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.pnlHeader.Controls.Add(this.lblTitle);
             this.pnlHeader.Controls.Add(this.lblSub);
             this.pnlHeader.Controls.Add(this.picHeader);
-            this.pnlHeader.Controls.Add(this.btnClose);
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Name = "pnlHeader";
@@ -113,20 +110,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
             this.lblSub.Size = new System.Drawing.Size(900, 18);
             this.lblSub.TabIndex = 1;
             this.lblSub.Text = "Yükleniyor...";
-            // 
-            // btnClose
-            // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Appearance.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnClose.Appearance.Options.UseFont = true;
-            this.btnClose.Location = new System.Drawing.Point(1170, 37);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(94, 36);
-            this.btnClose.TabIndex = 3;
-            this.btnClose.Text = "Kapat";
-            this.btnClose.ImageOptions.SvgImage = DxIcon.Close;
-            this.btnClose.ImageOptions.SvgImageSize = new System.Drawing.Size(16, 16);
-            this.btnClose.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.LeftCenter;
             // 
             // pnlToolbar
             // 

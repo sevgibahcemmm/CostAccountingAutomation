@@ -10,7 +10,7 @@ internal static class DesignTimeConfiguration
         "Integrated Security = True; Connect Timeout = 30; Encrypt = False; " +
         "Trust Server Certificate = False; Application Intent = ReadWrite; Multi Subnet Failover = False";
 
-    internal const string YearDesignTimeCatalog = "CAA_DesignTime_Year_NotForUpdates";
+    internal const string YearDesignTimeCatalog = "EA_DesignTime_Year_NotForUpdates";
 
     internal static string GetMasterConnectionString()
     {

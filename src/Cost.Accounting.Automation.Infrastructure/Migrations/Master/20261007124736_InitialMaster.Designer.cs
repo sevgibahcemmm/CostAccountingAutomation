@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20261005171038_AddRowVersionConcurrencyToken")]
-    partial class AddRowVersionConcurrencyToken
+    [Migration("20261007124736_InitialMaster")]
+    partial class InitialMaster
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -156,6 +156,186 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                     b.ToTable("LoginTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Messages.ConversationClear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ClearedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CounterpartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAnnouncementChannel")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CounterpartId");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("UserId", "CounterpartId", "IsAnnouncementChannel")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ConversationClears_User_Counterpart_Channel");
+
+                    b.ToTable("ConversationClears", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Messages.UserMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AttachmentFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("AttachmentPath")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<long?>("AttachmentSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeliveredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAnnouncement")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("RecipientId")
+                        .HasDatabaseName("IX_Messages_RecipientId");
+
+                    b.HasIndex("RecipientId", "SenderId", "CreatedAt")
+                        .HasDatabaseName("IX_Messages_Recipient_Sender_CreatedAt");
+
+                    b.HasIndex("SenderId", "RecipientId", "CreatedAt")
+                        .HasDatabaseName("IX_Messages_Sender_Recipient_CreatedAt");
+
+                    b.ToTable("Messages", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Presence.UserPresence", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("LastHeartbeatAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("LoggedOutAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("MachineName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("SessionStartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("LastHeartbeatAt")
+                        .HasDatabaseName("IX_UserPresences_LastHeartbeatAt");
+
+                    b.ToTable("UserPresences", (string)null);
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Roles.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -235,6 +415,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("RegistryNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(MAX)");
 
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
@@ -568,6 +752,97 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Messages.ConversationClear", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("CounterpartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.Messages.UserMessage", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Messages.MessageBody", "Body", b1 =>
+                        {
+                            b1.Property<Guid>("UserMessageId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Body_Value");
+
+                            b1.HasKey("UserMessageId");
+
+                            b1.ToTable("Messages");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserMessageId");
+                        });
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Messages.MessageReadState", "ReadState", b1 =>
+                        {
+                            b1.Property<Guid>("UserMessageId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<bool>("Value")
+                                .HasColumnType("bit")
+                                .HasColumnName("ReadState_Value");
+
+                            b1.HasKey("UserMessageId");
+
+                            b1.ToTable("Messages");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserMessageId");
+                        });
+
+                    b.OwnsOne("Cost.Accounting.Automation.Domain.Messages.MessageSubject", "Subject", b1 =>
+                        {
+                            b1.Property<Guid>("UserMessageId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnName("Subject_Value");
+
+                            b1.HasKey("UserMessageId");
+
+                            b1.ToTable("Messages");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserMessageId");
+                        });
+
+                    b.Navigation("Body")
+                        .IsRequired();
+
+                    b.Navigation("ReadState")
+                        .IsRequired();
+
+                    b.Navigation("Subject");
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Roles.Role", b =>
                 {
                     b.OwnsMany("Cost.Accounting.Automation.Domain.Roles.Permission", "Permissions", b1 =>
@@ -762,6 +1037,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Master
                         {
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("HashIterations")
+                                .HasColumnType("int");
 
                             b1.Property<byte[]>("PasswordHash")
                                 .IsRequired()

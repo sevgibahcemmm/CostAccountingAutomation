@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
@@ -10,25 +11,50 @@ using System.Threading;
 namespace Cost.Accounting.Automation.Infrastructure.Diagnostics;
 
 /// <summary>
-/// Her SQL komutunun gerçek yürütme süresini (EF translation dahil değil; SqlClient round-trip)
-/// Özellik katsayımıyla VS Debug çıktısına yazar. Amaç: ~25 sn'lik katalog gecikmesinin
-/// EF tarafında mı (query compilation/translation) yoksa ADO.NET/SQL tarafında mı olduğunu ayırmak.
+/// Her SQL komutunun gerçek yürütme süresini ölçer (EF translation dahil değil;
+/// SqlClient round-trip) ve önemli bulduklarını tanı amaçlı kaydeder:
+/// <c>SqlLogThresholdMs</c> üstü/uzun komutlar konsola, uzun komutların yaşam
+/// döngüsü <c>logs\sql-trace.log</c> dosyasına, <c>SlowCommandThresholdMs</c>
+/// üstü komutların tam SQL'i <c>logs\slow-queries.log</c> dosyasına yazılır.
+/// Konsol ve dosya yazımının arayüz thread'ini bekletmemesi için hem konsol
+/// logu eşikli hem de dosya yazımı arka plan kuyrukludur; bkz. <see cref="Trace"/>.
 /// </summary>
 internal sealed class SqlTimingInterceptor : DbCommandInterceptor
 {
     /// <summary>
-    /// Loglanan SQL uzunluğu. Kısaltma kasten yapılıyordu ama <c>WHERE</c> ve
-    /// <c>JOIN</c> kısımları kesildiği için hangi komutun yavaş olduğu
-    /// belirlenemiyordu; bu yüzden sınır yükseltildi.
+    /// Konsola (VS Çıktı penceresi) yazılan SQL uzunluğu.
+    ///
+    /// Kısıtlamanın sebebi: <c>Debug.WriteLine</c>, debugger ekliyken
+    /// <c>OutputDebugString</c> üzerinden Visual Studio'ya gider ve debugger
+    /// satırı okuyana kadar çağıran thread'i (arayüz thread'ini) bloklar.
+    /// Uzun sorgu metinleri Çıktı penceresini doldurduğunda bu bloklama
+    /// gözle görülür donmalara dönüşüyordu. Tam metin gerektiğinde
+    /// <c>SQL_TRACE_VERBOSE=1</c> ortam değişkeniyle eski davranış geri
+    /// açılabilir (bkz. <see cref="VerboseSqlLog"/>).
     /// </summary>
     private const int MaxLoggedSqlLength = 2000;
 
     /// <summary>
-    /// Bu süreyi aşan komutların <b>tam</b> SQL'i ve parametreleri
-    /// <c>logs\slow-queries.log</c> dosyasına yazılır. Konsol çıktısı
-    /// kısaltıldığı için yavaş sorgunun gerçek şekli (özellikle <c>WHERE</c> ve
-    /// tüm <c>JOIN</c>'ler) görülemiyordu; dosya bunu olduğu gibi kaydeder ve
-    /// sorgu veritabanında doğrudan çalıştırılabilir.
+    /// Konsol logunun eşiği. Süresi bu değeri aşmayan komutlar
+    /// <c>Debug.WriteLine</c> ile yazılmaz; amaç yalnızca dikkat çekmeye
+    /// değer sorguları gösterip Çıktı penceresini (ve dolayısıyla debugger'ı)
+    /// gereksiz satırlarla kilitlememektir. Tümünü görmek için
+    /// <c>SQL_TRACE_VERBOSE=1</c>.
+    /// </summary>
+    private const long SqlLogThresholdMs = 50;
+
+    /// <summary>
+    /// <c>SQL_TRACE_VERBOSE=1</c> ortam değişkeni verildiğinde süresi
+    /// <see cref="SqlLogThresholdMs"/> altındaki komutlar da konsola yazılır
+    /// (eski, her sorguyu loglayan davranış).
+    /// </summary>
+    private static readonly bool VerboseSqlLog =
+        Environment.GetEnvironmentVariable("SQL_TRACE_VERBOSE") == "1";
+
+    /// <summary>
+    /// Yavaş komutun tam SQL'i ve parametreleri <c>logs\slow-queries.log</c>
+    /// dosyasına yazılır. Bu eşik, komutun gerçek yürütme süresidir
+    /// (EF translation dahil değil; SqlClient round-trip).
     /// </summary>
     private const int SlowCommandThresholdMs = 1000;
 
@@ -38,12 +64,27 @@ internal sealed class SqlTimingInterceptor : DbCommandInterceptor
     /// belirsiz olduğu için (aynı komut birden fazla kez çalıştırılabilir)
     /// duvar saati kaydı, sürenin <c>created</c> → <c>begin</c> → <c>end</c>
     /// arasında hangi aralıkta geçtiğini kesin gösterir.
+    ///
+    /// Satırlar önce kuyruğa alınır, dosya yazımı arka planda tek bir
+    /// thread'de yapılır; bkz. <see cref="EnsureTraceWriter"/>.
     /// </summary>
     private const int TracedSqlMinLength = 2000;
 
     private static int _traceSequence;
 
-    private static readonly object TraceLock = new();
+    /// <summary>
+    /// <c>sql-trace.log</c> satırları için arka plan kuyruğu.
+    ///
+    /// Eskiden yazım <see cref="TraceLock"/> adlı global kilit altında
+    /// senkron yapılıyordu; arka plandaki bir sorgu kilidi tutarken arayüz
+    /// thread'i disk gecikmesinde bekliyordu (gözle görülür donma). Kuyruk
+    /// sayesinde arayüz thread'i yalnızca kuyruğa ekler ve hemen döner.
+    /// Süreç aniden sonlanırsa kuyrukta kalan satırlar yazılmaz; bu, tanı
+    /// kaydının uygulama akışından daha önemli olmadığı için kabul edilir.
+    /// </summary>
+    private static readonly BlockingCollection<string> TraceQueue = new();
+
+    private static int _traceWriterStarted;
 
     private static string TracePath =>
         Path.Combine(AppContext.BaseDirectory, "logs", "sql-trace.log");
@@ -201,8 +242,17 @@ internal sealed class SqlTimingInterceptor : DbCommandInterceptor
         {
             long totalMs = (long)Stopwatch.GetElapsedTime(track.CreatedMs).TotalMilliseconds;
             long execMs = track.Exec.ElapsedMilliseconds;
-            string sql = Shorten(string.IsNullOrWhiteSpace(track.Sql) ? command.CommandText : track.Sql);
-            Debug.WriteLine($"[SQL] exec={execMs}ms total={totalMs}ms sql={sql}");
+
+            // Konsol logu yalnızca dikkat çekmeye değer komutlar için yazılır;
+            // her sorgunun OutputDebugString ile debugger'ı bekletmesi arayüzde
+            // donmaya yol açıyordu. Tümünü görmek için SQL_TRACE_VERBOSE=1;
+            // uzun komutların yaşam döngüsü ayrıca logs\sql-trace.log'a yazılır.
+            if (VerboseSqlLog || execMs >= SqlLogThresholdMs || totalMs >= SqlLogThresholdMs)
+            {
+                string sql = Shorten(string.IsNullOrWhiteSpace(track.Sql) ? command.CommandText : track.Sql);
+                Debug.WriteLine($"[SQL] exec={execMs}ms total={totalMs}ms sql={sql}");
+            }
+
             Trace(track, "end", command.CommandText.Length, execMs, totalMs);
 
             if (execMs >= SlowCommandThresholdMs)
@@ -258,8 +308,11 @@ internal sealed class SqlTimingInterceptor : DbCommandInterceptor
 
     /// <summary>
     /// Komut yaşam döngüsünün bir aşamasını duvar saatiyle <c>logs\sql-trace.log</c>
-    /// dosyasına yazar. Yalnızca uzun komutlar izlenir; dosya yazımı tanı
-    /// amaçlıdır ve hata durumunda yüklemeyi bozmamalıdır.
+    /// dosyasına yazar. Yalnızca uzun komutlar izlenir.
+    ///
+    /// Satır kuyruğa alınır, dosya yazımı arka planda yapılır; böylece
+    /// arayüz thread'i disk gecikmesinde beklemez. Dosya yazımı tanı amaçlıdır
+    /// ve hata durumunda yüklemeyi bozmamalıdır.
     /// </summary>
     private static void Trace(Track track, string stage, int sqlLength, long? execMs = null, long? totalMs = null)
     {
@@ -274,17 +327,56 @@ internal sealed class SqlTimingInterceptor : DbCommandInterceptor
                 ? $" exec={execMs}ms total={totalMs}ms"
                 : string.Empty;
 
-            lock (TraceLock)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(TracePath)!);
-                File.AppendAllText(
-                    TracePath,
-                    $"{DateTimeOffset.Now:O} [{stage}] id={track.Id} len={sqlLength} thread={Environment.CurrentManagedThreadId}{suffix}\n");
-            }
+            // thread değeri kuyruklarken (üretici thread'de) alınır; yazımın
+            // arka plana taşınması kaydın hangi thread'de üretildiğini değiştirmez.
+            TraceQueue.TryAdd(
+                $"{DateTimeOffset.Now:O} [{stage}] id={track.Id} len={sqlLength} thread={Environment.CurrentManagedThreadId}{suffix}\n");
+
+            EnsureTraceWriter();
         }
         catch
         {
         }
+    }
+
+    /// <summary>
+    /// Arka plan yazıcısını ilk çağrıda bir kez başlatır.
+    ///
+    /// Eski sürümde dosyaya global bir kilit altında senkron yazılıyordu. Bir
+    /// thread kilit tutup disk yazarken diğer thread'ler (özellikle arayüz
+    /// thread'i) kilidi bekleyerek takılıyordu. Artık satırlar kuyruğa
+    /// alınır; diske dökme işlemi tek bir arka plan thread'inde, kilitsiz
+    /// yapılır.
+    /// </summary>
+    private static void EnsureTraceWriter()
+    {
+        if (Interlocked.Exchange(ref _traceWriterStarted, 1) != 0)
+        {
+            return;
+        }
+
+        var writer = new Thread(() =>
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(TracePath)!);
+
+                foreach (string line in TraceQueue.GetConsumingEnumerable())
+                {
+                    File.AppendAllText(TracePath, line);
+                }
+            }
+            catch
+            {
+                // Tanı kaydı uygulama akışını bozmamalı.
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "SqlTraceWriter",
+        };
+
+        writer.Start();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

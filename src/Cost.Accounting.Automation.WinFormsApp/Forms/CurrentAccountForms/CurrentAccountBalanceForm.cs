@@ -21,8 +21,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms
 
             GridColumnFactory.ConfigureFromAttributes(gridView, typeof(CurrentAccountBalanceDto));
 
-            btnClose.Click += (_, _) => Close();
-
             btnRefresh.Click += async (_, _) => await LoadDataAsync();
             btnDebtors.Click += async (_, _) => { _scope = CurrentAccountBalanceScope.Debtors; await LoadDataAsync(); };
             btnCreditors.Click += async (_, _) => { _scope = CurrentAccountBalanceScope.Creditors; await LoadDataAsync(); };
