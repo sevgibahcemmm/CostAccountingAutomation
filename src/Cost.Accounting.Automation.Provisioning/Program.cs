@@ -2,6 +2,7 @@ using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Infrastructure;
 using Cost.Accounting.Automation.Infrastructure.Services;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -54,6 +55,7 @@ internal static class Program
             {
                 "provision" => await ProvisionAsync(configuration),
                 "status" => await StatusAsync(configuration),
+                "can-connect" => await CanConnectAsync(configuration),
                 _ => UnknownCommand(command)
             };
         }
@@ -153,6 +155,38 @@ internal static class Program
         }
     }
 
+    private static async Task<int> CanConnectAsync(IConfiguration configuration)
+    {
+        var builder = new SqlConnectionStringBuilder(
+            configuration.GetConnectionString("SqlServer")
+            ?? throw new InvalidOperationException("SqlServer baglanti dizesi yok."));
+
+        // Kurulum sihirbazi erisim denetimini kisa tutmak ister; uzun baglanti
+        // zamani kurulumu dakikalarca durdurur.
+        if (builder.ConnectTimeout <= 0 || builder.ConnectTimeout > 10)
+        {
+            builder.ConnectTimeout = 10;
+        }
+
+        try
+        {
+            await using var connection = new SqlConnection(builder.ConnectionString);
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT 1;";
+            await command.ExecuteScalarAsync();
+
+            Console.WriteLine("SQL Server erisilebilir.");
+            return ExitSuccess;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"ERISILEMEDI: {ex.Message}");
+            return ExitFailure;
+        }
+    }
+
     private static ServiceProvider BuildServiceProvider(IConfiguration configuration)
     {
         ServiceCollection services = new();
@@ -230,6 +264,12 @@ internal static class Program
 
               caa-provision status      Sunucudaki şemanın güncel olup olmadığını
                                        salt okunur olarak raporlar. Hiçbir şey yazmaz.
+
+              caa-provision can-connect   SQL Server'a erişilip erişilemediğini
+                                       denetler (yalnızca bağlanır, hiçbir şey yazmaz).
+                                       0 = erişilebilir, 1 = erişilemedi. Kurulum
+                                       sihirbazı sunucuda SQL yoksa otomatik kurulum
+                                       kararını bu komutun çıkış koduyla verir.
 
             Seçenekler:
               --settings <yol>          appsettings.json dosyasının yolu.

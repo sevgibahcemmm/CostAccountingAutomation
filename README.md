@@ -11,6 +11,32 @@ Veritabanı ikiye ayrılmıştır:
 | `CostAccountingAutomationMaster` | Kurumlar, mali yıllar, kullanıcılar, roller, yetkiler, **mesajlar, çevrimiçi kayıtları** |
 | `CAA_<Yıl>_<Kurum>` | O kurumun o mali yılın iş verileri (fatura, stok, maliyet) |
 
+## Veritabanı dosyalarının konumu
+
+`CREATE DATABASE` komutuna dosya yolu verilmezse SQL Server dosyaları kendi
+varsayılan veri dizinine açar. Bu uygulama dosyaları bilinçli olarak tek bir
+`Data` klasöründe tutar:
+
+| Ortam | Klasör |
+|---|---|
+| Geliştirme (repo içinden çalıştırma) | `<proje kökü>\Data` (`.slnx` yanındaki) |
+| Kurulum (`setup.exe`) | Kurulumda seçilen klasör, varsayılan `{app}\Data` |
+
+Sıralama: `DatabaseFiles:DataDirectory` (kurulum sihirbazı yazar; ortam değişkeni
+`DatabaseFiles__DataDirectory` ile ezilebilir) → proje kökü `Data` → uygulama
+klasörü `Data`.
+
+Klasör oluşturulduğunda setup, SQL Server hizmet hesabına (örn.
+`NT SERVICE\MSSQL$SQLEXPRESS`) o klasöre yazma yetkisi verir: dosyaları uygulama
+değil SQL Server hizmeti oluşturur ve yazar.
+
+> Veritabanı sunucusu uzak bir makinedeyse dosya yolları o makinenin dosya
+> sistemini tarif eder; bu durumda `DatabaseFiles:UseExplicitFileNames` `false`
+> yapılmalıdır (dosyalar sunucunun kendi varsayılan dizinine açılır).
+
+Bilgisayarda SQL Server 2022 (örn. `.\SQLEXPRESS`) kurulu olmalıdır; LocalDB
+kullanılmaz.
+
 ## Şemayı kim hazırlar
 **Uygulama veritabanına hiçbir zaman dokunmaz.** Açılışta yalnızca şemanın
 güncel olduğunu *salt okunur* kontrol eder (`DatabaseInitializer.CheckSchemaAsync`).
@@ -97,6 +123,7 @@ Makineler arasında değişen değerler **ortam değişkeni** ile verilir ve JSO
 | `ConnectionStrings__SqlServer` | Yıl veritabanı bağlantı şablonu |
 | `Jwt__SecretKey` | Token imzalama anahtarı (en az 64 karakter) |
 | `DatabaseProvisioning__Mode` | `VerifyOnly` (üretim) \| `Automatic` (tek makine) |
+| `DatabaseFiles__DataDirectory` | Veritabanı dosyalarının (mdf/ldf) klasörü |
 
 PowerShell:
 
@@ -131,7 +158,7 @@ Anahtarı döndürmek için: `.\Set-LocalSecrets.ps1 -Rotate`
 | Mode | Nerede kullanılır |
 |---|---|
 | `VerifyOnly` | **Merkezi sunucu.** İstemci şemaya dokunmaz. Üretimde bu değer verilmelidir. |
-| `Automatic` | Yalnızca tek geliştirici makinesi / LocalDB. İlk kurulumda sihirbazı gösterir. |
+| `Automatic` | Yalnızca tek makine kurulumu (yerel SQL Server). İlk kurulumda sihirbazı gösterir. |
 
 Ayar okunamaz veya yazım hatalıysa uygulama `VerifyOnly` davranır: şemaya
 dokunmamak her zaman güvenli olan taraftır.

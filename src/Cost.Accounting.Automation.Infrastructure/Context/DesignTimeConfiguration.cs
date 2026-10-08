@@ -6,7 +6,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Context;
 internal static class DesignTimeConfiguration
 {
     internal const string DefaultMasterConnectionString =
-        "Data Source = (localdb)\\MSSQLLocalDB; Initial Catalog = CostAccountingAutomationMaster; " +
+        "Data Source = .\\SQLEXPRESS; Initial Catalog = CostAccountingAutomationMaster; " +
         "Integrated Security = True; Connect Timeout = 30; Encrypt = False; " +
         "Trust Server Certificate = False; Application Intent = ReadWrite; Multi Subnet Failover = False";
 

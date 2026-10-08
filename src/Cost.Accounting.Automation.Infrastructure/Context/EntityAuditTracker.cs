@@ -50,39 +50,7 @@ public void ApplyAudit(ChangeTracker changeTracker)
         }
     }
 
-    /// <summary>
-    /// Kök kaydın sahip olduğu değer nesnelerinden biri değişmişse kök kaydı
-    /// <see cref="EntityState.Modified"/> yapar.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Sorun şudur. <c>Customer.Description</c>, <c>Customer.Name</c>,
-    /// <c>Customer.Address</c> gibi alanlar EF'de tablo-ağılmış (table-splitting)
-    /// <i>owned</i> entity'lerdir. Yalnızca bunlardan biri değiştiğinde EF kök
-    /// kaydın <b>kendi</b> skaler alanları değişmediği için kök girişi
-    /// <see cref="EntityState.Unchanged"/> bırakır.
-    /// </para>
-    /// <para>
-    /// Bunun iki sonucu vardır:
-    /// </para>
-    /// <list type="bullet">
-    /// <item>
-    /// Denetim alanları yazılmaz. Kayıt "güncellendi" ama <c>UpdatedAt</c> ve
-    /// <c>UpdatedBy</c> boş kalır; dolayısıyla kim değiştirdi bilgisi kaybolur.
-    /// </item>
-    /// <item>
-    /// Eşzamanlılık belirteci çakışmayı yine de <i>tespit</i> eder (EF değişen
-    /// owned kaydın UPDATE'ini gönderir), ama çakışma bize kimin değiştirdiğini
-    /// söyleyemez çünkü o bilgi hiç yazılmamıştır.
-    /// </item>
-    /// </list>
-    /// <para>
-    /// Bu yüzden kök kayıt bilinçli olarak <c>Modified</c> durumuna alınır. Bedeli,
-    /// UPDATE'in tüm sütunları kapsamasıdır; ayrı tabloda tutulan satırlar
-    /// (örneğin <c>InvoiceLine</c>) bu etkiden etkilenmez çünkü onlar kendi
-    /// kayıtlarıyla izlenir.
-    /// </para>
-    /// </remarks>
+
     private static void PromoteIfOwnedValueChanged(EntityEntry<Entity> entry)
     {
         if (entry.State is EntityState.Added or EntityState.Deleted or EntityState.Modified)

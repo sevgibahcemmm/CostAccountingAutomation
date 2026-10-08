@@ -52,6 +52,33 @@ namespace Cost.Accounting.Automation.WinFormsApp
             }
         }
 
+        /// <summary>
+        /// Veritabanı dosyalarının (<c>.mdf</c> / <c>.ldf</c>) konacağı Data
+        /// klasörünü açılışta oluşturur: geliştirme ortamında proje kökünde,
+        /// kurulu sürümde kurulum klasöründe.
+        /// </summary>
+        /// <remarks>
+        /// Klasör oluşturulamazsa açılış durdurulmaz; klasör yalnızca
+        /// veritabanı hazırlanırken gereklidir ve hazırlık adımı hatayı
+        /// kullanıcıya zaten gösterir. Yol <c>DatabaseFiles:DataDirectory</c>
+        /// ile verilmişse (kurulum sihirbazı) ona uyulur.
+        /// </remarks>
+        private static void EnsureDataDirectoryExists()
+        {
+            try
+            {
+                string dataDirectory = Services
+                    .GetRequiredService<DatabaseFilePathResolver>()
+                    .GetDataDirectory();
+
+                CrashLog.Write("Main", "Veri klasoru: " + dataDirectory);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("Main.DataDirectory", ex);
+            }
+        }
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -100,6 +127,8 @@ namespace Cost.Accounting.Automation.WinFormsApp
 
             InstallCrashLogHandlers();
             InstallSessionFileLogging();
+
+            EnsureDataDirectoryExists();
 
             if (!EnsureSecretsConfigured())
             {

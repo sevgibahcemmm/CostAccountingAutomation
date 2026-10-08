@@ -19,6 +19,12 @@ public static class ServiceRegistrar
         services.Configure<DatabaseNamingOptions>(configuration.GetSection(DatabaseNamingOptions.SectionName));
         services.Configure<DatabaseProvisioningOptions>(configuration.GetSection(DatabaseProvisioningOptions.SectionName));
         services.Configure<UpdateOptions>(configuration.GetSection(UpdateOptions.SectionName));
+        services.Configure<DatabaseFilesOptions>(configuration.GetSection(DatabaseFilesOptions.SectionName));
+
+        // Veritabanı dosyalarının (mdf/ldf) konacağı Data klasörü. Veritabanı
+        // oluşturma adımlarında (master ve yıl veritabanları) dosya yolları bu
+        // klasöre göre üretilir; ayrıca uygulama açılışında klasör oluşturulur.
+        services.AddSingleton<DatabaseFilePathResolver>();
 
         string masterConnectionString = RequireConnectionString(configuration, "Master");
 

@@ -267,6 +267,16 @@ public static class DatabaseInitializer
             DatabaseProvisionStep.ApplyMasterSchema,
             DatabaseProvisionStepState.Running));
 
+        // Master veritabanı henüz yoksa dosyaları Data klasöründe olacak
+        // şekilde önceden oluşturulur. Böylece EF'in Migrate adımı dosyaları
+        // SQL Sunucusunun varsayılan dizinine açmak yerine yalnız şemayı
+        // uygular.
+        await SqlDatabaseCreator.EnsureCreatedAsync(
+            masterConnectionString,
+            databaseName,
+            sp.GetRequiredService<DatabaseFilePathResolver>(),
+            cancellationToken);
+
         await masterContext.Database.MigrateAsync(cancellationToken);
 
         int tableCount = await CountMasterTablesAsync(masterContext, cancellationToken);

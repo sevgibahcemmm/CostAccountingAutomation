@@ -41,8 +41,7 @@
     <!-- Makineye ozgu gizli ayarlar. Dosya yoksa hicbir sey kopyalanmaz ve
          uygulama yalnizca ortam degiskenlerine guvenir.
          .gitignore bu dosyayi izlemiyor. -->
-    <Content Include="appsettings.Local.json"
-             Condition="Exists('appsettings.Local.json')">
+    <Content Include="appsettings.Local.json" Condition="Exists('appsettings.Local.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

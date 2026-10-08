@@ -36,22 +36,7 @@ public abstract class AuditedDbContext(DbContextOptions options, IClaimContext c
         }
     }
 
-    /// <summary>
-    /// <see cref="Entity.RowVersion"/> alanını eşzamanlılık belirteci yapar.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Kural <see cref="Entity"/> türevlerine uygulanır; alan adıyla seçilir.
-    /// <c>Properties&lt;byte[]&gt;()</c> tür geneli kullanılmaz çünkü projede
-    /// zaten var olan <c>PasswordHash</c> ve <c>PasswordSalt</c> alanları da
-    /// <c>byte[]</c> türündedir ve onları yanlışlıkla kapsama alırdı.
-    /// </para>
-    /// <para>
-    /// <c>rowversion</c> (<c>timestamp</c>) SQL Server tarafından üretilir:
-    /// satır her yazıldığında değer kendiliğinden değişir. EF yalnızca okur,
-    /// hiçbir zaman değer üretmez.
-    /// </para>
-    /// </remarks>
+
     private static void ApplyRowVersion(IMutableEntityType entityType)
     {
         if (!typeof(Entity).IsAssignableFrom(entityType.ClrType))

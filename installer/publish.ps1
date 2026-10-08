@@ -5,7 +5,7 @@
 .DESCRIPTION
     Iki uygulamayi Release modunda publish edip 'staging' klasorune koyar:
 
-        staging\app        WinForms istemcisi (Cost.Accounting.Automation.WinFormsApp.exe)
+        staging\app        WinForms istemcisi (Maliyet Muhasebesi Otomasyonu.exe)
         staging\provision  Veritabani hazirlik araci (caa-provision.exe)
 
     Paket self-contained uretilir; .NET calisma zamanlari (NETCore, WindowsDesktop,
@@ -15,7 +15,7 @@
 
     ONEMLI: Gizli deger tasimamak icin publish sonrasi appsettings.Local.json
     dosyalari staging'den SILINIR. Bu dosyayi kurulum sihirbazi olusturur.
-    Aksi hâlde gelistirici makinesinin sunucu sifreleri setup.exe icine girer.
+    Aksi halde gelistirici makinesinin sunucu sifreleri setup.exe icine girer.
 
     NOT: Bu dosya bilerek yalnizca ASCII karakter icerir. Windows PowerShell 5.1,
     BOM'suz UTF-8 dosyalari ANSI kodlamasiyla okur; Turkce karakterler iceren
@@ -54,11 +54,18 @@ $provOut = Join-Path $staging 'provision'
 $runtimeDir = Join-Path $staging 'runtime'
 $cacheDir = Join-Path $PSScriptRoot '.cache'
 $vcRedistUrl = 'https://aka.ms/vs/17/release/vc_redist.x64.exe'
-$localDbUrl = 'https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi'
 
 Write-Host 'WinForms istemcisi publish ediliyor (self-contained)...' -ForegroundColor Cyan
 dotnet publish $appProject -c $Configuration -r $Runtime --self-contained true -o $appOut
 if (-not $?) { throw 'WinForms publish basarisiz oldu.' }
+
+# Kullanici istedigi isim: exe Turkce adla kurulur.
+$appExeOld = Join-Path $appOut 'Cost.Accounting.Automation.WinFormsApp.exe'
+$appExeNew = Join-Path $appOut 'Maliyet Muhasebesi Otomasyonu.exe'
+if (Test-Path -LiteralPath $appExeOld) {
+    Rename-Item -LiteralPath $appExeOld -NewName (Split-Path -Leaf $appExeNew)
+    Write-Host "Exe yeniden adlandirildi: $(Split-Path -Leaf $appExeNew)" -ForegroundColor Green
+}
 
 Write-Host 'caa-provision publish ediliyor (self-contained)...' -ForegroundColor Cyan
 dotnet publish $provProject -c $Configuration -r $Runtime --self-contained true -o $provOut
@@ -86,16 +93,6 @@ if (-not (Test-Path -LiteralPath $vcRedistCached)) {
     if (-not $?) { throw 'VC++ Redistributable indirilemedi.' }
 }
 Copy-Item -LiteralPath $vcRedistCached -Destination (Join-Path $runtimeDir 'vc_redist.x64.exe') -Force
-
-Write-Host 'SQL Server 2022 Express LocalDB hazirlaniyor...' -ForegroundColor Cyan
-$localDbCached = Join-Path $cacheDir 'SqlLocalDB.msi'
-if (-not (Test-Path -LiteralPath $localDbCached)) {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Write-Host "Indiriliyor: $localDbUrl"
-    Invoke-WebRequest -Uri $localDbUrl -OutFile $localDbCached -UseBasicParsing
-    if (-not $?) { throw 'SqlLocalDB.msi indirilemedi.' }
-}
-Copy-Item -LiteralPath $localDbCached -Destination (Join-Path $runtimeDir 'SqlLocalDB.msi') -Force
 
 Write-Host ''
 Write-Host 'Staging hazir:' -ForegroundColor Green

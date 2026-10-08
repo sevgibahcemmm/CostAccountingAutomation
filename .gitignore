@@ -271,6 +271,9 @@ ServiceFabricBackup/
 *.ldf
 *.ndf
 
+# Veritabani dosyalarinin klasoru (gelistirme ortaminda proje kokunde olusturulur)
+/Data/
+
 # Business Intelligence projects
 *.rdl.data
 *.bim.layout

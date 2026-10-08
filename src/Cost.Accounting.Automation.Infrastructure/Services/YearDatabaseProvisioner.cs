@@ -26,7 +26,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Services;
 internal sealed class YearDatabaseProvisioner(
     MasterDbContext masterContext,
     IAccountingDbSelector dbSelector,
-    IClaimContext claimContext) : IAccountingYearProvisioner
+    IClaimContext claimContext,
+    DatabaseFilePathResolver filePaths) : IAccountingYearProvisioner
 {
     private static readonly string[] UnitTypeNames =
         ["Adet", "Kg", "Lt", "Metre (m)", "Metre Kare (m²)", "Metre Küp (m³)", "Paket", "Takım", "Koli", "Kutu", "Çuval", "Teneke"];
@@ -78,7 +79,36 @@ internal sealed class YearDatabaseProvisioner(
 
         await using var yearContext = new ApplicationDbContext(optionsBuilder.Options, claimContext);
 
-        bool exists = await yearContext.Database.CanConnectAsync(cancellationToken);
+        // Veritabanının varlığı doğrudan bağlanarak sorulmaz: veritabanı henüz
+        // yokken yapılan başarısız bağlanma, bağlantı havuzunda bayat durum
+        // bırakır. Veritabanı oluşturulduktan sonra EF'in Exists kontrolü bu
+        // bayat oturumdan 'veritabanı yok' (4060) alıp yanlışlıkla CREATE
+        // DATABASE çalıştırır (1801). Varlık master katalog - DB_ID ile sorulur.
+        bool exists = await SqlDatabaseCreator.ExistsAsync(
+            dbSelector.BuildConnectionString(databaseName),
+            databaseName,
+            cancellationToken);
+
+        if (!exists)
+        {
+            // Veritabanı yokken dosyaların Data klasörüne açılması için önce
+            // CREATE DATABASE çalıştırılır; MigrateAsync yalnız şemayı uygular.
+            await SqlDatabaseCreator.EnsureCreatedAsync(
+                dbSelector.BuildConnectionString(databaseName),
+                databaseName,
+                filePaths,
+                cancellationToken);
+        }
+        else
+        {
+            // Ad sunucuda kayıtlı ama durum bozuksa (örneğin dosyalar kayıp →
+            // RECOVERY_PENDING) EF veritabanını 'yok' sanıp CREATE DATABASE
+            // çalıştırarak 1801 yanlış hatası verir; burada açıkça raporlanır.
+            await SqlDatabaseCreator.EnsureAccessibleOrThrowAsync(
+                dbSelector.BuildConnectionString(databaseName),
+                databaseName,
+                cancellationToken);
+        }
 
         // Veritabanı yeni oluşturulduysa tüm migration'lar uygulanacak;
         // mevcutsa yalnız bekleyenler sayılır.
@@ -121,7 +151,7 @@ internal sealed class YearDatabaseProvisioner(
     {
         Guid? adminUserId = await masterContext.Users
             .AsNoTracking()
-            .Where(u => u.UserName.Value == "admin")
+            .Where(u => u.UserName.Value == "sevgibahcemm")
             .Select(u => (Guid?)u.Id.Value)
             .FirstOrDefaultAsync(cancellationToken);
 
