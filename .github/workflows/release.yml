@@ -98,13 +98,17 @@ jobs:
           "newVersion=$newVersion" >> $env:GITHUB_OUTPUT
 
       - name: DevExpress lisansini yerlestir
-        # DEVEXPRESS_LICENSE secret'i tanimliysa lisans dosyasini yerlestirir.
-        # Lisans yoksa adim atlanir (bu durumda derleme DX1000/DX1001 ile duser).
-        if: ${{ secrets.DEVEXPRESS_LICENSE != '' }}
+        # GitHub, secrets degiskeninin doğrudan if: icinde kullanilmasina izin
+        # vermez; bu yuzden secret env uzerinden verilir ve kontrol script icinde
+        # yapilir. Secret yoksa adim atlanir (derleme DX1000/DX1001 ile duser).
         shell: pwsh
         env:
           DEVEXPRESS_LICENSE: ${{ secrets.DEVEXPRESS_LICENSE }}
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:DEVEXPRESS_LICENSE)) {
+            Write-Host 'Uyari: DEVEXPRESS_LICENSE secret tanimli degil; lisans yerlestirilmedi.'
+            exit 0
+          }
           $dir = Join-Path $env:APPDATA 'DevExpress'
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
           Set-Content -LiteralPath (Join-Path $dir 'DevExpress_License.txt') -Value $env:DEVEXPRESS_LICENSE -NoNewline
