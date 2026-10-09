@@ -245,7 +245,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lnkForgot.Location = new Point(51, 618);
             lnkForgot.Name = "lnkForgot";
             lnkForgot.Size = new Size(344, 21);
-            lnkForgot.TabIndex = 8;
+            lnkForgot.TabIndex = 6;
             lnkForgot.Text = "Şifremi unuttum";
             // 
             // btnLogin
@@ -274,7 +274,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnLogin.Location = new Point(51, 560);
             btnLogin.Name = "btnLogin";
             btnLogin.Size = new Size(344, 46);
-            btnLogin.TabIndex = 7;
+            btnLogin.TabIndex = 5;
             btnLogin.Text = "Giriş Yap";
             btnLogin.Click += btnLogin_Click;
             // 
@@ -287,7 +287,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCaptchaResult.Location = new Point(51, 480);
             pnlCaptchaResult.Name = "pnlCaptchaResult";
             pnlCaptchaResult.Size = new Size(344, 48);
-            pnlCaptchaResult.TabIndex = 0;
+            pnlCaptchaResult.TabIndex = 4;
             // 
             // txtCaptchaResult
             // 
@@ -335,7 +335,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlPasswordBox.Location = new Point(51, 392);
             pnlPasswordBox.Name = "pnlPasswordBox";
             pnlPasswordBox.Size = new Size(344, 48);
-            pnlPasswordBox.TabIndex = 6;
+            pnlPasswordBox.TabIndex = 3;
             // 
             // lblPassIcon
             // 
@@ -400,7 +400,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlUserNameBox.Location = new Point(51, 334);
             pnlUserNameBox.Name = "pnlUserNameBox";
             pnlUserNameBox.Size = new Size(344, 48);
-            pnlUserNameBox.TabIndex = 5;
+            pnlUserNameBox.TabIndex = 0;
             // 
             // lblUserIcon
             // 
@@ -444,7 +444,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlYearBox.Location = new Point(51, 276);
             pnlYearBox.Name = "pnlYearBox";
             pnlYearBox.Size = new Size(344, 48);
-            pnlYearBox.TabIndex = 4;
+            pnlYearBox.TabIndex = 2;
             // 
             // lookUpYear
             // 
@@ -480,7 +480,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCompanyBox.Location = new Point(51, 218);
             pnlCompanyBox.Name = "pnlCompanyBox";
             pnlCompanyBox.Size = new Size(344, 48);
-            pnlCompanyBox.TabIndex = 3;
+            pnlCompanyBox.TabIndex = 1;
             // 
             // lookUpCompany
             // 

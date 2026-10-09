@@ -27,8 +27,8 @@ internal sealed class MathCaptchaService : ICaptchaService
         {
             CleanupExpired();
 
-            int a = _random.Next(10, 99);
-            int b = _random.Next(3, 29);
+            int a = _random.Next(1, 10);
+            int b = _random.Next(1, 10);
             string code = _random.Next(1000, 10000).ToString();
             var challengeId = Guid.NewGuid();
 

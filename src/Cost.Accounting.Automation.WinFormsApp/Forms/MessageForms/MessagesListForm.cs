@@ -1176,7 +1176,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                 ToolTip = "Mesaja dosya ekle (en fazla 25 MB)"
             };
 
-            page.btnAttach.ImageOptions.Image = Properties.Resources.base_paperclip_32;
+            page.btnAttach.ImageOptions.SvgImage = DxIcon.Attach;
+            page.btnAttach.ImageOptions.SvgImageSize = new Size(16, 16);
             page.btnAttach.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
 
             page.btnSend = new SimpleButton
@@ -1185,7 +1186,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms
                 Width = 100,
                 Text = "Gönder"
             };
-            page.btnSend.ImageOptions.Image = Properties.Resources.arrowright_green_32_h;
+            page.btnSend.ImageOptions.SvgImage = DxIcon.Send;
+            page.btnSend.ImageOptions.SvgImageSize = new Size(16, 16);
             page.btnSend.ImageOptions.ImageToTextAlignment = ImageAlignToText.LeftCenter;
 
             page.btnSend.Appearance.Font = new Font("Segoe UI", 10F, FontStyle.Bold);

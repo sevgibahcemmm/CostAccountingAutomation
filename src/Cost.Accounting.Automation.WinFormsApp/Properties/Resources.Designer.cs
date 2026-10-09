@@ -59,25 +59,5 @@ namespace Cost.Accounting.Automation.WinFormsApp.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap arrowright_green_32_h {
-            get {
-                object obj = ResourceManager.GetObject("arrowright_green_32_h", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap base_paperclip_32 {
-            get {
-                object obj = ResourceManager.GetObject("base_paperclip_32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
     }
 }

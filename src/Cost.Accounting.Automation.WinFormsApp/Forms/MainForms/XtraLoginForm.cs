@@ -408,31 +408,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 _captchaChallengeId = result.Data.ChallengeId;
                 lblCaptchaQuestion.Text = result.Data.Question;
-               // txtCaptchaResult.Text = AutoSolveCaptcha(result.Data.Question);
+                txtCaptchaResult.Text = string.Empty;
             }
-        }
-
-        private static string AutoSolveCaptcha(string question)
-        {
-            try
-            {
-                string[] nums = System.Text.RegularExpressions.Regex.Matches(question, @"\d+")
-                    .Cast<System.Text.RegularExpressions.Match>()
-                    .Select(m => m.Value)
-                    .ToArray();
-
-                if (nums.Length >= 3
-                    && int.TryParse(nums[0], out int a)
-                    && int.TryParse(nums[1], out int b))
-                {
-                    return $"{a + b} {nums[^1]}";
-                }
-            }
-            catch
-            {
-            }
-
-            return string.Empty;
         }
 
         private void lblCaptchaQuestion_Click(object? sender, EventArgs e)
