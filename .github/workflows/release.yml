@@ -104,9 +104,9 @@ jobs:
           "newVersion=$newVersion" >> $env:GITHUB_OUTPUT
 
       - name: DevExpress lisansini yerlestir
-        # GitHub, secrets degiskeninin doğrudan if: icinde kullanilmasina izin
+        # GitHub, secrets degiskeninin dogrudan if: icinde kullanilmasina izin
         # vermez; bu yuzden secret env uzerinden verilir ve kontrol script icinde
-        # yapilir. Secret yoksa adim atlanir (derleme DX1000/DX1001 ile duser).
+        # yapilir. Secret yoksa ya da icerik yerel dosyadan farkliysa adim duser.
         shell: pwsh
         env:
           DEVEXPRESS_LICENSE: ${{ secrets.DEVEXPRESS_LICENSE }}
@@ -115,6 +115,9 @@ jobs:
             throw 'DEVEXPRESS_LICENSE secret tanimli degil. Repo Settings > Secrets and variables > Actions > New repository secret ile ekleyin.'
           }
           Write-Host "Secret uzunlugu: $($env:DEVEXPRESS_LICENSE.Length) karakter"
+          # Yerel Aktif lisans dosyasinin SHA256'si (D6230F6A...).
+          # Bu hash eslesmezse secret'a kopyalanan icerik dogru degildir.
+          $knownHash = 'D6230F6A0D3B4E0748D3580331ED806A0141917932B3B321F1E3773638F39A19'
           $dir = Join-Path $env:APPDATA 'DevExpress'
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
           $file = Join-Path $dir 'DevExpress_License.txt'
@@ -122,7 +125,13 @@ jobs:
           if (-not (Test-Path -LiteralPath $file)) {
             throw "Lisans dosyasi yazilamadi: $file"
           }
+          $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash
           Write-Host ("Lisans dosyasi yazildi: {0} ({1} bayt)" -f $file, (Get-Item -LiteralPath $file).Length)
+          Write-Host "Yazilan dosya SHA256: $hash"
+          if ($hash -ne $knownHash) {
+            throw "Lisans icerigi yerel dosyayla eslesmiyor. Dosyayi Notepad'de acin, Ctrl+A, Ctrl+C ile kopyalayin ve secret degerine tekrar yapistirin."
+          }
+          Write-Host 'Lisans dogrulandi: icerik yerel dosyayla birebir ayni.'
 
       - name: Publish ve setup olustur
         shell: pwsh
