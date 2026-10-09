@@ -101,6 +101,7 @@ const
   SQL2022_SSEI_URL = 'https://download.microsoft.com/download/5/1/4/5145fe04-4d30-4b85-b0d1-39533663a2f1/SQL2022-SSEI-Expr.exe';
   SQL_MEDIA_EXE = 'SQLEXPR_x64_ENU.exe';
   SQL_EXPRESS_INSTANCE = 'SQLEXPRESS';
+  UninstallRoot = 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{#AppIdGuid}_is1';
 
 { Windows URL indirme. NOT: urlmon.dll icinde 'URLDownloadToFile' diye bir
   export yoktur; gercek adlar A/W son eklidir (C makrosu). Inno (Unicode)
@@ -435,9 +436,119 @@ begin
   end;
 end;
 
+{ 'a.b.c(.d)' bicimindeki surum dizesinin bir sonraki sayisal parcasini dondurur
+  ve Start'i parcanin bittigi yere tasir. Parca yoksa geri cagirimda 0 doner. }
+function NextVersionPart(const S: String; var Start: Integer): Integer;
+var
+  P, SegStart: Integer;
+begin
+  if Start > Length(S) then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  SegStart := Start;
+  P := Pos('.', Copy(S, Start, Length(S)));
+  if P = 0 then
+  begin
+    Result := StrToIntDef(Copy(S, SegStart, Length(S) - SegStart + 1), 0);
+    Start := Length(S) + 1;
+  end
+  else
+  begin
+    P := Start + P - 1;
+    Result := StrToIntDef(Copy(S, SegStart, P - SegStart), 0);
+    Start := P + 1;
+  end;
+end;
+
+{ 'a.b.c(.d)' bicimindeki iki surumu sayisal olarak karsilastirir.
+  -1: A eski, 0: esit, +1: A yeni. }
+function CompareVersions(const A, B: String): Integer;
+var
+  SP, EP, NA, NB: Integer;
+begin
+  SP := 1;
+  EP := 1;
+  while (SP <= Length(A)) or (EP <= Length(B)) do
+  begin
+    NA := NextVersionPart(A, SP);
+    NB := NextVersionPart(B, EP);
+    if NA < NB then
+    begin
+      Result := -1;
+      Exit;
+    end;
+    if NA > NB then
+    begin
+      Result := 1;
+      Exit;
+    end;
+  end;
+  Result := 0;
+end;
+
 function InitializeSetup(): Boolean;
+var
+  InstalledVersion, UninstallString, MsgText: String;
+  Choice: Integer;
+  ResultCode: Integer;
 begin
   Result := True;
+
+  { Program kurulu degilse normal ilk kurulum akisi; hicbir sey sorulmaz. }
+  if not RegKeyExists(HKLM64, UninstallRoot) then
+    Exit;
+
+  RegQueryStringValue(HKLM64, UninstallRoot, 'DisplayVersion', InstalledVersion);
+  RegQueryStringValue(HKLM64, UninstallRoot, 'UninstallString', UninstallString);
+
+  if InstalledVersion = '' then
+    MsgText := 'Maliyet Muhasebesi Otomasyonu zaten kurulu.'
+  else if CompareVersions(InstalledVersion, '{#AppVersion}') = 0 then
+    MsgText := 'Maliyet Muhasebesi Otomasyonu zaten kurulu (surum ' + InstalledVersion + ').'
+  else
+    MsgText := 'Maliyet Muhasebesi Otomasyonu kurulu (surum ' + InstalledVersion + ');'
+      + #13#10 + 'bu kurulum surumu ' + '{#AppVersion}';
+
+  { Kurulu bir uygulamayi "ilk kurulum gibi" bastan acmak yanilticidir;
+    kullaniciya islemi sectirin. }
+  MsgText := MsgText + #13#10 + #13#10
+    + 'Yapmak istediginiz islem:' + #13#10
+    + '[Evet]      Guncelle / Onar (mevcut ayarlari korur)' + #13#10
+    + '[Hayir]     Programi kaldir' + #13#10
+    + '[Iptal]     Cikis';
+
+  Choice := MsgBox(MsgText, mbConfirmation, MB_YESNOCANCEL);
+
+  if Choice = IDYES then
+    Exit;  { guncelle/onar: normal kurulum akisi devam eder (ayarlar korunur). }
+
+  if Choice = IDNO then
+  begin
+    { Kaldir: uninstaller'i sessizce calistir ve bitmesini bekle. }
+    UninstallString := Trim(UninstallString);
+    if (Length(UninstallString) >= 2)
+      and (UninstallString[1] = '"')
+      and (UninstallString[Length(UninstallString)] = '"') then
+      UninstallString := Copy(UninstallString, 2, Length(UninstallString) - 2);
+
+    if (UninstallString <> '') and Exec(UninstallString,
+        '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART',
+        '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+      MsgBox('Program kaldirildi. Yeniden kurmak isterseniz setup dosyasini' + #13#10
+        + 'tekrar calistirin.', mbInformation, MB_OK)
+    else
+      MsgBox('Kaldirma islemi baslatilamadi. Programi elle kaldirin:' + #13#10
+        + 'Ayarlar > Uygulamalar > Kurulu uygulamalar.', mbError, MB_OK);
+
+    Result := False;
+    Exit;
+  end;
+
+  { Iptal: kurulum yapilmasin. }
+  Result := False;
 end;
 
 { Baglanti dizesinden 'Data Source=...' (ya da 'Server=...') degerini ayirir. }
