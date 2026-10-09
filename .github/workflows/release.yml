@@ -85,7 +85,8 @@ jobs:
           $newVersion = "$major.$minor.$patch"
 
           # Ayni tag zaten yayinlanmissa (yeniden calistirma) bir sonraki patch'e gec.
-          while ((git ls-remote --exit-code --tags origin "refs/tags/v$newVersion" 2>$null) -and $?) {
+          # (git tag --list her zaman 0 dondurur; native cikis kodu hatasi olusmaz.)
+          while (git tag --list "v$newVersion") {
             $patch++
             $newVersion = "$major.$minor.$patch"
           }
