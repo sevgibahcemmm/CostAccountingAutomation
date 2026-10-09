@@ -341,14 +341,6 @@ begin
   RunAutomaticCheck.Height := ScaleY(22);
   RunAutomaticCheck.Caption := 'Uygulama veritabanini ilk calistirmada kendisi hazirlayabilsin (yalnizca tek makinede isaretleyin)';
   RunAutomaticCheck.Checked := False;
-
-  { Guncelleme/onarim kurulumu: hazirlik adimlarini varsayilan olarak kapali tut.
-    Veritabani zaten var; tekrar provision calistirilmasin. }
-  if FileExists(ExpandConstant('{app}\appsettings.Local.json')) then
-  begin
-    RunProvisionCheck.Checked := False;
-    RunAutomaticCheck.Checked := False;
-  end;
 end;
 
 { Veritabani klasoru alani ilk kez goruldugunde varsayilan degeri yaz.
@@ -592,17 +584,25 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   ResultCode: Integer;
-  ProvDir, ProvExePath, VcRedist, DataDir: String;
+  ProvDir, ProvExePath, VcRedist, DataDir, SettingsFile: String;
+  IsReinstall: Boolean;
 begin
   if CurStep <> ssPostInstall then
     Exit;
 
+  { Guncelleme/onarim kurulumu: mevcut appsettings.Local.json korunur; ayarlar
+    yalnizca ILK kurulumda yazilir. Dikkat: FileExists kontrolu yalnizca bu
+    asamada yapilabilir; InitializeWizard sirasinda [app] sabiti henuz tanimli
+    degildir ve Inno kurulumu 'Ic hata' ile durdurur. }
+  SettingsFile := ExpandConstant('{app}\appsettings.Local.json');
+  IsReinstall := FileExists(SettingsFile);
+
   { Ayarlari yalnizca ILK kurulumda yaz. Guncelleme/onarim kurulumunda mevcut
     appsettings.Local.json korunur; aksi halde istemcinin calisan baglanti
     degerleri varsayilanlarla ezerdik. }
-  if not FileExists(ExpandConstant('{app}\appsettings.Local.json')) then
+  if not IsReinstall then
   begin
-    WriteSettingsFile(ExpandConstant('{app}\appsettings.Local.json'));
+    WriteSettingsFile(SettingsFile);
     WriteSettingsFile(ExpandConstant('{app}\tools\appsettings.Local.json'));
   end;
 
@@ -622,6 +622,12 @@ begin
 
   { Gecici onkosul dosyasini temizle. }
   DeleteFile(VcRedist);
+
+  { Guncelleme/onarim kurulumunda veritabani zaten var; provision tekrar
+    calistirilmaz. Ayrica ayar sayfasi atlandigindan alan degerleri guncel
+    olmayabilir; SQL kurulumu/icacls gibi yan etkiler de istenmez. }
+  if IsReinstall then
+    Exit;
 
   { 2) Sunucu kurulumunda ("simdi hazirla" isaretli) SQL Server'i denetle.
      Erisilemiyorsa ve hedef yerel SQLEXPRESS ise sondan onceki surum kurulsun. }
