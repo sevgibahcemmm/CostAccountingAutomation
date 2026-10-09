@@ -106,13 +106,17 @@ jobs:
           DEVEXPRESS_LICENSE: ${{ secrets.DEVEXPRESS_LICENSE }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:DEVEXPRESS_LICENSE)) {
-            Write-Host 'Uyari: DEVEXPRESS_LICENSE secret tanimli degil; lisans yerlestirilmedi.'
-            exit 0
+            throw 'DEVEXPRESS_LICENSE secret tanimli degil. Repo Settings > Secrets and variables > Actions > New repository secret ile ekleyin.'
           }
+          Write-Host "Secret uzunlugu: $($env:DEVEXPRESS_LICENSE.Length) karakter"
           $dir = Join-Path $env:APPDATA 'DevExpress'
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
-          Set-Content -LiteralPath (Join-Path $dir 'DevExpress_License.txt') -Value $env:DEVEXPRESS_LICENSE -NoNewline
-          Write-Host "DevExpress lisansi yerlestirildi: $dir"
+          $file = Join-Path $dir 'DevExpress_License.txt'
+          Set-Content -LiteralPath $file -Value $env:DEVEXPRESS_LICENSE -NoNewline
+          if (-not (Test-Path -LiteralPath $file)) {
+            throw "Lisans dosyasi yazilamadi: $file"
+          }
+          Write-Host ("Lisans dosyasi yazildi: {0} ({1} bayt)" -f $file, (Get-Item -LiteralPath $file).Length)
 
       - name: Publish ve setup olustur
         shell: pwsh
