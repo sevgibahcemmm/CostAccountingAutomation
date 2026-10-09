@@ -1,25 +1,24 @@
 name: Release
 
 # Ne zaman calisir?
-#   - master'a src veya installer altinda degisiklik push edilince (otomatik surum artisi)
-#   - Actions sekmesinden elle (workflow_dispatch) tetiklenince
+#   - YALNIZCA elle: Actions sekmesinden "Run workflow" ile (workflow_dispatch).
+#
+#   Neden push tetikleyicisi kaldirildi? DevExpress lisans dogrulamasi CI'da
+#   cozulemediginden her push basarisizlik bildirimi gonderiyordu. Surum
+#   yayini artik elle (Actions > Release > Run workflow) baslatilir; push
+#   ustune otomatik calisma olmaz, basarisizlik epostasi da gelmez. Pipeline
+#   daha sonra lisans sorunu cozulurse elle kullanilabilir.
 #
 # Akis: surumu artir -> publish -> Inno Setup ile setup.exe -> GitHub Release
 #       -> update.json guncelle (yalnizca gecmis kayit; istemciler surum kaydini
 #          Master veritabanindaki AppReleases tablosundan okur ve setup.exe'yi
-#          sunucunun paylasim klasorundan ceker -> sunucudaki sync-updates.ps1)
+#          sunucunun paylasim klasorunden ceker -> sunucudaki sync-updates.ps1)
 #       -> master'a geri commit ([skip ci] ile dongu engellenir).
 #
 # NOT: GITHUB_TOKEN ile yapilan push'lar yeni workflow tetiklemez ve ayrica
 # commit mesajinda [skip ci] vardir; bu yuzden sonsuz dongu olusmaz.
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-      - 'src/**'
-      - 'installer/*.ps1'
-      - 'installer/*.iss'
   workflow_dispatch:
     inputs:
       bump:
