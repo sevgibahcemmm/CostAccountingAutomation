@@ -489,6 +489,39 @@ begin
   Result := 0;
 end;
 
+{ Komut satirinda '/Name' (buyuk/kucuk fark etmez) var mi? Inno'nun bu
+  derlemesinde CmdLineParamExists yok; GetCmdTail uzerinden bakilir. }
+function HasParam(const Name: String): Boolean;
+begin
+  Result := Pos('/' + UpperCase(Name), UpperCase(GetCmdTail())) > 0;
+end;
+
+{ Setup, uygulamadaki "indir" akisiyla mi baslatildi?
+  Evet ise InitializeSetup soru sormaz; dogrudan gunceller.
+
+  Iki sinyal:
+  1) /AutoUpdate: yeni surumdeki uygulama bu parametreyi ekler (ayrica
+     /VERYSILENT verir).
+  2) Setup, uygulamanin guncelleme onbellegine (LOCALAPPDATA\...\Updates)
+     kopyalanip baslatildiysa: eski surumdeki uygulama bu parametreyi bilmez,
+     ama dosya her zaman o klasore kopyalanip baslatilir. Boylece eski
+     istemci surumlerinde bile guncelleme kurulumunda soru cikmaz.
+  Elle indirilip calistirilan setup bu iki kosulu da saglamaz; soru o zaman
+  sorulur (kullanici "guncelle/kaldi!/iptal" sectirilir). }
+function IsAutoUpdateLaunch(): Boolean;
+var
+  UpdatesDir, SrcLower: String;
+begin
+  Result := HasParam('AutoUpdate');
+  if Result then
+    Exit;
+
+  UpdatesDir := LowerCase(GetEnv('LOCALAPPDATA'))
+    + '\costaccountingautomation\updates\';
+  SrcLower := LowerCase(ExpandConstant('{srcexe}'));
+  Result := Copy(SrcLower, 1, Length(UpdatesDir)) = UpdatesDir;
+end;
+
 function InitializeSetup(): Boolean;
 var
   InstalledVersion, UninstallString, MsgText: String;
@@ -496,6 +529,11 @@ var
   ResultCode: Integer;
 begin
   Result := True;
+
+  { Otomatik guncelleme (uygulamadan gelen /AutoUpdate ya da onbellege
+    kopyalanmis setup): kullaniciya hicbir soru sorulmaz, dogrudan gunceller. }
+  if IsAutoUpdateLaunch() then
+    Exit;
 
   { Program kurulu degilse normal ilk kurulum akisi; hicbir sey sorulmaz. }
   if not RegKeyExists(HKLM64, UninstallRoot) then
@@ -733,6 +771,17 @@ begin
 
   { Gecici onkosul dosyasini temizle. }
   DeleteFile(VcRedist);
+
+  { Otomatik guncelleme sessiz kurulursa [Run] postinstall atlanir (dosyala
+    kilitli oldugu icin app kapatildi); kurulum bitince uygulamayi yeniden
+    baslat. Sessiz degilse [Run] kutusu zaten halleder; cift baslama olmasin.
+    Bu blok reinstall erken cikisindan ONCE gelmelidir; aksi halde guncelleme
+    onariminda buraya hic gelinmez. }
+  if IsAutoUpdateLaunch() and HasParam('VERYSILENT') then
+  begin
+    Exec(ExpandConstant('{app}\{#AppExe}'), '', '', SW_SHOW, ewNoWait, ResultCode);
+    Exit;
+  end;
 
   { Guncelleme/onarim kurulumunda veritabani zaten var; provision tekrar
     calistirilmaz. Ayrica ayar sayfasi atlandigindan alan degerleri guncel

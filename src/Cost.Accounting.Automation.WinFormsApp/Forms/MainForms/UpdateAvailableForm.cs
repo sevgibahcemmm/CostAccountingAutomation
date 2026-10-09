@@ -138,7 +138,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     File.Copy(_manifest.Url, localSetup, overwrite: true);
 
                     Close();
-                    Process.Start(new ProcessStartInfo(localSetup) { UseShellExecute = true });
+                    // /AutoUpdate ile yeni surum kurulurken setup "ne yapalim" diye
+                    // sormaz; /VERYSILENT ile sayfalar gosterilmez, dogrudan gunceller.
+                    // Kurulum bitince uygulamayi setup'in kendisi yeniden baslatir
+                    // (CurStepChanged - IsSilent, CostAccountingAutomation.iss).
+                    Process.Start(new ProcessStartInfo(localSetup)
+                    {
+                        UseShellExecute = true,
+                        Arguments = "/AutoUpdate /VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+                    });
                     Environment.Exit(0);
                     return;
                 }
