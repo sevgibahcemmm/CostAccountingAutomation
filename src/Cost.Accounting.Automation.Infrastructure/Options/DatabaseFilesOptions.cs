@@ -8,18 +8,23 @@ namespace Cost.Accounting.Automation.Infrastructure.Options;
 /// <para>
 /// SQL Server, <c>CREATE DATABASE</c> komutunda dosya yolu verilmezse
 /// veritabanını kendi varsayılan veri dizinine açar (örneğin
-/// <c>C:\Program Files\Microsoft SQL Server\MSSQL.16\MSSQL\DATA</c> veya
-/// LocalDB'de kullanıcı profili). Bu bölüm, dosyaların uygulamanın
-/// <c>Data</c> klasöründe tutulmasını sağlar.
+/// <c>C:\Program Files\Microsoft SQL Server\MSSQL.16\MSSQL\DATA</c>).
+/// Bu bölüm, dosyaların <b>tek bir sabit klasörde</b> tutulmasını sağlar.
+/// </para>
+/// <para>
+/// Veritabanı tüm ortamlarda (geliştirme ve kurulu sürüm) aynı yerde durur:
+/// varsayılan <see cref="WellKnownDataDirectory"/>'dir. Böylece IDE'den
+/// çalıştırılan uygulama ile kurulu sürüm aynı veritabanını kullanır; iki
+/// ayrı klasörde iki ayrı veritabanı oluşmaz.
 /// </para>
 /// <para>
 /// Öncelik sırası (<c>DatabaseFiles__DataDirectory</c> ortam değişkeni de
 /// bu değerin üzerine yazabilir):
 /// </para>
 /// <list type="number">
-/// <item><description><c>DataDirectory</c>: kurulum sihirbazının yazdığı açık yol.</description></item>
-/// <item><description>Geliştirme: proje kökündeki <c>Data</c> klasörü (slnx/sln yanındaki).</description></item>
-/// <item><description>Kurulu sürüm: uygulama klasöründeki <c>Data</c>.</description></item>
+/// <item><description><c>DataDirectory</c>: açıkça verilmiş yol (kurulum sihirbazı makineye
+/// özel farklı bir klasör seçtirdiğinde bunu yazar).</description></item>
+/// <item><description><see cref="WellKnownDataDirectory"/>: her ortam için tek varsayılan.</description></item>
 /// </list>
 /// </remarks>
 public sealed class DatabaseFilesOptions
@@ -27,9 +32,16 @@ public sealed class DatabaseFilesOptions
     public const string SectionName = "DatabaseFiles";
 
     /// <summary>
-    /// Veritabanı dosyalarının konacağı klasör. Boş bırakılırsa klasör
-    /// otomatik çözümlenir (proje kökü <c>Data</c> ya da uygulama klasörü
-    /// <c>Data</c>). Kurulum sihirbazı bu alanı kendi seçtiği klasörle doldurur.
+    /// Veritabanı dosyalarının (<c>.mdf</c> / <c>.ldf</c>) konacağı tek varsayılan
+    /// klasör. Geliştirme ve kurulu sürüm burayı kullanır; her otomatik dağıtım
+    /// ortamı aynı veritabanını görür. Kurulum sihirbazı da bu klasörü önerir.
+    /// </summary>
+    public const string WellKnownDataDirectory = @"C:\CostAccountingAutomation\Database";
+
+    /// <summary>
+    /// Veritabanı dosyalarının konacağı klasör. Boş bırakılırsa
+    /// <see cref="WellKnownDataDirectory"/> kullanılır. Kurulum sihirbazı bu
+    /// alanı makineye özel seçim yapıldığında doldurur.
     /// </summary>
     public string? DataDirectory { get; set; }
 

@@ -14,21 +14,26 @@ Veritabanı ikiye ayrılmıştır:
 ## Veritabanı dosyalarının konumu
 
 `CREATE DATABASE` komutuna dosya yolu verilmezse SQL Server dosyaları kendi
-varsayılan veri dizinine açar. Bu uygulama dosyaları bilinçli olarak tek bir
-`Data` klasöründe tutar:
+varsayılan veri dizinine açar. Bu uygulama dosyaları bilinçli olarak **tek bir
+sabit klasörde** tutar:
 
 | Ortam | Klasör |
 |---|---|
-| Geliştirme (repo içinden çalıştırma) | `<proje kökü>\Data` (`.slnx` yanındaki) |
-| Kurulum (`setup.exe`) | Kurulumda seçilen klasör, varsayılan `{app}\Data` |
+| Geliştirme (IDE'den çalıştırma) | `C:\CostAccountingAutomation\Database` |
+| Kurulum (`setup.exe`) | `C:\CostAccountingAutomation\Database` (sihirbazda makineye özel değiştirilebilir) |
 
-Sıralama: `DatabaseFiles:DataDirectory` (kurulum sihirbazı yazar; ortam değişkeni
-`DatabaseFiles__DataDirectory` ile ezilebilir) → proje kökü `Data` → uygulama
-klasörü `Data`.
+Geliştirme ve kurulu sürüm aynı klasörü kullandığından aynı veritabanını görür;
+iki ayrı klasörde iki ayrı veritabanı oluşmaz.
 
-Klasör oluşturulduğunda setup, SQL Server hizmet hesabına (örn.
-`NT SERVICE\MSSQL$SQLEXPRESS`) o klasöre yazma yetkisi verir: dosyaları uygulama
-değil SQL Server hizmeti oluşturur ve yazar.
+Sıralama: `DatabaseFiles:DataDirectory` (açıkça verilmişse; kurulum sihirbazı
+yazar, ortam değişkeni `DatabaseFiles__DataDirectory` ile ezilebilir) →
+`C:\CostAccountingAutomation\Database` (kod içindeki varsayılan).
+
+Klasör ilk kez oluşturulduğunda (setup ya da uygulama açılışı), SQL Server
+hizmet hesabına (örn. `NT SERVICE\MSSQL$SQLEXPRESS`) o klasöre yazma yetkisi
+icacls ile verilir: dosyaları uygulama değil SQL Server hizmeti oluşturur ve
+yazar. Yerel sunucuda dosya açılamazsa sessizce SQL varsayılan dizinine
+düşülmez; hata açıklamayla gösterilir (tek konumun korunması için).
 
 > Veritabanı sunucusu uzak bir makinedeyse dosya yolları o makinenin dosya
 > sistemini tarif eder; bu durumda `DatabaseFiles:UseExplicitFileNames` `false`
@@ -123,7 +128,7 @@ Makineler arasında değişen değerler **ortam değişkeni** ile verilir ve JSO
 | `ConnectionStrings__SqlServer` | Yıl veritabanı bağlantı şablonu |
 | `Jwt__SecretKey` | Token imzalama anahtarı (en az 64 karakter) |
 | `DatabaseProvisioning__Mode` | `VerifyOnly` (üretim) \| `Automatic` (tek makine) |
-| `DatabaseFiles__DataDirectory` | Veritabanı dosyalarının (mdf/ldf) klasörü |
+| `DatabaseFiles__DataDirectory` | Veritabanı dosyalarının (mdf/ldf) klasörü (bos bırakılırsa `C:\CostAccountingAutomation\Database`) |
 
 PowerShell:
 

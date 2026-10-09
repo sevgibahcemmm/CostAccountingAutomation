@@ -154,6 +154,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             LoadSessionInfoToStatusBar();
             StartClock();
+            StartSessionPresence();
             StartLiveMessaging();
             OpenDashboard();
 
@@ -187,6 +188,25 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
 
             return ribbonStatusBar.PointToScreen(new Point(ribbonStatusBar.Width, 0));
+        }
+
+        /// <summary>
+        /// Oturumun canlılık izini (kalp atışı) başlatır.
+        /// </summary>
+        /// <remarks>
+        /// Mesajlaşma yetkisi olsun olmasın her kullanıcı için çalışır:
+        /// tek-oturum kuralı ve "kim çevrimiçi" bilgisi tüm kullanıcıları kapsar.
+        /// </remarks>
+        private void StartSessionPresence()
+        {
+            try
+            {
+                Program.Services.GetRequiredService<SessionPresenceService>().Start();
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("RibbonMainForm.StartSessionPresence", ex);
+            }
         }
 
         /// <summary>
@@ -258,7 +278,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             });
         }
 
-        private async Task StopLiveMessagingAsync()
+        private async Task StopBackgroundServicesAsync()
         {
             LiveMessagingService live =
                 Program.Services.GetRequiredService<LiveMessagingService>();
@@ -266,14 +286,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             live.Polled -= LiveMessaging_Polled;
 
             await live.StopAsync();
+
+            await Program.Services.GetRequiredService<SessionPresenceService>().StopAsync();
         }
 
         /// <summary>
-        /// Canlı mesajlaşma motorunu durdurur ve çıkış bildirimini gönderir.
+        /// Arka plan servislerini durdurur ve oturumun çıkış bildirimini gönderir.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Çağıran, oturum bağlamını sıfırlamadan önce bu metodu çağırmak zorundadır.
+        /// Çağıran, oturum bağlamını sıfırlamadan önce bu metodu çağırmak zorundadır;
+        /// çıkış bildirimi oturum bağlamı hâlâ doluyken gönderilir.
         /// </para>
         /// <para>
         /// Bekleme <c>Task.Run</c> içinde yapılır. Asenkron devam arayüz iş
@@ -283,15 +306,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         /// turudur ve çıkış anındadır.
         /// </para>
         /// </remarks>
-        private void StopLiveMessaging()
+        private void StopBackgroundServices()
         {
             try
             {
-                Task.Run(StopLiveMessagingAsync).GetAwaiter().GetResult();
+                Task.Run(StopBackgroundServicesAsync).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
-                CrashLog.WriteException("RibbonMainForm.StopLiveMessaging", ex);
+                CrashLog.WriteException("RibbonMainForm.StopBackgroundServices", ex);
             }
         }
 
@@ -603,6 +626,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemCompanyName.Caption = $"🏢  {companyName}";
             barButtonItemUserName.Caption = $"👤  {fullName}";
             barButtonItemRoleName.Caption = $"🔑  Rol: {roleName}";
+            barStaticItemVersion.Caption = $"v{UpdateChecker.CurrentVersionString()}";
+            Text = $"Maliyet Muhasebesi Otomasyonu  v{UpdateChecker.CurrentVersionString()}";
         }
 
         private void StartClock()
@@ -669,7 +694,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // Çıkış bildirimi oturum bağlamı hâlâ doluyken gönderilmelidir.
             // Aksi hâlde komut kimliği okuyamaz ve kullanıcı, kendi çıkışını
             // yaptığını göremeden "Çevrimiçi" görünmeye devam eder.
-            StopLiveMessaging();
+            StopBackgroundServices();
 
             _session.Clear();
 
@@ -726,7 +751,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             // Program kapanıyor. Bu çağrı, çıkışta zaten yapıldıysa hiçbir şey
             // yapmaz: StopAsync kendi durumunu korur ve ikinci çağrıda çıkar.
-            StopLiveMessaging();
+            StopBackgroundServices();
 
             if (_restartingToLogin)
             {

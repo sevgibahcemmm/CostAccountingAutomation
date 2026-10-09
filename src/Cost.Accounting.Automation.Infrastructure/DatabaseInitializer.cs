@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Application.Updates;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.AccountingYears;
 using Cost.Accounting.Automation.Domain.AccountingYears.ValueObjects;
@@ -211,7 +212,8 @@ public static class DatabaseInitializer
     public static async Task InitializeAsync(
         IServiceProvider services,
         IProgress<DatabaseProvisionProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? appVersion = null)
     {
         using var scope = services.CreateScope();
         IServiceProvider sp = scope.ServiceProvider;
@@ -278,6 +280,14 @@ public static class DatabaseInitializer
             cancellationToken);
 
         await masterContext.Database.MigrateAsync(cancellationToken);
+
+        // Kurulu sürüm, sürüm numarasının +1 artırılabilmesi için ilk kurulumda
+        // (veya bu alan sonradan eklendiğinde) tabana yazılır.
+        if (!string.IsNullOrWhiteSpace(appVersion))
+        {
+            var appReleaseService = sp.GetRequiredService<IAppReleaseService>();
+            await appReleaseService.EnsureBaselineAsync(appVersion, cancellationToken);
+        }
 
         int tableCount = await CountMasterTablesAsync(masterContext, cancellationToken);
 

@@ -32,7 +32,7 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher=Emrullah AKPINAR-Muhasebe Yetkilisi
-DefaultDirName={autopf}\Maliyet Muhasebesi Otomasyonu
+DefaultDirName={userpf}\Maliyet Muhasebesi Otomasyonu
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 DisableWelcomePage=no
@@ -43,7 +43,7 @@ OutputDir=dist
 OutputBaseFilename=CostAccountingAutomation-Setup-{#AppVersion}
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-PrivilegesRequired=admin
+PrivilegesRequired=lowest
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 WizardImageStretch=no
@@ -71,7 +71,10 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{a
 
 [Run]
 ; Onkosullar (vc_redist, provisioning) [Code] icinde sirali calistirilir.
-Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+; skipifsilent BILINCLI OLARAK KULLANILMAZ: sessiz guncelleme (VERYSILENT)
+; tamamlaninca setup yeni surumu kendisi baslatir; giris ekrani boylece
+; kullanicidan "yukle" cevabi alinmadan acilir.
+Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall
 
 [InstallDelete]
 ; Eski surumlerde exe eski adla kuruluyordu; yeni adla kurulturken artigi temizle.
@@ -81,7 +84,9 @@ Type: files; Name: "{app}\Cost.Accounting.Automation.WinFormsApp.exe"
 Type: files; Name: "{app}\appsettings.Local.json"
 Type: files; Name: "{app}\tools\appsettings.Local.json"
 Type: filesandordirs; Name: "{app}\logs"
-; Dikkat: veritabani klasoru ({app}\Data) bilincli olarak silinmez; veri kaybi olmasin.
+; Dikkat: veritabani klasoru bilincli olarak silinmez; veri kaybi olmasin.
+; Varsayilan klasor uygulama klasoru degil, makine genelindeki tekil konumdur:
+; C:\CostAccountingAutomation\Database (geliştirme ve kurulu sürüm ayni yeri kullanir).
 
 [Code]
 var
@@ -202,6 +207,60 @@ begin
   StringChangeEx(Result, '"', '\"', True);
 end;
 
+{ Onceden kurulu surumun appsettings.Local.json dosyasindan, satiri '"Key": "..."'
+  biciminde olan bir JSON degerini okur (anahtarlar benzersiz oldugundan ust
+  bolum aranmaz). Dosya yoksa ya da anahtar yoksa bos dondurur. Guncelleme
+  sirasinda baglanti dizelerinin ve JWT anahtarinin korunmasini saglar; boylece
+  VERYSILENT (sessiz) guncellemede dogrulama da gecer. }
+function ReadSettingKey(const FileName, Key: String): String;
+var
+  Lines: TStringList;
+  I, P, Q: Integer;
+  Line, Wanted, Value: String;
+begin
+  Result := '';
+  if not FileExists(FileName) then
+    Exit;
+
+  Lines := TStringList.Create;
+  try
+    try
+      Lines.LoadFromFile(FileName);
+    except
+      Exit;
+    end;
+
+    Wanted := '"' + Key + '"';
+    for I := 0 to Lines.Count - 1 do
+    begin
+      Line := Trim(Lines[I]);
+      if Pos(Wanted, Line) = 0 then
+        Continue;
+
+      P := Pos(':', Line);
+      if P = 0 then
+        Continue;
+
+      Value := Trim(Copy(Line, P + 1, Length(Line) - P));
+      if (Length(Value) >= 2) and (Value[1] = '"') then
+      begin
+        Value := Copy(Value, 2, Length(Value) - 2);
+        Q := Pos('"', Value);
+        if Q > 0 then
+          Value := Copy(Value, 1, Q - 1);
+
+        { JSON kacislarini geri al: \\ -> \ }
+        StringChangeEx(Value, '\\', '\', True);
+
+        Result := Value;
+        Exit;
+      end;
+    end;
+  finally
+    Lines.Free;
+  end;
+end;
+
 { Baglanti dizesindeki Data Source degerini dondurur (ornek: .\SQLEXPRESS). }
 function ReadDataSource(const ConnectionString: String): String;
 var
@@ -284,6 +343,8 @@ var
   DescLabel: TNewStaticText;
   ButtonGap: Integer;
   ButtonW: Integer;
+  PrevFile: String;
+  Prev: String;
 begin
   { Sayfanin yuksekligine gore kutulari gorebilmek icin dort alan + iki onay
     kutusu yoGun bir yerlesimle elle dizilir; uzun aciklama boslugu
@@ -309,6 +370,39 @@ begin
   AddField(ScaleY(92), 'ConnectionStrings:SqlServer (yil veritabani sablonu)', DefaultSqlServer, SqlServerEdit);
   AddField(ScaleY(132), 'JWT imzalama anahtari (en az 64 karakter)', '', SecretEdit);
   AddField(ScaleY(172), 'Veritabani klasoru (mdf/ldf dosyalari)', '', DataDirEdit);
+
+  { Var olan kurulumun ustune kuruluyorsa (guncelleme) onceki ayarlar korunur:
+    baglanti dizeleri ve JWT anahtari yeniden sorulmaz. Bu sayede VERYSILENT
+    guncellemede alan boslugundan dogan hata da olusmaz. Veritabani klasoru
+    eski varsayilan olan kurulum klasoru altindaki Data ise tekil konuma tasinir. }
+  { Yeni per-user kurulum klasorunde ayar yoksa, yonetici (Program Files)
+     kurulumundan kalma ayarlar korunur: baglanti dizeleri, JWT anahtari ve
+     veritabani klasoru kesintisiz tasinir. }
+  PrevFile := GetEnv('LOCALAPPDATA') + '\Programs\Maliyet Muhasebesi Otomasyonu\appsettings.Local.json';
+  if not FileExists(PrevFile) then
+    PrevFile := GetEnv('ProgramFiles') + '\Maliyet Muhasebesi Otomasyonu\appsettings.Local.json';
+  if FileExists(PrevFile) then
+  begin
+    Prev := ReadSettingKey(PrevFile, 'Master');
+    if Prev <> '' then
+      MasterEdit.Text := Prev;
+
+    Prev := ReadSettingKey(PrevFile, 'SqlServer');
+    if Prev <> '' then
+      SqlServerEdit.Text := Prev;
+
+    Prev := ReadSettingKey(PrevFile, 'SecretKey');
+    if Prev <> '' then
+      SecretEdit.Text := Prev;
+
+    Prev := ReadSettingKey(PrevFile, 'DataDirectory');
+    if Prev = '' then
+      DataDirEdit.Text := 'C:\CostAccountingAutomation\Database'
+    else if CompareText(Prev, GetEnv('ProgramFiles') + '\Maliyet Muhasebesi Otomasyonu\Data') = 0 then
+      DataDirEdit.Text := 'C:\CostAccountingAutomation\Database'
+    else
+      DataDirEdit.Text := Prev;
+  end;
 
   { JWT alaninin sagina "rastgele uret" dugmesi. }
   ButtonGap := ScaleX(8);
@@ -351,7 +445,7 @@ begin
   if CurPageID = SettingsPage.ID then
   begin
     if Trim(DataDirEdit.Text) = '' then
-      DataDirEdit.Text := ExpandConstant('{app}\Data');
+      DataDirEdit.Text := 'C:\CostAccountingAutomation\Database';
   end;
 end;
 
@@ -363,34 +457,65 @@ begin
 
   if CurPageID = SettingsPage.ID then
   begin
+    { Sessiz modda (VERYSILENT) hicbir MsgBox gosterilmez; Inno bu kullanici
+      mesaj kutusunu BASKILAMAZ, gorunur bekleme yaratir. Guncelleme akisi
+      kesintiye ugramasin diye bos alanlar sessizde varsayilan/uretilen
+      degerlerle doldurulur; etkilesimli kurulumda eskisi gibi dogrulanir. }
     if Trim(MasterEdit.Text) = '' then
     begin
-      MsgBox('Master baglanti dizesi bos olamaz.', mbError, MB_OK);
-      Result := False;
-      Exit;
+      if WizardSilent then
+        MasterEdit.Text := DefaultMaster
+      else
+      begin
+        MsgBox('Master baglanti dizesi bos olamaz.', mbError, MB_OK);
+        Result := False;
+        Exit;
+      end;
     end;
 
     if Trim(SqlServerEdit.Text) = '' then
     begin
-      MsgBox('Yil veritabani baglanti dizesi bos olamaz.', mbError, MB_OK);
-      Result := False;
-      Exit;
+      if WizardSilent then
+        SqlServerEdit.Text := DefaultSqlServer
+      else
+      begin
+        MsgBox('Yil veritabani baglanti dizesi bos olamaz.', mbError, MB_OK);
+        Result := False;
+        Exit;
+      end;
     end;
 
     Secret := Trim(SecretEdit.Text);
     if Length(Secret) < 64 then
     begin
-      MsgBox('JWT anahtari en az 64 karakter olmalidir. Alanin sagindaki' + #13#10
-        + '''Rastgele uret'' dugmesiyle guclu bir anahtar olusturabilirsiniz.', mbError, MB_OK);
+      if WizardSilent then
+        GenerateSecretClick(nil)
+      else
+      begin
+        MsgBox('JWT anahtari en az 64 karakter olmalidir. Alanin sagindaki' + #13#10
+          + '''Rastgele uret'' dugmesiyle guclu bir anahtar olusturabilirsiniz.', mbError, MB_OK);
+        Result := False;
+        Exit;
+      end;
+    end;
+
+    Secret := Trim(SecretEdit.Text);
+    if Length(Secret) < 64 then
+    begin
       Result := False;
       Exit;
     end;
 
     if Trim(DataDirEdit.Text) = '' then
     begin
-      MsgBox('Veritabani klasoru bos olamaz.', mbError, MB_OK);
-      Result := False;
-      Exit;
+      if WizardSilent then
+        DataDirEdit.Text := 'C:\CostAccountingAutomation\Database'
+      else
+      begin
+        MsgBox('Veritabani klasoru bos olamaz.', mbError, MB_OK);
+        Result := False;
+        Exit;
+      end;
     end;
   end;
 end;
@@ -588,8 +713,10 @@ begin
 
   VcRedist := ExpandConstant('{tmp}\vc_redist.x64.exe');
 
-  { 1) VC++ Redistributable (yoksa): self-contained .NET icin on kosul. }
-  if VCRedistNeeded() then
+  { 1) VC++ Redistributable (yoksa): self-contained .NET icin on kosul.
+       Yalnizca yonetici altinda kurulabilir; standard kullanici (sessiz
+       guncelleme) daha onceden kuruldugu varsayimiyla bu adimi atlar. }
+  if IsAdminLoggedOn() and VCRedistNeeded() then
   begin
     if not Exec(VcRedist, '/install /quiet /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
       MsgBox('Microsoft Visual C++ Redistributable kurulumu baslatilamadi: ' + SysErrorMessage(ResultCode), mbError, MB_OK)
@@ -601,8 +728,9 @@ begin
   DeleteFile(VcRedist);
 
   { 2) Sunucu kurulumunda ("simdi hazirla" isaretli) SQL Server'i denetle.
-     Erisilemiyorsa ve hedef yerel SQLEXPRESS ise sondan onceki surum kurulsun. }
-  if RunProvisionCheck.Checked and not CanConnectToSql(ProvDir) then
+     Erisilemiyorsa ve hedef yerel SQLEXPRESS ise sondan onceki surum kurulsun.
+     Yonetici hakki gerekir; sessiz guncellemede (standard kullanici) adim atlanir. }
+  if IsAdminLoggedOn() and RunProvisionCheck.Checked and not CanConnectToSql(ProvDir) then
   begin
     if IsLocalSqlExpress(SqlServerEdit.Text) then
       InstallSqlExpress(ProvDir)
@@ -614,7 +742,7 @@ begin
   { 3) Veritabani klasoru ve SQL hizmet yetkisi yalnizca sunucu kurulumunda
         yapilir. Istemci makinesinde yerel SQL Server yoktur; kurulum yalnizca
         ayar dosyalarini yazar ve uygulamayi kopyalar. }
-  if RunProvisionCheck.Checked then
+  if IsAdminLoggedOn() and RunProvisionCheck.Checked then
   begin
     DataDir := ExpandConstant(Trim(DataDirEdit.Text));
     if not ForceDirectories(DataDir) then
@@ -623,11 +751,11 @@ begin
       GrantSqlServiceAccess(DataDir);
   end;
 
-  { 4) Veritabani hazirligi. }
-  if not RunProvisionCheck.Checked then
+  { 4) Veritabani hazirligi. Yonetici hakki gerekir; sessiz guncellemede adim atlanir. }
+  if not (IsAdminLoggedOn() and RunProvisionCheck.Checked) then
     Exit;
 
-  if not Exec(ProvExePath, 'provision', ProvDir, SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+  if not Exec(ProvExePath, 'provision --version "{#AppVersion}"', ProvDir, SW_SHOW, ewWaitUntilTerminated, ResultCode) then
   begin
     MsgBox('caa-provision calistirilamadi: ' + SysErrorMessage(ResultCode), mbError, MB_OK);
     Exit;

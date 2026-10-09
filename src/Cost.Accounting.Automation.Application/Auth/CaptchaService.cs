@@ -27,8 +27,10 @@ internal sealed class MathCaptchaService : ICaptchaService
         {
             CleanupExpired();
 
-            int a = _random.Next(10, 99);
-            int b = _random.Next(3, 29);
+            // Amaç robot zarftını ayıklatmak; hesap yaptırma sınavı değil. Bu
+            // yüzden toplama bilinçli olarak tek haneli sayılarla, çok basit tutulur.
+            int a = _random.Next(2, 10);
+            int b = _random.Next(2, 10);
             string code = _random.Next(1000, 10000).ToString();
             var challengeId = Guid.NewGuid();
 

@@ -60,6 +60,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             InitializeComponent();
 
+            lblFooter.Text = $"Maliyet Muhasebesi Otomasyonu {UpdateChecker.CurrentVersionString()}";
+
             // Form, içindeki tüm kontroller çizilmeden ekranda görünmesin diye şeffaf açılır;
             // OnShown içinde her şey çizildikten sonra yumuşakça belirir.
             Opacity = 0;

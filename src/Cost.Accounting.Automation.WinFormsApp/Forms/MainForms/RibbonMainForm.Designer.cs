@@ -30,6 +30,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemLongDate = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemTime = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemExpTime = new DevExpress.XtraBars.BarButtonItem();
+            barStaticItemVersion = new DevExpress.XtraBars.BarStaticItem();
             ribbon = new DevExpress.XtraBars.Ribbon.RibbonControl();
             skinRibbonGalleryBarItem1 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
             accordionControl = new DevExpress.XtraBars.Navigation.AccordionControl();
@@ -84,6 +85,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ribbonStatusBar.ItemLinks.Add(barButtonItemCompanyName);
             ribbonStatusBar.ItemLinks.Add(barButtonItemUserName);
             ribbonStatusBar.ItemLinks.Add(barButtonItemRoleName);
+            ribbonStatusBar.ItemLinks.Add(barStaticItemVersion);
             ribbonStatusBar.ItemLinks.Add(barButtonItemLiveMessaging);
             ribbonStatusBar.ItemLinks.Add(barButtonItemLongDate);
             ribbonStatusBar.ItemLinks.Add(barButtonItemTime);
@@ -140,6 +142,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemExpTime.Id = 6;
             barButtonItemExpTime.Name = "barButtonItemExpTime";
             // 
+            // barStaticItemVersion
+            // 
+            barStaticItemVersion.Caption = " ";
+            barStaticItemVersion.Id = 8;
+            barStaticItemVersion.Name = "barStaticItemVersion";
+            // 
             // ribbon
             // 
             ribbon.ApplicationButtonImageOptions.Image = (Image)resources.GetObject("ribbon.ApplicationButtonImageOptions.Image");
@@ -147,10 +155,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ribbon.EmptyAreaImageOptions.ImagePadding = new Padding(26, 24, 26, 24);
             ribbon.ExpandCollapseItem.Id = 0;
             ribbon.ImageAlignment = DevExpress.Utils.HorzAlignment.Center;
-            ribbon.Items.AddRange(new DevExpress.XtraBars.BarItem[] { skinRibbonGalleryBarItem1, ribbon.ExpandCollapseItem, barButtonItemCompanyName, barButtonItemUserName, barButtonItemRoleName, barButtonItemLiveMessaging, barButtonItemLongDate, barButtonItemTime, barButtonItemExpTime });
+            ribbon.Items.AddRange(new DevExpress.XtraBars.BarItem[] { skinRibbonGalleryBarItem1, ribbon.ExpandCollapseItem, barButtonItemCompanyName, barButtonItemUserName, barButtonItemRoleName, barStaticItemVersion, barButtonItemLiveMessaging, barButtonItemLongDate, barButtonItemTime, barButtonItemExpTime });
             ribbon.Location = new Point(0, 0);
             ribbon.Margin = new Padding(3, 2, 3, 2);
-            ribbon.MaxItemId = 9;
+            ribbon.MaxItemId = 10;
             ribbon.Name = "ribbon";
             ribbon.OptionsMenuMinWidth = 283;
             ribbon.OptionsSearchMenu.SearchItemPosition = DevExpress.XtraBars.Ribbon.SearchItemPosition.PageHeader;
@@ -476,7 +484,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Name = "RibbonMainForm";
             Ribbon = ribbon;
             StatusBar = ribbonStatusBar;
-            Text = "Maliyet Muhasebesi Otomasyonu V.01";
+            Text = "Maliyet Muhasebesi Otomasyonu";
             WindowState = FormWindowState.Maximized;
             ((System.ComponentModel.ISupportInitialize)ribbon).EndInit();
             ((System.ComponentModel.ISupportInitialize)accordionControl).EndInit();
@@ -497,6 +505,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.BarButtonItem barButtonItemLongDate;
         private DevExpress.XtraBars.BarButtonItem barButtonItemTime;
         private DevExpress.XtraBars.BarButtonItem barButtonItemExpTime;
+        private DevExpress.XtraBars.BarStaticItem barStaticItemVersion;
 
         private DevExpress.XtraBars.Navigation.AccordionControl accordionControl;
 

@@ -1,5 +1,3 @@
-using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Application.Messages;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Presence;
@@ -18,12 +16,12 @@ namespace Cost.Accounting.Automation.Application.Presence;
 /// aralığı boyunca periyodik olarak gönderir.
 /// </para>
 /// <para>
-/// Komut <b>oturum kimliğini</b> taşır. Aynı kullanıcı iki makineden çalışıyorsa
-/// son gönderen kalp atışının oturumu geçerli sayılır; böylece bir pencereden
-/// çıkmak diğerini düşürmez.
+/// Komut <b>oturum kimliğini</b> taşır ve mesajlaşma yetkisinden bağımsız
+/// olarak her oturum açan kullanıcı için çalışır: tek-oturum kuralı tüm
+/// kullanıcılar için geçerlidir. Aynı kullanıcı iki makineden çalışırsa son
+/// kalp atışının oturumu geçerli sayılır.
 /// </para>
 /// </remarks>
-[Permission(MessagePermissions.View)]
 public sealed record UserPresenceHeartbeatCommand(
     Guid SessionId,
     string? MachineName = null) : IRequest<Result<bool>>;
@@ -77,9 +75,9 @@ internal sealed class UserPresenceHeartbeatCommandHandler(
 /// <remarks>
 /// Kapanış bildirimi olmasa da kullanıcı bir süre sonra kendiliğinden pasife
 /// düşer (<see cref="UserPresence.OnlineWindow"/>). Ancak o süre boyunca diğer
-/// istemciler onu hâlâ çevrimiçi görür; düğmeye basınca haber verilmesi doğrudur.
+/// istemciler onu hâlâ çevrimiçi görür; çıkış bildirimi bunu bekletmeyi
+/// önlemek içindir.
 /// </remarks>
-[Permission(MessagePermissions.View)]
 public sealed record UserPresenceSignOutCommand(
     Guid SessionId) : IRequest<Result<bool>>;
 

@@ -27,13 +27,20 @@
 .PARAMETER Runtime
     Hedef calisma zamani. Varsayilan: win-x64.
 
+.PARAMETER Version
+    Derleme/assembly surumu (4 haneli, ornek: 1.0.0.2). Verilirse
+    'dotnet publish' komutuna -p:Version olarak gecilir ve hem exe'nin
+    dosya/assembly surumu hem de guncelleme karsilastirmasi dogru olur.
+    Bos birakilirsa assembly surumu csproj'daki <Version> olur (genelde 1.0.0).
+
 .EXAMPLE
-    .\publish.ps1
+    .\publish.ps1 -Version 1.0.0.2
 #>
 [CmdletBinding()]
 param(
     [string]$Configuration = 'Release',
-    [string]$Runtime = 'win-x64'
+    [string]$Runtime = 'win-x64',
+    [string]$Version = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,8 +62,14 @@ $runtimeDir = Join-Path $staging 'runtime'
 $cacheDir = Join-Path $PSScriptRoot '.cache'
 $vcRedistUrl = 'https://aka.ms/vs/17/release/vc_redist.x64.exe'
 
+$versionArgs = @()
+if ($Version) {
+    $versionArgs = @("-p:Version=$Version")
+    Write-Host "Assembly/derleme surumu: $Version"
+}
+
 Write-Host 'WinForms istemcisi publish ediliyor (self-contained)...' -ForegroundColor Cyan
-dotnet publish $appProject -c $Configuration -r $Runtime --self-contained true -o $appOut
+& dotnet publish $appProject -c $Configuration -r $Runtime --self-contained true -o $appOut @versionArgs
 if (-not $?) { throw 'WinForms publish basarisiz oldu.' }
 
 # Kullanici istedigi isim: exe Turkce adla kurulur.
@@ -68,7 +81,7 @@ if (Test-Path -LiteralPath $appExeOld) {
 }
 
 Write-Host 'caa-provision publish ediliyor (self-contained)...' -ForegroundColor Cyan
-dotnet publish $provProject -c $Configuration -r $Runtime --self-contained true -o $provOut
+& dotnet publish $provProject -c $Configuration -r $Runtime --self-contained true -o $provOut @versionArgs
 if (-not $?) { throw 'Provisioning publish basarisiz oldu.' }
 
 # Gizli deger tasimamak icin yerel ayar ve log dosyalarini staging'den cikar.

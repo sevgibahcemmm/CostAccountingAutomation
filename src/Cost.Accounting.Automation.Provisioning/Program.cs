@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application;
 using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Application.Updates;
 using Cost.Accounting.Automation.Infrastructure;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Microsoft.Data.SqlClient;
@@ -53,9 +54,11 @@ internal static class Program
         {
             return command switch
             {
-                "provision" => await ProvisionAsync(configuration),
+                "provision" => await ProvisionAsync(configuration, args),
                 "status" => await StatusAsync(configuration),
                 "can-connect" => await CanConnectAsync(configuration),
+                "latest-version" => await LatestVersionAsync(configuration),
+                "publish-update" => await PublishUpdateAsync(configuration, args),
                 _ => UnknownCommand(command)
             };
         }
@@ -89,15 +92,17 @@ internal static class Program
         }
     }
 
-    private static async Task<int> ProvisionAsync(IConfiguration configuration)
+    private static async Task<int> ProvisionAsync(IConfiguration configuration, string[] args)
     {
         using var services = BuildServiceProvider(configuration);
         var progress = new ConsoleProgressReporter();
 
+        string? appVersion = ReadOption(args, "--version");
+
         Console.WriteLine("Veritabanı hazırlanıyor...");
         Console.WriteLine();
 
-        await DatabaseInitializer.InitializeAsync(services, progress);
+        await DatabaseInitializer.InitializeAsync(services, progress, appVersion: appVersion);
 
         Console.WriteLine();
         Console.WriteLine("Hazırlık tamamlandı.");
@@ -187,6 +192,67 @@ internal static class Program
         }
     }
 
+    private static async Task<int> LatestVersionAsync(IConfiguration configuration)
+    {
+        using var services = BuildServiceProvider(configuration);
+        using var scope = services.CreateScope();
+
+        var appReleaseService = scope.ServiceProvider.GetRequiredService<IAppReleaseService>();
+        string? version = await appReleaseService.GetLatestVersionAsync();
+
+        // Kayıt yoksa boş satır basılır ve başarıyla çıkılır; build betiği bu
+        // durumda varsayılan sürümden başlar.
+        if (!string.IsNullOrWhiteSpace(version))
+        {
+            Console.WriteLine(version);
+        }
+
+        return ExitSuccess;
+    }
+
+    private static async Task<int> PublishUpdateAsync(IConfiguration configuration, string[] args)
+    {
+        string? filePath = ReadOption(args, "--file");
+        string? version = ReadOption(args, "--version");
+        string? notes = ReadOption(args, "--notes");
+        bool isMandatory = HasFlag(args, "--mandatory");
+
+        if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(version))
+        {
+            Console.Error.WriteLine("HATA: publish-update için --file ve --version zorunludur.");
+            return ExitFailure;
+        }
+
+        string fullPath = Path.GetFullPath(filePath);
+
+        if (!File.Exists(fullPath))
+        {
+            Console.Error.WriteLine($"HATA: kurulum dosyası bulunamadı: {fullPath}");
+            return ExitFailure;
+        }
+
+        byte[] content = await File.ReadAllBytesAsync(fullPath);
+
+        using var services = BuildServiceProvider(configuration);
+        using var scope = services.CreateScope();
+
+        var appReleaseService = scope.ServiceProvider.GetRequiredService<IAppReleaseService>();
+
+        await appReleaseService.PublishAsync(
+            AppVersion.Normalize(version),
+            Path.GetFileName(fullPath),
+            content,
+            notes,
+            isMandatory);
+
+        double sizeInMb = content.LongLength / (1024d * 1024d);
+
+        Console.WriteLine(
+            $"Sürüm yayınlandı: {AppVersion.Normalize(version)} ({sizeInMb:0.0} MB) · {Path.GetFileName(fullPath)}");
+
+        return ExitSuccess;
+    }
+
     private static ServiceProvider BuildServiceProvider(IConfiguration configuration)
     {
         ServiceCollection services = new();
@@ -238,6 +304,9 @@ internal static class Program
         return null;
     }
 
+    private static bool HasFlag(string[] args, string name)
+        => args.Any(arg => string.Equals(arg, name, StringComparison.OrdinalIgnoreCase));
+
     private static bool IsHelp(string argument) =>
         argument is "-h" or "--help" or "-?" or "/?" or "help";
 
@@ -271,9 +340,25 @@ internal static class Program
                                        sihirbazı sunucuda SQL yoksa otomatik kurulum
                                        kararını bu komutun çıkış koduyla verir.
 
+              caa-provision latest-version
+                                       Veritabanında kayıtlı en yüksek sürümü
+                                       yazdırır (derleme sırasında +1 artırmak için).
+                                       Kayıt yoksa boş satır basar.
+
+              caa-provision publish-update --file <setup.exe> --version <sürüm>
+                                       [--notes <metin>] [--mandatory]
+                                       Kurulum dosyasını yeni sürüm olarak yayınlar.
+                                       Eski sürümlerin dosyaları temizlenir; yalnızca
+                                       en güncel setup veritabanında saklanır.
+
             Seçenekler:
               --settings <yol>          appsettings.json dosyasının yolu.
                                        Verilmezse araç klasöründeki appsettings.json okunur.
+              --version <sürüm>         provision: kurulu sürümü tabana yazar.
+                                       publish-update: yayınlanacak sürüm.
+              --file <yol>              publish-update: yayınlanacak kurulum dosyası.
+              --notes <metin>           publish-update: sürüm notları.
+              --mandatory               publish-update: zorunlu güncelleme işareti.
 
             Yapılandırma önceliği (düşükten yükseğe):
               1. appsettings.json            izlenen, gizli olmayan varsayılanlar

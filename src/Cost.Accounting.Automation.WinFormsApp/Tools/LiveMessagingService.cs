@@ -1,6 +1,5 @@
 using Cost.Accounting.Automation.Application.Messages;
 using Cost.Accounting.Automation.Application.Presence;
-using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Presence;
 using Microsoft.Extensions.DependencyInjection;
 using TS.MediatR;
@@ -21,14 +20,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools;
 /// </para>
 /// <para>
 /// <b>Nasıl çalışır?</b> Uygulamanın sunucu katmanı olmadığı için anlık iletim
-/// kanalı da yoktur. Bunun yerine iki işlem periyodik olarak tekrarlanır:
+/// kanalı da yoktur. Bunun yerine (uygulama ömrü boyunca) tek bir yoklama
+/// tekrarlanır: diğer kullanıcıların durumu ve bize gelen okunmamış mesajlar
+/// okunur. <b>Kalp atışı</b> bu servise ait değildir; her oturum için ayrı
+/// <see cref="SessionPresenceService"/> çalışır.
 /// </para>
-/// <list type="number">
-/// <item><b>Kalp atışı</b>: kendi "ben buradayım" kaydımız tazelenir. Diğer
-/// istemciler bizi çevrimiçi görür.</item>
-/// <item><b>Yoklama</b>: diğer kullanıcıların durumu ve bize gelen okunmamış
-/// mesajlar okunur.</item>
-/// </list>
 /// <para>
 /// Yoklama sonucu bir önceki turla karşılaştırılır. Aradaki fark "bu turda yeni
 /// oturum açanlar" ve "bu turda yeni mesaj gelenler"dir; işte bildirim üretilecek
@@ -54,12 +50,6 @@ public sealed class LiveMessagingService : IDisposable
     /// her 10 saniyede bir hata yazmak günlük dosyayı şişirir ve hatayı gizler.
     /// </summary>
     private static readonly TimeSpan FailureBackoff = TimeSpan.FromSeconds(45);
-
-    /// <summary>
-    /// Bu oturumun kimliği. Girişte üretilir ve her kalp atışında gönderilir;
-    /// aynı kullanıcının başka bir makinedeki oturumundan ayırt edilmesini sağlar.
-    /// </summary>
-    private readonly Guid _sessionId = Guid.CreateVersion7();
 
     private CancellationTokenSource? _cts;
     private Task? _loop;
@@ -94,9 +84,6 @@ public sealed class LiveMessagingService : IDisposable
 
     /// <summary>Toplam okunmamış mesaj sayısı.</summary>
     public int UnreadTotal { get; private set; }
-
-    /// <summary>Bu oturumun kimliği; çıkış bildiriminde kullanılır.</summary>
-    public Guid SessionId => _sessionId;
 
     /// <summary>
     /// Her yoklamadan sonra tetiklenir. Ekranlar bu olayla kendini tazeler.
@@ -165,13 +152,12 @@ public sealed class LiveMessagingService : IDisposable
     }
 
     /// <summary>
-    /// Servisi durdurur ve çıkış bildirimini gönderir.
+    /// Servisi durdurur.
     /// </summary>
     /// <remarks>
-    /// Kapanış bildirimi "best effort"tir: uygulama kapanırken bağlantı zaten
-    /// kopmuş olabilir. Başarısız olması sorun değildir; diğer istemciler
-    /// kullanıcıyı <see cref="UserPresence.OnlineWindow"/> sonunda yine pasife
-    /// çevirir.
+    /// Oturumun çevrimiçi izini kapatma (kalp atışı ve çıkış bildirimi)
+    /// <see cref="SessionPresenceService"/> tarafından yapılır; bu servis
+    /// yalnızca mesajlaşma yoklamasını bitirir.
     /// </remarks>
     public async Task StopAsync()
     {
@@ -193,10 +179,6 @@ public sealed class LiveMessagingService : IDisposable
             {
             }
         }
-
-        // Çıkış bildirimi oturum bağlamı hâlâ dolyken gönderilir; bu yüzden
-        // RibbonMainForm bu çağrıyı session.Clear() öncesinde yapar.
-        await SendSignOutAsync(CancellationToken.None);
 
         try
         {
@@ -261,10 +243,6 @@ public sealed class LiveMessagingService : IDisposable
 
         try
         {
-            await mediator.Send(
-                new UserPresenceHeartbeatCommand(_sessionId, Environment.MachineName),
-                cancellationToken);
-
             Result<List<UserPresenceStateDto>> presence = await mediator.Send(
                 new UserPresenceStateQuery(), cancellationToken);
 
@@ -363,21 +341,6 @@ public sealed class LiveMessagingService : IDisposable
         if (arrivals.Count > 0)
         {
             UnreadReceived?.Invoke(this, new MessageGroupsChangedEventArgs(arrivals));
-        }
-    }
-
-    private async Task SendSignOutAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            using IServiceScope scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-
-            await mediator.Send(new UserPresenceSignOutCommand(_sessionId), cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            CrashLog.WriteException("LiveMessagingService.SignOut", ex);
         }
     }
 

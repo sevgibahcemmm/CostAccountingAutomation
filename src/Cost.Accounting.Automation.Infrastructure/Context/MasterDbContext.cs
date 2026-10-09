@@ -4,6 +4,7 @@ using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.LoginTokens;
 using Cost.Accounting.Automation.Domain.Presence;
 using Cost.Accounting.Automation.Domain.Roles;
+using Cost.Accounting.Automation.Domain.Updates;
 using Cost.Accounting.Automation.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,7 @@ public sealed class MasterDbContext(DbContextOptions<MasterDbContext> options, I
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
     public DbSet<UserPresence> UserPresences => Set<UserPresence>();
+    public DbSet<AppRelease> AppReleases => Set<AppRelease>();
 
     public bool HasChanges() => ChangeTracker.HasChanges();
 

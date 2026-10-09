@@ -4,10 +4,10 @@ namespace Cost.Accounting.Automation.Infrastructure.Options
     /// Açılışta yapılan güncelleme kontrolünün ayarları.
     ///
     /// <para>
-    /// Uygulama bir yayın sunucusundan küçük bir JSON manifestosu indirir ve
-    /// sürümü kendi sürümüyle karşılaştırır. Yeni sürüm varsa kullanıcıya
-    /// bildirim gösterilir; indirme bağlantısı kullanıcı tarafından açılır.
-    /// Program kendisini kendiliğinden güncellemez.
+    /// Uygulama, merkezi master veritabanındaki <c>AppReleases</c> tablosundan
+    /// en güncel yayın sürümünü okur ve kendi sürümüyle karşılaştırır. Yeni
+    /// sürüm varsa kurulum dosyası veritabanından indirilir ve uygulama
+    /// kendisini o dosyayla günceller; harici bir sunucu/URL gerekmez.
     /// </para>
     /// </summary>
     public sealed class UpdateOptions
@@ -15,26 +15,14 @@ namespace Cost.Accounting.Automation.Infrastructure.Options
         public const string SectionName = "Update";
 
         /// <summary>
-        /// Güncelleme kontrolü açık mı? Kapalıysa hiçbir ağ isteği yapılmaz.
+        /// Güncelleme kontrolü açık mı? Kapalıysa veritabanına hiç sorulmaz.
         /// </summary>
         public bool Enabled { get; set; } = true;
 
-        /// <summary>
-        /// Sürüm manifestosunun tam adresi (https://.../update.json).
-        /// Boş bırakılırsa kontrol yapılmaz.
-        /// </summary>
-        public string? ManifestUrl { get; set; }
-
-        /// <summary>
-        /// İndirme sırasında ağ zaman aşımı (saniye). Açılışı geciktirmemek için
+/// <summary>
+        /// Kontrol sırasında zaman aşımı (saniye). Kontrolü geciktirmemek için
         /// kısa tutulur; hata durumunda kontrol sessizce atlanır.
         /// </summary>
         public int TimeoutSeconds { get; set; } = 5;
-
-        /// <summary>
-        /// Kontrol kullanıcı girişinden önce mi yapılsın? Şu an giriş ekranından
-        /// önce gösterilir; gelecekte giriş sonrasına taşınabilir.
-        /// </summary>
-        public bool CheckBeforeLogin { get; set; } = true;
     }
 }

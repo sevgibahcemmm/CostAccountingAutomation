@@ -224,7 +224,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblMessage.Location = new Point(51, 534);
             lblMessage.Name = "lblMessage";
             lblMessage.Size = new Size(344, 19);
-            lblMessage.TabIndex = 6;
+            lblMessage.TabIndex = 11;
             lblMessage.Visible = false;
             // 
             // lnkForgot
@@ -244,8 +244,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lnkForgot.Cursor = Cursors.Hand;
             lnkForgot.Location = new Point(51, 618);
             lnkForgot.Name = "lnkForgot";
+            // Tab sırası: kullanıcı adı → şifre → captcha sonucu → Giriş Yap.
+            // Kurum (firma) ve mali yıl seçimleri çoğunlukla otomatik doldurulur;
+            // tab ile atlanır, fare ile erişilebilir kalır (TabStop=false).
             lnkForgot.Size = new Size(344, 21);
-            lnkForgot.TabIndex = 8;
+            lnkForgot.TabIndex = 10;
+            lnkForgot.TabStop = false;
             lnkForgot.Text = "Şifremi unuttum";
             // 
             // btnLogin
@@ -274,7 +278,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnLogin.Location = new Point(51, 560);
             btnLogin.Name = "btnLogin";
             btnLogin.Size = new Size(344, 46);
-            btnLogin.TabIndex = 7;
+            btnLogin.TabIndex = 9;
             btnLogin.Text = "Giriş Yap";
             btnLogin.Click += btnLogin_Click;
             // 
@@ -287,7 +291,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCaptchaResult.Location = new Point(51, 480);
             pnlCaptchaResult.Name = "pnlCaptchaResult";
             pnlCaptchaResult.Size = new Size(344, 48);
-            pnlCaptchaResult.TabIndex = 0;
+            pnlCaptchaResult.TabIndex = 5;
             // 
             // txtCaptchaResult
             // 
@@ -300,7 +304,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             txtCaptchaResult.Properties.Appearance.Options.UseFont = true;
             txtCaptchaResult.Properties.Appearance.Options.UseForeColor = true;
             txtCaptchaResult.Properties.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
-            txtCaptchaResult.Properties.NullText = "Sonuç ve kod (örn: 29 5424)";
+            txtCaptchaResult.Properties.NullText = "Sonuç ve kod (örn: 10 5424)";
             txtCaptchaResult.Size = new Size(320, 24);
             txtCaptchaResult.TabIndex = 0;
             // 
@@ -320,7 +324,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblCaptchaQuestion.Location = new Point(51, 456);
             lblCaptchaQuestion.Name = "lblCaptchaQuestion";
             lblCaptchaQuestion.Size = new Size(344, 21);
-            lblCaptchaQuestion.TabIndex = 0;
+            lblCaptchaQuestion.TabIndex = 8;
             lblCaptchaQuestion.Text = "12 + 30 = ?   •   Kod: 5424";
             lblCaptchaQuestion.Click += lblCaptchaQuestion_Click;
             // 
@@ -335,7 +339,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlPasswordBox.Location = new Point(51, 392);
             pnlPasswordBox.Name = "pnlPasswordBox";
             pnlPasswordBox.Size = new Size(344, 48);
-            pnlPasswordBox.TabIndex = 6;
+            pnlPasswordBox.TabIndex = 4;
             // 
             // lblPassIcon
             // 
@@ -347,7 +351,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblPassIcon.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblPassIcon.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblPassIcon.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblPassIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblPassIcon.ImageOptions.SvgImage");
+            lblPassIcon.ImageOptions.Image = (Image)resources.GetObject("lblPassIcon.ImageOptions.Image");
             lblPassIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             lblPassIcon.Location = new Point(0, 0);
             lblPassIcon.Name = "lblPassIcon";
@@ -400,7 +404,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlUserNameBox.Location = new Point(51, 334);
             pnlUserNameBox.Name = "pnlUserNameBox";
             pnlUserNameBox.Size = new Size(344, 48);
-            pnlUserNameBox.TabIndex = 5;
+            pnlUserNameBox.TabIndex = 3;
             // 
             // lblUserIcon
             // 
@@ -412,7 +416,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblUserIcon.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
             lblUserIcon.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
             lblUserIcon.AutoSizeMode = DevExpress.XtraEditors.LabelAutoSizeMode.None;
-            lblUserIcon.ImageOptions.SvgImage = (DevExpress.Utils.Svg.SvgImage)resources.GetObject("lblUserIcon.ImageOptions.SvgImage");
+            lblUserIcon.ImageOptions.Image = (Image)resources.GetObject("lblUserIcon.ImageOptions.Image");
             lblUserIcon.ImageOptions.SvgImageSize = new Size(22, 22);
             lblUserIcon.Location = new Point(0, 0);
             lblUserIcon.Name = "lblUserIcon";
@@ -432,7 +436,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             txtUserName.Properties.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             txtUserName.Properties.NullText = "Kullanıcı adı veya e-posta";
             txtUserName.Size = new Size(284, 24);
-            txtUserName.TabIndex = 0;
+            txtUserName.TabIndex = 1;
             txtUserName.ToolTip = "Kullanıcı adı veya e-posta";
             // 
             // pnlYearBox
@@ -444,7 +448,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlYearBox.Location = new Point(51, 276);
             pnlYearBox.Name = "pnlYearBox";
             pnlYearBox.Size = new Size(344, 48);
-            pnlYearBox.TabIndex = 4;
+            pnlYearBox.TabIndex = 7;
             // 
             // lookUpYear
             // 
@@ -460,6 +464,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lookUpYear.Properties.NullText = "Mali yıl seçin";
             lookUpYear.Properties.PopupView = lookUpYearView;
             lookUpYear.Size = new Size(320, 24);
+            lookUpYear.TabStop = false;
             lookUpYear.TabIndex = 0;
             lookUpYear.ToolTip = "Mali Yıl";
             // 
@@ -480,7 +485,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlCompanyBox.Location = new Point(51, 218);
             pnlCompanyBox.Name = "pnlCompanyBox";
             pnlCompanyBox.Size = new Size(344, 48);
-            pnlCompanyBox.TabIndex = 3;
+            pnlCompanyBox.TabIndex = 6;
             // 
             // lookUpCompany
             // 
@@ -496,6 +501,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lookUpCompany.Properties.NullText = "Kurum seçin";
             lookUpCompany.Properties.PopupView = lookUpCompanyView;
             lookUpCompany.Size = new Size(320, 24);
+            lookUpCompany.TabStop = false;
             lookUpCompany.TabIndex = 0;
             lookUpCompany.ToolTip = "Kurum";
             // 
@@ -579,7 +585,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             lblFooter.Location = new Point(0, 664);
             lblFooter.Name = "lblFooter";
             lblFooter.Size = new Size(446, 26);
-            lblFooter.TabIndex = 9;
+            lblFooter.TabIndex = 12;
             lblFooter.Text = "Maliyet Muhasebesi Otomasyonu v0.0.01";
             // 
             // XtraLoginForm

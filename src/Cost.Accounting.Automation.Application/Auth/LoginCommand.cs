@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using GenericRepository;
 using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.Domain.Presence;
 using Cost.Accounting.Automation.Domain.Users;
 using Cost.Accounting.Automation.Domain.Users.ValueObjects;
 using Cost.Accounting.Automation.Domain.Roles;
@@ -31,7 +32,8 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
 public sealed class LoginCommandHandler(
     IUserRepository userRepository,
     IRoleRepository roleRepository,
-    IJwtProvider jwtProvider) : IRequestHandler<LoginCommand, Result<LoginCommandResponse>>
+    IJwtProvider jwtProvider,
+    IUserPresenceRepository presenceRepository) : IRequestHandler<LoginCommand, Result<LoginCommandResponse>>
 {
     public async Task<Result<LoginCommandResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
@@ -72,6 +74,24 @@ public sealed class LoginCommandHandler(
                 return Result<LoginCommandResponse>.Failure(
                     "Bu kullanıcı seçilen kuruma ait değil. Kendi kurumunuzla giriş yapın.");
             }
+        }
+
+        // Kullanıcı aynı anda yalnızca tek oturum açabilir. Kalp atışı canlı
+        // olan (çevrimiçi) bir oturum varken ikinci giriş reddedilir. Temiz
+        // çıkış SignOut ile kapanışı yazar, çökmede ise oturum
+        // OnlineWindow süresi dolunca kendiliğinden pasife düşer.
+        UserPresence? presence = await presenceRepository.FindByUserIdAsync(
+            user.Id, cancellationToken);
+
+        if (presence is not null && presence.IsOnlineAt(DateTimeOffset.Now))
+        {
+            string location = string.IsNullOrWhiteSpace(presence.MachineName)
+                ? "başka bir yerde"
+                : $"“{presence.MachineName}” bilgisayarında";
+
+            return Result<LoginCommandResponse>.Failure(
+                $"Bu kullanıcının {location} açık bir oturumu bulunuyor. " +
+                "Yeni oturum açabilmek için önce o oturumu kapatmalısınız.");
         }
 
         var token = await jwtProvider.CreateTokenAsync(user, cancellationToken);

@@ -22,10 +22,12 @@ namespace Cost.Accounting.Automation.Domain.Presence;
 /// görür.
 /// </para>
 /// <para>
-/// Aynı kullanıcı birden çok makinede çalışabilir. Satır kullanıcı başına tek
-/// olduğu için bu durum <see cref="SessionId"/> ile ayrılır: kalp atışı yazan
-/// oturum kimliğini yazar, çıkış yalnızca <b>kendi oturumu</b> için geçerlidir.
-/// Bir pencereden çıkmak diğer pencerenin oturumunu düşürmez.
+/// Satır kullanıcı başına tektir ve tek-oturum kuralı <b>girişte</b>
+/// denetlenir (<c>LoginCommand</c>): kullanıcının canlı bir oturumu varken
+/// yeni giriş reddedilir. Kalp atışı bu satırı tazeleyen oturumun kimliğini
+/// yazar; çıkış yalnızca <b>kendi oturumu</b> için geçerlidir. <c>BeginSession</c>
+/// güvenlik ağıdır: eski bir oturum temiz kapanmadan kaybolduysa (çökme)
+/// yeni oturum satırı üzerine yazar.
 /// </para>
 /// </remarks>
 public sealed class UserPresence

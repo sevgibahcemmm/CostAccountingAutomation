@@ -1,97 +1,164 @@
+using Cost.Accounting.Automation.Application.Updates;
+using Cost.Accounting.Automation.Infrastructure.Context;
 using Cost.Accounting.Automation.Infrastructure.Options;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System.Data;
 using System.IO;
-using System.Net.Http;
 using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Utils
 {
     /// <summary>
-    /// Yayın sunucusundaki sürüm manifestosunu okuyup uygulamanın sürümüyle
-    /// karşılaştırır.
+    /// Merkezi master veritabanındaki <c>AppReleases</c> tablosunu okuyarak
+    /// uygulamanın sürümünü karşılaştırır ve yeni kurulum dosyasını indirir.
     ///
     /// <para>
-    /// Manifesto, <c>Update:ManifestUrl</c> adresinde duran küçük bir JSON
-    /// dosyasıdır (<c>version</c>, <c>url</c>, <c>notes</c>, <c>mandatory</c>).
-    /// Kontrol açılışta bir kez ve kısa zaman aşımıyla yapılır; ağ yoksa ya da
-    /// adres bozuksa sessizce atlanır ve uygulama normal açılır.
+    /// Harici bir yayın sunucusu/URL kullanılmaz; hem sürüm bilgisi hem kurulum
+    /// dosyası veritabanında saklanır. Kontrol açılışta bir kez yapılır;
+    /// veritabanına ulaşılamazsa sessizce atlanır ve uygulama normal açılır.
     /// </para>
     /// </summary>
     public sealed class UpdateChecker
     {
-        private static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
         private readonly UpdateOptions _options;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public UpdateChecker(IOptions<UpdateOptions> options)
+        public UpdateChecker(IOptions<UpdateOptions> options, IServiceScopeFactory scopeFactory)
         {
             _options = options.Value;
+            _scopeFactory = scopeFactory;
         }
 
         /// <summary>
-        /// Manifestoyu indirir ve yeni bir sürüm varsa döndürür; aksi hâlde
-        /// <c>null</c>. Ağ hataları çağırana bırakılır; çağıran sessizce yutar.
+        /// Veritabanındaki en güncel yayın sürümünü kontrol eder; kurulu sürümden
+        /// yeni bir sürüm varsa onu döndürür, aksi hâlde <c>null</c>. Veritabanı
+        /// hataları çağırana bırakılır; çağıran sessizce yutar.
         /// </summary>
         public async Task<UpdateManifest?> CheckAsync(CancellationToken cancellationToken = default)
         {
-            if (!_options.Enabled || string.IsNullOrWhiteSpace(_options.ManifestUrl))
+            if (!_options.Enabled)
             {
                 return null;
             }
 
-            UpdateManifest? manifest;
+            using var scope = _scopeFactory.CreateScope();
+            var appReleaseService = scope.ServiceProvider.GetRequiredService<IAppReleaseService>();
 
-            using (var http = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(Math.Max(1, _options.TimeoutSeconds))
-            })
-            {
-                string json = await http
-                    .GetStringAsync(_options.ManifestUrl, cancellationToken)
-                    .ConfigureAwait(false);
+            AppReleaseInfo? latest = await appReleaseService
+                .GetLatestPublishedAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-                manifest = JsonSerializer.Deserialize<UpdateManifest>(json, JsonOptions);
-            }
-
-            if (manifest is null
-                || string.IsNullOrWhiteSpace(manifest.Version)
-                || !Version.TryParse(manifest.Version, out Version? remote)
-                || remote is null)
+            if (latest is null)
             {
                 return null;
             }
 
-            if (Compare(remote, CurrentVersion()) <= 0)
+            if (AppVersion.Compare(latest.Version, CurrentVersionString()) <= 0)
             {
                 return null;
             }
 
-            return IsSkipped(manifest.Version) ? null : manifest;
+            if (IsSkipped(latest.Version))
+            {
+                return null;
+            }
+
+            return new UpdateManifest
+            {
+                Version = latest.Version,
+                Notes = latest.Notes,
+                Mandatory = latest.IsMandatory,
+                FileSizeBytes = latest.FileSizeBytes
+            };
         }
 
-        /// <summary>Çalışan uygulamanın sürümü.</summary>
+        /// <summary>
+        /// Yayınlanmış sürümün kurulum dosyasını veritabanından disk üzerindeki
+        /// geçici bir klasöre akış hâlinde indirir ve dosya yolunu döndürür.
+        /// </summary>
+        public async Task<string> DownloadToFileAsync(
+            UpdateManifest manifest,
+            string targetDirectory,
+            IProgress<int>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+
+            await using var connection = context.Database.GetDbConnection();
+            await connection.OpenAsync(cancellationToken);
+
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT FileContent FROM AppReleases WHERE VersionSort = @sortKey AND FileContent IS NOT NULL;";
+
+            System.Data.Common.DbParameter parameter = command.CreateParameter();
+            parameter.ParameterName = "@sortKey";
+            parameter.Value = AppVersion.SortKey(manifest.Version);
+            command.Parameters.Add(parameter);
+
+            await using var reader = await command
+                .ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
+
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                throw new InvalidOperationException(
+                    $"'{manifest.Version}' sürümü için kurulum dosyası veritabanında bulunamadı.");
+            }
+
+            Directory.CreateDirectory(targetDirectory);
+
+            string setupPath = Path.Combine(
+                targetDirectory,
+                $"CostAccountingAutomation-Setup-{manifest.Version}.exe");
+
+            const int bufferSize = 80 * 1024;
+            byte[] buffer = new byte[bufferSize];
+            long total = Math.Max(1, manifest.FileSizeBytes);
+            long written = 0;
+            int lastPercent = -1;
+
+            await using (var file = new FileStream(
+                setupPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize,
+                useAsync: true))
+            using (Stream stream = reader.GetStream(0))
+            {
+                int read;
+
+                while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
+                {
+                    await file.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+
+                    written += read;
+
+                    int percent = (int)(written * 100 / total);
+
+                    if (percent != lastPercent)
+                    {
+                        lastPercent = percent;
+                        progress?.Report(percent);
+                    }
+                }
+            }
+
+            progress?.Report(100);
+
+            return setupPath;
+        }
+
+        /// <summary>Çalışan uygulamanın sürümü (dört parçalı).</summary>
         public static Version CurrentVersion()
-        {
-            return Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0);
-        }
+            => Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0, 0);
 
-        /// <summary>İki sürümü Yalnızca Major.Minor.Build üzerinden karşılaştırır.</summary>
-        /// <remarks>
-        /// Revision bilinçli olarak yok sayılır: manifesto "1.0.0" yazarken
-        /// derleme sürümü "1.0.0.0" olduğundan ham karşılaştırma yanlış "yeni
-        /// sürüm var" sonucu üretirdi.
-        /// </remarks>
-        public static int Compare(Version a, Version b)
-        {
-            return (a.Major, a.Minor, Build(a)).CompareTo((b.Major, b.Minor, Build(b)));
-        }
-
-        private static int Build(Version version) => version.Build < 0 ? 0 : version.Build;
+        /// <summary>Çalışan uygulamanın sürümü (ör. "1.0.0.4").</summary>
+        public static string CurrentVersionString()
+            => AppVersion.Normalize(Assembly.GetEntryAssembly()?.GetName().Version?.ToString());
 
         private static string SkipFilePath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -129,22 +196,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         }
     }
 
-    /// <summary>Yayın sunucusundaki <c>update.json</c> modeli.</summary>
+    /// <summary>
+    /// Veritabanındaki yayın sürümünün özeti. Kurulum dosyası bu nesnede
+    /// taşınmaz; <see cref="UpdateChecker.DownloadToFileAsync"/> ile indirilir.
+    /// </summary>
     public sealed class UpdateManifest
     {
-        [JsonPropertyName("version")]
         public string Version { get; set; } = string.Empty;
 
-        /// <summary>Yeni sürümün indirme bağlantısı (setup.exe).</summary>
-        [JsonPropertyName("url")]
-        public string? Url { get; set; }
-
         /// <summary>Kullanıcıya gösterilecek kısa sürüm notları.</summary>
-        [JsonPropertyName("notes")]
         public string? Notes { get; set; }
 
-        /// <summary>Zorunlu güncelleme ise "atla"/"daha sonra" gizlenir.</summary>
-        [JsonPropertyName("mandatory")]
+        /// <summary>
+        /// Zorunlu güncelleme ise "atla"/"daha sonra" gizlenir ve kullanıcı
+        /// güncellemeden uygulamayı kullanamaz.
+        /// </summary>
         public bool Mandatory { get; set; }
+
+        public long FileSizeBytes { get; set; }
     }
 }

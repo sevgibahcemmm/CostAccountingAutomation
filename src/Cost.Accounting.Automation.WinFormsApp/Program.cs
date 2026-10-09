@@ -117,6 +117,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
             // kapatıldığında çevrimiçi bilgisi ve yeni mesaj bildirimleri kaybolurdu.
             services.AddSingleton<LiveMessagingService>();
             services.AddSingleton<MessagingNotifier>();
+            services.AddSingleton<SessionPresenceService>();
 
             // Açılışta yayın sunucusundaki sürüm manifestosunu okuyan servis.
             services.AddSingleton<UpdateChecker>();
@@ -140,7 +141,10 @@ namespace Cost.Accounting.Automation.WinFormsApp
                 return;
             }
 
-            CheckForUpdates();
+            if (!CheckForUpdates())
+            {
+                return;
+            }
 
             var loginForm = Services.GetRequiredService<XtraLoginForm>();
             CrashLog.Write("Main", "After loginForm");
@@ -159,15 +163,21 @@ namespace Cost.Accounting.Automation.WinFormsApp
         }
 
         /// <summary>
-        /// Yayın sunucusundaki sürüm manifestosunu kontrol eder; yeni sürüm
-        /// varsa kullanıcıya bildirim penceresi gösterir.
+        /// Merkezi veritabanındaki en güncel sürümü kontrol eder; yeni sürüm
+        /// varsa indirip kurulumu başlatır.
         /// </summary>
         /// <remarks>
-        /// Kontrol hiçbir koşulda uygulamanın açılmasını engellememelidir: ağ
-        /// yoksa, adres hatalıysa veya manifesto bozuksa sessizce atlanır ve
-        /// hata yalnızca günlüğe yazılır.
+        /// Kontrol hiçbir koşulda uygulamanın açılmasını engellememelidir:
+        /// veritabanına ulaşılamıyorsa, kayıt yoksa veya sürüm güncelse sessizce
+        /// atlanır ve hatalar yalnızca günlüğe yazılır. Zorunlu güncelleme
+        /// atlanamaz; kullanıcı vazgeçerse uygulama kapatılır.
         /// </remarks>
-        private static void CheckForUpdates()
+        /// <returns>
+        /// Giriş ekranına devam edilebiliyorsa <c>true</c>. Zorunlu bir
+        /// güncelleme kurulmadan vazgeçildiyse <c>false</c> olur ve program
+        /// uygulamayı kapatır.
+        /// </returns>
+        private static bool CheckForUpdates()
         {
             try
             {
@@ -180,16 +190,20 @@ namespace Cost.Accounting.Automation.WinFormsApp
 
                 if (manifest is null)
                 {
-                    return;
+                    return true;
                 }
 
-                using var updateForm = new UpdateAvailableForm(manifest);
+                using var updateForm = new UpdateAvailableForm(manifest, checker);
 
                 updateForm.ShowDialog();
+
+                return updateForm.ShouldContinueToLogin;
             }
             catch (Exception ex)
             {
                 CrashLog.WriteException("Main.UpdateCheck", ex);
+
+                return true;
             }
         }
 
@@ -382,7 +396,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
                 }
 
                 DatabaseInitializer
-                    .InitializeAsync(Services)
+                    .InitializeAsync(Services, appVersion: UpdateChecker.CurrentVersionString())
                     .GetAwaiter()
                     .GetResult();
 

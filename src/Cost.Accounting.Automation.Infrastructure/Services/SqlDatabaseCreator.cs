@@ -87,11 +87,15 @@ internal static class SqlDatabaseCreator
             {
                 return await TryCreateAsync(connection, placedSql, cancellationToken);
             }
-            catch (SqlException ex) when (!filePaths.IsDirectoryConfigured && IsFileAccessError(ex))
+            catch (SqlException ex) when (!filePaths.IsDirectoryConfigured
+                && !IsLocalServer(masterBuilder.DataSource)
+                && IsFileAccessError(ex))
             {
-                // Otomatik seçilen klasör kullanılamadı (örneğin veritabanı sunucusu
-                // bu makineden uzaktayken dosya yolu yanlış makineyi tarif etti).
-                // Dosya yolu verilmeden, sunucunun kendi varsayılan dizinine açılır.
+                // Yalnızca uzak sunucuda otomatik klasör kullanılamadıysa (dosya
+                // yolu yanlış makineyi tarif etti) sunucunun kendi varsayılan
+                // dizinine düşülür. Yerel sunucuda aynı davranış bilinçli olarak
+                // YOKTUR: sessizce varsayılan dizine geçilmesi veritabanının
+                // tek sabit klasör dışında ikinci bir yerde oluşmasına yol açar.
                 Debug.WriteLine(
                     $"[SqlDatabaseCreator] Dosya yolu ile oluşturulamadı ({ex.Number}); " +
                     $"sunucu varsayılan veri dizinine düşülüyor: {ex.Message}");

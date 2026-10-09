@@ -171,7 +171,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 case DatabaseFirstRunState.Exists:
                     // Veritabanı var: kullanıcıyı bekletmeden güncelle ve pencereyi
                     // kapat. Pencerenin tek işi "bekle" bilgisini vermekti.
-                    await Task.Run(() => DatabaseInitializer.InitializeAsync(Program.Services));
+                    await Task.Run(() => DatabaseInitializer.InitializeAsync(
+                        Program.Services,
+                        appVersion: UpdateChecker.CurrentVersionString()));
 
                     _shouldContinueToLogin = true;
                     Close();
@@ -207,7 +209,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     () => DatabaseInitializer.InitializeAsync(
                         Program.Services,
                         progress,
-                        _cts.Token));
+                        _cts.Token,
+                        UpdateChecker.CurrentVersionString()));
 
                 Complete();
             }
