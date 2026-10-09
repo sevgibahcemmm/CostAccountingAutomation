@@ -44,6 +44,12 @@ jobs:
     # Bot kendi commit'inde tekrar tetiklenmesin; istege bagli [no release] ile atlanabilir.
     if: ${{ github.event_name == 'workflow_dispatch' || (!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[no release]')) }}
 
+    # DevExpress resmi dokumanina gore CI'da lisans, ismi tam olarak
+    # "DevExpress_License" olan bir cevre degiskeniyle verilir (buyuk/kucuk harf
+    # onemli). Sifre : secrets.DEVEXPRESS_LICENSE secret'ina yuklenir.
+    env:
+      DevExpress_License: ${{ secrets.DEVEXPRESS_LICENSE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
