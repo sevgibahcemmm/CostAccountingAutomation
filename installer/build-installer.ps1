@@ -89,5 +89,5 @@ if ($UpdateUrl) {
     }
     $manifest | ConvertTo-Json | Set-Content -LiteralPath $manifestPath -Encoding UTF8
     Write-Host "update.json guncellendi: $manifestPath" -ForegroundColor Green
-    Write-Host "NOT: update.json'i commit'leyip yayinlamayi unutmayin (raw adresi appsettings Update:ManifestUrl ile ayni olmali)." -ForegroundColor Yellow
+    Write-Host "NOT: update.json yalnizca gecmis kayit icindir; istemciler surum kaydini Master veritabanindaki AppReleases tablosundan okur (sunucudaki sync-updates.ps1 tabloyu da yazar)." -ForegroundColor Yellow
 }

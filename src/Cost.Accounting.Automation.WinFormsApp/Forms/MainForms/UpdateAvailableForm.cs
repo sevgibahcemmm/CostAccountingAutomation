@@ -2,6 +2,7 @@ using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -122,6 +123,27 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             try
             {
+                // Yerel Alan Agi paylasimi (UNC): setup, gecici bir yerel klasore
+                // kopyalanir ve kurulum baslatilir. Calisan exe kilitli oldugundan
+                // uygulama kapanir; kurulum eski surumun uzerine yazar ve mevcut
+                // appsettings.Local.json'u korur (bkz. CostAccountingAutomation.iss).
+                if (UpdateChecker.IsUncPath(_manifest.Url))
+                {
+                    string updaterDir = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "CostAccountingAutomation",
+                        "Updates");
+                    Directory.CreateDirectory(updaterDir);
+                    string localSetup = Path.Combine(updaterDir, Path.GetFileName(_manifest.Url));
+                    File.Copy(_manifest.Url, localSetup, overwrite: true);
+
+                    Close();
+                    Process.Start(new ProcessStartInfo(localSetup) { UseShellExecute = true });
+                    Environment.Exit(0);
+                    return;
+                }
+
+                // Internet adresi (https/...): indirme baglantisini tarayicida ac.
                 Process.Start(new ProcessStartInfo(_manifest.Url) { UseShellExecute = true });
             }
             catch (Exception ex)

@@ -4,9 +4,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Options
     /// Açılışta yapılan güncelleme kontrolünün ayarları.
     ///
     /// <para>
-    /// Uygulama bir yayın sunucusundan küçük bir JSON manifestosu indirir ve
-    /// sürümü kendi sürümüyle karşılaştırır. Yeni sürüm varsa kullanıcıya
-    /// bildirim gösterilir; indirme bağlantısı kullanıcı tarafından açılır.
+    /// Uygulama merkezi Master veritabanındaki <c>AppReleases</c> tablosundan en
+    /// güncel sürüm kaydını okur ve sürümü kendi sürümüyle karşılaştırır. Yeni
+    /// sürüm varsa kullanıcıya bildirim gösterilir; kurulum dosyası kayıttaki
+    /// UNC paylaşım adresinden (ör. <c>\\192.168.1.5\CostAccountingUpdates\...
+    /// .exe</c>) yerel klasöre kopyalanır ve kurulum başlatılır.
     /// Program kendisini kendiliğinden güncellemez.
     /// </para>
     /// </summary>
@@ -15,19 +17,13 @@ namespace Cost.Accounting.Automation.Infrastructure.Options
         public const string SectionName = "Update";
 
         /// <summary>
-        /// Güncelleme kontrolü açık mı? Kapalıysa hiçbir ağ isteği yapılmaz.
+        /// Güncelleme kontrolü açık mı? Kapalıysa hiçbir veritabanı sorgusu yapılmaz.
         /// </summary>
         public bool Enabled { get; set; } = true;
 
         /// <summary>
-        /// Sürüm manifestosunun tam adresi (https://.../update.json).
-        /// Boş bırakılırsa kontrol yapılmaz.
-        /// </summary>
-        public string? ManifestUrl { get; set; }
-
-        /// <summary>
-        /// İndirme sırasında ağ zaman aşımı (saniye). Açılışı geciktirmemek için
-        /// kısa tutulur; hata durumunda kontrol sessizce atlanır.
+        /// Sorgu/bağlantı zaman aşımı (saniye). Açılışı geciktirmemek için kısa
+        /// tutulur; hata durumunda kontrol sessizce atlanır.
         /// </summary>
         public int TimeoutSeconds { get; set; } = 5;
 

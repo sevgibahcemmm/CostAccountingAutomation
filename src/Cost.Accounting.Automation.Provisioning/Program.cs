@@ -56,6 +56,7 @@ internal static class Program
                 "provision" => await ProvisionAsync(configuration),
                 "status" => await StatusAsync(configuration),
                 "can-connect" => await CanConnectAsync(configuration),
+                "set-version" => await SetVersionAsync(configuration, args),
                 _ => UnknownCommand(command)
             };
         }
@@ -153,6 +154,65 @@ internal static class Program
 
                 return false;
         }
+    }
+
+    private static async Task<int> SetVersionAsync(IConfiguration configuration, string[] args)
+    {
+        string version = RequireOption(args, "--version", "set-version");
+        string setupPath = RequireOption(args, "--setup-path", "set-version");
+        string notes = ReadOption(args, "--notes") ?? $"Surum {version}";
+        bool mandatory = args.Contains("--mandatory", StringComparer.OrdinalIgnoreCase);
+
+        string? masterConnection = configuration.GetConnectionString("Master")
+            ?? throw new InvalidOperationException("Master baglanti dizesi yapilandirilmemis.");
+
+        var builder = new SqlConnectionStringBuilder(masterConnection)
+        {
+            ConnectTimeout = 15
+        };
+
+        const string sql = """
+            MERGE dbo.AppReleases AS target
+            USING (VALUES (1)) AS source(Dummy) ON target.[Version] = @version
+            WHEN MATCHED THEN
+                UPDATE SET
+                    SetupPath   = @setupPath,
+                    Notes       = @notes,
+                    Mandatory   = @mandatory,
+                    PublishedAt = SYSUTCDATETIME(),
+                    IsActive    = 1
+            WHEN NOT MATCHED THEN
+                INSERT (Id, [Version], SetupPath, Notes, Mandatory, PublishedAt, IsActive)
+                VALUES (NEWID(), @version, @setupPath, @notes, @mandatory, SYSUTCDATETIME(), 1);
+            """;
+
+        await using (var connection = new SqlConnection(builder.ConnectionString))
+        {
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandTimeout = 15;
+
+            command.Parameters.AddWithValue("@version", version);
+            command.Parameters.AddWithValue("@setupPath", setupPath);
+            command.Parameters.AddWithValue("@notes", (object?)notes ?? DBNull.Value);
+            command.Parameters.AddWithValue("@mandatory", mandatory);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        Console.WriteLine($"Surum kaydedildi: {version}");
+        Console.WriteLine($"  Setup: {setupPath}");
+        Console.WriteLine($"  Not  : {notes}   Mandatory: {mandatory}");
+
+        return ExitSuccess;
+    }
+
+    private static string RequireOption(string[] args, string name, string command)
+    {
+        return ReadOption(args, name)
+            ?? throw new InvalidOperationException($"{command} icin '{name}' parametresi zorunludur.");
     }
 
     private static async Task<int> CanConnectAsync(IConfiguration configuration)
@@ -270,6 +330,14 @@ internal static class Program
                                        0 = erişilebilir, 1 = erişilemedi. Kurulum
                                        sihirbazı sunucuda SQL yoksa otomatik kurulum
                                        kararını bu komutun çıkış koduyla verir.
+
+              caa-provision set-version   AppReleases tablosuna yeni sürüm kaydı
+                                       yazar (idempotent MERGE). İstemci açılışta
+                                       bu kaydı okuyup güncelleme bildirir.
+                                       Zorunlu parametreler:
+                                         --version 1.0.1
+                                         --setup-path \\192.168.1.5\Paylasim\Setup-1.0.1.exe
+                                       İsteğe bağlı: --notes "Sürüm notu" --mandatory
 
             Seçenekler:
               --settings <yol>          appsettings.json dosyasının yolu.

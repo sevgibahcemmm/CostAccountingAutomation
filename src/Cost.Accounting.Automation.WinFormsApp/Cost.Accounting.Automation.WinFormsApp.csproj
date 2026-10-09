@@ -17,6 +17,9 @@
 	  <PackageReference Include="DevExpress.Win.Design" Version="25.2.3" />
 	  <PackageReference Include="DevExpress.Win.BonusSkins" Version="25.2.3" />
 
+	  <!-- Güncelleme kontrolü AppReleases tablosunu Master veritabanından okur. -->
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.6" />
+
 	  <!-- Bağlantı dizeleri ve Jwt:SecretKey ortam değişkeninden gelir; bu paket
 	       olmadan ortam değişkenleri yapılandırmaya katılmaz. -->
 	  <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.12" />

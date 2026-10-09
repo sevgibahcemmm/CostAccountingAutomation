@@ -341,6 +341,14 @@ begin
   RunAutomaticCheck.Height := ScaleY(22);
   RunAutomaticCheck.Caption := 'Uygulama veritabanini ilk calistirmada kendisi hazirlayabilsin (yalnizca tek makinede isaretleyin)';
   RunAutomaticCheck.Checked := False;
+
+  { Guncelleme/onarim kurulumu: hazirlik adimlarini varsayilan olarak kapali tut.
+    Veritabani zaten var; tekrar provision calistirilmasin. }
+  if FileExists(ExpandConstant('{app}\appsettings.Local.json')) then
+  begin
+    RunProvisionCheck.Checked := False;
+    RunAutomaticCheck.Checked := False;
+  end;
 end;
 
 { Veritabani klasoru alani ilk kez goruldugunde varsayilan degeri yaz.
@@ -393,6 +401,16 @@ begin
       Exit;
     end;
   end;
+end;
+
+{ Guncelleme/onarim kurulumunda (mevcut appsettings.Local.json varsa) ayar
+  sayfasini atla. Bu sayfa yalnizca ILK kurulumda gorunecek; boylece
+  calisan baglanti degerleri kurulum tarafindan ezip degistirilmez. }
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := False;
+  if (PageID = SettingsPage.ID) and FileExists(ExpandConstant('{app}\appsettings.Local.json')) then
+    Result := True;
 end;
 
 procedure WriteSettingsFile(const FileName: String);
@@ -579,9 +597,14 @@ begin
   if CurStep <> ssPostInstall then
     Exit;
 
-  { Ayarlari hem istemciye hem yonetici aracina yaz; ikisi ayni sunucuya baglanir. }
-  WriteSettingsFile(ExpandConstant('{app}\appsettings.Local.json'));
-  WriteSettingsFile(ExpandConstant('{app}\tools\appsettings.Local.json'));
+  { Ayarlari yalnizca ILK kurulumda yaz. Guncelleme/onarim kurulumunda mevcut
+    appsettings.Local.json korunur; aksi halde istemcinin calisan baglanti
+    degerleri varsayilanlarla ezerdik. }
+  if not FileExists(ExpandConstant('{app}\appsettings.Local.json')) then
+  begin
+    WriteSettingsFile(ExpandConstant('{app}\appsettings.Local.json'));
+    WriteSettingsFile(ExpandConstant('{app}\tools\appsettings.Local.json'));
+  end;
 
   ProvDir := ExpandConstant('{app}\tools');
   ProvExePath := ProvDir + '\{#ProvExe}';

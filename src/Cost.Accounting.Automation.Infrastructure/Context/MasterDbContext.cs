@@ -1,5 +1,6 @@
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.AccountingYears;
+using Cost.Accounting.Automation.Domain.AppReleases;
 using Cost.Accounting.Automation.Domain.Companies;
 using Cost.Accounting.Automation.Domain.LoginTokens;
 using Cost.Accounting.Automation.Domain.Presence;
@@ -20,6 +21,7 @@ public sealed class MasterDbContext(DbContextOptions<MasterDbContext> options, I
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
     public DbSet<UserPresence> UserPresences => Set<UserPresence>();
+    public DbSet<AppRelease> AppReleases => Set<AppRelease>();
 
     public bool HasChanges() => ChangeTracker.HasChanges();
 

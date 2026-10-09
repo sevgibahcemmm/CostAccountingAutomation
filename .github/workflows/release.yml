@@ -5,7 +5,10 @@ name: Release
 #   - Actions sekmesinden elle (workflow_dispatch) tetiklenince
 #
 # Akis: surumu artir -> publish -> Inno Setup ile setup.exe -> GitHub Release
-#       -> update.json guncelle -> master'a geri commit ([skip ci] ile dongu engellenir).
+#       -> update.json guncelle (yalnizca gecmis kayit; istemciler surum kaydini
+#          Master veritabanindaki AppReleases tablosundan okur ve setup.exe'yi
+#          sunucunun paylasim klasorundan ceker -> sunucudaki sync-updates.ps1)
+#       -> master'a geri commit ([skip ci] ile dongu engellenir).
 #
 # NOT: GITHUB_TOKEN ile yapilan push'lar yeni workflow tetiklemez ve ayrica
 # commit mesajinda [skip ci] vardir; bu yuzden sonsuz dongu olusmaz.

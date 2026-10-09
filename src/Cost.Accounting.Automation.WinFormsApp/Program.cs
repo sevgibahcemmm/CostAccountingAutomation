@@ -118,7 +118,8 @@ namespace Cost.Accounting.Automation.WinFormsApp
             services.AddSingleton<LiveMessagingService>();
             services.AddSingleton<MessagingNotifier>();
 
-            // Açılışta yayın sunucusundaki sürüm manifestosunu okuyan servis.
+            // Açılışta Master veritabanındaki AppReleases tablosundan en güncel
+            // sürümü okuyan servis.
             services.AddSingleton<UpdateChecker>();
 
             services.AddForms();
@@ -159,12 +160,12 @@ namespace Cost.Accounting.Automation.WinFormsApp
         }
 
         /// <summary>
-        /// Yayın sunucusundaki sürüm manifestosunu kontrol eder; yeni sürüm
-        /// varsa kullanıcıya bildirim penceresi gösterir.
+        /// Master veritabanındaki AppReleases tablosundan en güncel sürümü
+        /// okur; yeni sürüm varsa kullanıcıya bildirim penceresi gösterir.
         /// </summary>
         /// <remarks>
-        /// Kontrol hiçbir koşulda uygulamanın açılmasını engellememelidir: ağ
-        /// yoksa, adres hatalıysa veya manifesto bozuksa sessizce atlanır ve
+        /// Kontrol hiçbir koşulda uygulamanın açılmasını engellememelidir:
+        /// veritabanına ulaşılamıyorsa veya kayıt bozuksa sessizce atlanır ve
         /// hata yalnızca günlüğe yazılır.
         /// </remarks>
         private static void CheckForUpdates()

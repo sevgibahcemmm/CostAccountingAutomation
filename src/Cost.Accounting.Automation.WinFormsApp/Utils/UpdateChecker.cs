@@ -1,77 +1,135 @@
 using Cost.Accounting.Automation.Infrastructure.Options;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System.IO;
-using System.Net.Http;
 using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Utils
 {
     /// <summary>
-    /// Yayın sunucusundaki sürüm manifestosunu okuyup uygulamanın sürümüyle
-    /// karşılaştırır.
+    /// Sürüm kontrolünü merkezi <c>AppReleases</c> tablosundan (Master
+    /// veritabanı) okur ve uygulamanın sürümüyle karşılaştırır.
     ///
     /// <para>
-    /// Manifesto, <c>Update:ManifestUrl</c> adresinde duran küçük bir JSON
-    /// dosyasıdır (<c>version</c>, <c>url</c>, <c>notes</c>, <c>mandatory</c>).
-    /// Kontrol açılışta bir kez ve kısa zaman aşımıyla yapılır; ağ yoksa ya da
-    /// adres bozuksa sessizce atlanır ve uygulama normal açılır.
+    /// Tabloda <see cref="UpdateManifest"/> için gereken alanlar bulunur:
+    /// <c>Version</c>, <c>SetupPath</c> (setup.exe'nin UNC paylaşım adresi),
+    /// <c>Notes</c>, <c>Mandatory</c>. Kaydı sunucudaki <c>sync-updates.ps1</c>
+    /// betiği ya da <c>caa-provision set-version</c> komutu yazar.
+    /// Kontrol açılışta bir kez ve kısa zaman aşımıyla yapılır; veritabanına
+    /// ulaşılamazsa sessizce atlanır ve uygulama normal açılır.
     /// </para>
     /// </summary>
     public sealed class UpdateChecker
     {
-        private static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
         private readonly UpdateOptions _options;
+        private readonly string? _masterConnection;
 
-        public UpdateChecker(IOptions<UpdateOptions> options)
+        public UpdateChecker(IOptions<UpdateOptions> options, IConfiguration configuration)
         {
             _options = options.Value;
+            _masterConnection = configuration.GetConnectionString("Master");
         }
 
         /// <summary>
-        /// Manifestoyu indirir ve yeni bir sürüm varsa döndürür; aksi hâlde
-        /// <c>null</c>. Ağ hataları çağırana bırakılır; çağıran sessizce yutar.
+        /// Master veritabanından en güncel aktif sürümü okur ve yeni bir sürüm
+        /// varsa döndürür; aksi hâlde <c>null</c>. Veritabanına ulaşılamaz, kayıt
+        /// yoksa ya da veri bozuksa da <c>null</c> döner (sessizce atlanır).
         /// </summary>
         public async Task<UpdateManifest?> CheckAsync(CancellationToken cancellationToken = default)
         {
-            if (!_options.Enabled || string.IsNullOrWhiteSpace(_options.ManifestUrl))
+            if (!_options.Enabled || string.IsNullOrWhiteSpace(_masterConnection))
             {
                 return null;
             }
 
-            UpdateManifest? manifest;
+            int timeoutSeconds = Math.Max(1, _options.TimeoutSeconds);
+            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
 
-            using (var http = new HttpClient
+            try
             {
-                Timeout = TimeSpan.FromSeconds(Math.Max(1, _options.TimeoutSeconds))
-            })
-            {
-                string json = await http
-                    .GetStringAsync(_options.ManifestUrl, cancellationToken)
-                    .ConfigureAwait(false);
+                var builder = new SqlConnectionStringBuilder(_masterConnection)
+                {
+                    ConnectTimeout = timeoutSeconds
+                };
 
-                manifest = JsonSerializer.Deserialize<UpdateManifest>(json, JsonOptions);
+                await using (var connection = new SqlConnection(builder.ConnectionString))
+                {
+                    using var openCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    openCts.CancelAfter(timeout);
+
+                    await connection.OpenAsync(openCts.Token).ConfigureAwait(false);
+
+                    const string sql = """
+                        SELECT TOP (1)
+                            [Version], SetupPath, ISNULL(Notes, N''), Mandatory
+                        FROM dbo.AppReleases
+                        WHERE IsActive = 1
+                        ORDER BY PublishedAt DESC, Id DESC;
+                        """;
+
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = sql;
+                    command.CommandTimeout = timeoutSeconds;
+
+                    using var readCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    readCts.CancelAfter(timeout);
+
+                    string version;
+                    string setupPath;
+                    string notes;
+                    bool mandatory;
+
+                    await using (var reader = await command.ExecuteReaderAsync(readCts.Token).ConfigureAwait(false))
+                    {
+                        if (!await reader.ReadAsync(readCts.Token).ConfigureAwait(false))
+                        {
+                            return null; // henüz yayınlanmış sürüm yok
+                        }
+
+                        version = reader.GetString(0);
+                        setupPath = reader.GetString(1);
+                        notes = reader.GetString(2);
+                        mandatory = reader.GetBoolean(3);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(version)
+                        || string.IsNullOrWhiteSpace(setupPath)
+                        || !Version.TryParse(version, out Version? remote)
+                        || remote is null)
+                    {
+                        return null;
+                    }
+
+                    if (Compare(remote, CurrentVersion()) <= 0)
+                    {
+                        return null;
+                    }
+
+                    if (IsSkipped(version))
+                    {
+                        return null;
+                    }
+
+                    return new UpdateManifest
+                    {
+                        Version = version,
+                        Url = setupPath,
+                        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes,
+                        Mandatory = mandatory
+                    };
+                }
             }
-
-            if (manifest is null
-                || string.IsNullOrWhiteSpace(manifest.Version)
-                || !Version.TryParse(manifest.Version, out Version? remote)
-                || remote is null)
+            catch (Exception ex) when (
+                ex is SqlException
+                or InvalidOperationException)
             {
-                return null;
+                return null; // veritabanina erisilemiyor: sessizce yok say
             }
-
-            if (Compare(remote, CurrentVersion()) <= 0)
+            catch (OperationCanceledException)
             {
-                return null;
+                return null; // zaman asimi ya da iptal: sessizce yok say
             }
-
-            return IsSkipped(manifest.Version) ? null : manifest;
         }
 
         /// <summary>Çalışan uygulamanın sürümü.</summary>
@@ -80,9 +138,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
             return Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0);
         }
 
+        /// <summary>
+        /// Adres bir Windows paylaşımı (UNC) mu? Örn.
+        /// <c>\\192.168.1.5\Paylasim\CostAccountingAutomation-Setup-1.0.1.exe</c>.
+        /// </summary>
+        public static bool IsUncPath(string path)
+        {
+            return path.StartsWith(@"\\", StringComparison.Ordinal)
+                || path.StartsWith("//", StringComparison.Ordinal);
+        }
+
         /// <summary>İki sürümü Yalnızca Major.Minor.Build üzerinden karşılaştırır.</summary>
         /// <remarks>
-        /// Revision bilinçli olarak yok sayılır: manifesto "1.0.0" yazarken
+        /// Revision bilinçli olarak yok sayılır: tabloda "1.0.0" yazarken
         /// derleme sürümü "1.0.0.0" olduğundan ham karşılaştırma yanlış "yeni
         /// sürüm var" sonucu üretirdi.
         /// </remarks>
@@ -129,22 +197,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         }
     }
 
-    /// <summary>Yayın sunucusundaki <c>update.json</c> modeli.</summary>
+    /// <summary>Uygulamanın güncelleme bildirimi modeli (AppReleases kaydı).</summary>
     public sealed class UpdateManifest
     {
-        [JsonPropertyName("version")]
         public string Version { get; set; } = string.Empty;
 
-        /// <summary>Yeni sürümün indirme bağlantısı (setup.exe).</summary>
-        [JsonPropertyName("url")]
+        /// <summary>Yeni sürümün kurulum dosyası adresi (UNC paylaşım yolu).</summary>
         public string? Url { get; set; }
 
         /// <summary>Kullanıcıya gösterilecek kısa sürüm notları.</summary>
-        [JsonPropertyName("notes")]
         public string? Notes { get; set; }
 
         /// <summary>Zorunlu güncelleme ise "atla"/"daha sonra" gizlenir.</summary>
-        [JsonPropertyName("mandatory")]
         public bool Mandatory { get; set; }
     }
 }
