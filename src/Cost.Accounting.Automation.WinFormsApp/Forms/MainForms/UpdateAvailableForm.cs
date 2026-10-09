@@ -48,7 +48,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             var body = new Label
             {
-                Text = $"Kurulu sürüm: {UpdateChecker.CurrentVersion()}    •    Yeni sürüm: {_manifest.Version}",
+                Text = $"Kurulu sürüm: {UpdateChecker.DisplayVersion()}    •    Yeni sürüm: {_manifest.Version}",
                 Font = new Font(Font.FontFamily, 9.5f),
                 ForeColor = surface,
                 Location = new Point(22, 58),

@@ -129,6 +129,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             InitializeComponent();
 
+            // Basliktaki 'V.01' yazisi yalnizca tasarim gorunumu icindir; gercek
+            // surum derleme surumunden gelir (her yayinda otomatik guncellenir).
+            Text = "Maliyet Muhasebesi Otomasyonu v" + UpdateChecker.DisplayVersion();
+
             // Kapatma (×) düğmesi her MDI sekmesinin başlığında, adının
             // sağında gösterilsin. Bu ayarlar MDI kapsayıcısı bağlanmadan ve
             // herhangi bir sekme oluşmadan önce yapılmalıdır.

@@ -139,6 +139,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         }
 
         /// <summary>
+        /// Arayüzlerde gösterilecek sürüm etiketi ("1.0.1"). Derleme sürümündeki
+        /// dördüncü basamak ("0001") görüntülenmez; Compare ile aynı kuralla
+        /// Major.Minor.Build kullanılır.
+        /// </summary>
+        public static string DisplayVersion()
+        {
+            Version v = CurrentVersion();
+            return $"{v.Major}.{v.Minor}.{Build(v)}";
+        }
+
+        /// <summary>
         /// Adres bir Windows paylaşımı (UNC) mu? Örn.
         /// <c>\\192.168.1.5\Paylasim\CostAccountingAutomation-Setup-1.0.1.exe</c>.
         /// </summary>

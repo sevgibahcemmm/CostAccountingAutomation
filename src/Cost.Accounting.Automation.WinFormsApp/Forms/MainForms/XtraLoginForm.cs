@@ -60,6 +60,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         {
             InitializeComponent();
 
+            // Sabit yazilan 'v0.0.01' etiketi yalnizca tasarim gorunumu icindir;
+            // gercek surum derleme surumunden gelir (her yayinda otomatik guncellenir).
+            lblFooter.Text = "Maliyet Muhasebesi Otomasyonu v" + UpdateChecker.DisplayVersion();
+
             // Form, içindeki tüm kontroller çizilmeden ekranda görünmesin diye şeffaf açılır;
             // OnShown içinde her şey çizildikten sonra yumuşakça belirir.
             Opacity = 0;
