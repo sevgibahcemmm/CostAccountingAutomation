@@ -45,6 +45,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage Previous => Icon("svgimages/arrows/prev.svg");
         public static SvgImage Forward => Icon("svgimages/arrows/next.svg");
         public static SvgImage Trend => Icon("svgimages/icon%20builder/business_linearchart.svg");
+        public static SvgImage Attach => Icon("svgimages/icon%20builder/actions_attach.svg");
+        public static SvgImage Send => Icon("svgimages/icon%20builder/actions_send.svg");
 
         // Form / field icons
         public static SvgImage User => Icon("svgimages/icon%20builder/actions_user.svg");
