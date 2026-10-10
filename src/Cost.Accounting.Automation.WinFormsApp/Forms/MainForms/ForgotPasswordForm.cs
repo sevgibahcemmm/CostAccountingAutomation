@@ -17,9 +17,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlEmailBox.Paint += AuthFormStyles.RoundedField_Paint;
             txtEmail.Enter += AuthFormStyles.Field_Enter;
             txtEmail.Leave += AuthFormStyles.Field_Leave;
-pnlCodeBox.Paint += AuthFormStyles.RoundedField_Paint;
             AuthFormStyles.ApplyButtonAppearance(btnGenerate);
-            AuthFormStyles.ApplyButtonAppearance(btnContinue);
         }
 
         private async void BtnGenerate_Click(object? sender, EventArgs e)
@@ -48,24 +46,12 @@ if (!result.IsSuccessful || result.Data is null)
                     return;
                 }
 
-                // Sifirlama kodu burada uretilmez ve ekrana basilmaz. Kullanici
-                // once talep eder, kodu sistem yoneticisinden alir, sonra "Yeni
-                // Sifre Belirle" adimina gecer.
-                //
-                // Daha once komut kodu yanitta donduruyor ve bu forma otomatik
-                // yaziliyordu; e-posta adresini bilen herkes hesabi ele gecebiliyordu.
-                pnlCodeBox.Visible = false;
-                btnContinue.Visible = true;
-                btnContinue.Enabled = true;
+                // Talebin nereye iletileceği yanıt mesajıyla (toast) bildirilir;
+                // e-posta kanalı açıksa kod adrese gönderilir, kapalıysa üretimi
+                // yönetici yapar. Kod hiçbir zaman ekrana/yanıta yazdırılmaz; talep
+                // eden, kodu kendisine iletildikten sonra "Yöneticiden Kodum Var →"
+                // seçeneğiyle kod + yeni şifre ekranına geçer.
                 lblTitle.Text = "Talebiniz alındı";
-
-                // Kullaniciya bundan sonra ne yapacagini soyle. E-posta gonderilmez;
-                // kod sistem yoneticisi tarafindan uretilip sozluel olarak iletilir.
-                ShowGuidance(
-                    "Kod e-postanıza gönderilmez. Sistem yöneticiniz kodu üretip size "
-                    + "telefonla ya da yüz yüze iletecek. Kodu aldıktan sonra aşağıdaki "
-                    + "düğmeyle yeni şifrenizi belirleyebilirsiniz.");
-
                 ToastHelper.Show(result.Data.Message, ToastType.Success);
             }
             catch (ValidationException ex)
@@ -83,46 +69,29 @@ if (!result.IsSuccessful || result.Data is null)
         }
 
 /// <summary>
-        /// Kullanıcıya sürecin devamını anlatan yönlendirme metnini gösterir.
+        /// Kod + yeni şifre ekranını açar. Hem e-posta ile kod alan hem de
+        /// yöneticiden kod almış kullanıcı "Yöneticiden Kodum Var →" seçeneğiyle
+        /// buraya gelir; kod elle yazılır.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Etiket, eskiden kullanıcının kendi oluşturduğu kodu gösterdiği alana
-        /// yerleştirilir; o alan artık kullanılmadığı için boştur ve düğmeyle
-        /// çakışmaz. Yükseklik metin satırına göre verilir çünkü tasarımcıdaki
-        /// 36 piksel iki satıra yeter ama bu metin üç satıra taşar.
-        /// </para>
-        /// <para>
-        /// Metin bilinçli olarak olumlu bir kırmızı değil nötr bir renkte gösterilir:
-        /// burada bir hata değil, yönlendirme anlatılır.
-        /// </para>
-        /// </remarks>
-        private void ShowGuidance(string message)
+        private void OpenResetPasswordForm()
         {
-            lblMessage.Location = new Point(40, 240);
-            lblMessage.Size = new Size(400, 60);
-            lblMessage.Appearance.ForeColor = SkinTheme.EnsureReadable(
-                Color.FromArgb(71, 85, 105),
-                SkinTheme.SurfaceOf(this));
-            lblMessage.Appearance.Options.UseForeColor = true;
-            lblMessage.Text = message;
-            lblMessage.Visible = true;
-        }
-
-        private void BtnContinue_Click(object? sender, EventArgs e)
-        {
-            // Form yalnizca "yeni sifre belirle" adimina gecis yapar; kodu
-            // kullanici yoneticiden alip bu ekrana elle girer.
             using var scope = Program.Services.CreateScope();
             var resetForm = scope.ServiceProvider.GetRequiredService<ResetPasswordForm>();
             resetForm.FocusResetCodeInput();
 
             resetForm.ShowDialog(this);
 
-            if (resetForm.ResetCompleted)
+            // Sıfırlama tamamlandıysa ya da "Giriş ekranına dön" seçildiyse bu
+            // form da kapanır; kullanıcı doğrudan giriş ekranına döner.
+            if (resetForm.ResetCompleted || resetForm.GoBackToLogin)
             {
                 Close();
             }
+        }
+
+        private void BtnHaveCode_Click(object? sender, EventArgs e)
+        {
+            OpenResetPasswordForm();
         }
 
         private void LnkBack_Click(object? sender, EventArgs e)

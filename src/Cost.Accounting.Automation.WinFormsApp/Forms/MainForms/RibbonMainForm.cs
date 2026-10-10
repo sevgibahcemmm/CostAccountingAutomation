@@ -1,8 +1,10 @@
 using Cost.Accounting.Automation.Application.Messages;
+using Cost.Accounting.Automation.Application.Auth;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Infrastructure.Services;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ChartOfAccountForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CompanyForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.RecipeForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ConsumptionUnitForms;
@@ -117,6 +119,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // Sistem Yönetimi
             ["elmCompanies"] = DxIcon.Company,               // bo_organization
             ["elmUsers"] = DxIcon.Users,                     // bo_user
+            ["elmChangePassword"] = DxIcon.Key,              // key
             ["elmRoles"] = DxIcon.Roles,                      // bo_role
             ["elmEmployees"] = DxIcon.Employees,              // bo_contact
             ["elmSigningRoles"] = DxIcon.IdCard,             // security_personalid
@@ -431,6 +434,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private void BuildMenuActions()
         {
             _menuActions["elmUsers"] = () => MdiFormManager.Instance.OpenForm<UsersListForm>(this, "Kullanıcılar");
+            _menuActions["elmChangePassword"] = () => OpenChangeMyPassword();
             _menuActions["elmRoles"] = () => MdiFormManager.Instance.OpenForm<RolesListForm>(this, "Roller ve Yetkiler");
             _menuActions["elmEmployees"] = () => MdiFormManager.Instance.OpenForm<EmployeeForms.EmployeesListForm>(this, "Personel");
             _menuActions["elmSigningRoles"] = () => MdiFormManager.Instance.OpenForm<EmployeeSigningRolesListForm>(this, "Yetkili Görevler");
@@ -459,6 +463,49 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmUnitTypes"] = () => MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
             _menuActions["elmTaxRates"] = () => MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
             _menuActions["elmMessages"] = () => OpenMessages();
+        }
+
+        /// <summary>
+        /// "Şifre Yenile" menü öğesi. Seçili bir kullanıcıyla ilgisi yoktur;
+        /// yalnızca oturumu açan kullanıcının kendi şifresini (eski şifresini
+        /// vererek) değiştirir. Her kimliği doğrulanmış kullanıcı tarafından
+        /// kullanılabilir.
+        /// </summary>
+        private async void OpenChangeMyPassword()
+        {
+            using var changeForm = new ChangeMyPasswordForm();
+
+            if (changeForm.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            try
+            {
+                using var scope = Program.Services.CreateScope();
+                ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                var result = await mediator.Send(
+                    new ChangeMyPasswordCommand(
+                        changeForm.OldPassword,
+                        changeForm.NewPassword),
+                    CancellationToken.None);
+
+                if (!result.IsSuccessful)
+                {
+                    ToastHelper.Show(
+                        AuthFormStyles.GetErrorText(result.ErrorMessages),
+                        ToastType.Error);
+                    return;
+                }
+
+                ToastHelper.Show(result.Data ?? "Şifreniz güncellendi.", ToastType.Success);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("RibbonMainForm.OpenChangeMyPassword", ex);
+                ToastHelper.Show("Şifre güncellenirken bir hata oluştu.", ToastType.Error);
+            }
         }
 
         /// <summary>

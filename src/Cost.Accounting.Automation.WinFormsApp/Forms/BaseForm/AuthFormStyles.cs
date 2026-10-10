@@ -221,9 +221,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
 
         public static string GetValidationText(ValidationException exception)
         {
+            // Kullanıcı dostu açıklamalar (ErrorMessage), alan adı değil
+            // (PropertyName). Alan adı, "EmailOrUserName" gibi teknik bir isimdir;
+            // gösterilmesi hatanın ne olduğunu anlamayı imkânsızlaştırır.
             string message = string.Join(
                 Environment.NewLine,
-                exception.Errors.Select(e => e.PropertyName).Distinct());
+                exception.Errors.Select(e => e.ErrorMessage).Distinct());
 
             return string.IsNullOrWhiteSpace(message)
                 ? "Girdiğiniz bilgileri kontrol edin."

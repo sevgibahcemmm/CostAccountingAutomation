@@ -20,6 +20,7 @@ public static class ServiceRegistrar
         services.Configure<DatabaseProvisioningOptions>(configuration.GetSection(DatabaseProvisioningOptions.SectionName));
         services.Configure<UpdateOptions>(configuration.GetSection(UpdateOptions.SectionName));
         services.Configure<DatabaseFilesOptions>(configuration.GetSection(DatabaseFilesOptions.SectionName));
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
 
         // Veritabanı dosyalarının (mdf/ldf) konacağı Data klasörü. Veritabanı
         // oluşturma adımlarında (master ve yıl veritabanları) dosya yolları bu

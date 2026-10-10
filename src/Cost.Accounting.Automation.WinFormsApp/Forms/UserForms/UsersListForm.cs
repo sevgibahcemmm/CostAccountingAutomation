@@ -24,19 +24,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
 {
     public sealed partial class UsersListForm : CrudListFormBase<UserGetAllQuery, UserDto, UserEditForm>
     {
+        /// <summary>Sıfırlama kodu üretme eylemi bu yetkiye bağlıdır.</summary>
+        private const string ResetPasswordPermission = "user:reset_password";
+
         private readonly SimpleButton _btnPasswordReset;
+
+        /// <summary>Oturumu açan kullanıcının kimliği; kendine kod üretimi engellenir.</summary>
+        private Guid? _currentUserId;
 
         public UsersListForm() : base("Kullanıcılar")
         {
             InitializeComponent();
 
             // Sıfırlama kodu üretme kancası. Düzen dosyasında tanımlı değil çünkü
-            // bu yetki her rolde olmayabilir; görünürlük sunucu tarafında denetlenir
-            // ve komut yetki bulunmadığında hata döner.
+            // bu yetki her rolde olmayabilir; görünürlük yetkiye göre ayarlanır ve
+            // güvenlik her durumda sunucu tarafında denetlenir (komut yetki
+            // bulunmadığında hata döner). Varsayılan GİZLİ'dir: buton ancak
+            // <c>user:reset_password</c> yetkisi doğrulandığında görünür olur.
             _btnPasswordReset = new SimpleButton
             {
-                Text = "Şifre Sıfırla",
-                Enabled = false
+                Text = "Sıfırlama Kodu Üret",
+                Enabled = false,
+                Visible = false
             };
             _btnPasswordReset.Click += async (_, _) => await IssuePasswordResetAsync();
 
@@ -71,15 +80,36 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.UserForms
             }
 
             UpdatePasswordResetButton();
+            _ = ApplyPermissionVisibilityAsync();
         }
 
         /// <summary>
-        /// "Şifre Sıfırla" butonu yalnızca tam olarak bir aktif kullanıcı
-        /// seçiliyken etkindir.
+        /// Sıfırlama kodu butonu yalnızca <c>user:reset_password</c> yetkisi
+        /// olan yöneticilere gösterilir. Güvenlik sunucu tarafındadır; bu yalnızca
+        /// görünürlüktür.
+        /// </summary>
+        private async Task ApplyPermissionVisibilityAsync()
+        {
+            var permissions = await CurrentUserPermissions.GetAsync();
+
+            _currentUserId = permissions.UserId;
+
+            _btnPasswordReset.Visible = permissions.Has(ResetPasswordPermission);
+
+            UpdatePasswordResetButton();
+        }
+
+        /// <summary>
+        /// Sıfırlama kodu butonu yalnızca tam olarak bir aktif kullanıcı
+        /// seçiliyken etkindir. Kendi satırınız seçiliyse buton devre dışı kalır:
+        /// kendinize kod üretemezsiniz.
         /// </summary>
         private void UpdatePasswordResetButton()
         {
-            _btnPasswordReset.Enabled = GetSelectedUser() is not null;
+            UserDto? selected = GetSelectedUser();
+
+            _btnPasswordReset.Enabled = selected is not null
+                && (_currentUserId is not Guid selfId || selfId == Guid.Empty || selected.Id != selfId);
         }
 
         private UserDto? GetSelectedUser()

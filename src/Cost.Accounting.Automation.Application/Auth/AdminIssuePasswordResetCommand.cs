@@ -1,6 +1,8 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using FluentValidation;
 using GenericRepository;
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Users;
 using TS.MediatR;
 using TS.Result;
@@ -59,7 +61,9 @@ public sealed class AdminIssuePasswordResetCommandValidator : AbstractValidator<
 }
 
 [Permission("user:reset_password")]
-internal sealed class AdminIssuePasswordResetCommandHandler(    IUserRepository userRepository
+internal sealed class AdminIssuePasswordResetCommandHandler(
+    IUserRepository userRepository,
+    IClaimContext claimContext
   ) : IRequestHandler<AdminIssuePasswordResetCommand, Result<AdminIssuePasswordResetResponse>>
 {
     public async Task<Result<AdminIssuePasswordResetResponse>> Handle(
@@ -67,7 +71,7 @@ internal sealed class AdminIssuePasswordResetCommandHandler(    IUserRepository 
         CancellationToken cancellationToken)
     {
         var user = await userRepository.FirstOrDefaultAsync(
-            p => p.Id == new Domain.Abstractions.IdentityId(request.UserId),
+            p => p.Id == new IdentityId(request.UserId),
             cancellationToken);
 
         if (user is null)
@@ -79,6 +83,17 @@ internal sealed class AdminIssuePasswordResetCommandHandler(    IUserRepository 
         {
             return Result<AdminIssuePasswordResetResponse>.Failure(
                 "Pasif kullanıcılar için şifre sıfırlama kodu üretilemez");
+        }
+
+        // Yönetici kendine kod üretemez. Kendi şifresini "Şifremi Değiştir" ile
+        // (eski şifresini vererek) kendisi günceller; kendine kod üretmek hem
+        // anlamsızdır hem de "yönetici kendi hesabını kodu üreten kişi olarak
+        // kilitleyebilir" riskini taşır.
+        if (user.Id == new IdentityId(claimContext.GetUserId()))
+        {
+            return Result<AdminIssuePasswordResetResponse>.Failure(
+                "Kendi hesabınız için sıfırlama kodu üretemezsiniz. "
+                + "Kendi şifrenizi 'Şifremi Değiştir' ile güncelleyin.");
         }
 
         user.CreatePasswordResetRequest();

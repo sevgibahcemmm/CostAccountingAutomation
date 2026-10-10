@@ -1,36 +1,20 @@
 using Cost.Accounting.Automation.Application;
+using Cost.Accounting.Automation.Application.Auth;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Application.Updates;
+using Cost.Accounting.Automation.Domain.LoginTokens;
+using Cost.Accounting.Automation.Domain.Users;
+using Cost.Accounting.Automation.Domain.Users.ValueObjects;
 using Cost.Accounting.Automation.Infrastructure;
 using Cost.Accounting.Automation.Infrastructure.Services;
+using GenericRepository;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cost.Accounting.Automation.Provisioning;
 
-/// <summary>
-/// Veritabanı hazırlık aracı.
-/// </summary>
-/// <remarks>
-/// <para>
-/// Bu araç, <b>tek bir kez</b> sunucuda veritabanını hazırlamak için
-/// kullanılır: master veritabanı oluşturulur, migration'lar uygulanır, roller
-/// ve kullanıcılar tohumlanır, şirketler için mali yıl iş veritabanları açılır.
-/// </para>
-/// <para>
-/// WinForms uygulaması bu işi <b>yapmaz</b>. Uygulama yalnızca şemanın güncel
-/// olduğunu salt okunur doğrular. Bunun nedeni eşzamanlılıktır: merkezi bir
-/// SQL Server'a bağlanan on istemci aynı anda açıldığında her biri migration
-/// çalıştırmaya ve tohumlama yapmaya çalışırsa migration geçmişi tablosunda
-/// çakışma, çift kayıt ve "veritabanı zaten var" hataları oluşur.
-/// </para>
-/// <para>
-/// Kurulum işleminin kendisi yine de <c>sp_getapplock</c> ile korunur; iki
-/// yönetici aynı anda komutu çalıştırırsa ikincisi bekler, işlem bitince
-/// "bir şey yapılacak iş yok" mesajıyla çıkar.
-/// </para>
-/// </remarks>
 internal static class Program
 {
     private const int ExitSuccess = 0;
@@ -59,6 +43,7 @@ internal static class Program
                 "can-connect" => await CanConnectAsync(configuration),
                 "latest-version" => await LatestVersionAsync(configuration),
                 "publish-update" => await PublishUpdateAsync(configuration, args),
+                "reset-password" => await ResetPasswordAsync(configuration, args),
                 _ => UnknownCommand(command)
             };
         }
@@ -253,6 +238,115 @@ internal static class Program
         return ExitSuccess;
     }
 
+    private static async Task<int> ResetPasswordAsync(IConfiguration configuration, string[] args)
+    {
+        string? userName = ReadOption(args, "--user");
+        string? newPassword = ReadOption(args, "--password");
+
+        if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(newPassword))
+        {
+            Console.Error.WriteLine("HATA: reset-password için --user ve --password zorunludur.");
+            return ExitFailure;
+        }
+
+        string? validationError = ValidateNewPassword(newPassword);
+        if (validationError is not null)
+        {
+            Console.Error.WriteLine($"HATA: {validationError}");
+            return ExitFailure;
+        }
+
+        using var services = BuildServiceProvider(configuration);
+        using var scope = services.CreateScope();
+        IServiceProvider sp = scope.ServiceProvider;
+
+        var userRepository = sp.GetRequiredService<IUserRepository>();
+        var masterUow = sp.GetRequiredService<IMasterUnitOfWork>();
+
+        string cleanUser = LoginNameMatcher.Clean(userName);
+
+        if (cleanUser.Length == 0)
+        {
+            Console.Error.WriteLine("HATA: Geçerli bir kullanıcı adı veya e-posta girin.");
+            return ExitFailure;
+        }
+
+        // Eşleşme veritabanı collation'ına bağlı değildir; giriş ekranıyla aynı
+        // kurallar (bkz. LoginNameMatcher) kullanılır: kullanıcı adı YA DA e-posta.
+        var user = await userRepository.FirstOrDefaultAsync(p =>
+            EF.Functions.Collate(p.UserName.Value, LoginNameMatcher.Collation) == cleanUser
+            || EF.Functions.Collate(p.Email.Value, LoginNameMatcher.Collation) == cleanUser,
+            CancellationToken.None);
+
+        if (user is null)
+        {
+            Console.Error.WriteLine($"HATA: '{userName}' adında bir kullanıcı bulunamadı.");
+            return ExitFailure;
+        }
+
+        if (!user.IsActive)
+        {
+            Console.Error.WriteLine(
+                $"HATA: '{user.UserName.Value}' pasif durumda. Şifre sıfırlanmadan "
+                + "önce kullanıcı etkinleştirilmelidir.");
+            return ExitFailure;
+        }
+
+        user.SetPassword(new Password(newPassword));
+
+        // Eski sıfırlama kodları geçersiz kılınır; üretilmiş kodla hesaba girilmesin.
+        user.MarkPasswordResetCompleted();
+
+        if (HasFlag(args, "--logout-all"))
+        {
+            var loginTokenRepository = sp.GetRequiredService<ILoginTokenRepository>();
+
+            var loginTokens = await loginTokenRepository
+                .Where(p => p.UserId == user.Id && p.IsActive.Value == true)
+                .ToListAsync(CancellationToken.None);
+
+            foreach (var item in loginTokens)
+            {
+                item.SetIsActive(new(false));
+            }
+
+            if (loginTokens.Count > 0)
+            {
+                loginTokenRepository.UpdateRange(loginTokens);
+            }
+        }
+
+        userRepository.Update(user);
+
+        await masterUow.SaveChangesAsync(CancellationToken.None);
+
+        Console.WriteLine(
+            $"Şifre sıfırlandı: {user.UserName.Value} ({user.FirstName.Value} {user.LastName.Value})"
+            + (HasFlag(args, "--logout-all") ? " · tüm oturumlar kapatıldı" : string.Empty));
+
+        return ExitSuccess;
+    }
+
+    private static string? ValidateNewPassword(string password)
+    {
+        if (password.Length < 8)
+        {
+            return "Yeni şifre en az 8 karakter olmalıdır";
+        }
+
+        if (!password.Any(char.IsLetter))
+        {
+            return "Yeni şifre en az bir harf içermelidir";
+        }
+
+        if (!password.Any(char.IsDigit))
+        {
+            return "Yeni şifre en az bir rakam içermelidir";
+        }
+
+        return null;
+    }
+
     private static ServiceProvider BuildServiceProvider(IConfiguration configuration)
     {
         ServiceCollection services = new();
@@ -351,6 +445,14 @@ internal static class Program
                                        Eski sürümlerin dosyaları temizlenir; yalnızca
                                        en güncel setup veritabanında saklanır.
 
+              caa-provision reset-password --user <ad veya e-posta> --password <yeni şifre>
+                                       [--logout-all]
+                                       Kullanıcının şifresini doğrudan sıfırlar.
+                                       Uygulamaya giriş yapılamadığında (kilitlenme, unutulan
+                                       yönetici parolası) yönetici bu komutla kurtarır. Üretilmiş
+                                       sıfırlama kodları geçersiz kılınır. --logout-all ile
+                                       kullanıcının tüm açık oturumları kapatılır.
+
             Seçenekler:
               --settings <yol>          appsettings.json dosyasının yolu.
                                        Verilmezse araç klasöründeki appsettings.json okunur.
@@ -359,6 +461,9 @@ internal static class Program
               --file <yol>              publish-update: yayınlanacak kurulum dosyası.
               --notes <metin>           publish-update: sürüm notları.
               --mandatory               publish-update: zorunlu güncelleme işareti.
+              --user <ad>               reset-password: kullanıcı adı ya da e-posta.
+              --password <şifre>        reset-password: yeni şifre (min 8; harf + rakam).
+              --logout-all              reset-password: tüm oturumları kapat.
 
             Yapılandırma önceliği (düşükten yükseğe):
               1. appsettings.json            izlenen, gizli olmayan varsayılanlar

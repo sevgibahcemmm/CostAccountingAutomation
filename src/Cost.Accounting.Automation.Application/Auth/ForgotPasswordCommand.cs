@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using GenericRepository;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
@@ -11,10 +12,18 @@ namespace Cost.Accounting.Automation.Application.Auth;
 /// Şifre sıfırlama talebi.
 /// </summary>
 /// <remarks>
-/// <b>Bu istek kodu döndürmez.</b> Kod, talebi alan kişiye iletilmez; onu
-/// sistem yöneticisi üretir ve kullanıcıya sözlü olarak iletir. Daha önce kod
-/// doğrudan yanıtta dönüyordu; e-posta adresini bilen herkes bu bilgiyi alıp
-/// hesabı ele geçirebiliyordu.
+/// <para>
+/// Bu istek kodu <b>yanıt içinde</b> döndürmez. E-posta gönderimi açıksa
+/// (<c>Email.Enabled</c>) kod üretilir ve kayıtlı e-posta adresine gönderilir;
+/// adresin sistemde olup olmadığı yanıttan anlaşılamaz (nötr yanıt). E-posta
+/// gönderimi kapalıysa kod üretimi sistem yöneticisine aittir
+/// (<see cref="AdminIssuePasswordResetCommand"/>).
+/// </para>
+/// <para>
+/// Daha önce kod doğrudan yanıtta dönüyordu; e-posta adresini bilen herkes bu
+/// bilgiyi alıp hesabı ele geçirebiliyordu. Bu yüzden yanıt her koşulda nötr
+/// tutulur; kod yalnızca kullanıcının kendi e-posta adresine gönderilir.
+/// </para>
 /// </remarks>
 public sealed record ForgotPasswordCommand(
     string Email) : IRequest<Result<ForgotPasswordCommandResponse>>;
@@ -32,10 +41,19 @@ public sealed class ForgotPasswordCommandValidator : AbstractValidator<ForgotPas
 }
 
 internal sealed class ForgotPasswordCommandHandler(
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IEmailSender emailSender
   ) : IRequestHandler<ForgotPasswordCommand, Result<ForgotPasswordCommandResponse>>
 {
     /// <summary>
+    /// E-posta gönderimi açıkken kullanılan yanıt.
+    /// </summary>
+    private const string EmailSentMessage =
+        "Eğer bu adres kayıtlıysa, şifre sıfırlama kodu e-posta adresinize gönderildi. "
+        + "Posta kutunuzu (gerekiyorsa önemsiz/spam klasörünü) kontrol edin.";
+
+    /// <summary>
+    /// E-posta gönderimi kapalıyken kullanılan yanıt; kod üretimini yönetici yapar.
     /// Bilinçli olarak nötr. Hesabın var olup olmadığını ayırmak, e-posta
     /// adreslerinin sisteme kayıtlı kullanıcılara ait olup olmadığını ölçmeye
     /// yarar. Gerekirse "kullanıcı yok" bilgisi ayrı bir denetim kaydına yazılır.
@@ -58,12 +76,32 @@ internal sealed class ForgotPasswordCommandHandler(
 
         if (user is not null)
         {
-            // Yalnızca kaydın varlığı doğrulanır ve eski kod (varsa) geçersiz
-            // kılınır. Yeni kod burada ÜRETİLMEZ: üretimi yönetici yapar.
-            user.MarkPasswordResetCompleted();
-            userRepository.Update(user);
+            if (emailSender.IsEnabled)
+            {
+                // E-posta kanalı açık: kod üretilir ve kullanıcının adresine
+                // gönderilir. Kod yanıtta döndürülmez; gönderim hatası sızdırmaya
+                // neden olmasın diye yanıt yine nötrdür (gönderim aracı hatayı
+                // günlüğe yazar).
+                user.CreatePasswordResetRequest();
+                userRepository.Update(user);
+
+                await emailSender.SendPasswordResetCodeAsync(
+                    user.Email.Value,
+                    user.FirstName.Value,
+                    user.ForgotPasswordCode!.Value.ToString("D"),
+                    DateTimeOffset.Now.Add(User.PasswordResetCodeValidity),
+                    cancellationToken);
+            }
+            else
+            {
+                // E-posta kanalı yok: eski kod (varsa) geçersiz kılınır. Yeni kod
+                // burada ÜRETİLMEZ; üretimi yönetici yapar.
+                user.MarkPasswordResetCompleted();
+                userRepository.Update(user);
+            }
         }
 
-        return new ForgotPasswordCommandResponse(NeutralMessage);
+        return new ForgotPasswordCommandResponse(
+            emailSender.IsEnabled ? EmailSentMessage : NeutralMessage);
     }
 }

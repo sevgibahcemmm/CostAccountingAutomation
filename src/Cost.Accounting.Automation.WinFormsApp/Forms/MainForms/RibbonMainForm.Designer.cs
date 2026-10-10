@@ -68,6 +68,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             grpSystem = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmCompanies = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmUsers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmChangePassword = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmEmployees = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmSigningRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
@@ -405,7 +406,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpSystem
             // 
-            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, elmUsers, elmRoles, elmEmployees, elmSigningRoles });
+            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, elmUsers, elmChangePassword, elmRoles, elmEmployees, elmSigningRoles });
             grpSystem.Name = "grpSystem";
             grpSystem.Tag = 8;
             grpSystem.Text = "Sistem Yönetimi";
@@ -423,6 +424,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmUsers.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmUsers.Tag = 8;
             elmUsers.Text = "Kullanıcılar";
+            // 
+            // elmChangePassword
+            // 
+            elmChangePassword.Name = "elmChangePassword";
+            elmChangePassword.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmChangePassword.Tag = 8;
+            elmChangePassword.Text = "Şifre Yenile";
             // 
             // elmRoles
             // 
@@ -562,6 +570,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmMessages;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmCompanies;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmUsers;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmChangePassword;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmRoles;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmEmployees;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmSigningRoles;

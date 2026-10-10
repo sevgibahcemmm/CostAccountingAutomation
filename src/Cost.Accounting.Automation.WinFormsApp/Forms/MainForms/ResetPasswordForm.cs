@@ -15,6 +15,13 @@ public partial class ResetPasswordForm : DevExpress.XtraEditors.XtraForm
 
         public bool ResetCompleted { get; private set; }
 
+        /// <summary>
+        /// "Giriş ekranına dön" bağlantısına basıldığında <see langword="true"/>
+        /// olur. Açan form (şifremi unuttum) da kapanarak kullanıcıyı doğrudan
+        /// giriş ekranına döndürür.
+        /// </summary>
+        public bool GoBackToLogin { get; private set; }
+
         public ResetPasswordForm()
         {
             InitializeComponent();
@@ -132,8 +139,11 @@ pnlConfirmBox.Paint += AuthFormStyles.RoundedField_Paint;
             }
         }
 
-        private void LnkBack_Click(object? sender, EventArgs e)
+private void LnkBack_Click(object? sender, EventArgs e)
         {
+            // Şifremi unuttum zincirinden geliyorsa bu formun üstündeki form da
+            // kapanmalıdır; böylece kullanıcı doğrudan giriş ekranına döner.
+            GoBackToLogin = true;
             Close();
         }
     }
