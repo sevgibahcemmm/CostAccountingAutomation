@@ -10,12 +10,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
     /// Yeni bir sürüm bulunduğunda gösterilen küçük ilerleme penceresidir.
     ///
     /// <para>
-    /// Kullanıcıdan onay istenmez: kurulum dosyası veritabanından indirilir
+    /// Kullanıcıdan kurulum onayı alınmaz: kurulum dosyası veritabanından indirilir
     /// (ilerleme ortadaki durum kartında gösterilir), Inno Setup
-    /// <c>/VERYSILENT</c> bayrağıyla arka planda sessizce çalıştırılır ve
-    /// program kapatılır. Setup kurulumu tamamlayıp yeni sürümü kendisi
-    /// başlatır; böylece kullanıcı doğrudan giriş ekranına döner.
+    /// <c>/VERYSILENT</c> bayrağıyla yükseltmeli (<c>runas</c>) çalıştırılır ve
+    /// program kapatılır. UAC, veritabanı hazırlama (provision) adımının
+    /// yönetici yetkisiyle çalışmasını sağlar; kurulum tamamlanıp yeni sürümü
+    /// kendisi başlatır; böylece kullanıcı doğrudan giriş ekranına döner.
     /// Sihirbaz/onay penceresi gösterilmez.
+    /// </para>
+    ///
+    /// <para>
+    /// Eğer kullanıcı UAC isteğini iptal ederse kurulum başlatılmaz; uygulama
+    /// normal şekilde giriş ekranına devam eder ve güncelleme sonraki açılışta
+    /// denenir.
     /// </para>
     ///
     /// <para>
@@ -117,9 +124,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 // Sihirbaz gösterilmez; sessiz kurulum başlatılır. Kurulum bitince
                 // setup, yeni sürümü açacak olan adımı kendisi çalıştırır.
+                //
+                // Yükseltmeli (runas) başlatılır: sessiz kurulum yönetici yetkisi
+                // olmadan çalışırsa Inno Setup, veritabanı hazırlama adımını
+                // (provision) atlar ve master/yıl veritabanı kurulmaz. UAC onayı
+                // sonrası kurulum yönetici olarak çalışır ve provision guard'ı
+                // geçer. İstemci makinelerde sağladıkları AppVersion'e göre
+                // kurulum/veritabanı akışı değişmez; yalnızca yetki yükselir.
                 var startInfo = new ProcessStartInfo(setupPath)
                 {
                     UseShellExecute = true,
+                    Verb = "runas",
                     Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-"
                 };
 

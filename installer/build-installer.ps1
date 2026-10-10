@@ -75,7 +75,12 @@ function Get-NextVersion([string]$Latest) {
     }
 
     try {
-        $parts[3] = [int]$parts[3] + 1
+        $next = [int]$parts[3] + 1
+        if ($next -gt 9) {
+            $parts[2] = [string]([int]$parts[2] + 1)
+            $next = 0
+        }
+        $parts[3] = [string]$next
     }
     catch {
         throw "Veritabanindaki surum artirilamadi: '$Latest'"

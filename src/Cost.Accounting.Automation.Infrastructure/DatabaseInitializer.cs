@@ -396,13 +396,13 @@ public static class DatabaseInitializer
             var adminUser = new User(
                 firstName: new FirstName("Emrullah"),
                 lastName: new LastName("AKPINAR"),
-                email: new Email("sevgibahcemm45@gmail.com"),
+                email: new Email("manisademirci2525@gmail.com"),
                 userName: new UserName("sevgibahcemm"),
                 password: new Password("61785"),
                 companyId: demirciCompany.Id,
                 roleId: sysAdminRole.Id,
                 isActive: true,
-                tRIdentityNumber: new TRIdentityNumber("27070677444")
+                tRIdentityNumber: new TRIdentityNumber("12345678911")
             );
 
             // Sicil numarasını "AB" ile başlatacak şekilde atıyoruz[cite: 1]
@@ -418,35 +418,35 @@ public static class DatabaseInitializer
 
                 await masterContext.SaveChangesAsync();
 
-                //(string UserName, string Email, IdentityId CompanyId, IdentityId RoleId, string RegistryNumber, string TCIdentity)[] sampleUsers =
-                //[
-                //    ("aaa", "aaa@test.com", demirciCompany.Id, accountingManagerRole.Id, "AB1002", "22222222220"),
-                //    ("bbb", "bbb@test.com", demirciCompany.Id, accountantRole.Id, "AB1003", "33333333330"),
-                //    ("ccc", "ccc@test.com", demirciCompany.Id, accountantRole.Id, "AB1004", "44444444440"),
-                //    ("ddd", "ddd@test.com", demirciCompany.Id, accountantRole.Id, "AB1005", "55555555550"),
-                //];
+                (string UserName, string Email, IdentityId CompanyId, IdentityId RoleId, string RegistryNumber, string TCIdentity)[] sampleUsers =
+                [
+                    ("aaa", "aaa@test.com", demirciCompany.Id, accountingManagerRole.Id, "AB1002", "22222222220"),
+                    ("bbb", "bbb@test.com", demirciCompany.Id, accountantRole.Id, "AB1003", "33333333330"),
+                    ("ccc", "ccc@test.com", demirciCompany.Id, accountantRole.Id, "AB1004", "44444444440"),
+                    ("ddd", "ddd@test.com", demirciCompany.Id, accountantRole.Id, "AB1005", "55555555550"),
+                ];
 
-                //foreach (var sample in sampleUsers)
-                //{
-                //    string firstName = char.ToUpperInvariant(sample.UserName[0]) + sample.UserName[1..];
+                foreach (var sample in sampleUsers)
+                {
+                    string firstName = char.ToUpperInvariant(sample.UserName[0]) + sample.UserName[1..];
 
-                //    var user = new User(
-                //        firstName: new FirstName(firstName),
-                //        lastName: new LastName("Soyad"),
-                //        email: new Email(sample.Email),
-                //        userName: new UserName(sample.UserName),
-                //        password: new Password("1"),
-                //        companyId: sample.CompanyId,
-                //        roleId: sample.RoleId,
-                //        isActive: true,
-                //        tRIdentityNumber: new TRIdentityNumber(sample.TCIdentity)
-                //    );
+                    var user = new User(
+                        firstName: new FirstName(firstName),
+                        lastName: new LastName("Soyad"),
+                        email: new Email(sample.Email),
+                        userName: new UserName(sample.UserName),
+                        password: new Password("1"),
+                        companyId: sample.CompanyId,
+                        roleId: sample.RoleId,
+                        isActive: true,
+                        tRIdentityNumber: new TRIdentityNumber(sample.TCIdentity)
+                    );
 
-                    // Sicil numarasını "AB" ile başlatacak şekilde atıyoruz[cite: 1]
-                    //user.SetRegistryNumber(sample.RegistryNumber);
+                //    Sicil numarasını "AB" ile başlatacak şekilde atıyoruz[cite: 1]
+                    user.SetRegistryNumber(sample.RegistryNumber);
 
-                    //masterContext.Users.Add(user);
-                //}
+                    masterContext.Users.Add(user);
+                }
 
                 await masterContext.SaveChangesAsync();
             }

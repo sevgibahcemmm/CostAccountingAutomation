@@ -26,11 +26,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemCompanyName = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemUserName = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemRoleName = new DevExpress.XtraBars.BarButtonItem();
+            barStaticItemVersion = new DevExpress.XtraBars.BarStaticItem();
             barButtonItemLiveMessaging = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemLongDate = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemTime = new DevExpress.XtraBars.BarButtonItem();
             barButtonItemExpTime = new DevExpress.XtraBars.BarButtonItem();
-            barStaticItemVersion = new DevExpress.XtraBars.BarStaticItem();
             ribbon = new DevExpress.XtraBars.Ribbon.RibbonControl();
             skinRibbonGalleryBarItem1 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
             accordionControl = new DevExpress.XtraBars.Navigation.AccordionControl();
@@ -67,15 +67,55 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmWorkshopStockReport = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             grpSystem = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmCompanies = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator2 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmUsers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmChangePassword = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator3 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator4 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmEmployees = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator5 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmSigningRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator1 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            elmChangePassword = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             grpMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmExit = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             xtraTabbedMdiManager = new DevExpress.XtraTabbedMdi.XtraTabbedMdiManager(components);
+            accordionControlSeparator6 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator7 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator8 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator9 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator10 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator11 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator12 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator13 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator14 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator15 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator16 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator17 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator18 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator19 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator20 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator21 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator22 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator23 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator24 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator25 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator26 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator27 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator28 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator29 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator30 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator31 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator32 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator33 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator34 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator35 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator36 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator37 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator38 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator39 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator40 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             ((System.ComponentModel.ISupportInitialize)ribbon).BeginInit();
             ((System.ComponentModel.ISupportInitialize)accordionControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)xtraTabbedMdiManager).BeginInit();
@@ -115,6 +155,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemRoleName.Id = 3;
             barButtonItemRoleName.Name = "barButtonItemRoleName";
             // 
+            // barStaticItemVersion
+            // 
+            barStaticItemVersion.Caption = " ";
+            barStaticItemVersion.Id = 8;
+            barStaticItemVersion.Name = "barStaticItemVersion";
+            // 
             // barButtonItemLiveMessaging
             // 
             barButtonItemLiveMessaging.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
@@ -142,12 +188,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             barButtonItemExpTime.Caption = " ";
             barButtonItemExpTime.Id = 6;
             barButtonItemExpTime.Name = "barButtonItemExpTime";
-            // 
-            // barStaticItemVersion
-            // 
-            barStaticItemVersion.Caption = " ";
-            barStaticItemVersion.Id = 8;
-            barStaticItemVersion.Name = "barStaticItemVersion";
             // 
             // ribbon
             // 
@@ -177,12 +217,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // accordionControl
             // 
             accordionControl.Dock = DockStyle.Left;
-            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHome, grpStockMaster, grpStockOperations, grpInvoices, grpCurrentAccounts, grpCosting, grpAccounting, grpReports, grpSystem, grpMessages, elmExit });
+            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHome, accordionControlSeparator31, grpStockMaster, accordionControlSeparator32, grpStockOperations, accordionControlSeparator33, grpInvoices, accordionControlSeparator34, grpCurrentAccounts, accordionControlSeparator35, grpCosting, accordionControlSeparator36, grpAccounting, accordionControlSeparator37, grpReports, accordionControlSeparator38, grpSystem, accordionControlSeparator39, grpMessages, accordionControlSeparator40, elmExit, accordionControlSeparator30 });
             accordionControl.Location = new Point(0, 58);
             accordionControl.Margin = new Padding(3, 2, 3, 2);
             accordionControl.Name = "accordionControl";
-            accordionControl.OptionsMinimizing.State = DevExpress.XtraBars.Navigation.AccordionControlState.Minimized;
-            accordionControl.Size = new Size(48, 676);
+            accordionControl.Size = new Size(250, 676);
             accordionControl.TabIndex = 2;
             accordionControl.ViewType = DevExpress.XtraBars.Navigation.AccordionControlViewType.HamburgerMenu;
             // 
@@ -196,7 +235,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpStockMaster
             // 
-            grpStockMaster.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmProducts, elmUnitTypes, elmTaxRates, elmConsumptionUnits });
+            grpStockMaster.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmProducts, accordionControlSeparator6, elmUnitTypes, accordionControlSeparator7, elmTaxRates, accordionControlSeparator8, elmConsumptionUnits, accordionControlSeparator9 });
             grpStockMaster.Name = "grpStockMaster";
             grpStockMaster.Tag = 1;
             grpStockMaster.Text = "Stok Yönetimi";
@@ -231,7 +270,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpStockOperations
             // 
-            grpStockOperations.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmStockInput, elmStockOutput, elmConsumption, elmWorkshopTransfer });
+            grpStockOperations.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmStockInput, accordionControlSeparator10, elmStockOutput, accordionControlSeparator11, elmConsumption, accordionControlSeparator12, elmWorkshopTransfer, accordionControlSeparator13 });
             grpStockOperations.Name = "grpStockOperations";
             grpStockOperations.Tag = 2;
             grpStockOperations.Text = "Stok İşlemleri";
@@ -266,7 +305,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpInvoices
             // 
-            grpInvoices.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmInvoices, elmInvoiceApproval });
+            grpInvoices.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmInvoices, accordionControlSeparator14, elmInvoiceApproval, accordionControlSeparator15 });
             grpInvoices.Name = "grpInvoices";
             grpInvoices.Tag = 3;
             grpInvoices.Text = "Faturalar";
@@ -287,7 +326,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpCurrentAccounts
             // 
-            grpCurrentAccounts.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCustomers, elmSuppliers, elmCurrentAccountMovements, elmPayments, elmCurrentAccountBalance });
+            grpCurrentAccounts.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCustomers, accordionControlSeparator16, elmSuppliers, accordionControlSeparator17, elmCurrentAccountMovements, accordionControlSeparator18, elmPayments, accordionControlSeparator19, elmCurrentAccountBalance, accordionControlSeparator20 });
             grpCurrentAccounts.Name = "grpCurrentAccounts";
             grpCurrentAccounts.Tag = 4;
             grpCurrentAccounts.Text = "Cari Yönetimi";
@@ -329,7 +368,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpCosting
             // 
-            grpCosting.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCostSlips, elmRecipes, elmWorkshopAnalysis });
+            grpCosting.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCostSlips, accordionControlSeparator21, elmRecipes, accordionControlSeparator22, elmWorkshopAnalysis, accordionControlSeparator23 });
             grpCosting.Name = "grpCosting";
             grpCosting.Tag = 5;
             grpCosting.Text = "Maliyet & Üretim";
@@ -357,7 +396,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpAccounting
             // 
-            grpAccounting.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmChartOfAccounts, elmCarryForwardOperations });
+            grpAccounting.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmChartOfAccounts, accordionControlSeparator24, elmCarryForwardOperations, accordionControlSeparator25 });
             grpAccounting.Name = "grpAccounting";
             grpAccounting.Tag = 6;
             grpAccounting.Text = "Muhasebe";
@@ -378,7 +417,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpReports
             // 
-            grpReports.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmStockMovements, elmPriceStockList, elmWorkshopStockReport });
+            grpReports.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmStockMovements, accordionControlSeparator26, elmPriceStockList, accordionControlSeparator27, elmWorkshopStockReport, accordionControlSeparator28 });
             grpReports.Name = "grpReports";
             grpReports.Tag = 7;
             grpReports.Text = "Raporlar";
@@ -406,7 +445,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpSystem
             // 
-            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, elmUsers, elmChangePassword, elmRoles, elmEmployees, elmSigningRoles });
+            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, accordionControlSeparator2, elmUsers, accordionControlSeparator3, elmRoles, accordionControlSeparator4, elmEmployees, accordionControlSeparator5, elmSigningRoles, accordionControlSeparator1, elmChangePassword });
             grpSystem.Name = "grpSystem";
             grpSystem.Tag = 8;
             grpSystem.Text = "Sistem Yönetimi";
@@ -418,6 +457,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmCompanies.Tag = 8;
             elmCompanies.Text = "Şirket Ayarları";
             // 
+            // accordionControlSeparator2
+            // 
+            accordionControlSeparator2.Name = "accordionControlSeparator2";
+            // 
             // elmUsers
             // 
             elmUsers.Name = "elmUsers";
@@ -425,12 +468,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmUsers.Tag = 8;
             elmUsers.Text = "Kullanıcılar";
             // 
-            // elmChangePassword
+            // accordionControlSeparator3
             // 
-            elmChangePassword.Name = "elmChangePassword";
-            elmChangePassword.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmChangePassword.Tag = 8;
-            elmChangePassword.Text = "Şifre Yenile";
+            accordionControlSeparator3.Name = "accordionControlSeparator3";
             // 
             // elmRoles
             // 
@@ -439,12 +479,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmRoles.Tag = 8;
             elmRoles.Text = "Roller ve Yetkiler";
             // 
+            // accordionControlSeparator4
+            // 
+            accordionControlSeparator4.Name = "accordionControlSeparator4";
+            // 
             // elmEmployees
             // 
             elmEmployees.Name = "elmEmployees";
             elmEmployees.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmEmployees.Tag = 8;
             elmEmployees.Text = "Personel";
+            // 
+            // accordionControlSeparator5
+            // 
+            accordionControlSeparator5.Name = "accordionControlSeparator5";
             // 
             // elmSigningRoles
             // 
@@ -453,9 +501,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmSigningRoles.Tag = 8;
             elmSigningRoles.Text = "Yetkili Görevler";
             // 
+            // accordionControlSeparator1
+            // 
+            accordionControlSeparator1.Name = "accordionControlSeparator1";
+            // 
+            // elmChangePassword
+            // 
+            elmChangePassword.Name = "elmChangePassword";
+            elmChangePassword.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmChangePassword.Tag = 8;
+            elmChangePassword.Text = "Şifre Yenile";
+            // 
             // grpMessages
             // 
-            grpMessages.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmMessages });
+            grpMessages.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmMessages, accordionControlSeparator29 });
             grpMessages.Name = "grpMessages";
             grpMessages.Tag = 9;
             grpMessages.Text = "Mesajlaşma";
@@ -478,6 +537,146 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             xtraTabbedMdiManager.MdiParent = this;
             xtraTabbedMdiManager.UseFormIconAsPageImage = DevExpress.Utils.DefaultBoolean.True;
+            // 
+            // accordionControlSeparator6
+            // 
+            accordionControlSeparator6.Name = "accordionControlSeparator6";
+            // 
+            // accordionControlSeparator7
+            // 
+            accordionControlSeparator7.Name = "accordionControlSeparator7";
+            // 
+            // accordionControlSeparator8
+            // 
+            accordionControlSeparator8.Name = "accordionControlSeparator8";
+            // 
+            // accordionControlSeparator9
+            // 
+            accordionControlSeparator9.Name = "accordionControlSeparator9";
+            // 
+            // accordionControlSeparator10
+            // 
+            accordionControlSeparator10.Name = "accordionControlSeparator10";
+            // 
+            // accordionControlSeparator11
+            // 
+            accordionControlSeparator11.Name = "accordionControlSeparator11";
+            // 
+            // accordionControlSeparator12
+            // 
+            accordionControlSeparator12.Name = "accordionControlSeparator12";
+            // 
+            // accordionControlSeparator13
+            // 
+            accordionControlSeparator13.Name = "accordionControlSeparator13";
+            // 
+            // accordionControlSeparator14
+            // 
+            accordionControlSeparator14.Name = "accordionControlSeparator14";
+            // 
+            // accordionControlSeparator15
+            // 
+            accordionControlSeparator15.Name = "accordionControlSeparator15";
+            // 
+            // accordionControlSeparator16
+            // 
+            accordionControlSeparator16.Name = "accordionControlSeparator16";
+            // 
+            // accordionControlSeparator17
+            // 
+            accordionControlSeparator17.Name = "accordionControlSeparator17";
+            // 
+            // accordionControlSeparator18
+            // 
+            accordionControlSeparator18.Name = "accordionControlSeparator18";
+            // 
+            // accordionControlSeparator19
+            // 
+            accordionControlSeparator19.Name = "accordionControlSeparator19";
+            // 
+            // accordionControlSeparator20
+            // 
+            accordionControlSeparator20.Name = "accordionControlSeparator20";
+            // 
+            // accordionControlSeparator21
+            // 
+            accordionControlSeparator21.Name = "accordionControlSeparator21";
+            // 
+            // accordionControlSeparator22
+            // 
+            accordionControlSeparator22.Name = "accordionControlSeparator22";
+            // 
+            // accordionControlSeparator23
+            // 
+            accordionControlSeparator23.Name = "accordionControlSeparator23";
+            // 
+            // accordionControlSeparator24
+            // 
+            accordionControlSeparator24.Name = "accordionControlSeparator24";
+            // 
+            // accordionControlSeparator25
+            // 
+            accordionControlSeparator25.Name = "accordionControlSeparator25";
+            // 
+            // accordionControlSeparator26
+            // 
+            accordionControlSeparator26.Name = "accordionControlSeparator26";
+            // 
+            // accordionControlSeparator27
+            // 
+            accordionControlSeparator27.Name = "accordionControlSeparator27";
+            // 
+            // accordionControlSeparator28
+            // 
+            accordionControlSeparator28.Name = "accordionControlSeparator28";
+            // 
+            // accordionControlSeparator29
+            // 
+            accordionControlSeparator29.Name = "accordionControlSeparator29";
+            // 
+            // accordionControlSeparator30
+            // 
+            accordionControlSeparator30.Name = "accordionControlSeparator30";
+            // 
+            // accordionControlSeparator31
+            // 
+            accordionControlSeparator31.Name = "accordionControlSeparator31";
+            // 
+            // accordionControlSeparator32
+            // 
+            accordionControlSeparator32.Name = "accordionControlSeparator32";
+            // 
+            // accordionControlSeparator33
+            // 
+            accordionControlSeparator33.Name = "accordionControlSeparator33";
+            // 
+            // accordionControlSeparator34
+            // 
+            accordionControlSeparator34.Name = "accordionControlSeparator34";
+            // 
+            // accordionControlSeparator35
+            // 
+            accordionControlSeparator35.Name = "accordionControlSeparator35";
+            // 
+            // accordionControlSeparator36
+            // 
+            accordionControlSeparator36.Name = "accordionControlSeparator36";
+            // 
+            // accordionControlSeparator37
+            // 
+            accordionControlSeparator37.Name = "accordionControlSeparator37";
+            // 
+            // accordionControlSeparator38
+            // 
+            accordionControlSeparator38.Name = "accordionControlSeparator38";
+            // 
+            // accordionControlSeparator39
+            // 
+            accordionControlSeparator39.Name = "accordionControlSeparator39";
+            // 
+            // accordionControlSeparator40
+            // 
+            accordionControlSeparator40.Name = "accordionControlSeparator40";
             // 
             // RibbonMainForm
             // 
@@ -578,5 +777,45 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmExit;
 
         private DevExpress.XtraTabbedMdi.XtraTabbedMdiManager xtraTabbedMdiManager;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator2;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator3;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator4;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator5;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator1;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator31;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator6;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator7;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator8;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator9;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator32;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator10;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator11;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator12;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator13;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator33;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator14;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator15;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator34;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator16;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator17;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator18;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator19;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator20;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator35;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator21;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator22;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator23;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator36;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator24;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator25;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator37;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator26;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator27;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator28;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator38;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator39;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator29;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator40;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator30;
     }
 }

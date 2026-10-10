@@ -58,7 +58,12 @@ function Get-NextVersion([string]$Latest) {
     }
 
     try {
-        $parts[3] = [int]$parts[3] + 1
+        $next = [int]$parts[3] + 1
+        if ($next -gt 9) {
+            $parts[2] = [string]([int]$parts[2] + 1)
+            $next = 0
+        }
+        $parts[3] = [string]$next
     }
     catch {
         throw "Veritabanindaki surum artirilamadi: '$Latest'"
@@ -89,9 +94,9 @@ if (-not $Version) {
 # --- 2) Setup uretilir ----------------------------------------------------
 Write-Host ''
 Write-Host "Adim 1/2 - Kurulum paketi uretiliyor ($Version)..." -ForegroundColor Cyan
-$buildArgs = @('-Version', $Version)
+$buildArgs = @{ Version = $Version }
 if ($Iscc) {
-    $buildArgs += @('-Iscc', $Iscc)
+    $buildArgs.Iscc = $Iscc
 }
 
 & (Join-Path $PSScriptRoot 'build-installer.ps1') @buildArgs
@@ -109,9 +114,9 @@ if (-not $Notes) {
     $Notes = "Surum $Version"
 }
 
-$pubArgs = @('-Version', $Version, '-SetupPath', $setupPath, '-Notes', $Notes)
+$pubArgs = @{ Version = $Version; SetupPath = $setupPath; Notes = $Notes }
 if ($Mandatory) {
-    $pubArgs += '-Mandatory'
+    $pubArgs.Mandatory = $true
 }
 
 & (Join-Path $PSScriptRoot 'publish-update.ps1') @pubArgs

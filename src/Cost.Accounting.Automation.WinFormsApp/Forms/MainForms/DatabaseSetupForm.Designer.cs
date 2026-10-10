@@ -22,6 +22,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private System.Windows.Forms.Label lblProgress;
         private DevExpress.XtraEditors.SimpleButton btnOk;
         private DevExpress.XtraEditors.SimpleButton btnRetry;
+        private DevExpress.XtraEditors.SimpleButton btnElevated;
 
         protected override void Dispose(bool disposing)
         {
@@ -41,6 +42,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlFooter = new Panel();
             btnRetry = new DevExpress.XtraEditors.SimpleButton();
             btnOk = new DevExpress.XtraEditors.SimpleButton();
+            btnElevated = new DevExpress.XtraEditors.SimpleButton();
             pnlProgressTrack = new Panel();
             pnlProgressFill = new Panel();
             lblProgress = new Label();
@@ -89,6 +91,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             pnlFooter.Controls.Add(btnRetry);
             pnlFooter.Controls.Add(btnOk);
+            pnlFooter.Controls.Add(btnElevated);
             pnlFooter.Controls.Add(pnlProgressTrack);
             pnlFooter.Controls.Add(lblProgress);
             pnlFooter.Dock = DockStyle.Bottom;
@@ -113,6 +116,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnRetry.TabIndex = 3;
             btnRetry.Text = "Tekrar Dene";
             btnRetry.Visible = false;
+            // 
+            // btnElevated
+            // 
+            btnElevated.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnElevated.Appearance.Font = new Font("Segoe UI Semibold", 9.5F);
+            btnElevated.Appearance.Options.UseFont = true;
+            btnElevated.Location = new Point(349, 12);
+            btnElevated.Margin = new Padding(3, 2, 3, 2);
+            btnElevated.Name = "btnElevated";
+            btnElevated.Size = new Size(186, 28);
+            btnElevated.TabIndex = 4;
+            btnElevated.Text = "Yöneticiyle Kur / Güncelle";
+            btnElevated.Visible = false;
             // 
             // btnOk
             // 

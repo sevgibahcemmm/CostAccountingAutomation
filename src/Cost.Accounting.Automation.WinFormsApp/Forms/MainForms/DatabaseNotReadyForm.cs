@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Services;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 using Cost.Accounting.Automation.WinFormsApp.Utils;
 using DevExpress.XtraEditors;
 using System.Drawing;
@@ -26,6 +27,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private readonly TextBox _commandBox;
         private readonly Panel _listHost;
         private readonly SimpleButton _retryButton;
+        private readonly SimpleButton _provisionButton;
 
         /// <summary>
         /// <paramref name="result"/> durumuna göre pencereyi hazırlar.
@@ -63,6 +65,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             };
             _retryButton.Click += BtnRetry_Click;
 
+            _provisionButton = new SimpleButton
+            {
+                Text = "Veritabanını Hazırla ve Güncelle",
+                Size = new Size(250, 32),
+                Location = new Point(22, ClientSize.Height - 46),
+                Cursor = Cursors.Hand
+            };
+            _provisionButton.Click += BtnProvision_Click;
+
             var closeButton = new SimpleButton
             {
                 Text = "Kapat",
@@ -78,6 +89,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             Controls.Add(_commandBox);
             Controls.Add(_listHost);
             Controls.Add(_retryButton);
+            Controls.Add(_provisionButton);
             Controls.Add(closeButton);
 
             AcceptButton = _retryButton;
@@ -96,12 +108,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     _titleLabel.Text = "Veritabanı güncel değil";
                     _bodyLabel.Text =
                         "Sunucudaki veritabanı şeması, bu program sürümünün ihtiyaç duyduğundan eski. "
-                        + "Güvenlik nedeniyle program kendi şemasını güncellemez.\n\n"
-                        + "Programı kullanmaya başlamak için sistem yöneticiniz veritabanını güncellemelidir.";
+                        + "Program kendi şemasını kullanıcı olarak değiştirmez.\n\n"
+                        + "Veritabanını bu bilgisayardan yönetici olarak hazırlamak isterseniz "
+                        + "aşağıdaki düğmeyi kullanın; istemciler için yönetici tarafından "
+                        + "güncellenmesi yeterlidir.";
 
                     ShowPendingMigrations();
                     _commandBox.Visible = true;
                     _commandBox.Text = ProvisioningCommand;
+                    _provisionButton.Visible = true;
 
                     _retryButton.Text = "Yeniden Dene";
                     _retryButton.Left = ClientSize.Width - 152;
@@ -113,12 +128,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     _titleLabel.Text = "Veritabanı bulunamadı";
                     _bodyLabel.Text =
                         "Bağlantı dizesinde tanımlı veritabanı sunucuda mevcut değil. "
-                        + "Program veritabanını kendisi oluşturmaz.\n\n"
-                        + "Lütfen sistem yöneticinizle iletişime geçin.";
+                        + "Program veritabanını kullanıcı olarak oluşturmaz.\n\n"
+                        + "Veritabanını bu bilgisayardan yönetici olarak oluşturup güncellemek "
+                        + "için aşağıdaki düğmeyi kullanın.";
                     _detailLabel.Visible = false;
                     _listHost.Visible = false;
                     _commandBox.Visible = true;
                     _commandBox.Text = ProvisioningCommand;
+                    _provisionButton.Visible = true;
 
                     _retryButton.Text = "Yeniden Dene";
                     _retryButton.Left = ClientSize.Width - 152;
@@ -136,6 +153,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                     _detailLabel.Visible = false;
                     _listHost.Visible = false;
                     _commandBox.Visible = false;
+                    _provisionButton.Visible = false;
 
                     _retryButton.Text = "Yeniden Dene";
                     _retryButton.Left = ClientSize.Width - 152;
@@ -198,6 +216,54 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // Pencere kapanır; Program yeniden kontrol edip giriş ekranını açar.
             DialogResult = DialogResult.Retry;
             Close();
+        }
+
+        private async void BtnProvision_Click(object? sender, EventArgs e)
+        {
+            _provisionButton.Enabled = false;
+            _provisionButton.Text = "Hazırlanıyor...";
+
+            try
+            {
+                ProvisioningProcess.Result result = await Task.Run(ProvisioningProcess.RunProvision);
+
+                switch (result.State)
+                {
+                    case ProvisioningRunState.Succeeded:
+                        // Kurulum başarılı; Program yeniden kontrol edip girişe devam eder.
+                        DialogResult = DialogResult.Retry;
+                        Close();
+                        break;
+
+                    case ProvisioningRunState.NotFound:
+                        MsgBox.Notice(
+                            this,
+                            "caa-provision.exe bulunamadı. Program kurulum klasörüne "
+                            + "\"tools\" altında kurulur; lütfen kurulumun eksiksiz olduğunu "
+                            + "denetleyin ya da yöneticiye başvurun.",
+                            "Araç Bulunamadı");
+                        break;
+
+                    case ProvisioningRunState.Cancelled:
+                        // Kullanıcı UAC istemini iptal etti; hiçbir işlem yapılmadı.
+                        break;
+
+                    default:
+                        MsgBox.Notice(
+                            this,
+                            "Veritabanı hazırlığı başarısız oldu (çıkış kodu: "
+                            + result.ExitCode + "). Ayrıntılar için yöneticiye "
+                            + "başvurun ya da 'caa-provision provision' komutunu "
+                            + "yönetici konsolunda elle çalıştırın.",
+                            "Hazırlık Başarısız");
+                        break;
+                }
+            }
+            finally
+            {
+                _provisionButton.Enabled = true;
+                _provisionButton.Text = "Veritabanını Hazırla ve Güncelle";
+            }
         }
 
         private static Label CreateLabel(Color surface, int left, int top = 30, float size = 10f, FontStyle style = FontStyle.Regular)

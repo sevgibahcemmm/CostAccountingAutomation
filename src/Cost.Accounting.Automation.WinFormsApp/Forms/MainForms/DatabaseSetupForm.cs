@@ -89,6 +89,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             btnOk.Click += BtnOk_Click;
             btnRetry.Click += BtnRetry_Click;
+            btnElevated.Click += BtnElevated_Click;
 
             BuildStepRows();
             ApplyTheme();
@@ -304,6 +305,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnRetry.Enabled = !busy;
             btnRetry.Visible = !busy;
 
+            if (busy)
+            {
+                btnElevated.Enabled = false;
+                btnElevated.Visible = false;
+            }
+
             lblProgress.Text = status;
 
             pnlProgressFill.Width = 0;
@@ -359,6 +366,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             btnRetry.Visible = true;
             btnRetry.Enabled = true;
             btnRetry.Focus();
+
+            btnElevated.Visible = true;
+            btnElevated.Enabled = true;
 
             CrashLog.Write("DatabaseSetup", "Kurulum basarisiz: " + message);
         }
@@ -455,6 +465,74 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             pnlSteps.Visible = false;
 
             await DetectAndPrepareAsync();
+        }
+
+        /// <summary>
+        /// Yönetici haklarıyla <c>caa-provision provision --version &lt;kurulu&gt;</c>
+        /// çalıştırır; başarılıysa kontrolü yeniden yürütür.
+        ///
+        /// <para>
+        /// Kurulum modunda veritabanını normalde uygulama kendisi hazırlar;
+        /// yönetici düğmesi "kullanıcı olarak başarılamadı" durumları için bir
+        /// kaçış yoludur (ör. klasör/SQL hizmet yetkisi gerekiyorsa). Araç
+        /// kurulumla <c>{app}\tools</c> klasörüne konur.
+        /// </para>
+        /// </summary>
+        private async void BtnElevated_Click(object? sender, EventArgs e)
+        {
+            if (_cts is not null)
+            {
+                return;
+            }
+
+            btnElevated.Enabled = false;
+            SetBusy(true, "Yönetici ile veritabanı hazırlanıyor...");
+
+            try
+            {
+                var result = await Task.Run(ProvisioningProcess.RunProvision);
+
+                switch (result.State)
+                {
+                    case ProvisioningRunState.Succeeded:
+                        // Veritabanı hazır; kontrolü yeniden yürüt, girişe devam et.
+                        foreach (StepRow row in _rows.Values)
+                        {
+                            row.ApplyPending(_mutedText);
+                        }
+
+                        pnlSteps.Visible = false;
+
+                        await DetectAndPrepareAsync();
+                        break;
+
+                    case ProvisioningRunState.NotFound:
+                        MsgBox.Notice(
+                            this,
+                            "caa-provision.exe bulunamadı. Program kurulum klasörüne "
+                            + "\"tools\" altında kurulur; lütfen kurulumun eksiksiz "
+                            + "olduğunu denetleyin.",
+                            "Araç Bulunamadı");
+                        break;
+
+                    case ProvisioningRunState.Cancelled:
+                        // Kullanıcı UAC istemini iptal etti; hiçbir işlem yapılmadı.
+                        break;
+
+                    default:
+                        MsgBox.Notice(
+                            this,
+                            "Veritabanı hazırlığı başarısız oldu (çıkış kodu: "
+                            + result.ExitCode + "). 'caa-provision provision' "
+                            + "komutunu yönetici konsolunda elle deneyin.",
+                            "Hazırlık Başarısız");
+                        break;
+                }
+            }
+            finally
+            {
+                btnElevated.Enabled = true;
+            }
         }
 
         private enum BannerState

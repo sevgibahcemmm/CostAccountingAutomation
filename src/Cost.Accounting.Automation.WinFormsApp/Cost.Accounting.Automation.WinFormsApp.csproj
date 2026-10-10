@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- Surum, guncelleme kontrolunde (UpdateChecker) ve setup surumunde kullanilir. -->
-    <Version>1.0.1</Version>
+    <Version>1.0.1.3</Version>
   </PropertyGroup>
 
   <ItemGroup>

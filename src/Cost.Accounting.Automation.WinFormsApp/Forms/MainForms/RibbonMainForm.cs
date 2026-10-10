@@ -34,6 +34,7 @@ using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using TS.MediatR;
+using DevExpress.XtraBars;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 {
@@ -69,6 +70,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         };
 
         private const int HomeTag = 0;
+        private const string UpdateVersion = "1.0.1.3";
         private const int ExitTag = 99;
 
         /// <summary>
@@ -143,6 +145,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
             InitializeAccordion();
             BuildMenuActions();
+
+            // Hamburger menüsündeki "Sistem Yönetimi" grubuna "Güncelleme Oluştur" ekle
+            var elmCreateUpdate = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmCreateUpdate.Name = "elmCreateUpdate";
+            elmCreateUpdate.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCreateUpdate.Tag = 8;
+            elmCreateUpdate.Text = "Güncelleme Oluştur";
+            grpSystem.Elements.Add(elmCreateUpdate);
+
             IconOptions.SvgImage = DxIcon.AppIcon;
             accordionControl.OptionsMinimizing.State = AccordionControlState.Minimized;
             accordionControl.OptionsMinimizing.NormalWidth = 260;
@@ -172,6 +183,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // Bildirim baloncukları artık tıklanabilir: mesaj bildiriminde o
             // konuşma, diğer bildirimlerde Mesajlar sayfası açılır.
             ToastHelper.OpenMessages = OpenMessages;
+
+            // Bildirim baloncukları artık tıklanabilir: mesaj bildiriminde o
+            // konuşma, diğer bildirimlerde Mesajlar sayfası açılır.
+            ToastHelper.OpenMessages = OpenMessages;
+
             ToastHelper.OpenConversation = OpenConversationFromNotification;
         }
 
@@ -180,7 +196,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         /// </summary>
         /// <remarks>
         /// Nokta, durum çubuğunun sağ (çevrimiçi göstergesi, tarih ve saatin
-        /// durduğu) üst köşesidir. ToastForm bu noktanın soluna ve üstüne
+        /// durduğu) üst köşesidir. ToastForm bu noktanın soluna ve üstune
         /// yerleşerek bildirimin "oradan geldiği" hissini verir.
         /// </remarks>
         private Point? GetLiveStatusAnchor()
@@ -806,6 +822,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             }
 
             System.Windows.Forms.Application.Exit();
+        }
+
+        /// <summary>
+        /// Kullanıcıya güncelleme oluşturma komutunu gösterir.
+        /// </summary>
+        private void ShowUpdateCreationInstructions()
+        {
+            string message =
+                "Güncelleme oluşturmak için aşağıdaki komutu çalıştırabilirsiniz:\n\n" +
+                $"caa-provision publish-update --file \"DOSYA_YOLU\" --version {UpdateVersion} --notes \"Açıklamalar\" --mandatory false\n\n" +
+                "Dosya yolunu ve notları uygun olarak değiştirip PowerShell veya CMD'de çalıştırabilirsiniz.";
+
+            MessageBox.Show(message, "Güncelleme Oluştur", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

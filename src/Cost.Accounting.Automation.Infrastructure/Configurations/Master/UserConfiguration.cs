@@ -26,6 +26,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
 builder.Property(i => i.AvatarPath).HasMaxLength(500);
 
+        // Şifre sıfırlama denetim alanları. PasswordResetIssuedBy bir IdentityId;
+        // kimlikler AuditedDbContext'teki global converter ile GUID'e eşlenir.
+
         // Sicil numarası mesajlaşmada alıcı bulmak için kullanılır. Uzunluğu
         // sınırlıdır ve üzerinde indeks vardır; arama bu alan üzerinden yapılır.
         builder.Property(i => i.RegistryNumber).HasMaxLength(50);

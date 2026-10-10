@@ -551,8 +551,37 @@ begin
 end;
 
 function InitializeSetup(): Boolean;
+var
+  ResultCode: Integer;
+  RespawnArgs: String;
 begin
   Result := True;
+
+  { Veritabani hazirligi (provision), VC++ onkosulu ve SQL Server Express
+    otomatik kurulumu yonetici yetkisi gerektirir. Yonetici degilsek kurulumu
+    UAC ile yukseltilmis olarak YENIDEN calistirir ve bu (yetkisiz) kopya
+    sonlanir. Boylece "veritabani yoksa kurulum onu kendisi olustursun" garantisi:
+    diger makinelerde kurulum bos veritabaniyla da DB'yi kurar.
+
+    Sessiz (VERYSILENT) guncelleme de bu noktadan gecer: uygulama setup'i
+    zaten 'runas' ile bastırır; burada da argumanlar korunup (VERYSILENT vb.)
+    yukseltilmis kopya ayni modda devam eder. }
+  if not IsAdminLoggedOn() then
+  begin
+    RespawnArgs := '';
+    if WizardSilent then
+      RespawnArgs := '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-';
+
+    if ShellExec('runas', ExpandConstant('{srcexe}'), RespawnArgs, '', SW_SHOW, ewNoWait, ResultCode) then
+      Result := False
+    else
+    begin
+      MsgBox('Yonetici yetkisi ile devam edilemiyor. Kurulumu "Yonetici olarak' + #13#10
+        + 'calistir" ile baslatin. (Yonetici yetkisi olmadan veritabani kurulamaz.)',
+        mbError, MB_OK);
+      Result := False;
+    end;
+  end;
 end;
 
 { Baglanti dizesinden 'Data Source=...' (ya da 'Server=...') degerini ayirir. }

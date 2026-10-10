@@ -97,6 +97,12 @@ internal sealed class AdminIssuePasswordResetCommandHandler(
         }
 
         user.CreatePasswordResetRequest();
+
+        // Kod üreten yöneticinin kimliği UpdatedBy'de değil, bu amaçla ayrılmış
+        // denetim alanına yazılır. Sıfırlama giriş ekranından (oturumsuz) yapıldığı
+        // için EntityAuditTracker UpdatedBy'yi NULL'e çevirir; bilgi burada kalır.
+        user.SetPasswordResetIssuedBy(new IdentityId(claimContext.GetUserId()));
+
         userRepository.Update(user);
 
         // Kodu üreten yönetici kaydın UpdatedBy alanına otomatik yazılır

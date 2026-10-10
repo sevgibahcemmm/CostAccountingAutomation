@@ -31,7 +31,12 @@ public sealed class User : Entity
         ResolveDuplicateKey();
     }
 
-    private User() { }
+    private User()
+    {
+        ForgotPasswordCode = null;
+        ForgotPasswordDate = null;
+        IsForgotPasswordCompleted = new(true);
+    }
     public FirstName FirstName { get; private set; } = default!;
     public LastName LastName { get; private set; } = default!;
     public FullName FullName { get; private set; } = default!;
@@ -59,6 +64,24 @@ public sealed class User : Entity
     /// <para>Zorunlu değildir; numarası olmayan kullanıcılar TC kimlik numarası ya da kullanıcı adıyla bulunur.</para>
     /// </remarks>
     public string? RegistryNumber { get; private set; }
+
+    /// <summary>Şifre sıfırlama kodunu kimin ürettiği (denetim).</summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="UpdatedBy"/> değil: sıfırlama, giriş ekranından oturum açılmadan
+    /// yapılır; kullanıcı kimliği yokken <c>EntityAuditTracker</c> tarafından
+    /// <c>UpdatedBy</c> NULL'e ezilir ve "hangi yönetici kodu üretti" bilgisi
+    /// kaybolur. Bu alan yalnızca kod üretiminde yazılır ve hiçbir sonraki işlemde
+    /// silinmez.
+    /// </para>
+    /// </remarks>
+    public IdentityId? PasswordResetIssuedBy { get; private set; }
+
+    /// <summary>Şifre sıfırlama kodunun üretildiği zaman (denetim).</summary>
+    public DateTimeOffset? PasswordResetIssuedAt { get; private set; }
+
+    /// <summary>Şifre sıfırlama kodunun kullanılıp sıfırlamanın tamamlandığı zaman (denetim).</summary>
+    public DateTimeOffset? PasswordResetCompletedAt { get; private set; }
 
     /// <summary>Sicil numarasını kırpıp atar; boşsa <c>null</c> yapar.</summary>
     public void SetRegistryNumber(string? registryNumber)
@@ -112,6 +135,20 @@ public sealed class User : Entity
         ForgotPasswordCode = new(Guid.CreateVersion7());
         ForgotPasswordDate = new(DateTimeOffset.Now);
         IsForgotPasswordCompleted = new(false);
+
+        // Denetim: kod üretildi. IssuedBy ayrıca atanır (yönetici kimliği
+        // yalnızca provider katmanından bilinir).
+        PasswordResetIssuedAt = DateTimeOffset.Now;
+    }
+
+    /// <summary>
+    /// Kod üreten yöneticinin kimliğini denetim alanına yazar. Yalnızca ilk atamada
+    /// geçerli olur; yeniden kod üretilse bile önceki denetim no kaydı korunur
+    /// (üst üste yazmaz), böylece "kodu kim üretti" sorusunun genel cevabı değişmez.
+    /// </summary>
+    public void SetPasswordResetIssuedBy(IdentityId adminId)
+    {
+        PasswordResetIssuedBy = PasswordResetIssuedBy ?? adminId;
     }
 
     /// <summary>
@@ -134,6 +171,10 @@ public sealed class User : Entity
         IsForgotPasswordCompleted = new(true);
         ForgotPasswordCode = null;
         ForgotPasswordDate = null;
+
+        // Denetim: sıfırlama tamamlandığı an. Kod artık temizlendiği için
+        // "ne zaman tamamlandı" bilgisi burada korunur.
+        PasswordResetCompletedAt = DateTimeOffset.Now;
     }
 
     /// <summary>
