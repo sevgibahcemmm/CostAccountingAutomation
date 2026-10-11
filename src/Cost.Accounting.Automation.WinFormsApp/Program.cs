@@ -121,6 +121,7 @@ namespace Cost.Accounting.Automation.WinFormsApp
 
             // Açılışta yayın sunucusundaki sürüm manifestosunu okuyan servis.
             services.AddSingleton<UpdateChecker>();
+            services.AddSingleton<UpdatePublisher>();
 
             services.AddForms();
 

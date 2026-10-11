@@ -43,6 +43,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private readonly SessionClaimContext _session;
         private readonly Dictionary<int, string> _groupNames = new();
         private readonly Dictionary<string, Action> _menuActions = new(StringComparer.OrdinalIgnoreCase);
+        private AccordionControlElement? _updateMenuItem;
+        private bool _isSysAdmin;
         private System.Windows.Forms.Timer? _clockTimer;
         private DateTime _tokenExpiry;
 
@@ -70,7 +72,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         };
 
         private const int HomeTag = 0;
-        private const string UpdateVersion = "1.0.1.3";
         private const int ExitTag = 99;
 
         /// <summary>
@@ -125,10 +126,44 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmRoles"] = DxIcon.Roles,                      // bo_role
             ["elmEmployees"] = DxIcon.Employees,              // bo_contact
             ["elmSigningRoles"] = DxIcon.IdCard,             // security_personalid
+            ["elmCreateUpdate"] = DxIcon.Update,             // actions_reload
 
             // Mesajlaşma
             ["elmMessages"] = DxIcon.WhatsApp        // yeşil konuşma balonu
         };
+
+        private void AddUpdateMenuItem()
+        {
+            var element = new AccordionControlElement
+            {
+                Name = "elmCreateUpdate",
+                Style = ElementStyle.Item,
+                Tag = 8,
+                Text = "Güncelleme Oluştur",
+                Hint = "Kaynak koddan kurulum paketi üretir ve veritabanına yeni sürüm olarak yayınlar."
+            };
+
+            grpSystem.Elements.Add(element);
+            _updateMenuItem = element;
+        }
+
+        private async Task ApplyUpdateMenuVisibilityAsync()
+        {
+            if (_updateMenuItem is null)
+            {
+                return;
+            }
+
+            try
+            {
+                _isSysAdmin = (await CurrentUserPermissions.GetAsync()).IsSysAdmin;
+                _updateMenuItem.Visible = _isSysAdmin;
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("RibbonMainForm.ApplyUpdateMenuVisibility", ex);
+            }
+        }
 
         public RibbonMainForm()
         {
@@ -143,16 +178,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _session = Program.Services.GetRequiredService<SessionClaimContext>();
             MdiFormManager.Instance.Initialize(xtraTabbedMdiManager);
 
+            AddUpdateMenuItem();
             InitializeAccordion();
             BuildMenuActions();
-
-            // Hamburger menüsündeki "Sistem Yönetimi" grubuna "Güncelleme Oluştur" ekle
-            var elmCreateUpdate = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmCreateUpdate.Name = "elmCreateUpdate";
-            elmCreateUpdate.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
-            elmCreateUpdate.Tag = 8;
-            elmCreateUpdate.Text = "Güncelleme Oluştur";
-            grpSystem.Elements.Add(elmCreateUpdate);
 
             IconOptions.SvgImage = DxIcon.AppIcon;
             accordionControl.OptionsMinimizing.State = AccordionControlState.Minimized;
@@ -164,13 +192,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             FormClosed += RibbonMainForm_FormClosed;
         }
 
-        private void RibbonMainForm_Load(object? sender, EventArgs e)
+        private async void RibbonMainForm_Load(object? sender, EventArgs e)
         {
             LoadSessionInfoToStatusBar();
             StartClock();
             StartSessionPresence();
             StartLiveMessaging();
             OpenDashboard();
+            await ApplyUpdateMenuVisibilityAsync();
 
             // Durum çubuğundaki çevrimiçi göstergesi artık bir kısayoldur:
             // tıklanınca Mesajlar sayfası açılır, bildirim baloncukları da
@@ -479,6 +508,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmUnitTypes"] = () => MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
             _menuActions["elmTaxRates"] = () => MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
             _menuActions["elmMessages"] = () => OpenMessages();
+            _menuActions["elmCreateUpdate"] = () => ShowCreateUpdateForm();
         }
 
         /// <summary>
@@ -824,17 +854,44 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             System.Windows.Forms.Application.Exit();
         }
 
-        /// <summary>
-        /// Kullanıcıya güncelleme oluşturma komutunu gösterir.
-        /// </summary>
-        private void ShowUpdateCreationInstructions()
+        private void ShowCreateUpdateForm()
         {
-            string message =
-                "Güncelleme oluşturmak için aşağıdaki komutu çalıştırabilirsiniz:\n\n" +
-                $"caa-provision publish-update --file \"DOSYA_YOLU\" --version {UpdateVersion} --notes \"Açıklamalar\" --mandatory false\n\n" +
-                "Dosya yolunu ve notları uygun olarak değiştirip PowerShell veya CMD'de çalıştırabilirsiniz.";
+            if (!_isSysAdmin)
+            {
+                ToastHelper.Show("Bu işlem için yönetici yetkisi gerekir.", ToastType.Warning);
+                return;
+            }
 
-            MessageBox.Show(message, "Güncelleme Oluştur", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (_updateMenuItem is { Enabled: false })
+            {
+                ToastHelper.Show(
+                    "Bu oturumda bir sürüm yayınlandı. Yeni bir sürüm için uygulamayı yeniden başlatın.",
+                    ToastType.Info,
+                    5000);
+
+                return;
+            }
+
+            try
+            {
+                var publisher = Program.Services.GetRequiredService<UpdatePublisher>();
+                using var form = new CreateUpdateForm(publisher);
+
+                form.ShowDialog(this);
+
+                if (form.Published && _updateMenuItem is not null)
+                {
+                    _updateMenuItem.Enabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("RibbonMainForm.ShowCreateUpdateForm", ex);
+                ToastHelper.Show(
+                    "Güncelleme ekranı açılamadı. Ayrıntı için logs\\crash.log dosyasına bakınız.",
+                    ToastType.Error,
+                    6000);
+            }
         }
     }
 }

@@ -43,6 +43,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
                 return null;
             }
 
+            if (!IsInstalledLocation())
+            {
+                return null;
+            }
+
             using var scope = _scopeFactory.CreateScope();
             var appReleaseService = scope.ServiceProvider.GetRequiredService<IAppReleaseService>();
 
@@ -155,6 +160,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         /// <summary>Çalışan uygulamanın sürümü (dört parçalı).</summary>
         public static Version CurrentVersion()
             => Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0, 0);
+
+        public static bool IsInstalledLocation()
+            => File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.dat"));
 
         /// <summary>Çalışan uygulamanın sürümü (ör. "1.0.0.4").</summary>
         public static string CurrentVersionString()

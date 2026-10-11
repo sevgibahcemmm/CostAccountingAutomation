@@ -108,6 +108,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage StockInput => Icon("svgimages/icon%20builder/shopping_box.svg");
         public static SvgImage StockOutput => Icon("svgimages/icon%20builder/shopping_shoppingbasket.svg");
         public static SvgImage StockMovements => Icon("svgimages/icon%20builder/actions_reload.svg");
+        public static SvgImage Update => Icon("svgimages/icon%20builder/actions_reload.svg");
         public static SvgImage StockIssue => Icon("svgimages/icon%20builder/shopping_shoppingbasket.svg");
         public static SvgImage AtelierTransfer => Icon("svgimages/icon%20builder/actions_arrow1right.svg");
         public static SvgImage CurrentAccounts => Icon("svgimages/icon%20builder/business_money.svg");

@@ -101,6 +101,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             await InstallAsync();
         }
 
+        private static string SetupLogPath()
+        {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "CostAccountingAutomation",
+                "setup-inno.log");
+        }
+
         private async Task InstallAsync()
         {
             try
@@ -118,7 +126,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 _progressBar.Value = 100;
                 _percentLabel.Text = "100%";
-                _statusLabel.Text = "Kurulum yükleniyor...";
+                _statusLabel.Text = "Kurulum başlatılıyor. Uygulama kapanacak, kurulum penceresi açılacak.";
 
                 Update();
 
@@ -135,7 +143,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 {
                     UseShellExecute = true,
                     Verb = "runas",
-                    Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-"
+                    Arguments = "/SILENT /SUPPRESSMSGBOXES /NORESTART /SP- /AutoUpdate /LOG\"" + SetupLogPath() + "\""
                 };
 
                 Process.Start(startInfo);

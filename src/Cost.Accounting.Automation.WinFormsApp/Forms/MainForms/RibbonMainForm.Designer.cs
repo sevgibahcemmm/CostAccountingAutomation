@@ -35,36 +35,67 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             skinRibbonGalleryBarItem1 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
             accordionControl = new DevExpress.XtraBars.Navigation.AccordionControl();
             elmHome = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator31 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpStockMaster = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmProducts = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator6 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmUnitTypes = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator7 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmTaxRates = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator8 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmConsumptionUnits = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator9 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator32 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpStockOperations = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmStockInput = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator10 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmStockOutput = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator11 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmConsumption = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator12 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmWorkshopTransfer = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator13 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator33 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpInvoices = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmInvoices = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator14 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmInvoiceApproval = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator15 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator34 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpCurrentAccounts = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmCustomers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator16 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmSuppliers = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator17 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmCurrentAccountMovements = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator18 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmPayments = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator19 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmCurrentAccountBalance = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator20 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator35 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpCosting = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmCostSlips = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator21 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmRecipes = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator22 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmWorkshopAnalysis = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator23 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator36 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpAccounting = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmChartOfAccounts = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator24 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmCarryForwardOperations = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator25 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator37 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpReports = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmStockMovements = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator26 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmPriceStockList = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator27 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmWorkshopStockReport = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator28 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator38 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpSystem = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmCompanies = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             accordionControlSeparator2 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
@@ -77,45 +108,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmSigningRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             accordionControlSeparator1 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmChangePassword = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator39 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            elmExit = new DevExpress.XtraBars.Navigation.AccordionControlElement();
-            xtraTabbedMdiManager = new DevExpress.XtraTabbedMdi.XtraTabbedMdiManager(components);
-            accordionControlSeparator6 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator7 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator8 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator9 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator10 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator11 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator12 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator13 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator14 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator15 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator16 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator17 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator18 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator19 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator20 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator21 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator22 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator23 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator24 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator25 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator26 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator27 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator28 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             accordionControlSeparator29 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator30 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator31 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator32 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator33 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator34 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator35 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator36 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator37 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator38 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
-            accordionControlSeparator39 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             accordionControlSeparator40 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            elmExit = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator30 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            xtraTabbedMdiManager = new DevExpress.XtraTabbedMdi.XtraTabbedMdiManager(components);
             ((System.ComponentModel.ISupportInitialize)ribbon).BeginInit();
             ((System.ComponentModel.ISupportInitialize)accordionControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)xtraTabbedMdiManager).BeginInit();
@@ -233,6 +233,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmHome.Tag = 0;
             elmHome.Text = "Ana Sayfa";
             // 
+            // accordionControlSeparator31
+            // 
+            accordionControlSeparator31.Name = "accordionControlSeparator31";
+            // 
             // grpStockMaster
             // 
             grpStockMaster.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmProducts, accordionControlSeparator6, elmUnitTypes, accordionControlSeparator7, elmTaxRates, accordionControlSeparator8, elmConsumptionUnits, accordionControlSeparator9 });
@@ -247,12 +251,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmProducts.Tag = 1;
             elmProducts.Text = "Ürünler";
             // 
+            // accordionControlSeparator6
+            // 
+            accordionControlSeparator6.Name = "accordionControlSeparator6";
+            // 
             // elmUnitTypes
             // 
             elmUnitTypes.Name = "elmUnitTypes";
             elmUnitTypes.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmUnitTypes.Tag = 1;
             elmUnitTypes.Text = "Birim Cinsleri";
+            // 
+            // accordionControlSeparator7
+            // 
+            accordionControlSeparator7.Name = "accordionControlSeparator7";
             // 
             // elmTaxRates
             // 
@@ -261,12 +273,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmTaxRates.Tag = 1;
             elmTaxRates.Text = "KDV Oranları";
             // 
+            // accordionControlSeparator8
+            // 
+            accordionControlSeparator8.Name = "accordionControlSeparator8";
+            // 
             // elmConsumptionUnits
             // 
             elmConsumptionUnits.Name = "elmConsumptionUnits";
             elmConsumptionUnits.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmConsumptionUnits.Tag = 1;
             elmConsumptionUnits.Text = "Tüketim Birimleri";
+            // 
+            // accordionControlSeparator9
+            // 
+            accordionControlSeparator9.Name = "accordionControlSeparator9";
+            // 
+            // accordionControlSeparator32
+            // 
+            accordionControlSeparator32.Name = "accordionControlSeparator32";
             // 
             // grpStockOperations
             // 
@@ -282,12 +306,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmStockInput.Tag = 2;
             elmStockInput.Text = "Stok Girişi";
             // 
+            // accordionControlSeparator10
+            // 
+            accordionControlSeparator10.Name = "accordionControlSeparator10";
+            // 
             // elmStockOutput
             // 
             elmStockOutput.Name = "elmStockOutput";
             elmStockOutput.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmStockOutput.Tag = 2;
             elmStockOutput.Text = "Stok Çıkışı";
+            // 
+            // accordionControlSeparator11
+            // 
+            accordionControlSeparator11.Name = "accordionControlSeparator11";
             // 
             // elmConsumption
             // 
@@ -296,12 +328,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmConsumption.Tag = 2;
             elmConsumption.Text = "Tüketim";
             // 
+            // accordionControlSeparator12
+            // 
+            accordionControlSeparator12.Name = "accordionControlSeparator12";
+            // 
             // elmWorkshopTransfer
             // 
             elmWorkshopTransfer.Name = "elmWorkshopTransfer";
             elmWorkshopTransfer.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmWorkshopTransfer.Tag = 2;
             elmWorkshopTransfer.Text = "Atölye Transferi";
+            // 
+            // accordionControlSeparator13
+            // 
+            accordionControlSeparator13.Name = "accordionControlSeparator13";
+            // 
+            // accordionControlSeparator33
+            // 
+            accordionControlSeparator33.Name = "accordionControlSeparator33";
             // 
             // grpInvoices
             // 
@@ -317,12 +361,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmInvoices.Tag = 3;
             elmInvoices.Text = "Faturalar (Tümü)";
             // 
+            // accordionControlSeparator14
+            // 
+            accordionControlSeparator14.Name = "accordionControlSeparator14";
+            // 
             // elmInvoiceApproval
             // 
             elmInvoiceApproval.Name = "elmInvoiceApproval";
             elmInvoiceApproval.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmInvoiceApproval.Tag = 3;
             elmInvoiceApproval.Text = "Fatura Onaylama";
+            // 
+            // accordionControlSeparator15
+            // 
+            accordionControlSeparator15.Name = "accordionControlSeparator15";
+            // 
+            // accordionControlSeparator34
+            // 
+            accordionControlSeparator34.Name = "accordionControlSeparator34";
             // 
             // grpCurrentAccounts
             // 
@@ -338,12 +394,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmCustomers.Tag = 4;
             elmCustomers.Text = "Müşteriler";
             // 
+            // accordionControlSeparator16
+            // 
+            accordionControlSeparator16.Name = "accordionControlSeparator16";
+            // 
             // elmSuppliers
             // 
             elmSuppliers.Name = "elmSuppliers";
             elmSuppliers.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmSuppliers.Tag = 4;
             elmSuppliers.Text = "Tedarikçiler";
+            // 
+            // accordionControlSeparator17
+            // 
+            accordionControlSeparator17.Name = "accordionControlSeparator17";
             // 
             // elmCurrentAccountMovements
             // 
@@ -352,6 +416,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmCurrentAccountMovements.Tag = 4;
             elmCurrentAccountMovements.Text = "Cari Hareketler";
             // 
+            // accordionControlSeparator18
+            // 
+            accordionControlSeparator18.Name = "accordionControlSeparator18";
+            // 
             // elmPayments
             // 
             elmPayments.Name = "elmPayments";
@@ -359,12 +427,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmPayments.Tag = 4;
             elmPayments.Text = "Ödeme / Tahsilat";
             // 
+            // accordionControlSeparator19
+            // 
+            accordionControlSeparator19.Name = "accordionControlSeparator19";
+            // 
             // elmCurrentAccountBalance
             // 
             elmCurrentAccountBalance.Name = "elmCurrentAccountBalance";
             elmCurrentAccountBalance.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmCurrentAccountBalance.Tag = 4;
             elmCurrentAccountBalance.Text = "Cari Borç/Alacak Özeti";
+            // 
+            // accordionControlSeparator20
+            // 
+            accordionControlSeparator20.Name = "accordionControlSeparator20";
+            // 
+            // accordionControlSeparator35
+            // 
+            accordionControlSeparator35.Name = "accordionControlSeparator35";
             // 
             // grpCosting
             // 
@@ -380,6 +460,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmCostSlips.Tag = 5;
             elmCostSlips.Text = "Maliyet Pusulası";
             // 
+            // accordionControlSeparator21
+            // 
+            accordionControlSeparator21.Name = "accordionControlSeparator21";
+            // 
             // elmRecipes
             // 
             elmRecipes.Name = "elmRecipes";
@@ -387,12 +471,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmRecipes.Tag = 5;
             elmRecipes.Text = "Reçeteler";
             // 
+            // accordionControlSeparator22
+            // 
+            accordionControlSeparator22.Name = "accordionControlSeparator22";
+            // 
             // elmWorkshopAnalysis
             // 
             elmWorkshopAnalysis.Name = "elmWorkshopAnalysis";
             elmWorkshopAnalysis.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmWorkshopAnalysis.Tag = 5;
             elmWorkshopAnalysis.Text = "Atölye Gelir/Gider Analizi";
+            // 
+            // accordionControlSeparator23
+            // 
+            accordionControlSeparator23.Name = "accordionControlSeparator23";
+            // 
+            // accordionControlSeparator36
+            // 
+            accordionControlSeparator36.Name = "accordionControlSeparator36";
             // 
             // grpAccounting
             // 
@@ -408,12 +504,24 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmChartOfAccounts.Tag = 6;
             elmChartOfAccounts.Text = "Hesap Planı";
             // 
+            // accordionControlSeparator24
+            // 
+            accordionControlSeparator24.Name = "accordionControlSeparator24";
+            // 
             // elmCarryForwardOperations
             // 
             elmCarryForwardOperations.Name = "elmCarryForwardOperations";
             elmCarryForwardOperations.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmCarryForwardOperations.Tag = 6;
             elmCarryForwardOperations.Text = "Devir İşlemleri";
+            // 
+            // accordionControlSeparator25
+            // 
+            accordionControlSeparator25.Name = "accordionControlSeparator25";
+            // 
+            // accordionControlSeparator37
+            // 
+            accordionControlSeparator37.Name = "accordionControlSeparator37";
             // 
             // grpReports
             // 
@@ -429,12 +537,20 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmStockMovements.Tag = 7;
             elmStockMovements.Text = "Stok Hareketleri";
             // 
+            // accordionControlSeparator26
+            // 
+            accordionControlSeparator26.Name = "accordionControlSeparator26";
+            // 
             // elmPriceStockList
             // 
             elmPriceStockList.Name = "elmPriceStockList";
             elmPriceStockList.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             elmPriceStockList.Tag = 7;
             elmPriceStockList.Text = "Fiyat & Stok Listesi";
+            // 
+            // accordionControlSeparator27
+            // 
+            accordionControlSeparator27.Name = "accordionControlSeparator27";
             // 
             // elmWorkshopStockReport
             // 
@@ -443,9 +559,18 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmWorkshopStockReport.Tag = 7;
             elmWorkshopStockReport.Text = "Atölye Stok Raporu";
             // 
+            // accordionControlSeparator28
+            // 
+            accordionControlSeparator28.Name = "accordionControlSeparator28";
+            // 
+            // accordionControlSeparator38
+            // 
+            accordionControlSeparator38.Name = "accordionControlSeparator38";
+            // 
             // grpSystem
             // 
             grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, accordionControlSeparator2, elmUsers, accordionControlSeparator3, elmRoles, accordionControlSeparator4, elmEmployees, accordionControlSeparator5, elmSigningRoles, accordionControlSeparator1, elmChangePassword });
+            grpSystem.Expanded = true;
             grpSystem.Name = "grpSystem";
             grpSystem.Tag = 8;
             grpSystem.Text = "Sistem Yönetimi";
@@ -512,6 +637,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmChangePassword.Tag = 8;
             elmChangePassword.Text = "Şifre Yenile";
             // 
+            // accordionControlSeparator39
+            // 
+            accordionControlSeparator39.Name = "accordionControlSeparator39";
+            // 
             // grpMessages
             // 
             grpMessages.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmMessages, accordionControlSeparator29 });
@@ -526,6 +655,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmMessages.Tag = 9;
             elmMessages.Text = "Mesajlar";
             // 
+            // accordionControlSeparator29
+            // 
+            accordionControlSeparator29.Name = "accordionControlSeparator29";
+            // 
+            // accordionControlSeparator40
+            // 
+            accordionControlSeparator40.Name = "accordionControlSeparator40";
+            // 
             // elmExit
             // 
             elmExit.Name = "elmExit";
@@ -533,150 +670,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmExit.Tag = 99;
             elmExit.Text = "Çıkış";
             // 
-            // xtraTabbedMdiManager
-            // 
-            xtraTabbedMdiManager.MdiParent = this;
-            xtraTabbedMdiManager.UseFormIconAsPageImage = DevExpress.Utils.DefaultBoolean.True;
-            // 
-            // accordionControlSeparator6
-            // 
-            accordionControlSeparator6.Name = "accordionControlSeparator6";
-            // 
-            // accordionControlSeparator7
-            // 
-            accordionControlSeparator7.Name = "accordionControlSeparator7";
-            // 
-            // accordionControlSeparator8
-            // 
-            accordionControlSeparator8.Name = "accordionControlSeparator8";
-            // 
-            // accordionControlSeparator9
-            // 
-            accordionControlSeparator9.Name = "accordionControlSeparator9";
-            // 
-            // accordionControlSeparator10
-            // 
-            accordionControlSeparator10.Name = "accordionControlSeparator10";
-            // 
-            // accordionControlSeparator11
-            // 
-            accordionControlSeparator11.Name = "accordionControlSeparator11";
-            // 
-            // accordionControlSeparator12
-            // 
-            accordionControlSeparator12.Name = "accordionControlSeparator12";
-            // 
-            // accordionControlSeparator13
-            // 
-            accordionControlSeparator13.Name = "accordionControlSeparator13";
-            // 
-            // accordionControlSeparator14
-            // 
-            accordionControlSeparator14.Name = "accordionControlSeparator14";
-            // 
-            // accordionControlSeparator15
-            // 
-            accordionControlSeparator15.Name = "accordionControlSeparator15";
-            // 
-            // accordionControlSeparator16
-            // 
-            accordionControlSeparator16.Name = "accordionControlSeparator16";
-            // 
-            // accordionControlSeparator17
-            // 
-            accordionControlSeparator17.Name = "accordionControlSeparator17";
-            // 
-            // accordionControlSeparator18
-            // 
-            accordionControlSeparator18.Name = "accordionControlSeparator18";
-            // 
-            // accordionControlSeparator19
-            // 
-            accordionControlSeparator19.Name = "accordionControlSeparator19";
-            // 
-            // accordionControlSeparator20
-            // 
-            accordionControlSeparator20.Name = "accordionControlSeparator20";
-            // 
-            // accordionControlSeparator21
-            // 
-            accordionControlSeparator21.Name = "accordionControlSeparator21";
-            // 
-            // accordionControlSeparator22
-            // 
-            accordionControlSeparator22.Name = "accordionControlSeparator22";
-            // 
-            // accordionControlSeparator23
-            // 
-            accordionControlSeparator23.Name = "accordionControlSeparator23";
-            // 
-            // accordionControlSeparator24
-            // 
-            accordionControlSeparator24.Name = "accordionControlSeparator24";
-            // 
-            // accordionControlSeparator25
-            // 
-            accordionControlSeparator25.Name = "accordionControlSeparator25";
-            // 
-            // accordionControlSeparator26
-            // 
-            accordionControlSeparator26.Name = "accordionControlSeparator26";
-            // 
-            // accordionControlSeparator27
-            // 
-            accordionControlSeparator27.Name = "accordionControlSeparator27";
-            // 
-            // accordionControlSeparator28
-            // 
-            accordionControlSeparator28.Name = "accordionControlSeparator28";
-            // 
-            // accordionControlSeparator29
-            // 
-            accordionControlSeparator29.Name = "accordionControlSeparator29";
-            // 
             // accordionControlSeparator30
             // 
             accordionControlSeparator30.Name = "accordionControlSeparator30";
             // 
-            // accordionControlSeparator31
+            // xtraTabbedMdiManager
             // 
-            accordionControlSeparator31.Name = "accordionControlSeparator31";
-            // 
-            // accordionControlSeparator32
-            // 
-            accordionControlSeparator32.Name = "accordionControlSeparator32";
-            // 
-            // accordionControlSeparator33
-            // 
-            accordionControlSeparator33.Name = "accordionControlSeparator33";
-            // 
-            // accordionControlSeparator34
-            // 
-            accordionControlSeparator34.Name = "accordionControlSeparator34";
-            // 
-            // accordionControlSeparator35
-            // 
-            accordionControlSeparator35.Name = "accordionControlSeparator35";
-            // 
-            // accordionControlSeparator36
-            // 
-            accordionControlSeparator36.Name = "accordionControlSeparator36";
-            // 
-            // accordionControlSeparator37
-            // 
-            accordionControlSeparator37.Name = "accordionControlSeparator37";
-            // 
-            // accordionControlSeparator38
-            // 
-            accordionControlSeparator38.Name = "accordionControlSeparator38";
-            // 
-            // accordionControlSeparator39
-            // 
-            accordionControlSeparator39.Name = "accordionControlSeparator39";
-            // 
-            // accordionControlSeparator40
-            // 
-            accordionControlSeparator40.Name = "accordionControlSeparator40";
+            xtraTabbedMdiManager.MdiParent = this;
+            xtraTabbedMdiManager.UseFormIconAsPageImage = DevExpress.Utils.DefaultBoolean.True;
             // 
             // RibbonMainForm
             // 
