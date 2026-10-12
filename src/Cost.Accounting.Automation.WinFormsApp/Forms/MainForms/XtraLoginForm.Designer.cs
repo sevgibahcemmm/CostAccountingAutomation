@@ -360,6 +360,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // txtPassword
             // 
+            txtPassword.EditValue = "1";
             txtPassword.Location = new Point(48, 12);
             txtPassword.Name = "txtPassword";
             txtPassword.Properties.Appearance.BackColor = Color.Transparent;
@@ -425,6 +426,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // txtUserName
             // 
+            txtUserName.EditValue = "ea";
             txtUserName.Location = new Point(48, 12);
             txtUserName.Name = "txtUserName";
             txtUserName.Properties.Appearance.BackColor = Color.Transparent;

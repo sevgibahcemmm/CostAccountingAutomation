@@ -15,8 +15,7 @@ public sealed class EntityAuditTracker(IClaimContext claimContext)
 
 public void ApplyAudit(ChangeTracker changeTracker)
     {
-        Guid? currentUserGuid = _seedAdminUserId ?? claimContext.GetUserIdOrDefault();
-        IdentityId? currentUserId = currentUserGuid is null ? null : new IdentityId(currentUserGuid.Value);
+        IdentityId currentUserId = new((_seedAdminUserId ?? claimContext.GetUserIdOrDefault()) ?? Guid.Empty);
         DateTimeOffset now = DateTimeOffset.Now;
 
         foreach (var entry in changeTracker.Entries<Entity>())
@@ -27,10 +26,7 @@ public void ApplyAudit(ChangeTracker changeTracker)
             {
                 case EntityState.Added:
                     entry.Property(p => p.CreatedAt).CurrentValue = now;
-
-                    if (currentUserId is not null)
-                        entry.Property(p => p.CreatedBy).CurrentValue = currentUserId;
-
+                    entry.Property(p => p.CreatedBy).CurrentValue = currentUserId;
                     break;
 
                 case EntityState.Modified:
@@ -73,7 +69,7 @@ public void ApplyAudit(ChangeTracker changeTracker)
         }
     }
 
-    private static void ApplyModifiedAudit(EntityEntry<Entity> entry, DateTimeOffset now, IdentityId? currentUserId)
+    private static void ApplyModifiedAudit(EntityEntry<Entity> entry, DateTimeOffset now, IdentityId currentUserId)
     {
         bool isDeletedTouched = entry.Property(p => p.IsDeleted).IsModified;
         bool isDeletedNow = entry.Property(p => p.IsDeleted).CurrentValue;
@@ -86,7 +82,7 @@ public void ApplyAudit(ChangeTracker changeTracker)
         else if (isDeletedTouched && !isDeletedNow)
         {
             entry.Property(p => p.DeletedAt).CurrentValue = null;
-            entry.Property(p => p.DeletedBy).CurrentValue = null;
+            entry.Property(p => p.DeletedBy).CurrentValue = new IdentityId(Guid.Empty);
             entry.Property(p => p.UpdatedAt).CurrentValue = now;
             entry.Property(p => p.UpdatedBy).CurrentValue = currentUserId;
         }

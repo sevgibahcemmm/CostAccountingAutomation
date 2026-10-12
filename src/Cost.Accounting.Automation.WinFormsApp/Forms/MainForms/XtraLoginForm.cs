@@ -410,7 +410,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             {
                 _captchaChallengeId = result.Data.ChallengeId;
                 lblCaptchaQuestion.Text = result.Data.Question;
-               // txtCaptchaResult.Text = AutoSolveCaptcha(result.Data.Question);
+                txtCaptchaResult.Text = AutoSolveCaptcha(result.Data.Question);
             }
         }
 

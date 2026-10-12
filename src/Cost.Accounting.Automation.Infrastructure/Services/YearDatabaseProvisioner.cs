@@ -124,6 +124,15 @@ internal sealed class YearDatabaseProvisioner(
         AccountingYearProvisionSeedResult seeded =
             await SeedAsync(yearContext, progress, cancellationToken);
 
+        string? warning = seeded.Warning;
+        if (warning is not null)
+        {
+            progress?.Report(new DatabaseProvisionProgress(
+                DatabaseProvisionStep.SeedChartOfAccounts,
+                DatabaseProvisionStepState.Skipped,
+                warning));
+        }
+
         return new AccountingYearProvisionResult
         {
             DatabaseName = databaseName,
@@ -133,6 +142,39 @@ internal sealed class YearDatabaseProvisioner(
             SeededReferenceCount = seeded.ReferenceCount,
             SeededSampleRecordCount = seeded.SampleRecordCount
         };
+    }
+
+    /// <summary>
+    /// Tohum kayıtlarının sahibi olacak kullanıcıyı bulur: önce aktif
+    /// sys_admin rolündeki en eski kullanıcı, yoksa en eski aktif kullanıcı.
+    /// </summary>
+    private async Task<Guid?> FindSeedOwnerUserIdAsync(CancellationToken cancellationToken)
+    {
+        Guid? adminRoleId = await masterContext.Roles
+            .AsNoTracking()
+            .Where(r => r.Name.Value == "sys_admin" && r.IsActive && !r.IsDeleted)
+            .Select(r => (Guid?)r.Id.Value)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (adminRoleId.HasValue)
+        {
+            Guid? adminUser = await masterContext.Users
+                .AsNoTracking()
+                .Where(u => u.RoleId == new IdentityId(adminRoleId.Value) && u.IsActive && !u.IsDeleted)
+                .OrderBy(u => u.CreatedAt)
+                .Select(u => (Guid?)u.Id.Value)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (adminUser.HasValue)
+                return adminUser;
+        }
+
+        return await masterContext.Users
+            .AsNoTracking()
+            .Where(u => u.IsActive && !u.IsDeleted)
+            .OrderBy(u => u.CreatedAt)
+            .Select(u => (Guid?)u.Id.Value)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <summary>
@@ -149,15 +191,16 @@ internal sealed class YearDatabaseProvisioner(
         IProgress<DatabaseProvisionProgress>? progress,
         CancellationToken cancellationToken)
     {
-        Guid? adminUserId = await masterContext.Users
-            .AsNoTracking()
-            .Where(u => u.UserName.Value == "sevgibahcemm")
-            .Select(u => (Guid?)u.Id.Value)
-            .FirstOrDefaultAsync(cancellationToken);
+        Guid? adminUserId = await FindSeedOwnerUserIdAsync(cancellationToken);
 
         if (adminUserId is null)
         {
-            return new AccountingYearProvisionSeedResult(0, 0, 0);
+            return new AccountingYearProvisionSeedResult(0, 0, 0)
+            {
+                Warning =
+                    "Tohum kayitlari icin system yoneticisi kullanici bulunamadi; " +
+                    "hesap plani, birim, KDV orani ve ornek cariler yuklenmedi."
+            };
         }
 
         context.SetSeedAdminUserId(adminUserId.Value);
@@ -409,5 +452,8 @@ internal sealed class YearDatabaseProvisioner(
     private sealed record AccountingYearProvisionSeedResult(
         int ChartOfAccountCount,
         int ReferenceCount,
-        int SampleRecordCount);
+        int SampleRecordCount)
+    {
+        public string? Warning { get; init; }
+    }
 }
