@@ -127,10 +127,25 @@ internal sealed class ProductCreateCommandHandler(
 
         string companyPrefix = await ProductBarcodePrefixResolver.ResolveAsync(companyRepository, cancellationToken);
 
-        bool isSemi = warehouse.Code.Value == "151" || warehouse.Code.Value == "152" || warehouse.Code.Value.StartsWith("151.") || warehouse.Code.Value.StartsWith("152.");
+        bool isPairWarehouse = ProductCodeHelper.IsPairWarehouse(warehouse.Code.Value);
+        bool isExpense = ProductCodeHelper.IsExpenseWarehouse(warehouse.Code.Value);
 
-        if (request.CreatePair && isSemi)
+        if (request.CreatePair && isPairWarehouse)
         {
+            if (isExpense)
+            {
+                return await CreateExpensePairAsync(
+                    request,
+                    warehouse,
+                    category,
+                    unitType,
+                    taxRate,
+                    productCodes,
+                    accountCodes,
+                    companyPrefix,
+                    cancellationToken);
+            }
+
             string pairWarehouseCode = warehouse.Code.Value == "151" || warehouse.Code.Value.StartsWith("151.")
                 ? ("152" + warehouse.Code.Value.Substring(3))
                 : ("151" + warehouse.Code.Value.Substring(3));
@@ -300,6 +315,111 @@ internal sealed class ProductCreateCommandHandler(
         await productRepository.AddAsync(product, cancellationToken);
 
         return "Ürün başarıyla kaydedildi";
+    }
+
+    private async Task<Result<string>> CreateExpensePairAsync(
+        ProductCreateCommand request,
+        ChartOfAccount warehouse,
+        ChartOfAccount category,
+        ProductUnitType unitType,
+        TaxRate taxRate,
+        List<string> productCodes,
+        List<string> accountCodes,
+        string companyPrefix,
+        CancellationToken cancellationToken)
+    {
+        // 630 = GİDERLER HESABI: seçilen 630.16.03 yaprağı hem depo hem kategori
+        // olarak kullanılır; HİZMET kartı ve ona bağlı YARIMAMÜL kartı aynı yaprağa açılır.
+        string baseName = request.Name.Trim();
+        string hizmetName = baseName + " (HİZMET)";
+        string yarimamulName = baseName + " (YARIMAMÜL)";
+
+        (string hizmetCode, string hizmetNodeCode) = ProductCodeHelper.BuildNextCodes(category.Code.Value, productCodes, accountCodes);
+        productCodes.Add(hizmetCode); accountCodes.Add(hizmetNodeCode);
+
+        (string yarimamulCode, string yarimamulNodeCode) = ProductCodeHelper.BuildNextCodes(category.Code.Value, productCodes, accountCodes);
+        productCodes.Add(yarimamulCode); accountCodes.Add(yarimamulNodeCode);
+
+        ChartOfAccount hizmetNode = new(
+            new AccountCode(hizmetNodeCode),
+            new Name(hizmetName),
+            category.Level + 1,
+            ChartOfAccountType.Stok);
+        hizmetNode.SetParent(category.Id);
+        await chartOfAccountRepository.AddAsync(hizmetNode, cancellationToken);
+
+        ChartOfAccount yarimamulNode = new(
+            new AccountCode(yarimamulNodeCode),
+            new Name(yarimamulName),
+            category.Level + 1,
+            ChartOfAccountType.Stok);
+        yarimamulNode.SetParent(category.Id);
+        await chartOfAccountRepository.AddAsync(yarimamulNode, cancellationToken);
+
+        string gtinHizmet = barcodeGeneratorService.GenerateGtin(companyPrefix, hizmetCode);
+        string qrHizmet = ProductQrContentBuilder.Build(
+            hizmetCode, gtinHizmet, hizmetName, taxRate.Rate,
+            warehouse.Name.Value, category.Name.Value, unitType.Name.Value);
+
+        string gtinYarimamul = barcodeGeneratorService.GenerateGtin(companyPrefix, yarimamulCode);
+        string qrYarimamul = ProductQrContentBuilder.Build(
+            yarimamulCode, gtinYarimamul, yarimamulName, taxRate.Rate,
+            warehouse.Name.Value, category.Name.Value, unitType.Name.Value);
+
+        Product productHizmet = new(
+            new Name(hizmetName),
+            new ProductCode(hizmetCode),
+            new Barcode(gtinHizmet),
+            new QRCode(qrHizmet),
+            request.MinimumProductLevel,
+            new IdentityId(request.TaxRateId),
+            warehouse.Id,
+            category.Id,
+            new IdentityId(request.ProductUnitTypeId),
+            hizmetNode.Id,
+            new Description(request.Description),
+            request.IsActive);
+
+        productHizmet.ReplacePrices(request.Prices.Select(p => new ProductPrice(
+            new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
+
+        productHizmet.ReplaceImages(request.ImagePaths
+            .Select((path, index) => new Photo(
+                System.IO.Path.GetFileName(path),
+                GetContentType(path),
+                path,
+                index == 0)));
+
+        await productRepository.AddAsync(productHizmet, cancellationToken);
+
+        Product productYarimamul = new(
+            new Name(yarimamulName),
+            new ProductCode(yarimamulCode),
+            new Barcode(gtinYarimamul),
+            new QRCode(qrYarimamul),
+            request.MinimumProductLevel,
+            new IdentityId(request.TaxRateId),
+            warehouse.Id,
+            category.Id,
+            new IdentityId(request.ProductUnitTypeId),
+            yarimamulNode.Id,
+            new Description(request.Description),
+            request.IsActive);
+
+        productYarimamul.ReplacePrices(request.Prices.Select(p => new ProductPrice(
+            new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
+
+        productYarimamul.ReplaceImages(request.ImagePaths
+            .Select((path, index) => new Photo(
+                System.IO.Path.GetFileName(path),
+                GetContentType(path),
+                path,
+                index == 0)));
+
+        productYarimamul.SetSemiFinishedProduct(productHizmet.Id);
+        await productRepository.AddAsync(productYarimamul, cancellationToken);
+
+        return "Hizmet ve yarımamül ürünleri başarıyla kaydedildi";
     }
 
     private static bool IsDescendantOf(

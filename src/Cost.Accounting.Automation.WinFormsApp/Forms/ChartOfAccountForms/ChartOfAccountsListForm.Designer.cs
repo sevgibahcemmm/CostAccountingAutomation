@@ -293,8 +293,10 @@ AddColumn(_tree, "Kod", nameof(ChartOfAccountDto.Code), 130);
             }
         }
 
+        _tree.Columns[nameof(ChartOfAccountDto.Code)].SortMode = DevExpress.XtraGrid.ColumnSortMode.Custom;
         _tree.Columns[nameof(ChartOfAccountDto.Code)].SortOrder = System.Windows.Forms.SortOrder.Ascending;
         _tree.OptionsCustomization.AllowSort = false;
+        _tree.CustomColumnSort += Tree_CustomColumnSort;
 
         _tree.GetCustomSummaryValue += Tree_GetCustomSummaryValue;
         _tree.CustomDrawFooterCell += Tree_CustomDrawFooterCell;

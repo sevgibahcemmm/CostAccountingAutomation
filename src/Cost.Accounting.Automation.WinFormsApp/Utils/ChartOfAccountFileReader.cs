@@ -19,6 +19,8 @@ public static class ChartOfAccountFileReader
             _ => throw new NotSupportedException("Desteklenen dosya formatları: .xlsx, .csv")
         };
 
+        int nameColumn = DetectNameColumn(cells);
+
         List<ChartOfAccountImportRow> rows = new();
 
         foreach (string[] cell in cells)
@@ -28,8 +30,10 @@ public static class ChartOfAccountFileReader
                 continue;
             }
 
-            string code = BuildCode(cell);
-            string name = cell.Length > 7 ? (cell[7] ?? string.Empty).Trim() : string.Empty;
+            string code = BuildCode(cell, nameColumn);
+            string name = nameColumn >= 0 && nameColumn < cell.Length
+                ? (cell[nameColumn] ?? string.Empty).Trim()
+                : string.Empty;
 
             if (code.Length == 0 || name.Length == 0)
             {
@@ -50,10 +54,11 @@ public static class ChartOfAccountFileReader
             return true;
         }
 
-        if (cell.Length > 7)
+        foreach (string value in cell)
         {
-            string last = (cell[7] ?? string.Empty).Trim().ToLowerInvariant();
-            if (last is "hesap adı" or "adi" or "ad" or "isim" or "name" or "açıklama" or "aciklama" or "description")
+            string text = (value ?? string.Empty).Trim().ToLowerInvariant();
+            if (text is "hesap adı" or "hesap adi" or "adi" or "ad" or "isim" or "name"
+                or "açıklama" or "aciklama" or "description")
             {
                 return true;
             }
@@ -62,7 +67,43 @@ public static class ChartOfAccountFileReader
         return false;
     }
 
-    private static string BuildCode(string[] cell)
+    /// <summary>
+    /// Başlık satırındaki "HESKOD / YARDIMCI n" sütunlarını sayıp hesap adının
+    /// bulunduğu sütun indeksini bulur. Böylece plan düzeyi (yardımcı hesap
+    /// sayısı) değiştiğinde sabit sütun varsayımı kırılmaz.
+    /// </summary>
+    private static int DetectNameColumn(List<string[]> rows)
+    {
+        foreach (string[] cells in rows.Take(10))
+        {
+            if (!IsHeader(cells))
+            {
+                continue;
+            }
+
+            int codeColumns = 0;
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                string text = (cells[i] ?? string.Empty).Trim().ToLowerInvariant();
+                if (text.StartsWith("heskod", StringComparison.Ordinal)
+                    || text.StartsWith("yardimci", StringComparison.Ordinal)
+                    || text.StartsWith("yardımcı", StringComparison.Ordinal))
+                {
+                    codeColumns = i + 1;
+                }
+            }
+
+            if (codeColumns > 0)
+            {
+                return codeColumns;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string BuildCode(string[] cell, int nameColumn)
     {
         string first = cell.Length > 0 ? (cell[0] ?? string.Empty).Trim() : string.Empty;
 
@@ -78,7 +119,9 @@ public static class ChartOfAccountFileReader
             parts.AddRange(SplitPart(first));
         }
 
-        for (int i = 1; i <= 6 && i < cell.Length; i++)
+        int codeColumns = nameColumn > 0 ? nameColumn : cell.Length;
+
+        for (int i = 1; i < codeColumns && i < cell.Length; i++)
         {
             if (string.IsNullOrWhiteSpace(cell[i]))
             {
@@ -178,7 +221,7 @@ public static class ChartOfAccountFileReader
 
         foreach (XElement row in sheetData.Elements(XName.Get("row", "http://schemas.openxmlformats.org/spreadsheetml/2006/main")))
         {
-            string[] cells = new string[8];
+            string[] cells = new string[20];
 
             foreach (XElement cell in row.Elements(XName.Get("c", "http://schemas.openxmlformats.org/spreadsheetml/2006/main")))
             {

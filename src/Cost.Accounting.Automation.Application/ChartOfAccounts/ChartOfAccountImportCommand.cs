@@ -34,7 +34,7 @@ internal sealed class ChartOfAccountImportCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ChartOfAccountImportCommand, Result<string>>
 {
     private static readonly HashSet<string> WarehouseCodes =
-        new(StringComparer.OrdinalIgnoreCase) { "150", "150.98", "151", "152" };
+        new(StringComparer.OrdinalIgnoreCase) { "150", "150.98", "151", "152", "630" };
 
     private const string ConsumptionRootCode = "900";
 
@@ -170,7 +170,7 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
 
         foreach (KeyValuePair<string, ChartOfAccount> pair in nodes)
         {
-            string? parentKey = GetParentKey(pair.Key);
+            string? parentKey = GetParentKey(pair.Key, nodes);
             if (parentKey is not null && nodes.TryGetValue(parentKey, out ChartOfAccount? parent))
             {
                 pair.Value.SetParent(parent.Id);
@@ -252,9 +252,9 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
     private void LinkWorkshops()
     {
         Dictionary<string, List<ChartOfAccount>> semiFinished =
-            GetLeafCandidatesByRoot(_nodes, "151");
+            GetLeafCandidatesByRoot("151");
         Dictionary<string, List<ChartOfAccount>> finished =
-            GetLeafCandidatesByRoot(_nodes, "152");
+            GetLeafCandidatesByRoot("152");
 
         foreach (ChartOfAccount account in _nodes.Values)
         {
@@ -275,13 +275,11 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         }
     }
 
-    private static Dictionary<string, List<ChartOfAccount>> GetLeafCandidatesByRoot(
-        Dictionary<string, ChartOfAccount> nodes,
-        string rootKey)
+    private Dictionary<string, List<ChartOfAccount>> GetLeafCandidatesByRoot(string rootKey)
     {
         Dictionary<string, List<ChartOfAccount>> result = new(StringComparer.OrdinalIgnoreCase);
 
-        foreach (ChartOfAccount account in nodes.Values)
+        foreach (ChartOfAccount account in _nodes.Values)
         {
             if (!IsUnderRoot(account.Code.Value, rootKey))
             {
@@ -293,8 +291,10 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
                 continue;
             }
 
-            bool isLeaf = !nodes.Values.Any(c => c.ParentId == account.Id);
-            if (!isLeaf)
+            // Yaprak = alt hesabı olmayan. _children, LinkParents sırasında
+            // doldurulur; tüm düğümleri taramaya gerek kalmaz (8 düzeyli
+            // planlarda yüz binlerce hesap olabilir).
+            if (_children.ContainsKey(account.Code.Value))
             {
                 continue;
             }
@@ -365,6 +365,13 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
 
     private void AssignLevels(Dictionary<string, ChartOfAccount> nodes)
     {
+        // Üst hesap aramasını O(1) yapmak için kimlik -> hesap sözlüğü.
+        Dictionary<Guid, ChartOfAccount> byId = new();
+        foreach (ChartOfAccount account in nodes.Values)
+        {
+            byId[account.Id.Value] = account;
+        }
+
         Dictionary<Guid, int> depthById = [];
 
         int GetDepth(ChartOfAccount account)
@@ -376,7 +383,7 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
 
             int depth = account.ParentId is null
                 ? 0
-                : 1 + GetDepth(nodes.Values.First(n => n.Id == account.ParentId));
+                : 1 + GetDepth(byId[account.ParentId.Value]);
 
             depthById[account.Id.Value] = depth;
             return depth;
@@ -388,20 +395,35 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         }
     }
 
-    private static string? GetParentKey(string code)
+    /// <summary>
+    /// Noktayla ayrılmış hesap kodunun plan içinde var olan en uzun üst önekini
+    /// döndürür: "102.1.1.2.10" için "102.1.1.2", "101.1" için "101",
+    /// "100" için "10", "10" için "1". Ara düzey kayıpsa bir üst önek denenir;
+    /// hiçbiri yoksa null (kök) kalır.
+    /// </summary>
+    private static string? GetParentKey(string code, Dictionary<string, ChartOfAccount> nodes)
     {
         int lastDot = code.LastIndexOf('.');
-        if (lastDot <= 0)
+        while (lastDot > 0)
         {
-            // 150 / 151 / 152 depo kökleri "15 STOKLAR" anagrubunun çocuğudur.
-            if (code.Length == 3 && code.StartsWith("15", StringComparison.Ordinal))
+            string candidate = code[..lastDot];
+            if (nodes.ContainsKey(candidate))
             {
-                return "15";
+                return candidate;
             }
 
-            return null;
+            lastDot = candidate.LastIndexOf('.');
         }
 
-        return code[..lastDot];
+        if (code.Length > 1)
+        {
+            string candidate = code[..^1];
+            if (nodes.ContainsKey(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 }

@@ -1028,7 +1028,14 @@ private void DeleteSelectedLine()
 
             lookUpProducedProduct.Enabled = true;
 
-            string warehouseCode = type == CostSlipType.SemiFinishedProduct ? "151" : "152";
+            // 630 = GİDERLER HESABI: hizmet tipi pusulalarda ürünler 151/152'den değil
+            // 630 altında tanımlanan hizmet kartlarından gelir.
+            string warehouseCode = type switch
+            {
+                CostSlipType.SemiFinishedProduct => "151",
+                CostSlipType.Service or CostSlipType.SemiFinishedService => ProductCodeHelper.ExpenseWarehouseCode,
+                _ => "152"
+            };
             Guid? targetAccountId = GetWorkshopProducedAccountId(SelectedWorkshopId, type);
             string? workshopName = GetSelectedWorkshopName();
 
@@ -1053,7 +1060,7 @@ private void DeleteSelectedLine()
             lookUpProducedProduct.Properties.NullText = SelectedWorkshopId is null
                 ? "Önce atölye seçin"
                 : filtered.Count == 0
-                    ? "Bu atölye için üretilen ürün (151/152 bağlantısı veya aynı adlı kategori) tanımlı değil"
+                    ? "Bu atölye için üretilen ürün (ilgili depo/kategori bağlantısı veya aynı adlı kategori) tanımlı değil"
                     : "Üretilen Ürün Seçiniz...";
         }
 

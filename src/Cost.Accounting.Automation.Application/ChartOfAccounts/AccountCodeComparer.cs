@@ -5,7 +5,7 @@ namespace Cost.Accounting.Automation.Application.ChartOfAccounts;
 /// her bir segmenti sayısal olarak (sayı değilse metinsel) karşılaştırarak sıralar.
 /// Böylece "150.10", "150.2"den sonra gelir.
 /// </summary>
-internal sealed class AccountCodeComparer : IComparer<string>
+public sealed class AccountCodeComparer : IComparer<string>
 {
     public static AccountCodeComparer Instance { get; } = new();
 

@@ -42,6 +42,15 @@ internal sealed class ChartOfAccountLedgerSyncCommandHandler(
                 continue;
             }
 
+            // Maliyet pusulası üretim girişi yevmiyesi (ürün hesabı BORÇ +
+            // atölye ALACAK) de onay anında oluşturulur; burada hareket yeniden
+            // işlenirse 151/152/630 hesaplarına tek taraflı ikinci bir BORÇ
+            // yazılır ve maliyet iki kat görünür.
+            if (movement.Description.Value.StartsWith("Maliyet Pusulası Girişi", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             if (movement.UnitPrice is not { } price || price.Value <= 0)
             {
                 continue;

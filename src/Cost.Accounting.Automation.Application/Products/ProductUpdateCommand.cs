@@ -192,6 +192,7 @@ internal sealed class ProductUpdateCommandHandler(
             i.IsPrimary)));
 
         const string mamulSuffix = " (MAMÜL)";
+        const string hizmetSuffix = " (HİZMET)";
         const string yarimamulSuffix = " (YARIMAMÜL)";
 
         Product? companion = null;
@@ -199,13 +200,12 @@ internal sealed class ProductUpdateCommandHandler(
 
         if (product.SemiFinishedProductId is { } semiId)
         {
-            // Bu ürün YARIMAMÜL kartı ise eşi MAMÜL kartıdır.
+            // Bu ürün YARIMAMÜL kartı ise eşi MAMÜL (630'da HİZMET) kartıdır.
             companion = await productRepository.GetByIdWithDetailsAsync(semiId, cancellationToken);
         }
-        else if (warehouse.Code.Value == "151" || warehouse.Code.Value == "152"
-            || warehouse.Code.Value.StartsWith("151.") || warehouse.Code.Value.StartsWith("152."))
+        else if (ProductCodeHelper.IsPairWarehouse(warehouse.Code.Value))
         {
-            // Bu ürün MAMÜL kartı olabilir; kendisini işaret eden YARIMAMÜL kartını bul.
+            // Bu ürün MAMÜL (630'da HİZMET) kartı olabilir; kendisini işaret eden YARIMAMÜL kartını bul.
             Product? yarimamul = await productRepository.FirstOrDefaultAsync(
                 p => p.SemiFinishedProductId == product.Id,
                 cancellationToken);
@@ -217,23 +217,34 @@ internal sealed class ProductUpdateCommandHandler(
 
         if (companion is not null)
         {
+            ChartOfAccount? companionWarehouse = accounts.FirstOrDefault(a => a.Id == companion.WarehouseId);
+
             string baseName = request.Name.Trim();
             if (baseName.EndsWith(mamulSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 baseName = baseName[..^mamulSuffix.Length].TrimEnd();
+            }
+            else if (baseName.EndsWith(hizmetSuffix, StringComparison.OrdinalIgnoreCase))
+            {
+                baseName = baseName[..^hizmetSuffix.Length].TrimEnd();
             }
             else if (baseName.EndsWith(yarimamulSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 baseName = baseName[..^yarimamulSuffix.Length].TrimEnd();
             }
 
-            // Eşi olan ürünün adı hangi kart düzenlenirse düzenlensin, kendi takısıyla kaydedilir.
-            string productName = product.SemiFinishedProductId is not null
-                ? baseName + yarimamulSuffix
-                : baseName + mamulSuffix;
+            bool productIsSemi = product.SemiFinishedProductId is not null;
+            bool mainIsExpense = ProductCodeHelper.IsExpenseWarehouse(warehouse.Code.Value);
+            bool companionIsExpense = companionWarehouse is not null
+                && ProductCodeHelper.IsExpenseWarehouse(companionWarehouse.Code.Value);
 
-            string companionName = product.SemiFinishedProductId is not null
-                ? baseName + mamulSuffix
+            // Eşi olan ürünün adı hangi kart düzenlenirse düzenlensin, kendi takısıyla kaydedilir.
+            string productName = productIsSemi
+                ? baseName + yarimamulSuffix
+                : baseName + (mainIsExpense ? hizmetSuffix : mamulSuffix);
+
+            string companionName = productIsSemi
+                ? baseName + (companionIsExpense ? hizmetSuffix : mamulSuffix)
                 : baseName + yarimamulSuffix;
 
             product.SetName(new Name(productName));
@@ -258,7 +269,6 @@ internal sealed class ProductUpdateCommandHandler(
             companion.SetProductUnitType(new IdentityId(request.ProductUnitTypeId));
             companion.SetStatus(request.IsActive);
 
-            ChartOfAccount? companionWarehouse = accounts.FirstOrDefault(a => a.Id == companion.WarehouseId);
             ChartOfAccount? companionCategory = accounts.FirstOrDefault(a => a.Id == companion.CategoryId);
 
             if (companionWarehouse is not null && companionCategory is not null)

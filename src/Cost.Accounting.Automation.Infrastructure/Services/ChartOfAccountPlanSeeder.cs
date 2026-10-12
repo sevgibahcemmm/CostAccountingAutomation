@@ -69,7 +69,7 @@ internal static class ChartOfAccountPlanSeeder
         // Üst/alt ilişkisi: eşleme tamamlandıktan sonra bağlanır.
         foreach ((string code, ChartOfAccount account) in nodes)
         {
-            string? parentCode = ParentOf(code);
+            string? parentCode = ParentOf(code, nodes);
             if (parentCode is not null && nodes.TryGetValue(parentCode, out ChartOfAccount? parent))
             {
                 account.SetParent(parent.Id);
@@ -158,23 +158,31 @@ internal static class ChartOfAccountPlanSeeder
             return [];
         }
 
+        List<string[]> rows = ReadRows(sheet, sharedStrings);
+        int nameColumn = DetectNameColumn(rows);
+
         var plan = new List<PlanRow>();
 
-        foreach (string[] cells in ReadRows(sheet, sharedStrings))
+        foreach (string[] cells in rows)
         {
             if (IsHeaderRow(cells))
             {
                 continue;
             }
 
-            // A..G sütunları hesap kodunun parçaları, H sütunu hesap adıdır.
-            // I sütunu boştur.
+            // Başlıktaki "HESKOD / YARDIMCI n" sütunları hesap kodunun
+            // parçalarıdır; ardından gelen sütun hesap adıdır (8 düzeyli yeni
+            // planda A..I kod, J hesap adı). Sütunlar başlıktan dinamik bulunur.
+            int codeColumns = nameColumn > 0 ? nameColumn : cells.Length;
+
             string raw = string.Join(
                 ".",
-                cells.Take(7).Where(c => !string.IsNullOrWhiteSpace(c)));
+                cells.Take(codeColumns).Where(c => !string.IsNullOrWhiteSpace(c)));
 
             string code = ChartOfAccountCodeHelper.NormalizeCode(raw);
-            string name = cells.Length > 7 ? cells[7].Trim() : string.Empty;
+            string name = nameColumn >= 0 && nameColumn < cells.Length
+                ? cells[nameColumn].Trim()
+                : string.Empty;
 
             if (code.Length == 0 || name.Length == 0)
             {
@@ -194,16 +202,16 @@ internal static class ChartOfAccountPlanSeeder
     /// </summary>
     private static bool IsHeaderRow(string[] cells)
     {
-        string first = cells.Length > 0 ? cells[0].Trim().ToLowerInvariant() : string.Empty;
+        string first = cells.Length > 0 ? (cells[0] ?? string.Empty).Trim().ToLowerInvariant() : string.Empty;
         if (first is "heskod" or "kod" or "hesap kodu" or "kodu" or "no" or "nosu")
         {
             return true;
         }
 
-        if (cells.Length > 7)
+        foreach (string value in cells)
         {
-            string last = cells[7].Trim().ToLowerInvariant();
-            if (last is "hesap adı" or "adi" or "ad" or "isim" or "name"
+            string text = (value ?? string.Empty).Trim().ToLowerInvariant();
+            if (text is "hesap adı" or "hesap adi" or "adi" or "ad" or "isim" or "name"
                 or "açıklama" or "aciklama" or "description")
             {
                 return true;
@@ -211,6 +219,42 @@ internal static class ChartOfAccountPlanSeeder
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Başlık satırındaki "HESKOD / YARDIMCI n" sütunlarını sayıp hesap adının
+    /// bulunduğu sütun indeksini bulur. Plan düzeyi (yardımcı hesap sayısı)
+    /// değiştiğinde sabit sütun varsayımı bozulmasın diye dinamik hesaplanır.
+    /// </summary>
+    private static int DetectNameColumn(List<string[]> rows)
+    {
+        foreach (string[] cells in rows.Take(10))
+        {
+            if (!IsHeaderRow(cells))
+            {
+                continue;
+            }
+
+            int codeColumns = 0;
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                string text = (cells[i] ?? string.Empty).Trim().ToLowerInvariant();
+                if (text.StartsWith("heskod", StringComparison.Ordinal)
+                    || text.StartsWith("yardimci", StringComparison.Ordinal)
+                    || text.StartsWith("yardımcı", StringComparison.Ordinal))
+                {
+                    codeColumns = i + 1;
+                }
+            }
+
+            if (codeColumns > 0)
+            {
+                return codeColumns;
+            }
+        }
+
+        return -1;
     }
 
     private static List<string[]> ReadRows(ZipArchiveEntry sheet, string[] sharedStrings)
@@ -230,7 +274,7 @@ internal static class ChartOfAccountPlanSeeder
 
         foreach (XElement row in sheetData.Elements(ns + "row"))
         {
-            var cells = new string[8];
+            var cells = new string[20];
 
             foreach (XElement cell in row.Elements(ns + "c"))
             {
@@ -320,11 +364,36 @@ internal static class ChartOfAccountPlanSeeder
 
     // ---------------------------------------------------------------- kurallar
 
-    /// <summary>Adım sayısı 2 olan en üst kısım: "150.01.01" için "150.01".</summary>
-    private static string? ParentOf(string code)
+    /// <summary>
+    /// Noktayla ayrılmış hesap kodunun plan içinde var olan en uzun üst önekini
+    /// döndürür: "102.1.1.2.10" için "102.1.1.2", "101.1" için "101",
+    /// "100" için "10", "10" için "1". Ara düzey kayıpsa bir üst önek denenir;
+    /// hiçbiri yoksa null (kök) kalır.
+    /// </summary>
+    private static string? ParentOf(string code, Dictionary<string, ChartOfAccount> nodes)
     {
         int lastDot = code.LastIndexOf('.');
-        return lastDot > 0 ? code[..lastDot] : null;
+        while (lastDot > 0)
+        {
+            string candidate = code[..lastDot];
+            if (nodes.ContainsKey(candidate))
+            {
+                return candidate;
+            }
+
+            lastDot = candidate.LastIndexOf('.');
+        }
+
+        if (code.Length > 1)
+        {
+            string candidate = code[..^1];
+            if (nodes.ContainsKey(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     private static bool IsUnderWorkshopRoot(string code)

@@ -9,14 +9,25 @@ public static class ChartOfAccountCodeHelper
         string[] segments = (code ?? string.Empty)
             .Replace('-', '.')
             .Replace(',', '.')
-            .Split('.', StringSplitOptions.RemoveEmptyEntries);
+            .Split('.', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => s.Length > 0)
+            .ToArray();
 
-        return string.Join(".", segments.Select(NormalizeSegment).Where(s => s.Length > 0));
+        if (segments.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        // İlk segment ana hesap kodu (heskod) olarak korunur, yardımcı
+        // segmentler "150.01.01" biçiminde iki haneye tamamlanır.
+        return segments.Length == 1
+            ? segments[0]
+            : segments[0] + "." + string.Join(".", segments.Skip(1).Select(NormalizeSegment));
     }
 
     private static string NormalizeSegment(string segment)
     {
-        segment = segment.Trim();
         if (segment.Length > 0 && segment.All(char.IsDigit) && segment.Length < 2)
         {
             return segment.PadLeft(2, '0');
@@ -99,7 +110,7 @@ public static class ChartOfAccountCodeHelper
 
     private static bool IsUnderAnyWarehouseRoot(string code)
     {
-        return "150,150.98,151,152"
+        return "150,150.98,151,152,630"
             .Split(',')
             .Any(root => IsUnderRoot(code, root));
     }

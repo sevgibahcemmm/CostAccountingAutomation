@@ -214,14 +214,14 @@ internal static class CostSlipStockHelper
         List<ProductMovement> plannedMovements = [];
         List<PlannedLedgerEntry> plannedLedger = [];
 
-        // Atölye hesabı bu akışta ÜRETİM MALİYETİ (WIP) hesabı gibi çalışır:
-        // malzeme transferiyle borçlanır (AtolyeTransferi), tüketimle alacaklanır.
-        // Üretilen ürünün stok değeri de aynı hesabın karşı tarafıdır. Böylece
-        // 15x stok hesapları gerçek değeri gösterir ve yevmiye dengelenir.
-        //
-        // Önceden yalnızca alacak tarafı yazılıyordu; karşılığı olmayan tek
-        // taraflı kayıtlar 151'in alacakta birikmesine yol açıyordu.
-        IdentityId wipAccountId = slip.WorkshopId;
+        // Yevmiye modeli (kullanıcı kuralı):
+        // - Üretilen ürünün maliyeti: D ürün hesabı = Genel Toplam.
+        // - Atölye stoğundan (150.55) yalnızca pusulada KULLANILAN transfer
+        //   malzemesi düşülür: C atölye hesabı = malzeme satır tutarı (grid
+        //   toplamı). Grid boşsa 150.55'e hiçbir kayıt yazılmaz.
+        // - Yarı mamul (151) tüketildiyse C yarı mamulün kendi stok hesabı.
+        // - Gider kalemleri kendi 7xx hesabına ALACAK yazılır.
+        // Böylece yevmiye yapısal olarak dengelenir (D=C=Genel Toplam).
 
         // Tüketim ÜRÜN bazında planlanır, satır bazında değil. Aynı ürün
         // pusulada birden fazla satırda geçse bile katmanlar TEK SEFER tüketilir;
@@ -243,9 +243,6 @@ internal static class CostSlipStockHelper
                 StockIssueCostingHelper.BuildConsumptionLayers(
                     movements, productId, quantity, costingMethod, slip.CostDate);
 
-            IdentityId ledgerAccountId =
-                ResolveConsumptionAccount(productMap, productId, slip.WorkshopId);
-
             // Her katman için AYRI çıkış hareketi yazılır. Tek bir ortalama
             // fiyatlı satır yazılsaydı o fiyat hiçbir giriş kaydına uymaz ve
             // stok hareketi raporunda (fiyat grup anahtarı) girişi olmayan,
@@ -262,20 +259,86 @@ internal static class CostSlipStockHelper
                     description: new Description($"{ProductStockBalanceHelper.CostSlipConsumptionOutputDescriptionPrefix}{slip.SlipNumber}"));
 
                 plannedMovements.Add(output);
-
-                decimal amount = Math.Round(layerQuantity * layerUnitPrice, 2);
-
-                if (amount > 0)
-                {
-                    // Malzeme stoğu (15x) azalır: ALACAK.
-                    plannedLedger.Add(new PlannedLedgerEntry(
-                        ledgerAccountId, 0, amount, LedgerSourceType, output.Id));
-
-                    // Karşı taraf: üretim maliyeti (atölye/WIP) artar: BORÇ.
-                    plannedLedger.Add(new PlannedLedgerEntry(
-                        wipAccountId, amount, 0, LedgerSourceType, output.Id));
-                }
             }
+        }
+
+        // Gider kalemleri (ürünsüz kutular) kendi 7xx hesabına ALACAK yazılır.
+        // Hesap planında hesap yoksa onay başarısız olur; eksik hesap sessizce
+        // geçilmez.
+        var expenseItems = slip.CostSlipItems
+            .Where(i => i.ProductId is null
+                        && i.ExpenseAccountType != ExpenseAccountHelper.SemiFinishedAccount
+                        && i.TotalAmount > 0)
+            .ToList();
+
+        List<string> expenseCodes = expenseItems
+            .Select(i => ExpenseAccountHelper.GetChartOfAccountCode(i.ExpenseAccountType))
+            .Distinct()
+            .ToList();
+
+        Dictionary<string, IdentityId> expenseAccountIds = [];
+        if (expenseCodes.Count > 0)
+        {
+            var expenseAccounts = await chartOfAccountRepository.GetAll()
+                .AsNoTracking()
+                .Where(a => !a.IsDeleted)
+                .Select(a => new { a.Id, a.Code.Value })
+                .ToListAsync(cancellationToken);
+
+            expenseAccountIds = expenseAccounts
+                .Where(a => expenseCodes.Contains(a.Value, StringComparer.OrdinalIgnoreCase))
+                .ToDictionary(a => a.Value, a => a.Id, StringComparer.OrdinalIgnoreCase);
+
+            List<string> missing = expenseCodes
+                .Where(c => !expenseAccountIds.ContainsKey(c))
+                .ToList();
+
+            if (missing.Count > 0)
+            {
+                return Result<CostSlipStockPlan>.Failure(
+                    "Hesap planında gider hesabı bulunamadı: "
+                    + $"{string.Join(", ", missing)}. 7xx gider grubunu hesap planına ekleyin.");
+            }
+        }
+
+        foreach (var expenseItem in expenseItems)
+        {
+            string accountCode = ExpenseAccountHelper
+                .GetChartOfAccountCode(expenseItem.ExpenseAccountType);
+
+            plannedLedger.Add(new PlannedLedgerEntry(
+                expenseAccountIds[accountCode], 0, expenseItem.TotalAmount, LedgerSourceType, null));
+        }
+
+        // Yarı mamul kutusundan (satır olmadan, eski kayıtlarda) düşüm: C atölyenin
+        // 151 stok bağlantısı (bağlantı yoksa atölye hesabı).
+        foreach (var semiItem in slip.CostSlipItems
+            .Where(i => i.ProductId is null
+                        && i.ExpenseAccountType == ExpenseAccountHelper.SemiFinishedAccount
+                        && i.TotalAmount > 0))
+        {
+            IdentityId semiCreditAccountId =
+                workshop?.SemiFinishedAccountId ?? slip.WorkshopId;
+
+            plannedLedger.Add(new PlannedLedgerEntry(
+                semiCreditAccountId, 0, semiItem.TotalAmount, LedgerSourceType, null));
+        }
+
+        // Kullanılan transfer malzemeleri atölye stoğundan düşülür: C atölye hesabı
+        // = malzeme satır tutarı (grid toplamı). Yarı mamul satırları yarı mamulün
+        // kendi stok hesabına alacaklanır.
+        foreach (var materialLine in materialLines)
+        {
+            if (materialLine.TotalAmount <= 0)
+            {
+                continue;
+            }
+
+            IdentityId consumptionAccountId =
+                ResolveConsumptionAccount(productMap, materialLine.ProductId!, slip.WorkshopId);
+
+            plannedLedger.Add(new PlannedLedgerEntry(
+                consumptionAccountId, 0, materialLine.TotalAmount, LedgerSourceType, null));
         }
 
         if (slip.ProducedProductId is { } producedProductId)
@@ -296,9 +359,9 @@ internal static class CostSlipStockHelper
 
             plannedMovements.Add(input);
 
-            // Üretim çıkışı: ürün stoğu artar (BORÇ), üretim maliyeti düşer (ALACAK).
-            // Bu kayıt hiç yazılmadığı için 151/152 hesapları tüketim alacaklarıyla
-            // hiçbir zaman sıfırlanamıyor ve stok değeriyle araları açılıyordu.
+            // Üretilen ürünün maliyeti: D ürün hesabı = Genel Toplam. Karşı taraf
+            // (alacaklar) giderlerin 7xx hesaplarına ve kullanılan stoklara
+            // (150.55/151) yukarıda yazılır; buraya ayrıca atölyeye alacak girmez.
             if (producedAmount > 0)
             {
                 IdentityId? productionAccountId =
@@ -308,9 +371,6 @@ internal static class CostSlipStockHelper
                 {
                     plannedLedger.Add(new PlannedLedgerEntry(
                         productionAccount, producedAmount, 0, LedgerSourceType, input.Id));
-
-                    plannedLedger.Add(new PlannedLedgerEntry(
-                        wipAccountId, 0, producedAmount, LedgerSourceType, input.Id));
                 }
             }
         }

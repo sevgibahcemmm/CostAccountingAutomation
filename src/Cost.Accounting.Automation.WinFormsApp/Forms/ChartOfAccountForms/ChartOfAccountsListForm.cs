@@ -285,6 +285,18 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         }
     }
 
+    private void Tree_CustomColumnSort(object? sender, CustomColumnSortEventArgs e)
+    {
+        if (!string.Equals(e.Column.FieldName, nameof(ChartOfAccountDto.Code), StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        e.Result = AccountCodeComparer.Instance.Compare(
+            e.NodeValue1?.ToString(),
+            e.NodeValue2?.ToString());
+    }
+
     private async void BtnRefresh_Click(object? sender, EventArgs e)
     {
         await ReloadAsync();

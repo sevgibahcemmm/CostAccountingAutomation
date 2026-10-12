@@ -323,19 +323,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
                 if (_editing is null)
                 {
-                    // Create mode: show pair creation if warehouse is 151 or 152
+                    // Create mode: show pair creation if a pair warehouse (151/152/630) is selected
                     if (cmbWarehouse.EditValue is Guid whId)
                     {
-                        var wh = _accounts.FirstOrDefault(a => a.Id == whId);
-if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("151.") || wh.Code.StartsWith("152.")))
-                        {
-                            chkCreatePair.Visible = true;
-                            chkCreatePair.IsOn = true;
-                        }
-                        else
-                        {
-                            chkCreatePair.Visible = false;
-                        }
+                        UpdatePairToggle(_accounts.FirstOrDefault(a => a.Id == whId));
                     }
                     else
                     {
@@ -371,6 +362,14 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
 
             IQueryable<ProductDto> productsQuery = await mediator.Send(new ProductGetAllQuery(), CancellationToken.None);
             List<ChartOfAccountLookUpDto> warehouses = _accounts.Where(a => a.Type == ChartOfAccountType.Warehouse).ToList();
+
+            // 630 = GİDERLER HESABI: ürün kartında bir depo gibi seçilebilir.
+            ChartOfAccountLookUpDto? expense = _accounts.FirstOrDefault(a =>
+                string.Equals(a.Code, ProductCodeHelper.ExpenseWarehouseCode, StringComparison.OrdinalIgnoreCase));
+            if (expense is not null)
+            {
+                warehouses.Add(expense);
+            }
 
             ConfigureLookUp(cmbWarehouse, warehouses, nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Depo", 440);
             ConfigureLookUp(cmbCategory, new List<ChartOfAccountLookUpDto>(), nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Kategori", 200);
@@ -416,22 +415,41 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
 
             if (_editing is null) // create mode only
             {
-                var wh = _accounts.FirstOrDefault(a => a.Id == warehouseId);
-                if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("151.") || wh.Code.StartsWith("152.")))
-                {
-                    chkCreatePair.Visible = true;
-                    chkCreatePair.IsOn = true;
-                }
-                else
-                {
-                    chkCreatePair.Visible = false;
-                    chkCreatePair.IsOn = false;
-                }
+                UpdatePairToggle(_accounts.FirstOrDefault(a => a.Id == warehouseId));
+            }
+        }
+
+        /// <summary>
+        /// Çift kart anahtarı yalnızca ilgili depolarda (151/152 ve 630) gösterilir;
+        /// 630 seçiminde etiket "Hizmet / Yarı Mamül" olarak değişir.
+        /// </summary>
+        private void UpdatePairToggle(ChartOfAccountLookUpDto? warehouse)
+        {
+            if (warehouse is not null && ProductCodeHelper.IsPairWarehouse(warehouse.Code))
+            {
+                chkCreatePair.Visible = true;
+                chkCreatePair.IsOn = true;
+
+                bool expense = ProductCodeHelper.IsExpenseWarehouse(warehouse.Code);
+                chkCreatePair.Properties.OnText = expense ? "Hizmet + Yarı Mamül" : "Mamül + Yarı Mamül";
+                chkCreatePair.Properties.OffText = expense ? "Yalnız Hizmet" : "Yalnız Mamül";
+            }
+            else
+            {
+                chkCreatePair.Visible = false;
+                chkCreatePair.IsOn = false;
             }
         }
 
         private void LoadCategoriesForWarehouse(Guid warehouseId)
         {
+            ChartOfAccountLookUpDto? warehouse = _accounts.FirstOrDefault(a => a.Id == warehouseId);
+            if (warehouse is not null && ProductCodeHelper.IsExpenseWarehouse(warehouse.Code))
+            {
+                LoadExpenseCategories();
+                return;
+            }
+
             HashSet<Guid> levelNodes = _accounts
                 .Where(a => a.ParentId == warehouseId)
                 .Select(a => a.Id)
@@ -461,6 +479,62 @@ if (wh != null && (wh.Code == "151" || wh.Code == "152" || wh.Code.StartsWith("1
             {
                 ToastHelper.Show("Seçilen depoya bağlı kategori bulunamadı. Hesap Planı'nda depo altında kategori düğümü oluşturun.", ToastType.Warning, 4000);
             }
+        }
+
+        /// <summary>
+        /// 630 = GİDERLER HESABI seçildiğinde kategori olarak yalnızca 630.16.03
+        /// altındaki en son kırılım (yaprak) hesapları listelenir.
+        /// </summary>
+        private void LoadExpenseCategories()
+        {
+            List<ChartOfAccountLookUpDto> categories = GetExpenseCategoryLeaves(_accounts);
+
+            ConfigureLookUp(cmbCategory, categories, nameof(ChartOfAccountLookUpDto.Id), nameof(ChartOfAccountLookUpDto.Display), "Kategori", 200);
+            cmbCategory.Enabled = categories.Count > 0;
+            cmbCategory.EditValue = null;
+
+            if (categories.Count == 0)
+            {
+                ToastHelper.Show("630.16.03 (Satılan Hizmet Maliyeti) altında yaprak kategori bulunamadı.", ToastType.Warning, 4000);
+            }
+        }
+
+        /// <summary>630.16.03 kökünün tüm soyundan alt hesabı olmayanları döndürür.</summary>
+        private static List<ChartOfAccountLookUpDto> GetExpenseCategoryLeaves(List<ChartOfAccountLookUpDto> accounts)
+        {
+            ChartOfAccountLookUpDto? root = accounts.FirstOrDefault(a =>
+                string.Equals(a.Code, ProductCodeHelper.ExpenseCategoryRootCode, StringComparison.OrdinalIgnoreCase));
+            if (root is null)
+            {
+                return [];
+            }
+
+            Dictionary<Guid, List<ChartOfAccountLookUpDto>> childrenByParent = accounts
+                .Where(a => a.ParentId is Guid)
+                .GroupBy(a => a.ParentId!.Value)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            List<ChartOfAccountLookUpDto> descendants = [];
+            Queue<Guid> queue = new();
+            queue.Enqueue(root.Id);
+
+            while (queue.Count > 0)
+            {
+                Guid id = queue.Dequeue();
+                if (!childrenByParent.TryGetValue(id, out List<ChartOfAccountLookUpDto>? children))
+                {
+                    continue;
+                }
+
+                foreach (ChartOfAccountLookUpDto child in children)
+                {
+                    descendants.Add(child);
+                    queue.Enqueue(child.Id);
+                }
+            }
+
+            HashSet<Guid> parentIds = childrenByParent.Keys.ToHashSet();
+            return descendants.Where(a => !parentIds.Contains(a.Id)).ToList();
         }
 
         private async void BtnAddUnitType_Click(object? sender, EventArgs e)
