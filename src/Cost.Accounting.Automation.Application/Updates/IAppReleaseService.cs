@@ -12,6 +12,20 @@ public sealed record AppReleaseInfo(
     DateTimeOffset? PublishedAt);
 
 /// <summary>
+/// Sürüm geçmişi listesinde gösterilen kaydın özeti. İndirilebilir içerik
+/// (kurulum dosyası) bu nesnede taşınmaz; yalnızca hangi sürümlerin yayınlandığı,
+/// ne zaman ve hangi notlarla yayınlandığı gösterilir.
+/// </summary>
+public sealed record AppReleaseHistoryInfo(
+    string Version,
+    string? Notes,
+    bool IsMandatory,
+    bool IsPublished,
+    string? FileName,
+    long FileSizeBytes,
+    DateTimeOffset? PublishedAt);
+
+/// <summary>
 /// Master veritabanındaki sürüm kayıtlarını yönetir. Hem istemci (güncelleme
 /// kontrolü/indirme) hem de dağıtım araçları (caa-provision) bu servisi kullanır.
 /// </summary>
@@ -25,6 +39,13 @@ public interface IAppReleaseService
     /// artırmak için kullanılır. Hiç kayıt yoksa null.
     /// </summary>
     Task<string?> GetLatestVersionAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Yayınlanmış tüm sürümlerin geçmişini en yeniden en eskiye sıralar.
+    /// Kurulum dosyası içeriği döndürülmez; yalnızca sürüm, notlar, tarih ve
+    /// boyut bilgisi taşınır.
+    /// </summary>
+    Task<IReadOnlyList<AppReleaseHistoryInfo>> GetHistoryAsync(CancellationToken cancellationToken = default);
 
     /// <summary>Belirtilen sürümün kurulum dosyası; bulunamazsa null.</summary>
     Task<byte[]?> GetContentAsync(string version, CancellationToken cancellationToken = default);

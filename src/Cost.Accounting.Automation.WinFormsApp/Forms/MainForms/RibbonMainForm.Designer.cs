@@ -108,6 +108,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmSigningRoles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             accordionControlSeparator1 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmChangePassword = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator41 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            elmCreateUpdate = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmUpdateHistory = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             accordionControlSeparator39 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             grpMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
@@ -116,6 +119,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmExit = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             accordionControlSeparator30 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             xtraTabbedMdiManager = new DevExpress.XtraTabbedMdi.XtraTabbedMdiManager(components);
+            accordionControlSeparator42 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator43 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             ((System.ComponentModel.ISupportInitialize)ribbon).BeginInit();
             ((System.ComponentModel.ISupportInitialize)accordionControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)xtraTabbedMdiManager).BeginInit();
@@ -223,7 +228,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             accordionControl.Name = "accordionControl";
             accordionControl.Size = new Size(250, 676);
             accordionControl.TabIndex = 2;
-            accordionControl.ViewType = DevExpress.XtraBars.Navigation.AccordionControlViewType.HamburgerMenu;
             // 
             // elmHome
             // 
@@ -569,7 +573,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             // grpSystem
             // 
-            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, accordionControlSeparator2, elmUsers, accordionControlSeparator3, elmRoles, accordionControlSeparator4, elmEmployees, accordionControlSeparator5, elmSigningRoles, accordionControlSeparator1, elmChangePassword });
+            grpSystem.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmCompanies, accordionControlSeparator2, elmUsers, accordionControlSeparator3, elmRoles, accordionControlSeparator4, elmEmployees, accordionControlSeparator5, elmSigningRoles, accordionControlSeparator1, elmChangePassword, accordionControlSeparator41, elmCreateUpdate, accordionControlSeparator42, elmUpdateHistory, accordionControlSeparator43 });
             grpSystem.Expanded = true;
             grpSystem.Name = "grpSystem";
             grpSystem.Tag = 8;
@@ -637,6 +641,26 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             elmChangePassword.Tag = 8;
             elmChangePassword.Text = "Şifre Yenile";
             // 
+            // accordionControlSeparator41
+            // 
+            accordionControlSeparator41.Name = "accordionControlSeparator41";
+            // 
+            // elmCreateUpdate
+            // 
+            elmCreateUpdate.Hint = "Kaynak koddan kurulum paketi üretir ve veritabanına yeni sürüm olarak yayınlar.";
+            elmCreateUpdate.Name = "elmCreateUpdate";
+            elmCreateUpdate.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmCreateUpdate.Tag = 8;
+            elmCreateUpdate.Text = "Güncelleme Oluştur";
+            // 
+            // elmUpdateHistory
+            // 
+            elmUpdateHistory.Hint = "Yayınlanmış tüm sürümlerin listesi.";
+            elmUpdateHistory.Name = "elmUpdateHistory";
+            elmUpdateHistory.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmUpdateHistory.Tag = 8;
+            elmUpdateHistory.Text = "Sürüm Geçmişi";
+            // 
             // accordionControlSeparator39
             // 
             accordionControlSeparator39.Name = "accordionControlSeparator39";
@@ -678,6 +702,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // 
             xtraTabbedMdiManager.MdiParent = this;
             xtraTabbedMdiManager.UseFormIconAsPageImage = DevExpress.Utils.DefaultBoolean.True;
+            // 
+            // accordionControlSeparator42
+            // 
+            accordionControlSeparator42.Name = "accordionControlSeparator42";
+            // 
+            // accordionControlSeparator43
+            // 
+            accordionControlSeparator43.Name = "accordionControlSeparator43";
             // 
             // RibbonMainForm
             // 
@@ -774,6 +806,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmRoles;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmEmployees;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmSigningRoles;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmCreateUpdate;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmUpdateHistory;
 
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmExit;
 
@@ -818,5 +852,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator29;
         private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator40;
         private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator30;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator41;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator42;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator43;
     }
 }

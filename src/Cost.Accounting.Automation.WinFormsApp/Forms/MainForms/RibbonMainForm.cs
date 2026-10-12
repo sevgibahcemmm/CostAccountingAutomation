@@ -43,7 +43,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private readonly SessionClaimContext _session;
         private readonly Dictionary<int, string> _groupNames = new();
         private readonly Dictionary<string, Action> _menuActions = new(StringComparer.OrdinalIgnoreCase);
-        private AccordionControlElement? _updateMenuItem;
         private bool _isSysAdmin;
         private System.Windows.Forms.Timer? _clockTimer;
         private DateTime _tokenExpiry;
@@ -127,37 +126,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmEmployees"] = DxIcon.Employees,              // bo_contact
             ["elmSigningRoles"] = DxIcon.IdCard,             // security_personalid
             ["elmCreateUpdate"] = DxIcon.Update,             // actions_reload
+            ["elmUpdateHistory"] = DxIcon.Restore,           // actions_rollback: sürüm geçmişi
 
             // Mesajlaşma
             ["elmMessages"] = DxIcon.WhatsApp        // yeşil konuşma balonu
         };
 
-        private void AddUpdateMenuItem()
-        {
-            var element = new AccordionControlElement
-            {
-                Name = "elmCreateUpdate",
-                Style = ElementStyle.Item,
-                Tag = 8,
-                Text = "Güncelleme Oluştur",
-                Hint = "Kaynak koddan kurulum paketi üretir ve veritabanına yeni sürüm olarak yayınlar."
-            };
-
-            grpSystem.Elements.Add(element);
-            _updateMenuItem = element;
-        }
-
         private async Task ApplyUpdateMenuVisibilityAsync()
         {
-            if (_updateMenuItem is null)
-            {
-                return;
-            }
-
             try
             {
                 _isSysAdmin = (await CurrentUserPermissions.GetAsync()).IsSysAdmin;
-                _updateMenuItem.Visible = _isSysAdmin;
+                elmCreateUpdate.Visible = _isSysAdmin;
+                elmUpdateHistory.Visible = _isSysAdmin;
             }
             catch (Exception ex)
             {
@@ -178,11 +159,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _session = Program.Services.GetRequiredService<SessionClaimContext>();
             MdiFormManager.Instance.Initialize(xtraTabbedMdiManager);
 
-            AddUpdateMenuItem();
             InitializeAccordion();
             BuildMenuActions();
 
             IconOptions.SvgImage = DxIcon.AppIcon;
+            accordionControl.ViewType = AccordionControlViewType.HamburgerMenu;
             accordionControl.OptionsMinimizing.State = AccordionControlState.Minimized;
             accordionControl.OptionsMinimizing.NormalWidth = 260;
             accordionControl.AnimationType = DevExpress.XtraBars.Navigation.AnimationType.None;
@@ -509,6 +490,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmTaxRates"] = () => MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
             _menuActions["elmMessages"] = () => OpenMessages();
             _menuActions["elmCreateUpdate"] = () => ShowCreateUpdateForm();
+            _menuActions["elmUpdateHistory"] = () => MdiFormManager.Instance.OpenForm<UpdateHistoryForm>(this, "Sürüm Geçmişi");
         }
 
         /// <summary>
@@ -862,7 +844,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
                 return;
             }
 
-            if (_updateMenuItem is { Enabled: false })
+            if (elmCreateUpdate is { Enabled: false })
             {
                 ToastHelper.Show(
                     "Bu oturumda bir sürüm yayınlandı. Yeni bir sürüm için uygulamayı yeniden başlatın.",
@@ -879,9 +861,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
 
                 form.ShowDialog(this);
 
-                if (form.Published && _updateMenuItem is not null)
+                if (form.Published && elmCreateUpdate is not null)
                 {
-                    _updateMenuItem.Enabled = false;
+                    elmCreateUpdate.Enabled = false;
                 }
             }
             catch (Exception ex)

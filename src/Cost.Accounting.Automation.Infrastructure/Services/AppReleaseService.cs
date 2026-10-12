@@ -31,6 +31,22 @@ internal sealed class AppReleaseService(MasterDbContext masterDbContext) : IAppR
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<AppReleaseHistoryInfo>> GetHistoryAsync(CancellationToken cancellationToken = default)
+    {
+        return await masterDbContext.AppReleases
+            .AsNoTracking()
+            .OrderByDescending(release => release.VersionSort)
+            .Select(release => new AppReleaseHistoryInfo(
+                release.Version,
+                release.Notes,
+                release.IsMandatory,
+                release.IsPublished,
+                release.FileName,
+                release.FileSizeBytes,
+                release.PublishedAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<byte[]?> GetContentAsync(string version, CancellationToken cancellationToken = default)
     {
         long sortKey = AppVersion.SortKey(version);
