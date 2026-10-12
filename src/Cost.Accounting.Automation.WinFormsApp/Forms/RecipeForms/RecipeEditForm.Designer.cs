@@ -13,9 +13,11 @@ public sealed partial class RecipeEditForm
     private DevExpress.XtraEditors.PanelControl pnlHeaderLine;
     private System.Windows.Forms.Panel pnlBody;
     private DevExpress.XtraEditors.SearchLookUpEdit lookUpProduct;
+    private DevExpress.XtraGrid.Views.Grid.GridView lookUpProductView;
     private DevExpress.XtraEditors.LabelControl lblWorkshopLabel;
     private DevExpress.XtraEditors.SearchLookUpEdit lookUpWorkshop;
-    private DevExpress.XtraGrid.Views.Grid.GridView lookUpProductView;
+    private DevExpress.XtraEditors.LabelControl lblOutputLabel;
+    private DevExpress.XtraEditors.SpinEdit txtOutput;
     private DevExpress.XtraGrid.Views.Grid.GridView lookUpWorkshopView;
     private DevExpress.XtraGrid.GridControl gridLinesControl;
     private DevExpress.XtraGrid.Views.Grid.GridView gridLinesView;
@@ -58,6 +60,8 @@ private void InitializeComponent()
         labelControl1 = new DevExpress.XtraEditors.LabelControl();
         lookUpProduct = new DevExpress.XtraEditors.SearchLookUpEdit();
         lookUpProductView = new DevExpress.XtraGrid.Views.Grid.GridView();
+        lblOutputLabel = new DevExpress.XtraEditors.LabelControl();
+        txtOutput = new DevExpress.XtraEditors.SpinEdit();
         pnlFooter = new DevExpress.XtraEditors.PanelControl();
         pnlFooterLine = new DevExpress.XtraEditors.PanelControl();
         btnSave = new DevExpress.XtraEditors.SimpleButton();
@@ -73,6 +77,7 @@ private void InitializeComponent()
         ((System.ComponentModel.ISupportInitialize)lookUpWorkshopView).BeginInit();
         ((System.ComponentModel.ISupportInitialize)lookUpProduct.Properties).BeginInit();
         ((System.ComponentModel.ISupportInitialize)lookUpProductView).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)txtOutput.Properties).BeginInit();
         ((System.ComponentModel.ISupportInitialize)pnlFooter).BeginInit();
         pnlFooter.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)pnlFooterLine).BeginInit();
@@ -150,21 +155,23 @@ private void InitializeComponent()
         pnlBody.Controls.Add(lookUpWorkshop);
         pnlBody.Controls.Add(labelControl1);
         pnlBody.Controls.Add(lookUpProduct);
+        pnlBody.Controls.Add(lblOutputLabel);
+        pnlBody.Controls.Add(txtOutput);
         pnlBody.Dock = DockStyle.Fill;
         pnlBody.Location = new Point(0, 55);
         pnlBody.Margin = new Padding(3, 2, 3, 2);
         pnlBody.Name = "pnlBody";
-        pnlBody.Size = new Size(760, 402);
+        pnlBody.Size = new Size(760, 470);
         pnlBody.TabIndex = 1;
         // 
         // gridLinesControl
         // 
         gridLinesControl.EmbeddedNavigator.Margin = new Padding(3, 2, 3, 2);
-        gridLinesControl.Location = new Point(21, 86);
+        gridLinesControl.Location = new Point(21, 160);
         gridLinesControl.MainView = gridLinesView;
         gridLinesControl.Margin = new Padding(3, 2, 3, 2);
         gridLinesControl.Name = "gridLinesControl";
-        gridLinesControl.Size = new Size(718, 276);
+        gridLinesControl.Size = new Size(718, 246);
         gridLinesControl.TabIndex = 3;
         gridLinesControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridLinesView });
         // 
@@ -243,11 +250,45 @@ private void InitializeComponent()
         lookUpProductView.OptionsSelection.EnableAppearanceFocusedCell = false;
         lookUpProductView.OptionsView.ShowGroupPanel = false;
         // 
+        // lblOutputLabel
+        // 
+        lblOutputLabel.Appearance.Font = new Font("Segoe UI", 9.5F);
+        lblOutputLabel.Appearance.ForeColor = SystemColors.ActiveCaptionText;
+        lblOutputLabel.Appearance.Options.UseFont = true;
+        lblOutputLabel.Appearance.Options.UseForeColor = true;
+        lblOutputLabel.Location = new Point(26, 127);
+        lblOutputLabel.Margin = new Padding(3, 2, 3, 2);
+        lblOutputLabel.Name = "lblOutputLabel";
+        lblOutputLabel.Size = new Size(109, 17);
+        lblOutputLabel.TabIndex = 17;
+        lblOutputLabel.Text = "Üretim Miktarı :";
+        // 
+        // txtOutput
+        // 
+        txtOutput.EditValue = 1m;
+        txtOutput.Location = new Point(141, 124);
+        txtOutput.Margin = new Padding(3, 2, 3, 2);
+        txtOutput.Name = "txtOutput";
+        txtOutput.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
+        txtOutput.Properties.DisplayFormat.FormatString = "n0";
+        txtOutput.Properties.DisplayFormat.FormatType = DevExpress.Utils.FormatType.Numeric;
+        txtOutput.Properties.EditFormat.FormatString = "n0";
+        txtOutput.Properties.EditFormat.FormatType = DevExpress.Utils.FormatType.Numeric;
+        txtOutput.Properties.Increment = 1m;
+        txtOutput.Properties.IsFloatValue = false;
+        txtOutput.Properties.MaskSettings.Set("MaskManagerType", typeof(DevExpress.Data.Mask.NumericMaskManager).FullName);
+        txtOutput.Properties.MaskSettings.Set("mask", "n0");
+        txtOutput.Properties.MaskSettings.Set("decimalDigits", 0);
+        txtOutput.Properties.MinValue = 1m;
+        txtOutput.Properties.MaxValue = 999999999m;
+        txtOutput.Size = new Size(220, 20);
+        txtOutput.TabIndex = 18;
+        // 
         // pnlLinesActions
         // 
         pnlLinesActions.Controls.Add(btnDeleteLine);
         pnlLinesActions.Controls.Add(btnAddLine);
-        pnlLinesActions.Location = new Point(21, 368);
+        pnlLinesActions.Location = new Point(21, 436);
         pnlLinesActions.Margin = new Padding(3, 2, 3, 2);
         pnlLinesActions.Name = "pnlLinesActions";
         pnlLinesActions.Size = new Size(718, 30);
@@ -283,7 +324,7 @@ private void InitializeComponent()
         pnlFooter.Controls.Add(btnSave);
         pnlFooter.Controls.Add(btnCancel);
         pnlFooter.Dock = DockStyle.Bottom;
-        pnlFooter.Location = new Point(0, 457);
+        pnlFooter.Location = new Point(0, 525);
         pnlFooter.Margin = new Padding(3, 2, 3, 2);
         pnlFooter.Name = "pnlFooter";
         pnlFooter.Size = new Size(760, 49);
@@ -340,7 +381,7 @@ private void InitializeComponent()
         // 
         AutoScaleDimensions = new SizeF(6F, 13F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(760, 506);
+        ClientSize = new Size(760, 574);
         Controls.Add(pnlBody);
         Controls.Add(pnlFooter);
         Controls.Add(pnlHeader);
@@ -365,6 +406,7 @@ private void InitializeComponent()
         ((System.ComponentModel.ISupportInitialize)lookUpWorkshopView).EndInit();
         ((System.ComponentModel.ISupportInitialize)lookUpProduct.Properties).EndInit();
         ((System.ComponentModel.ISupportInitialize)lookUpProductView).EndInit();
+        ((System.ComponentModel.ISupportInitialize)txtOutput.Properties).EndInit();
         ((System.ComponentModel.ISupportInitialize)pnlFooter).EndInit();
         pnlFooter.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)pnlFooterLine).EndInit();

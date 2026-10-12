@@ -12,6 +12,11 @@ internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.OutputQuantity)
+            .HasColumnType("decimal(18,4)")
+            .HasDefaultValue(1m)
+            .IsRequired();
+
         builder.HasIndex(x => x.ProductId);
 
         builder.HasOne(x => x.Product)

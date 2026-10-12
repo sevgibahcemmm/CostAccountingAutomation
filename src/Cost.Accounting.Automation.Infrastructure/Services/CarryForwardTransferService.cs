@@ -1020,9 +1020,9 @@ SourceCurrentAccountBalanceCount = cariBalanced.Count,
             return (0, 0);
         }
 
-        List<RecipeRow> recipes = await source.Set<Recipe>()
+List<RecipeRow> recipes = await source.Set<Recipe>()
             .AsNoTracking()
-            .Select(r => new RecipeRow(r.Id, r.ProductId.Value))
+            .Select(r => new RecipeRow(r.Id.Value, r.ProductId.Value, r.OutputQuantity))
             .ToListAsync(cancellationToken);
 
         List<RecipeItemRow> items = await source.Set<RecipeItem>()
@@ -1051,6 +1051,7 @@ SourceCurrentAccountBalanceCount = cariBalanced.Count,
             }
 
             var copy = new Recipe(new IdentityId(targetProductId));
+            copy.SetOutputQuantity(row.OutputQuantity);
             targetContext.Set<Recipe>().Add(copy);
             recipeMap[row.SourceId] = copy.Id.Value;
             newlyCreatedRecipeIds.Add(copy.Id.Value);
@@ -1392,7 +1393,7 @@ SourceCurrentAccountBalanceCount = cariBalanced.Count,
         string Path,
         bool IsDefault);
 
-    private sealed record RecipeRow(Guid SourceId, Guid SourceProductId);
+    private sealed record RecipeRow(Guid SourceId, Guid SourceProductId, decimal OutputQuantity);
 
     private sealed record RecipeItemRow(Guid RecipeId, Guid SourceProductId, decimal Quantity);
 }

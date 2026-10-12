@@ -32,18 +32,17 @@ public sealed partial class RecipeMaterialSelectionForm : XtraForm
 
         lblHeaderTitle.Text = "Reçeteye Eklenecek Malzemeler";
         Text = "Reçeteye Eklenecek Malzemeler";
-        lblHeaderSub.Text = $"'{producedProductName}' üretim reçetesine hangi malzemeler eklensin?";
+        lblHeaderSub.Text = producedQuantity > 0
+            ? $"'{producedProductName}' → {producedQuantity:N0} adet için bu malzemeler yeni reçeteye eklensin?"
+            : $"'{producedProductName}' üretim reçetesine hangi malzemeler eklensin?";
 
         foreach (RecipeMaterialCandidate material in materials)
         {
-            decimal perUnitQuantity = producedQuantity > 0
-                ? Math.Round(material.TotalQuantity / producedQuantity, 2)
-                : 0m;
             checkedList.Items.Add(new RecipeMaterialsListItem(
                 material.ProductId,
                 material.ProductName,
                 material.ProductUnitTypeName,
-                perUnitQuantity), true);
+                material.TotalQuantity), true);
         }
 
         checkedList.ItemCheck += (_, _) => UpdateBadge();
@@ -90,7 +89,7 @@ public sealed partial class RecipeMaterialSelectionForm : XtraForm
         }
 
         SelectedItems = selected
-            .Select(s => new RecipeItemRow(s.ProductId, s.PerUnitQuantity))
+            .Select(s => new RecipeItemRow(s.ProductId, s.TotalQuantity))
             .ToList();
         DialogResult = DialogResult.OK;
     }
@@ -112,21 +111,21 @@ public sealed partial class RecipeMaterialSelectionForm : XtraForm
 
     private sealed class RecipeMaterialsListItem
     {
-        public RecipeMaterialsListItem(Guid productId, string productName, string unitTypeName, decimal perUnitQuantity)
+        public RecipeMaterialsListItem(Guid productId, string productName, string unitTypeName, decimal totalQuantity)
         {
             ProductId = productId;
             ProductName = productName;
             ProductUnitTypeName = unitTypeName;
-            PerUnitQuantity = perUnitQuantity;
+            TotalQuantity = totalQuantity;
         }
 
         public Guid ProductId { get; }
         public string ProductName { get; }
         public string ProductUnitTypeName { get; }
-        public decimal PerUnitQuantity { get; }
+        public decimal TotalQuantity { get; }
 
         public override string ToString()
-            => $"{ProductName}  ({ProductUnitTypeName})  —  Birim Miktar: {PerUnitQuantity:n2}";
+            => $"{ProductName}  ({ProductUnitTypeName})  —  Miktar: {TotalQuantity:n2}";
     }
 }
 

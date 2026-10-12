@@ -19,12 +19,32 @@ public sealed class Recipe : Entity
     {
         SetProduct(productId);
         ResolveDuplicateKey();
+        OutputQuantity = 1;
     }
 
     public IdentityId ProductId { get; private set; } = default!;
     public Product? Product { get; private set; }
 
+    /// <summary>
+    /// Reçetenin tanımlı olduğu üretim miktarı (çıktı). Kalem miktarları bu
+    /// miktara göre yorumlanır. Örneğin 600 bardak çay üreten bir reçetede
+    /// OutputQuantity = 600; kalem miktarları da "600 bardak için" girilir.
+    /// Varsayılan 1 olduğunda davranış önceki sürümle birebir aynıdır
+    /// (kalem miktarları "1 birim mamul için").
+    /// </summary>
+    public decimal OutputQuantity { get; private set; }
+
     public IReadOnlyCollection<RecipeItem> Items => _items.AsReadOnly();
+
+    public void SetOutputQuantity(decimal outputQuantity)
+    {
+        if (outputQuantity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(outputQuantity), "Üretim miktarı pozitif olmalıdır.");
+        }
+
+        OutputQuantity = outputQuantity;
+    }
 
     public static string? BuildDuplicateKey(IdentityId productId)
         => DuplicateKeyRule.From(productId);

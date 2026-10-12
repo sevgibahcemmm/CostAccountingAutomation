@@ -694,11 +694,11 @@ private void DeleteSelectedLine()
         };
 
         /// <summary>
-        /// Reçete kontrolü yalnızca MAMUL pusulasında yapılır. Yarı mamul
+        /// Reçete kontrolü MAMUL ve HİZMET pusulasında yapılır. Yarı mamul
         /// üretiminde reçete tutulmadığı için var/yok kontrolü, malzeme
         /// uyumsuzluk uyarısı ve reçeteye göre satış fiyatı uyarısı çalıştırılmaz.
         /// </summary>
-        private bool RequiresRecipeCheck => CurrentType == CostSlipType.Product;
+        private bool RequiresRecipeCheck => CurrentType is CostSlipType.Product or CostSlipType.Service;
 
         private Guid? SelectedWorkshopId
             => lookUpWorkshop.EditValue is Guid id && id != Guid.Empty ? id : null;
@@ -1025,26 +1025,23 @@ private void DeleteSelectedLine()
         private void UpdateProducedProductAvailability()
         {
             CostSlipType type = CurrentType;
-            bool isService = type == CostSlipType.Service;
 
-            lookUpProducedProduct.Enabled = !isService;
+            lookUpProducedProduct.Enabled = true;
 
             string warehouseCode = type == CostSlipType.SemiFinishedProduct ? "151" : "152";
-            Guid? targetAccountId = isService ? null : GetWorkshopProducedAccountId(SelectedWorkshopId, type);
+            Guid? targetAccountId = GetWorkshopProducedAccountId(SelectedWorkshopId, type);
             string? workshopName = GetSelectedWorkshopName();
 
             bool hasSelector = targetAccountId is not null || !string.IsNullOrWhiteSpace(workshopName);
 
-            List<ProductCatalogDto> filtered = isService
+            List<ProductCatalogDto> filtered = !hasSelector
                 ? []
-                : !hasSelector
-                    ? []
-                    : _products
-                        .Where(p => MatchesWarehouse(p, warehouseCode) &&
-                                    (targetAccountId is Guid tid
-                                        ? p.CategoryId == tid
-                                        : string.Equals(p.CategoryName.Trim(), workshopName!.Trim(), StringComparison.OrdinalIgnoreCase)))
-                        .ToList();
+                : _products
+                    .Where(p => MatchesWarehouse(p, warehouseCode) &&
+                                (targetAccountId is Guid tid
+                                    ? p.CategoryId == tid
+                                    : string.Equals(p.CategoryName.Trim(), workshopName!.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
 
             if (lookUpProducedProduct.EditValue is Guid producedId && producedId != Guid.Empty
                 && !filtered.Any(p => p.Id == producedId))
@@ -1053,13 +1050,11 @@ private void DeleteSelectedLine()
             }
 
             lookUpProducedProduct.Properties.DataSource = filtered;
-            lookUpProducedProduct.Properties.NullText = isService
-                ? "Hizmet pusulasında gerekmez"
-                : SelectedWorkshopId is null
-                    ? "Önce atölye seçin"
-                    : filtered.Count == 0
-                        ? "Bu atölye için üretilen ürün (151/152 bağlantısı veya aynı adlı kategori) tanımlı değil"
-                        : "Üretilen Ürün Seçiniz...";
+            lookUpProducedProduct.Properties.NullText = SelectedWorkshopId is null
+                ? "Önce atölye seçin"
+                : filtered.Count == 0
+                    ? "Bu atölye için üretilen ürün (151/152 bağlantısı veya aynı adlı kategori) tanımlı değil"
+                    : "Üretilen Ürün Seçiniz...";
         }
 
         private string? GetSelectedWorkshopName()
@@ -2533,6 +2528,7 @@ private void DeleteSelectedLine()
 
                 await CrudExecutor.ExecuteAsync(new RecipeSaveCommand(
                     producedProductId,
+                    quantity,
                     true,
                     dialog.SelectedItems,
                     SelectedWorkshopId ?? Guid.Empty));

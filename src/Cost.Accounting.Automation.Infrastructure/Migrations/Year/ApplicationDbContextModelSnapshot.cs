@@ -1369,6 +1369,11 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<decimal>("OutputQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(1m);
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 

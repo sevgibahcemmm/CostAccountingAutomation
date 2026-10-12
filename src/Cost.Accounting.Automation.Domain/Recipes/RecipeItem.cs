@@ -23,9 +23,18 @@ public sealed class RecipeItem : Entity
 
     public decimal Quantity { get; private set; }
 
-    // Bir birim mamul için kullanılacak malzeme miktarıdır.
-    public decimal EffectiveQuantity(int producedQuantity)
-        => Quantity * producedQuantity;
+    // Kalem miktarı, reçetenin tanımlı olduğu üretim miktarına (Recipe.OutputQuantity)
+    // göre girilir. Beklenen malzeme = kalem miktarı / üretim miktarı * fiilen üretilen.
+    // OutputQuantity = 1 olduğunda davranış "bir birim mamul için miktar" ile birebirdir.
+    public decimal EffectiveQuantity(int producedQuantity, decimal outputQuantity)
+    {
+        if (producedQuantity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(producedQuantity), "Üretilen miktar pozitif olmalıdır.");
+        if (outputQuantity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(outputQuantity), "Reçete üretim miktarı pozitif olmalıdır.");
+
+        return Quantity * producedQuantity / outputQuantity;
+    }
 
     public void SetRecipe(IdentityId recipeId) => RecipeId = recipeId;
 

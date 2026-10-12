@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Products;
 using Cost.Accounting.Automation.Application.Recipes;
@@ -89,6 +90,7 @@ public sealed partial class RecipeEditForm : XtraForm
             _suppressProductLoad = true;
             lookUpProduct.EditValue = _editing.ProductId;
             _suppressProductLoad = false;
+            txtOutput.EditValue = _editing.OutputQuantity;
             await LoadRecipeItemsAsync();
         }
         else
@@ -211,11 +213,11 @@ public sealed partial class RecipeEditForm : XtraForm
         };
         GridColumn quantityColumn = new()
         {
-            Caption = "Miktar (1 birim için)",
+            Caption = "Reçete Miktarı (üretim miktarı için)",
             FieldName = nameof(RecipeItemDto.Quantity),
             ColumnEdit = riQuantity,
             Visible = true,
-            Width = 170,
+            Width = 200,
             AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } }
         };
 
@@ -267,12 +269,12 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
         {
             ChartOfAccountLookUpDto? workshop = _workshops.FirstOrDefault(w => w.Id == workshopId);
             Guid? linkId = workshop?.FinishedAccountId;
-            string? workshopName = workshop?.Name?.Trim();
+            string? workshopName = NormalizeName(workshop?.Name);
             filtered = _mamulProducts
                 .Where(p => p.WarehouseCode.StartsWith("152", StringComparison.OrdinalIgnoreCase)
                             && (linkId is Guid lid
                                 ? p.CategoryId == lid
-                                : string.Equals(p.CategoryName?.Trim(), workshopName, StringComparison.OrdinalIgnoreCase)))
+                                : string.Equals(NormalizeName(p.CategoryName), workshopName, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
         }
         else
@@ -429,6 +431,7 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
             _lines.Clear();
             if (recipe is not null && recipe.Items.Count > 0)
             {
+                txtOutput.EditValue = recipe.OutputQuantity;
                 foreach (RecipeItemDto item in recipe.Items)
                 {
                     _lines.Add(new RecipeItemDto
@@ -584,6 +587,14 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
             return;
         }
 
+        decimal outputQuantity = txtOutput.EditValue is decimal od ? od : 0m;
+        if (outputQuantity <= 0m)
+        {
+            ToastHelper.Show("Üretim miktarı sıfırdan büyük olmalıdır.", ToastType.Warning);
+            txtOutput.Focus();
+            return;
+        }
+
         await LoadTransferredProductsForWorkshopAsync();
 
         if (_transferredByWorkshop.TryGetValue(workshopId, out List<AtelierTransferProductDto>? transferred)
@@ -618,7 +629,7 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
         {
             using var scope = Program.Services.CreateScope();
             ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-            bool ok = await CrudExecutor.ExecuteAsync(new RecipeSaveCommand(productId, true, items, workshopId));
+            bool ok = await CrudExecutor.ExecuteAsync(new RecipeSaveCommand(productId, outputQuantity, true, items, workshopId));
             if (ok)
             {
                 ToastHelper.Show("Reçete kaydedildi.", ToastType.Success);
@@ -630,5 +641,15 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
         {
             btnSave.Enabled = true;
         }
+    }
+
+    private static string? NormalizeName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return Regex.Replace(value.Trim(), @"\s+", " ");
     }
 }

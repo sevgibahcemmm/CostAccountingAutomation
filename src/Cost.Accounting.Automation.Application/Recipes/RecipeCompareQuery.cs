@@ -100,7 +100,7 @@ internal sealed class RecipeCompareQueryHandler(
         foreach (RecipeItem item in recipe.Items)
         {
             Guid productId = item.ProductId;
-            decimal expected = item.EffectiveQuantity(request.Quantity);
+            decimal expected = item.EffectiveQuantity(request.Quantity, recipe.OutputQuantity);
             actual.TryGetValue(productId, out decimal used);
 
             decimal diff = used - expected;

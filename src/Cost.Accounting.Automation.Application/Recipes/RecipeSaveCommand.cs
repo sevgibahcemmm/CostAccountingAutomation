@@ -17,6 +17,7 @@ public sealed record RecipeItemRow(
 [Permission("recipe:manage")]
 public sealed record RecipeSaveCommand(
     Guid ProductId,
+    decimal OutputQuantity,
     bool IsActive,
     IReadOnlyCollection<RecipeItemRow> Items,
     Guid WorkshopId) : IRequest<Result<string>>;
@@ -27,6 +28,9 @@ public sealed class RecipeSaveCommandValidator : AbstractValidator<RecipeSaveCom
     {
         RuleFor(x => x.ProductId)
             .NotEmpty().WithMessage("Mamül ürün seçilmelidir.");
+
+        RuleFor(x => x.OutputQuantity)
+            .GreaterThan(0).WithMessage("Üretim miktarı sıfırdan büyük olmalıdır.");
 
         RuleFor(x => x.Items)
             .NotEmpty().WithMessage("Reçetede en az bir malzeme satırı bulunmalıdır.");
@@ -85,6 +89,7 @@ internal sealed class RecipeSaveCommandHandler(
 
         if (recipe is not null)
         {
+            recipe.SetOutputQuantity(request.OutputQuantity);
             recipe.ClearItems();
             foreach (RecipeItemRow row in request.Items)
             {
@@ -106,11 +111,13 @@ internal sealed class RecipeSaveCommandHandler(
             target = existing;
             target.Restore();
             target.SetStatus(request.IsActive);
+            target.SetOutputQuantity(request.OutputQuantity);
         }
         else
         {
             target = new Recipe(productId);
             target.SetStatus(request.IsActive);
+            target.SetOutputQuantity(request.OutputQuantity);
         }
 
         target.ClearItems();

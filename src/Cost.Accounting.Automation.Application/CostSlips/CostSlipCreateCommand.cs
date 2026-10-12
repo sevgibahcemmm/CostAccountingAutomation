@@ -66,12 +66,6 @@ public sealed class CostSlipCreateCommandValidator : AbstractValidator<CostSlipC
                 .NotEmpty().WithMessage("Mamul / yarı mamul pusulası için üretilen ürün seçilmelidir.");
         });
 
-        When(x => x.CostSlipType == CostSlipType.Service, () =>
-        {
-            RuleFor(x => x.ProducedProductId)
-                .Empty().WithMessage("Hizmet pusulasında üretilen ürün seçilmemelidir.");
-        });
-
         RuleForEach(x => x.Items).ChildRules(item =>
         {
             item.RuleFor(i => i.ExpenseAccountType)
