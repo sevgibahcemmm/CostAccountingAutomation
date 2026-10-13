@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -29,7 +30,8 @@ public sealed class ConsumptionUnitCreateCommandValidator : AbstractValidator<Co
 
 internal sealed class ConsumptionUnitCreateCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository,
-    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ConsumptionUnitCreateCommand, Result<string>>
+    IDuplicateCheckService duplicateCheckService,
+    IMemoryCache cache) : IRequestHandler<ConsumptionUnitCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ConsumptionUnitCreateCommand request, CancellationToken cancellationToken)
     {
@@ -93,6 +95,8 @@ internal sealed class ConsumptionUnitCreateCommandHandler(
         unit.SetStatus(request.IsActive);
 
         await chartOfAccountRepository.AddAsync(unit, cancellationToken);
+
+        ChartOfAccountLookUpCache.Invalidate(cache);
 
         return $"'{code} - {name}' tüketim birimi başarıyla kaydedildi.";
     }

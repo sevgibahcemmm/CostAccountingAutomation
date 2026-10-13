@@ -13,6 +13,13 @@ namespace Cost.Accounting.Automation.Infrastructure;
 
 public static class ServiceRegistrar
 {
+    /// <summary>
+    /// Komutların zaman aşımı (saniye). Yerel SQL Server'da antivirüs ya da disk
+    /// kaynaklı kısa donmalar EF'in varsayılan 30 saniyelik sınırını aşabildiği
+    /// ve kullanıcıya "zaman aşımı" hatası olarak yansıdığı için cömert tutulur.
+    /// </summary>
+    internal const int CommandTimeoutSeconds = 120;
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
@@ -85,10 +92,14 @@ public static class ServiceRegistrar
     {
         options.UseSqlServer(
             connectionString,
-            sql => sql.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null));
+            sql =>
+            {
+                sql.CommandTimeout(CommandTimeoutSeconds);
+                sql.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null);
+            });
     }
 
     private static string RequireConnectionString(IConfiguration configuration, string name)

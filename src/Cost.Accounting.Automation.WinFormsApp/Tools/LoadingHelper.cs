@@ -89,8 +89,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     {
                         waitForm = ShowCompletion(waitForm, completionSummary);
                     }
-                    catch (ArgumentException)
+                    catch (Exception ex)
                     {
+                        CrashLog.WriteException("LoadingHelper.ShowCompletion", ex);
                     }
 
                     await Task.Delay(completionDuration ?? DefaultCompletionDuration);
@@ -185,8 +186,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools
                     {
                         waitForm = ShowCompletion(waitForm, completionSummary);
                     }
-                    catch (ArgumentException)
+                    catch (Exception ex)
                     {
+                        CrashLog.WriteException("LoadingHelper.ShowCompletion", ex);
                     }
 
                     await Task.Delay(completionDuration ?? DefaultCompletionDuration);

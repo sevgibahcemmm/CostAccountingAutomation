@@ -458,7 +458,9 @@ SourceCurrentAccountBalanceCount = cariBalanced.Count,
     private ApplicationDbContext OpenYearContext(string databaseName)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-        optionsBuilder.UseSqlServer(dbSelector.BuildConnectionString(databaseName));
+        optionsBuilder.UseSqlServer(
+            dbSelector.BuildConnectionString(databaseName),
+            sql => sql.CommandTimeout(ServiceRegistrar.CommandTimeoutSeconds));
         optionsBuilder.AddInterceptors(new SqlTimingInterceptor());
 
         return new ApplicationDbContext(optionsBuilder.Options, claimContext);

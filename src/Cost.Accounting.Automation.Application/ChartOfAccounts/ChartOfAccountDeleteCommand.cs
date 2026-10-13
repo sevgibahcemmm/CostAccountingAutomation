@@ -2,6 +2,7 @@ using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -12,7 +13,8 @@ public sealed record ChartOfAccountDeleteCommand(
     IReadOnlyCollection<Guid> AccountIds) : IRequest<Result<string>>;
 
 internal sealed class ChartOfAccountDeleteCommandHandler(
-    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ChartOfAccountDeleteCommand, Result<string>>
+    IChartOfAccountRepository chartOfAccountRepository,
+    IMemoryCache cache) : IRequestHandler<ChartOfAccountDeleteCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ChartOfAccountDeleteCommand request, CancellationToken cancellationToken)
     {
@@ -64,6 +66,8 @@ internal sealed class ChartOfAccountDeleteCommandHandler(
 
         ClearDeletedReferences(targets, all);
         chartOfAccountRepository.SoftDeleteRange(toDelete);
+
+        ChartOfAccountLookUpCache.Invalidate(cache);
 
         if (!check.HasRelated)
         {

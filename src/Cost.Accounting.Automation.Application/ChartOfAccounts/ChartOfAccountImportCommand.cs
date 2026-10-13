@@ -4,6 +4,7 @@ using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -31,7 +32,8 @@ public sealed class ChartOfAccountImportCommandValidator : AbstractValidator<Cha
 }
 
 internal sealed class ChartOfAccountImportCommandHandler(
-    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ChartOfAccountImportCommand, Result<string>>
+    IChartOfAccountRepository chartOfAccountRepository,
+    IMemoryCache cache) : IRequestHandler<ChartOfAccountImportCommand, Result<string>>
 {
     private static readonly HashSet<string> WarehouseCodes =
         new(StringComparer.OrdinalIgnoreCase) { "150", "150.98", "151", "152", "630" };
@@ -139,6 +141,8 @@ if (existingByCode.TryGetValue(fullCode, out ChartOfAccount? account))
         {
             await chartOfAccountRepository.AddAsync(account, cancellationToken);
         }
+
+        ChartOfAccountLookUpCache.Invalidate(cache);
 
         int warehouses = _nodes.Values.Count(n => n.Type == ChartOfAccountType.Warehouse);
         int workshops = _nodes.Values.Count(n => n.Type == ChartOfAccountType.Workshop);

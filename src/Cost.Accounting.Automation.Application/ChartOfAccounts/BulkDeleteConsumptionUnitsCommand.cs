@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -18,7 +19,8 @@ namespace Cost.Accounting.Automation.Application.ChartOfAccounts;
 public sealed record BulkDeleteConsumptionUnitsCommand(IReadOnlyCollection<Guid> Ids) : IRequest<Result<string>>;
 
 internal sealed class BulkDeleteConsumptionUnitsCommandHandler(
-    IChartOfAccountRepository chartOfAccountRepository)
+    IChartOfAccountRepository chartOfAccountRepository,
+    IMemoryCache cache)
     : IRequestHandler<BulkDeleteConsumptionUnitsCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(
@@ -32,6 +34,11 @@ internal sealed class BulkDeleteConsumptionUnitsCommandHandler(
             request.Ids,
             "tüketim birimi",
             cancellationToken);
+
+        if (result.IsSuccessful)
+        {
+            ChartOfAccountLookUpCache.Invalidate(cache);
+        }
 
         return BulkDeletionResult.ToMessage(result, "tüketim birimi");
     }

@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -30,7 +31,8 @@ public sealed class ChartOfAccountManualCreateCommandValidator : AbstractValidat
 
 internal sealed class ChartOfAccountManualCreateCommandHandler(
     IChartOfAccountRepository chartOfAccountRepository,
-    IDuplicateCheckService duplicateCheckService) : IRequestHandler<ChartOfAccountManualCreateCommand, Result<string>>
+    IDuplicateCheckService duplicateCheckService,
+    IMemoryCache cache) : IRequestHandler<ChartOfAccountManualCreateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ChartOfAccountManualCreateCommand request, CancellationToken cancellationToken)
     {
@@ -93,6 +95,8 @@ internal sealed class ChartOfAccountManualCreateCommandHandler(
         account.SetStatus(request.IsActive);
 
         await chartOfAccountRepository.AddAsync(account, cancellationToken);
+
+        ChartOfAccountLookUpCache.Invalidate(cache);
 
         return $"'{code} - {name}' hesabı başarıyla kaydedildi.";
     }

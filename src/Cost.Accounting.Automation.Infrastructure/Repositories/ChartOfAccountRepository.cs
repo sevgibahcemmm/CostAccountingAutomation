@@ -19,6 +19,9 @@ internal sealed class ChartOfAccountRepository : AuditableRepository<ChartOfAcco
     public Task<List<ChartOfAccount>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default)
         => this.Context.Set<ChartOfAccount>().IgnoreQueryFilters().ToListAsync(cancellationToken);
 
+    public Task<List<ChartOfAccount>> GetLookUpAsync(CancellationToken cancellationToken = default)
+        => this.Context.Set<ChartOfAccount>().AsNoTracking().ToListAsync(cancellationToken);
+
     /// <summary>
     /// Seçilen hesapların tamamını <c>IN</c> listesiyle denetler; sorgu sayısı
     /// seçim büyüklüğünden bağımsızdır.

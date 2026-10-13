@@ -12,6 +12,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         /// </summary>
         private const float FrozenAnimationSpeed = 0.01f;
 
+        private string? _pendingCaption;
+        private string? _pendingDescription;
+
         public WaitForm()
         {
             InitializeComponent();
@@ -23,13 +26,43 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         public override void SetCaption(string caption)
         {
             base.SetCaption(caption);
-            this.progressPanel1.Caption = caption;
+            _pendingCaption = caption;
+
+            // Pencere çizilmeden (handle oluşmadan) yapılan atamalar DevExpress
+            // ProgressPanel yerleşimi hesaplanırken NullReferenceException
+            // fırlatabiliyor; bu durumda metin OnShown'da uygulanır.
+            if (this.IsHandleCreated && this.Visible)
+            {
+                ApplyProgressPanel(panel => panel.Caption = caption);
+            }
         }
 
         public override void SetDescription(string description)
         {
             base.SetDescription(description);
-            this.progressPanel1.Description = description;
+            _pendingDescription = description;
+
+            if (this.IsHandleCreated && this.Visible)
+            {
+                ApplyProgressPanel(panel => panel.Description = description);
+            }
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            string? pendingCaption = _pendingCaption;
+            if (pendingCaption is not null)
+            {
+                ApplyProgressPanel(panel => panel.Caption = pendingCaption);
+            }
+
+            string? pendingDescription = _pendingDescription;
+            if (pendingDescription is not null)
+            {
+                ApplyProgressPanel(panel => panel.Description = pendingDescription);
+            }
         }
 
         #endregion
@@ -43,20 +76,43 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             SetCaption(caption);
             SetDescription(description);
 
-            // Onay görünümü hiçbir koşulda bozulmamalı: animasyon ayarı
-            // DevExpress tarafından reddedilirse renk ve metin yine de uygulanır.
+            ApplyProgressPanel(panel =>
+            {
+                // Onay görünümü hiçbir koşulda bozulmamalı: animasyon ayarı
+                // DevExpress tarafından reddedilirse renk ve metin yine de
+                // uygulanır.
+                try
+                {
+                    panel.AnimationSpeed = FrozenAnimationSpeed;
+                }
+                catch (ArgumentException)
+                {
+                }
+
+                panel.AppearanceCaption.ForeColor = SkinTheme.Success;
+                panel.AppearanceCaption.Options.UseForeColor = true;
+            });
+        }
+
+        /// <summary>
+        /// ProgressPanel'e yapılan görsel atamaları güvenle uygular.
+        ///
+        /// Bilinen DevExpress davranışı: yerleşim hesabında
+        /// (<c>GetBestSize</c>) bazı durumlarda null dönüp
+        /// <c>NullReferenceException</c> fırlatır. Görsel güncelleme başarısız
+        /// olsa bile yükleme akışı ve pencerenin kapanışı bozulmamalıdır.
+        /// </summary>
+        private void ApplyProgressPanel(
+            Action<DevExpress.XtraWaitForm.ProgressPanel> apply)
+        {
             try
             {
-                this.progressPanel1.AnimationSpeed = FrozenAnimationSpeed;
+                apply(this.progressPanel1);
             }
-            catch (ArgumentException)
+            catch (Exception ex) when (
+                ex is NullReferenceException or InvalidOperationException)
             {
             }
-
-            this.progressPanel1.AppearanceCaption.ForeColor =
-                SkinTheme.Success;
-
-            this.progressPanel1.AppearanceCaption.Options.UseForeColor = true;
         }
     }
 }

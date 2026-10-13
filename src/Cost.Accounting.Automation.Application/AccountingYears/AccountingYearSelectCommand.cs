@@ -1,6 +1,8 @@
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.AccountingYears;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -27,7 +29,8 @@ internal sealed class AccountingYearSelectCommandHandler(
     ICompanyYearRepository companyYearRepository,
     IMasterCompanyNameLookup companyNameLookup,
     IAccountingYearProvisioner provisioner,
-    IAccountingDbSelector dbSelector) : IRequestHandler<AccountingYearSelectCommand, Result<AccountingYearSelectResult>>
+    IAccountingDbSelector dbSelector,
+    IMemoryCache cache) : IRequestHandler<AccountingYearSelectCommand, Result<AccountingYearSelectResult>>
 {
     public async Task<Result<AccountingYearSelectResult>> Handle(
         AccountingYearSelectCommand request,
@@ -64,6 +67,10 @@ internal sealed class AccountingYearSelectCommandHandler(
             cancellationToken);
 
         dbSelector.Select(companyYear.CompanyId, companyYear.Year, companyYear.DatabaseName.Value);
+
+        // İş bağlamı başka bir yıl veritabanına yönlendirildi; önceki yılın
+        // hesap planı önbellekte kalmasın (giriş her seferinde buradan geçer).
+        ChartOfAccountLookUpCache.Invalidate(cache);
 
         return Result<AccountingYearSelectResult>.Succeed(new AccountingYearSelectResult
         {

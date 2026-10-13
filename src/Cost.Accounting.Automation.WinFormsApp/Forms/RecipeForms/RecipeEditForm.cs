@@ -47,7 +47,7 @@ public sealed partial class RecipeEditForm : XtraForm
         Text = _editing is null ? "Yeni Reçete" : "Reçete Düzenle";
         lblTitle.Text = Text;
         lblSubtitle.Text = _editing is null
-            ? "Atölyeyi seçin, mamül ürünü belirleyin ve reçete kalemlerini girin."
+            ? "Atölyeyi seçin, mamül/hizmet ürünü belirleyin ve reçete kalemlerini girin."
             : $"{_editing.ProductName} üretim reçetesini güncelleyin.";
 
         WireEvents();
@@ -67,22 +67,37 @@ public sealed partial class RecipeEditForm : XtraForm
 
     private async void RecipeEditForm_Load(object? sender, EventArgs e)
     {
+        // Üç sorgu birbirinden bağımsızdır ve her biri kendi scope'unda (kendi
+        // DbContext'i) paralel çalışır. Böylece SQL Server'daki kısa bir donma
+        // sorguları sırayla bekletip süreleri toplamaz.
+        Task<List<ChartOfAccountLookUpDto>> accountsTask = LoadAccountsAsync();
+        Task<List<ProductLookUpDto>> mamulTask = LoadProductsAsync("152");
+        Task<List<ProductLookUpDto>> serviceTask = LoadProductsAsync(ProductCodeHelper.ExpenseWarehouseCode);
+
+        // Atölye combo'su ürün sorgularına bağlı değildir; hesap planı döner
+        // dönmez bağlanır, ürünler beklenmez.
         try
         {
-            using var scope = Program.Services.CreateScope();
-            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-            _workshops = ((await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [])
+            _workshops = (await accountsTask)
                 .Where(a => a.Type == ChartOfAccountType.Workshop)
                 .ToList();
-            _mamulProducts = await mediator.Send(new ProductLookUpQuery("152"), CancellationToken.None);
+            SetupWorkshopLookup();
         }
         catch (Exception ex)
         {
-            ToastHelper.Show("Veriler yüklenemedi: " + ex.Message, ToastType.Warning);
+            ToastHelper.Show("Atölyeler yüklenemedi: " + ex.Message, ToastType.Warning);
         }
 
-        SetupWorkshopLookup();
-        SetupMamulLookup();
+        try
+        {
+            _mamulProducts = [.. await mamulTask, .. await serviceTask];
+            SetupMamulLookup();
+        }
+        catch (Exception ex)
+        {
+            ToastHelper.Show("Ürünler yüklenemedi: " + ex.Message, ToastType.Warning);
+        }
+
         SetupGrid();
 
         if (_editing is not null)
@@ -99,6 +114,20 @@ public sealed partial class RecipeEditForm : XtraForm
         }
 
         RefreshMaterialLookup();
+    }
+
+    private static async Task<List<ChartOfAccountLookUpDto>> LoadAccountsAsync()
+    {
+        using var scope = Program.Services.CreateScope();
+        ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+        return (await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None)).Data ?? [];
+    }
+
+    private static async Task<List<ProductLookUpDto>> LoadProductsAsync(string warehouseCode)
+    {
+        using var scope = Program.Services.CreateScope();
+        ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+        return await mediator.Send(new ProductLookUpQuery(warehouseCode), CancellationToken.None);
     }
 
     private void SetupWorkshopLookup()
@@ -129,7 +158,7 @@ public sealed partial class RecipeEditForm : XtraForm
         lookUpProductView.Columns.Clear();
         lookUpProductView.OptionsBehavior.AutoPopulateColumns = false;
         GridColumn nameColumn = lookUpProductView.Columns.AddField(nameof(ProductLookUpDto.Name));
-        nameColumn.Caption = "Mamül";
+        nameColumn.Caption = "Mamül/Hizmet";
         nameColumn.VisibleIndex = 0;
         nameColumn.Width = 260;
         GridColumn codeColumn = lookUpProductView.Columns.AddField(nameof(ProductLookUpDto.ProductCode));
@@ -271,7 +300,7 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
             Guid? linkId = workshop?.FinishedAccountId;
             string? workshopName = NormalizeName(workshop?.Name);
             filtered = _mamulProducts
-                .Where(p => p.WarehouseCode.StartsWith("152", StringComparison.OrdinalIgnoreCase)
+                .Where(p => IsProducedWarehouse(p.WarehouseCode)
                             && (linkId is Guid lid
                                 ? p.CategoryId == lid
                                 : string.Equals(NormalizeName(p.CategoryName), workshopName, StringComparison.OrdinalIgnoreCase)))
@@ -294,9 +323,16 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
 
         lookUpProduct.Properties.DataSource = filtered;
         lookUpProduct.Properties.NullText = filtered.Count == 0
-            ? "Bu atölye için 152 mamül ürünü tanımlı değil"
-            : "Mamül ürün seçiniz...";
+            ? "Bu atölye için 152 mamül veya 630 hizmet ürünü tanımlı değil"
+            : "Mamül/hizmet ürün seçiniz...";
     }
+
+    /// <summary>
+    /// Reçetede üretilebilen ürün depoları: 152 (mamüller) ve 630 (hizmet üretim).
+    /// </summary>
+    private static bool IsProducedWarehouse(string warehouseCode)
+        => warehouseCode.StartsWith("152", StringComparison.OrdinalIgnoreCase)
+           || warehouseCode.StartsWith(ProductCodeHelper.ExpenseWarehouseCode, StringComparison.OrdinalIgnoreCase);
 
     private bool IsMamulVisible(Guid productId)
     {

@@ -103,7 +103,16 @@ const
   DefaultMaster = 'Data Source=.\SQLEXPRESS;Initial Catalog=CostAccountingAutomationMaster;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False';
   DefaultSqlServer = 'Data Source=.\SQLEXPRESS;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False';
   HEX_CHARS = '0123456789ABCDEF';
-  SQL2022_SSEI_URL = 'https://download.microsoft.com/download/5/1/4/5145fe04-4d30-4b85-b0d1-39533663a2f1/SQL2022-SSEI-Expr.exe';
+  { SQL Server Express yukleyicisi.
+    ONEMLI: onceki sabit deger
+    (download.microsoft.com/download/5/1/4/.../SQL2022-SSEI-Expr.exe) Microsoft
+    tarafindan kaldirildi ve 404 donuyor; bu yuzden kurulum, SQL Express'in
+    kurulu olmadigi her makineda "yukleyici indirilemedi" diye duruyordu.
+    Bunun yerine kalici fwlink kullanilir. NOT: bu baglanti surum sabit
+    DEGILDIR; linkid=2216019 Aralik 2025 itibariyle SQL Server 2025 Express'e
+    isaret ediyor. }
+  SQL_EXPRESS_SSEI_URL = 'https://go.microsoft.com/fwlink/?linkid=2216019';
+  SQL_SSEI_EXE = 'SQL2025-SSEI-Expr.exe';
   SQL_MEDIA_EXE = 'SQLEXPR_x64_ENU.exe';
   SQL_EXPRESS_INSTANCE = 'SQLEXPRESS';
 
@@ -653,7 +662,34 @@ end;
 
 function DownloadSqlExpress(const DestFile: String): Boolean;
 begin
-  Result := URLDownloadToFileW(0, SQL2022_SSEI_URL, DestFile, 0, 0) = 0;
+  Result := URLDownloadToFileW(0, SQL_EXPRESS_SSEI_URL, DestFile, 0, 0) = 0;
+end;
+
+{ Indirilen medya klasorunde gercek SQL Express kurulum dosyasini bulur.
+  Dosya adi surumden surume degisebildigi icin sabit ada guvenilmez;
+  once 'SQLEXPR*.exe' maskesi taranir. }
+function FindSqlExpressMedia(const MediaDir: String): String;
+var
+  FindRec: TFindRec;
+  Fallback: String;
+begin
+  Fallback := MediaDir + '\' + SQL_MEDIA_EXE;
+  if FileExists(Fallback) then
+  begin
+    Result := Fallback;
+    Exit;
+  end;
+
+  Result := '';
+  if FindFirst(MediaDir + '\SQLEXPR*.exe', FindRec) then
+  begin
+    try
+      if (FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then
+        Result := FindRec.Name;
+    finally
+      FindClose(FindRec);
+    end;
+  end;
 end;
 
 { SQL Server Express'i (SQLEXPRESS) sessizce kurar; sonunda sunucu erisilebilir
@@ -664,7 +700,7 @@ var
   Bootstrapper, MediaDir, MediaExe: String;
 begin
   Result := False;
-  Bootstrapper := ExpandConstant('{tmp}\SQL2022-SSEI-Expr.exe');
+  Bootstrapper := ExpandConstant('{tmp}\') + SQL_SSEI_EXE;
 
   if not DownloadSqlExpress(Bootstrapper) then
   begin
@@ -673,7 +709,7 @@ begin
     Exit;
   end;
 
-  MediaDir := ExpandConstant('{tmp}\sql2022media');
+  MediaDir := ExpandConstant('{tmp}\sql2025media');
   if not ForceDirectories(MediaDir) then
   begin
     MsgBox('Gecici klasor olusturulamadi: ' + MediaDir, mbError, MB_OK);
@@ -681,7 +717,8 @@ begin
   end;
 
   { SSEI yukleyicisi kurulum medyasini MEDIAPATH icine indirir. }
-  if not Exec(Bootstrapper, '/ACTION=Download MEDIAPATH="' + MediaDir + '" MEDIATYPE=Core /QUIET',
+  if not Exec(Bootstrapper, '/ACTION=Download MEDIAPATH="' + MediaDir + '" MEDIATYPE=Core /QUIET'
+    + ' /IACCEPTSQLSERVERLICENSETERMS',
     '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
   begin
     MsgBox('SQL Server Express medyasi indirilemedi: ' + SysErrorMessage(ResultCode), mbError, MB_OK);
@@ -695,10 +732,10 @@ begin
     Exit;
   end;
 
-  MediaExe := MediaDir + '\' + SQL_MEDIA_EXE;
-  if not FileExists(MediaExe) then
+  MediaExe := FindSqlExpressMedia(MediaDir);
+  if MediaExe = '' then
   begin
-    MsgBox('SQL Server Express medyasi bulunamadi: ' + SQL_MEDIA_EXE + #13#10
+    MsgBox('SQL Server Express medyasi bulunamadi. Indirilen klasor: ' + MediaDir + #13#10
       + 'Kurulumu elle yapin: https://aka.ms/sqlexpress', mbError, MB_OK);
     Exit;
   end;

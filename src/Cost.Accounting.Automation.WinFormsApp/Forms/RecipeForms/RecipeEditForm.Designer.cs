@@ -228,19 +228,19 @@ private void InitializeComponent()
         labelControl1.Location = new Point(26, 55);
         labelControl1.Margin = new Padding(3, 2, 3, 2);
         labelControl1.Name = "labelControl1";
-        labelControl1.Size = new Size(79, 17);
+        labelControl1.Size = new Size(110, 17);
         labelControl1.TabIndex = 16;
-        labelControl1.Text = "Mamül Ürün :";
+        labelControl1.Text = "Mamül / Hizmet :";
         // 
         // lookUpProduct
         // 
-        lookUpProduct.Location = new Point(103, 52);
+        lookUpProduct.Location = new Point(140, 52);
         lookUpProduct.Margin = new Padding(3, 2, 3, 2);
         lookUpProduct.Name = "lookUpProduct";
         lookUpProduct.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
-        lookUpProduct.Properties.NullText = "Mamül ürün seçiniz...";
+        lookUpProduct.Properties.NullText = "Mamül/hizmet ürün seçiniz...";
         lookUpProduct.Properties.PopupView = lookUpProductView;
-        lookUpProduct.Size = new Size(636, 20);
+        lookUpProduct.Size = new Size(599, 20);
         lookUpProduct.TabIndex = 2;
         // 
         // lookUpProductView

@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Shared;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -28,7 +29,8 @@ public sealed class ConsumptionUnitUpdateCommandValidator : AbstractValidator<Co
 }
 
 internal sealed class ConsumptionUnitUpdateCommandHandler(
-    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ConsumptionUnitUpdateCommand, Result<string>>
+    IChartOfAccountRepository chartOfAccountRepository,
+    IMemoryCache cache) : IRequestHandler<ConsumptionUnitUpdateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(ConsumptionUnitUpdateCommand request, CancellationToken cancellationToken)
     {
@@ -60,6 +62,8 @@ internal sealed class ConsumptionUnitUpdateCommandHandler(
         unit.SetStatus(request.IsActive);
 
         chartOfAccountRepository.Update(unit);
+
+        ChartOfAccountLookUpCache.Invalidate(cache);
 
         return "Tüketim birimi başarıyla güncellendi.";
     }

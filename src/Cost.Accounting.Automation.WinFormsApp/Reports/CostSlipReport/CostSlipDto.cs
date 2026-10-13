@@ -145,6 +145,15 @@ public sealed class CostSlipItemEditDto : INotifyPropertyChanged
     private decimal _availableQuantity;
     public decimal AvailableQuantity { get => _availableQuantity; set { _availableQuantity = value; OnPropertyChanged(); } }
 
+    private decimal? _recipeRecommendedQuantity;
+    /// <summary>
+    /// Satır reçeteden otomatik eklendiyse en son önerilen miktar. Kullanıcı
+    /// miktarı elle değiştirmediyse (girilen değer bu değere eşitse) üretim
+    /// miktarı değiştiğinde öneri yeniden uygulanır. Elle değiştirildiyse
+    /// miktar korunur.
+    /// </summary>
+    public decimal? RecipeRecommendedQuantity { get => _recipeRecommendedQuantity; set { _recipeRecommendedQuantity = value; OnPropertyChanged(); } }
+
     private string _description = string.Empty;
     public string Description { get => _description; set { _description = value; OnPropertyChanged(); } }
 }

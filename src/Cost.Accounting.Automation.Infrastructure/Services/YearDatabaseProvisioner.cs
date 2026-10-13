@@ -74,7 +74,9 @@ internal sealed class YearDatabaseProvisioner(
         IProgress<DatabaseProvisionProgress>? progress = null)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-        optionsBuilder.UseSqlServer(dbSelector.BuildConnectionString(databaseName));
+        optionsBuilder.UseSqlServer(
+            dbSelector.BuildConnectionString(databaseName),
+            sql => sql.CommandTimeout(ServiceRegistrar.CommandTimeoutSeconds));
         optionsBuilder.AddInterceptors(new SqlTimingInterceptor());
 
         await using var yearContext = new ApplicationDbContext(optionsBuilder.Options, claimContext);
@@ -84,37 +86,21 @@ internal sealed class YearDatabaseProvisioner(
         // bırakır. Veritabanı oluşturulduktan sonra EF'in Exists kontrolü bu
         // bayat oturumdan 'veritabanı yok' (4060) alıp yanlışlıkla CREATE
         // DATABASE çalıştırır (1801). Varlık master katalog - DB_ID ile sorulur.
-        bool exists = await SqlDatabaseCreator.ExistsAsync(
+        //
+        // Veritabanı yoksa oluşturulur; varsa kullanılabilirliği doğrulanır.
+        // Her iki durumda da AUTO_CLOSE kapatılır; böylece eski kurulumlarda
+        // "liste/atölye geç açılıyor" gecikmesi kendini onarır.
+        bool created = await SqlDatabaseCreator.EnsureCreatedAsync(
             dbSelector.BuildConnectionString(databaseName),
             databaseName,
+            filePaths,
             cancellationToken);
-
-        if (!exists)
-        {
-            // Veritabanı yokken dosyaların Data klasörüne açılması için önce
-            // CREATE DATABASE çalıştırılır; MigrateAsync yalnız şemayı uygular.
-            await SqlDatabaseCreator.EnsureCreatedAsync(
-                dbSelector.BuildConnectionString(databaseName),
-                databaseName,
-                filePaths,
-                cancellationToken);
-        }
-        else
-        {
-            // Ad sunucuda kayıtlı ama durum bozuksa (örneğin dosyalar kayıp →
-            // RECOVERY_PENDING) EF veritabanını 'yok' sanıp CREATE DATABASE
-            // çalıştırarak 1801 yanlış hatası verir; burada açıkça raporlanır.
-            await SqlDatabaseCreator.EnsureAccessibleOrThrowAsync(
-                dbSelector.BuildConnectionString(databaseName),
-                databaseName,
-                cancellationToken);
-        }
 
         // Veritabanı yeni oluşturulduysa tüm migration'lar uygulanacak;
         // mevcutsa yalnız bekleyenler sayılır.
-        int appliedMigrationCount = exists
-            ? (await yearContext.Database.GetPendingMigrationsAsync(cancellationToken)).Count()
-            : yearContext.Database.GetMigrations().Count();
+        int appliedMigrationCount = created
+            ? yearContext.Database.GetMigrations().Count()
+            : (await yearContext.Database.GetPendingMigrationsAsync(cancellationToken)).Count();
 
         if (appliedMigrationCount > 0)
         {
@@ -136,7 +122,7 @@ internal sealed class YearDatabaseProvisioner(
         return new AccountingYearProvisionResult
         {
             DatabaseName = databaseName,
-            Created = !exists,
+            Created = created,
             AppliedMigrationCount = appliedMigrationCount,
             SeededChartOfAccountCount = seeded.ChartOfAccountCount,
             SeededReferenceCount = seeded.ReferenceCount,

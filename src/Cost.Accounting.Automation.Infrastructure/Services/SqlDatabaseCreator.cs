@@ -68,6 +68,7 @@ internal static class SqlDatabaseCreator
             if (await DatabaseExistsAsync(connection, databaseName, cancellationToken))
             {
                 await EnsureAccessibleOrThrowCoreAsync(connection, databaseName, cancellationToken);
+                await EnsureAutoCloseOffAsync(connection, databaseName, cancellationToken);
 
                 return false;
             }
@@ -78,14 +79,20 @@ internal static class SqlDatabaseCreator
 
             if (dataDirectory is null)
             {
-                return await TryCreateAsync(connection, plainSql, cancellationToken);
+                bool created = await TryCreateAsync(connection, plainSql, cancellationToken);
+                await EnsureAutoCloseOffAsync(connection, databaseName, cancellationToken);
+
+                return created;
             }
 
             string placedSql = BuildCreateWithFilesSql(databaseName, dataDirectory);
 
             try
             {
-                return await TryCreateAsync(connection, placedSql, cancellationToken);
+                bool created = await TryCreateAsync(connection, placedSql, cancellationToken);
+                await EnsureAutoCloseOffAsync(connection, databaseName, cancellationToken);
+
+                return created;
             }
             catch (SqlException ex) when (!filePaths.IsDirectoryConfigured
                 && !IsLocalServer(masterBuilder.DataSource)
@@ -100,7 +107,10 @@ internal static class SqlDatabaseCreator
                     $"[SqlDatabaseCreator] Dosya yolu ile oluşturulamadı ({ex.Number}); " +
                     $"sunucu varsayılan veri dizinine düşülüyor: {ex.Message}");
 
-                return await TryCreateAsync(connection, plainSql, cancellationToken);
+                bool created = await TryCreateAsync(connection, plainSql, cancellationToken);
+                await EnsureAutoCloseOffAsync(connection, databaseName, cancellationToken);
+
+                return created;
             }
             catch (SqlException ex)
             {
@@ -279,6 +289,44 @@ internal static class SqlDatabaseCreator
         catch (SqlException ex) when (ex.Number == AlreadyExistsErrorNumber)
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Veritabanının otomatik kapanmasını (<c>AUTO_CLOSE</c>) kapatır.
+    ///
+    /// <para>
+    /// <c>AUTO_CLOSE</c> açıkken SQL Server, son kullanıcı bağlantısı kapandığında
+    /// veritabanını kapatır. Bir sonraki bağlantı <c>.mdf</c>/<c>.ldf</c> dosyalarını
+    /// baştan açmak zorunda kalır; bu ilk sorguya saniyeler (yavaş diskte daha
+    /// fazla) ekler. Bağlantı havuzu temizlendiğinde ya da oturumlar arasında bu
+    /// gecikme kullanıcıya "liste/atölye geç açılıyor" gibi yansır. Kurulum
+    /// sırasında ayar kapatılarak yeniden açılma maliyeti ortadan kaldırılır.
+    /// </para>
+    ///
+    /// <para>
+    /// Mevcut veritabanlarında da çalıştırılabilir (idempotent) ve böylece eski
+    /// kurulumlar kendini onarır. Yetki yetersizliği gibi durumlarda kurulum
+    /// akışını bozmaması için hata yutulur; yalnızca tanı amacıyla yazılır.
+    /// </para>
+    /// </summary>
+    private static async Task EnsureAutoCloseOffAsync(
+        SqlConnection connection,
+        string databaseName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using SqlCommand command = connection.CreateCommand();
+            command.CommandText = $"ALTER DATABASE {Quote(databaseName)} SET AUTO_CLOSE OFF";
+            command.CommandTimeout = 60;
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                $"[SqlDatabaseCreator] AUTO_CLOSE kapatılamadı ({databaseName}); " +
+                $"liste açılışları yavaş kalabilir: {ex.Message}");
         }
     }
 

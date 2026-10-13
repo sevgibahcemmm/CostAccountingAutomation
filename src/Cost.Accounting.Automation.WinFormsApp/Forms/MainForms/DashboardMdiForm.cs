@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Dashboards;
 using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Infrastructure.Services;
@@ -96,6 +97,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // sonra "tüm veriler yüklendi" onayı gösterip kapanır.
             _ = LoadDashboardDataAsync(showLoading: true);
 
+            // Hesap planı açılır listeleri (atölye/depo/kategori) çok formda
+            // kullanılır ve tam-tablo okuması yapar. Girişten hemen sonra arka
+            // planda bir kez ısıtılır ki kullanıcı formu açtığında beklemesin.
+            WarmLookUpCaches();
+
             _refreshTimer.Start();
         }
 
@@ -113,6 +119,28 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             LoadingHelper.CloseCurrent();
 
             base.OnFormClosed(e);
+        }
+
+        /// <summary>
+        /// Hesap planı açılır liste önbelleğini arka planda ısıtır. Amaç,
+        /// tam-tablo okumasının (SQL Server'da kısa donmalarda uzun sürebilir)
+        /// kullanıcı bir formu açtığı anda kritik yola girmemesidir. Isınma
+        /// başarısız olursa form açılışında yine normal şekilde denenir.
+        /// </summary>
+        private static void WarmLookUpCaches()
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = Program.Services.CreateScope();
+                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+                    await mediator.Send(new ChartOfAccountLookUpQuery(), CancellationToken.None);
+                }
+                catch
+                {
+                }
+            });
         }
 
         private async void RefreshDashboardTimer_Tick(object? sender, EventArgs e)

@@ -1,6 +1,7 @@
 using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Deletion;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
+using Microsoft.Extensions.Caching.Memory;
 using TS.MediatR;
 using TS.Result;
 
@@ -15,7 +16,8 @@ public sealed record ConsumptionUnitDeleteCommand(Guid Id) : IRequest<Result<str
 /// silme sonrası not üretir.
 /// </summary>
 internal sealed class ConsumptionUnitDeleteCommandHandler(
-    IChartOfAccountRepository chartOfAccountRepository)
+    IChartOfAccountRepository chartOfAccountRepository,
+    IMemoryCache cache)
     : IRequestHandler<ConsumptionUnitDeleteCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(
@@ -29,6 +31,11 @@ internal sealed class ConsumptionUnitDeleteCommandHandler(
             [request.Id],
             "tüketim birimi",
             cancellationToken);
+
+        if (result.IsSuccessful)
+        {
+            ChartOfAccountLookUpCache.Invalidate(cache);
+        }
 
         return BulkDeletionResult.ToMessage(result, "tüketim birimi");
     }

@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.ChartOfAccounts;
 using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.CostSlips;
@@ -120,6 +121,40 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
         /// </summary>
         private StockCostingMethod _semiFinishedCostingMethod = StockCostingMethod.Fifo;
 
+        /// <summary>
+        /// Üretilen ürün için reçete tanımlıysa önerilen malzeme miktarlarını
+        /// gösteren yanıp sönen uyarı etiketi. Ürün seçilince/miktar değişince
+        /// güncellenir; grid satırlarıyla karşılaştırılarak uyumsuzluklar işaretlenir.
+        /// </summary>
+        private LabelControl _lblRecipeHint = default!;
+
+        private readonly System.Windows.Forms.Timer _recipeBlinkTimer = new() { Interval = 450 };
+        private bool _recipeBlinkOn;
+        private string? _recipeHintFullText;
+
+        /// <summary>Üretilen ürün için yüklenen reçete ve hangi ürüne ait olduğu.</summary>
+        private RecipeDto? _recipeHintRecipe;
+        private Guid? _recipeHintProductId;
+        private bool _recipeHintLoaded;
+
+        /// <summary>
+        /// Ardışık ürün seçimlerinde geç dönen sorgunun ekrana yazılmasını
+        /// engelleyen istek sırası.
+        /// </summary>
+        private int _recipeHintRequestId;
+
+        /// <summary>
+        /// Aynı "bakiyesi yok" uyarısının her tuş vuruşunda tekrar gösterilmesini
+        /// engelleyen son mesaj imzası.
+        /// </summary>
+        private string? _lastNoBalanceWarning;
+
+        /// <summary>
+        /// Aynı "bakiye yetersiz" uyarısının her tuş vuruşunda tekrar
+        /// gösterilmesini engelleyen son mesaj imzası.
+        /// </summary>
+        private string? _lastShortBalanceWarning;
+
         private sealed record WorkshopLink(string Code, Guid? SemiFinishedAccountId, Guid? FinishedAccountId);
 
         private sealed record ProductLookUpItem(Guid Id, string Name, string Code, string UnitType, decimal Balance, decimal Draft)
@@ -162,6 +197,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLinesView.OptionsBehavior.AutoPopulateColumns = false;
             gridLines.DataSource = _lines;
             ConfigureGrid();
+            InitializeRecipeHintLabel();
 
             // Onay işlemi bu ekranda yok: yeni kayıt formlarında onay verilmez.
             // Pusula daima TASLAK kaydedilir; onay CostSlipsListForm'daki
@@ -312,6 +348,453 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             descriptionColumn.SummaryItem.DisplayFormat = "";
         }
 
+        /// <summary>
+        /// "Gider Kalemleri" başlığının yanına reçete önerisini gösteren yanıp
+        /// sönen etiketi kurar. Etiket koda kurulur çünkü kalem başlığı satırı
+        /// tasarımcıda başlık ve düğmelerle birlikte yerleşir; araya kontrol
+        /// eklemek tasarımcı yerleşimini bozardı.
+        /// </summary>
+        private void InitializeRecipeHintLabel()
+        {
+            _lblRecipeHint = new LabelControl
+            {
+                Name = "lblRecipeHint",
+                AutoSizeMode = LabelAutoSizeMode.Horizontal,
+                Location = new Point(110, 8),
+                Visible = false
+            };
+            _lblRecipeHint.Appearance.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            _lblRecipeHint.Appearance.Options.UseFont = true;
+            _lblRecipeHint.Appearance.Options.UseForeColor = true;
+            _lblRecipeHint.Appearance.ForeColor = SkinTheme.Danger;
+
+            pnlItemsHeader.Controls.Add(_lblRecipeHint);
+            _lblRecipeHint.BringToFront();
+
+            _recipeBlinkTimer.Tick += RecipeBlinkTimer_Tick;
+        }
+
+        private void RecipeBlinkTimer_Tick(object? sender, EventArgs e)
+        {
+            _recipeBlinkOn = !_recipeBlinkOn;
+            Color surface = SkinTheme.SurfaceOf(pnlItemsHeader);
+            _lblRecipeHint.Appearance.ForeColor = _recipeBlinkOn
+                ? SkinTheme.Danger
+                : SkinTheme.Blend(SkinTheme.Danger, surface, 0.72F);
+        }
+
+        /// <summary>
+        /// Reçete önerisi yalnızca kullanıcı veri girerken (yeni pusula veya
+        /// taslak) ve pusula türü reçete kontrolü gerektirdiğinde gösterilir;
+        /// onaylı kayıtların inceleme ekranında yanıp sönmez.
+        /// </summary>
+        private bool IsRecipeHintEditable
+            => !_saved && _editing is null or { Status: CostSlipStatus.Draft };
+
+        /// <summary>
+        /// Seçili üretilen ürünün reçetesini (varsa) yükler ve öneriyi yeniler.
+        /// Reçete ürün bazlı olduğundan ve miktardan bağımsız olduğundan ürün
+        /// değişmedikçe tekrar sorgu yapılmaz; miktar değişince yalnızca metin
+        /// yeniden hesaplanır.
+        /// </summary>
+        private async Task UpdateRecipeHintAsync()
+        {
+            int requestId = ++_recipeHintRequestId;
+
+            try
+            {
+                if (!IsRecipeHintEditable
+                    || !RequiresRecipeCheck
+                    || lookUpProducedProduct.EditValue is not Guid producedId
+                    || producedId == Guid.Empty)
+                {
+                    ClearRecipeHintCache();
+                    ApplyRecipeHint(null);
+                    return;
+                }
+
+                if (!_recipeHintLoaded || _recipeHintProductId != producedId)
+                {
+                    using var scope = Program.Services.CreateScope();
+                    ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                    RecipeDto? recipe = await mediator.Send(
+                        new RecipeGetByProductQuery(producedId),
+                        CancellationToken.None);
+
+                    if (requestId != _recipeHintRequestId || IsDisposed)
+                    {
+                        return;
+                    }
+
+                    _recipeHintProductId = producedId;
+                    _recipeHintRecipe = recipe;
+                    _recipeHintLoaded = true;
+                }
+
+                // Yeni pusula: reçete malzemeleri grid'e eklenir (reçetedeki
+                // miktarla birebir, ölçekleme yapılmadan). Mevcut (taslak
+                // kayıt) pusulada kayıtlı satırlara dokunulmaz; yalnızca kullanıcı
+                // elle değiştirmediği reçete satırları senkronlanır.
+                ApplyRecipeToGrid(allowAdd: _editing is null);
+
+                RebuildRecipeHintText();
+            }
+            catch (AuthorizationException)
+            {
+                // Kullanıcının reçete görüntüleme yetkisi yoksa öneri sessizce gizlenir.
+                ApplyRecipeHint(null);
+            }
+            catch (Exception ex)
+            {
+                CrashLog.WriteException("CostSlip.RecipeHint", ex);
+                ApplyRecipeHint(null);
+            }
+        }
+
+        /// <summary>
+        /// Önbellekteki reçete ve güncel miktarla öneri metnini yeniden kurar.
+        /// Veritabanına gitmez; grid satırları değiştiğinde sık çağrılabilir.
+        /// </summary>
+        private void RebuildRecipeHintText()
+        {
+            if (!IsRecipeHintEditable
+                || !RequiresRecipeCheck
+                || lookUpProducedProduct.EditValue is not Guid producedId
+                || !_recipeHintLoaded
+                || _recipeHintProductId != producedId)
+            {
+                ApplyRecipeHint(null);
+                return;
+            }
+
+            ApplyRecipeHint(BuildRecipeHint(_recipeHintRecipe));
+        }
+
+        private void ClearRecipeHintCache()
+        {
+            _recipeHintLoaded = false;
+            _recipeHintProductId = null;
+            _recipeHintRecipe = null;
+        }
+
+        /// <summary>
+        /// Reçeteyi, üretim miktarını ve gridde girilen miktarları karşılaştırıp
+        /// "Malzeme öneri (girilen)" biçiminde tek satırlık özet üretir.
+        /// Uyumsuz/eksik kalem varsa özetin BAŞINA sayı olarak yazılır; böylece
+        /// metin kısaltılsa bile uyarı görünür kalır.
+        /// </summary>
+        private string? BuildRecipeHint(RecipeDto? recipe)
+        {
+            if (recipe is null || recipe.Items.Count == 0)
+            {
+                return null;
+            }
+
+            bool hasGridData = _lines.Any(l => l.ProductId is not null && l.Quantity > 0m);
+
+            List<string> parts = [];
+            int mismatch = 0;
+            int missing = 0;
+
+            foreach (RecipeItemDto item in recipe.Items)
+            {
+                // Grid ile aynı mantık: reçete miktarı birebir beklenir.
+                decimal expected = item.Quantity;
+                decimal actual = _lines
+                    .Where(l => l.ProductId == item.ProductId)
+                    .Sum(l => l.Quantity);
+
+                string part = $"{item.ProductName} {expected:n2}";
+
+                if (hasGridData && Math.Abs(actual - expected) > 0.0001m)
+                {
+                    if (actual <= 0m)
+                    {
+                        part += " (girilmedi)";
+                        missing++;
+                    }
+                    else
+                    {
+                        part += $" (girilen {actual:n2})";
+                        mismatch++;
+                    }
+                }
+
+                parts.Add(part);
+            }
+
+            string header = "Reçete (birebir)";
+
+            if (hasGridData && (mismatch > 0 || missing > 0))
+            {
+                List<string> notes = [];
+                if (mismatch > 0)
+                {
+                    notes.Add($"{mismatch} kalem uyumsuz");
+                }
+
+                if (missing > 0)
+                {
+                    notes.Add($"{missing} kalem eksik");
+                }
+
+                header += $" — {string.Join(", ", notes)}";
+            }
+
+            return $"{header}: {string.Join(" • ", parts)}";
+        }
+
+        private void ApplyRecipeHint(string? text)
+        {
+            if (string.Equals(_recipeHintFullText, text, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _recipeHintFullText = text;
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                _recipeBlinkTimer.Stop();
+                _lblRecipeHint.Visible = false;
+                _lblRecipeHint.Text = string.Empty;
+                return;
+            }
+
+            _lblRecipeHint.Text = ShortenHint(text, 118);
+            _lblRecipeHint.Visible = true;
+            _recipeBlinkOn = true;
+            _lblRecipeHint.Appearance.ForeColor = SkinTheme.Danger;
+            _recipeBlinkTimer.Start();
+        }
+
+        private static string ShortenHint(string text, int maxLength)
+            => text.Length <= maxLength ? text : text[..maxLength].TrimEnd() + "…";
+
+        /// <summary>
+        /// Reçetesi olan üretilen ürün için reçete malzemelerini grid'e REÇETEDEKİ
+        /// MİKTARINDA BİREBİR (ölçekleme yapılmadan) ve transfer birim fiyatıyla
+        /// ekler; böylece kullanıcı yalnızca rakamları doldurur, ek gider
+        /// kalemlerini kendisi ekler ve maliyet otomatik oluşur.
+        ///
+        /// <para>
+        /// Yalnızca atölyeye transfer edilmiş (bakiyesi olan) malzemeler eklenir;
+        /// transfer edilmemiş malzeme stoktan tüketilemeyeceği için grid'e
+        /// alınmaz ve kullanıcıya liste dışı bırakıldığı bildirilir. Ürün ya da
+        /// atölye değiştiğinde (ve ekleme yapıldığında) reçete satırları
+        /// senkronlanır: eksik kalemler eklenir, stoğu kalmayan ve kullanıcının
+        /// dokunmadığı satırlar kaldırılır. Kullanıcının elle değiştirdiği
+        /// satırlara dokunulmaz.
+        /// <paramref name="allowAdd"/> false iken yeni satır eklenmez; yalnızca
+        /// mevcut (dokunulmamış) reçete satırları senkronlanır.
+        /// </para>
+        /// </summary>
+        private void ApplyRecipeToGrid(bool allowAdd)
+        {
+            if (!IsRecipeHintEditable
+                || !RequiresRecipeCheck
+                || !_recipeHintLoaded
+                || _recipeHintRecipe is null
+                || lookUpProducedProduct.EditValue is not Guid producedId
+                || _recipeHintProductId != producedId)
+            {
+                return;
+            }
+
+            ExpenseAccountType account = CurrentType == CostSlipType.Service
+                ? ExpenseAccountType.Account740_1
+                : ExpenseAccountType.Account710;
+
+            Guid? selectedWorkshopId = SelectedWorkshopId;
+            bool workshopReady = false;
+            List<AtelierTransferProductDto> transferred = [];
+            if (selectedWorkshopId is Guid readyWorkshopId
+                && _transferredByWorkshop.TryGetValue(readyWorkshopId, out List<AtelierTransferProductDto>? readyList))
+            {
+                workshopReady = true;
+                transferred = readyList!;
+            }
+
+            bool changed = false;
+            List<string> skippedNoBalance = [];
+
+            foreach (RecipeItemDto item in _recipeHintRecipe.Items)
+            {
+                // Reçete miktarı grid'e BİREBİR yazılır; üretim miktarıyla
+                // ölçekleme yapılmaz (reçetede 3 kg şeker varsa grid'de de 3 kg
+                // görünür). Ölçekleme, küçük üretim miktarlarında kalemlerin
+                // sıfıra yuvarlanıp listeden kaybolmasına yol açıyordu.
+                decimal expected = item.Quantity;
+
+                // Yalnızca reçeteden gelmiş satırlar güncellenir/kaldırılır;
+                // kullanıcının elle eklediği aynı ürünlü satırlara dokunulmaz.
+                CostSlipItemEditDto? existing = FindRecipeLine(item.ProductId);
+                bool untouched = existing is not null && IsUntouchedRecipeLine(existing);
+
+                AtelierTransferProductDto? transfer = transferred
+                    .FirstOrDefault(t => t.ProductId == item.ProductId);
+                bool hasStock = transfer is not null && transfer.AvailableQuantity > 0m;
+
+                // Reçete miktarı sıfırsa veya atölye bakiyesi kalmadıysa, kullanıcı
+                // dokunmadıysa satır kaldırılır; böylece grid yalnızca gerçekten
+                // tüketilebilecek malzemeleri gösterir ve eksik olan bildirilir.
+                if (expected <= 0m || (workshopReady && !hasStock))
+                {
+                    if (untouched)
+                    {
+                        _lines.Remove(existing!);
+                        changed = true;
+                    }
+
+                    if (workshopReady && !hasStock)
+                    {
+                        skippedNoBalance.Add(item.ProductName);
+                    }
+
+                    continue;
+                }
+
+                if (existing is not null)
+                {
+                    // Kullanıcı miktara dokunmadıysa reçete miktarına göre
+                    // yenilenir; elle değiştirdiyse korunur.
+                    if (untouched && Math.Abs(existing!.Quantity - expected) > 0.0001m)
+                    {
+                        existing.Quantity = expected;
+                        existing.RecipeRecommendedQuantity = expected;
+                        changed = true;
+                    }
+
+                    continue;
+                }
+
+                if (!allowAdd)
+                {
+                    continue;
+                }
+
+                ProductCatalogDto? prod = _products.FirstOrDefault(p => p.Id == item.ProductId);
+
+                _lines.Add(new CostSlipItemEditDto
+                {
+                    ProductId = item.ProductId,
+                    ProductName = prod?.Name ?? item.ProductName,
+                    ProductUnitTypeId = prod?.ProductUnitTypeId,
+                    ProductUnitTypeName = prod?.ProductUnitTypeName ?? item.ProductUnitTypeName,
+                    ExpenseAccountType = account,
+                    Quantity = expected,
+                    UnitPrice = transfer!.UnitPrice,
+                    TransferredQuantity = transfer.TransferredQuantity,
+                    RecipeRecommendedQuantity = expected
+                });
+
+                changed = true;
+            }
+
+            ReportSkippedNoBalance(skippedNoBalance);
+
+            if (changed)
+            {
+                RefreshAvailableQuantities();
+                RecalculateTotals();
+            }
+
+            ReportShortBalances();
+        }
+
+        /// <summary>
+        /// Satırın miktarı atölyede kalan bakiyeyi aşıyor mu? Bakiye sıfırın
+        /// üzerindeyse satır yine de grid'de kalır; yalnızca miktar fazla
+        /// olduğu için kırmızı işaretlenir ve kaydetme engellenir.
+        /// </summary>
+        private bool IsLineShortOfBalance(CostSlipItemEditDto line)
+        {
+            if (line.ProductId is not Guid pid || line.Quantity <= 0m)
+            {
+                return false;
+            }
+
+            // Yarı mamulün bakiyesi kendi kuralıyla (tutar üzerinden) yürütülür.
+            if (pid == _semiFinishedProductId)
+            {
+                return false;
+            }
+
+            return line.Quantity > GetDisplayedAvailable(line) + 0.0001m;
+        }
+
+        /// <summary>
+        /// Miktarı bakiyeyi aşan satırları bildirir. Satırlar grid'den
+        /// silinmez; kullanıcı eksik malzemeyi görebilsin diye yalnızca uyarılır.
+        /// </summary>
+        private void ReportShortBalances()
+        {
+            List<string> shortLines = [];
+
+            foreach (CostSlipItemEditDto line in _lines)
+            {
+                if (line.ProductName is not string name || string.IsNullOrWhiteSpace(name)
+                    || !IsLineShortOfBalance(line))
+                {
+                    continue;
+                }
+
+                shortLines.Add($"{name} (girilen {line.Quantity:n2} / kalan {GetDisplayedAvailable(line):n2})");
+            }
+
+            if (shortLines.Count == 0)
+            {
+                _lastShortBalanceWarning = null;
+                return;
+            }
+
+            string message = "Atölye bakiyesi yetersiz, bu satırlar kırmızı işaretlendi ve kayıt yapılamaz: "
+                + string.Join(", ", shortLines)
+                + ". Eksik malzemeleri atölyeye transfer edip onaylayın.";
+
+            if (string.Equals(message, _lastShortBalanceWarning, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _lastShortBalanceWarning = message;
+            ToastHelper.Show(message, ToastType.Warning);
+        }
+
+        private CostSlipItemEditDto? FindRecipeLine(Guid productId)
+            => _lines.FirstOrDefault(l => l.ProductId == productId && l.RecipeRecommendedQuantity is not null);
+
+        private static bool IsUntouchedRecipeLine(CostSlipItemEditDto line)
+            => line.RecipeRecommendedQuantity is decimal previous
+                && Math.Abs(line.Quantity - previous) < 0.0001m;
+
+        /// <summary>
+        /// Bakiye yetersizliğinden listeye alınmayan malzemeleri bildirir. Aynı
+        /// uyarı her miktar değişiminde tekrar edilmesin diye son mesajla
+        /// karşılaştırılır.
+        /// </summary>
+        private void ReportSkippedNoBalance(List<string> skipped)
+        {
+            if (skipped.Count == 0)
+            {
+                _lastNoBalanceWarning = null;
+                return;
+            }
+
+            string message = "Atölye bakiyesi olmadığı için reçeteden listeye alınmayan malzemeler: "
+                + string.Join(", ", skipped)
+                + ". Önce bu malzemeleri atölyeye transfer edip onaylayın.";
+
+            if (string.Equals(message, _lastNoBalanceWarning, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _lastNoBalanceWarning = message;
+            ToastHelper.Show(message, ToastType.Warning);
+        }
+
         private void WireEvents()
         {
             cmbCostSlipType.SelectedIndexChanged += CmbCostSlipType_SelectedIndexChanged;
@@ -324,16 +807,19 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
             gridLinesView.ValidatingEditor += GridLinesView_ValidatingEditor;
             gridLinesView.CustomDrawFooterCell += GridLinesView_CustomDrawFooterCell;
+            gridLinesView.CustomDrawCell += GridLinesView_CustomDrawCell;
             lookUpProducedProduct.EditValueChanged += (_, _) =>
             {
                 UpdateAutoDescription();
                 _ = CheckSemiFinishedBalanceAsync();
+                _ = UpdateRecipeHintAsync();
             };
             dtCostDate.EditValueChanged += (_, _) => UpdateAutoDescription();
             txtQuantity.EditValueChanged += (_, _) =>
             {
                 RecalculateGrandTotal();
                 UpdateAutoDescription();
+                _ = UpdateRecipeHintAsync();
             };
         }
 
@@ -400,6 +886,8 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms
             {
                 await AutoAssignNumberAsync();
             }
+
+            await UpdateRecipeHintAsync();
         }
 
         /// <summary>
@@ -722,6 +1210,7 @@ private void DeleteSelectedLine()
             }
 
             UpdateAutoDescription();
+            await UpdateRecipeHintAsync();
         }
 
         private void LookUpWorkshop_EditValueChanged(object? sender, EventArgs e)
@@ -1003,6 +1492,7 @@ private void DeleteSelectedLine()
                 }
 
                 UpdateMaterialProductDataSource();
+                ApplyRecipeToGrid(allowAdd: _editing is null);
             }
             catch (Exception ex)
             {
@@ -1741,6 +2231,28 @@ private void DeleteSelectedLine()
         {
             RefreshAvailableQuantities();
             RecalculateTotals();
+            ReportShortBalances();
+        }
+
+        /// <summary>
+        /// Miktarı atölye bakiyesini aşan satırı kırmızıya boyar. Satır
+        /// silinmez; kullanıcı eksiği görüp transfer yapabilsin diye ekrende
+        /// kalır ve kaydetme mevcut stok kontrolüyle engellenir.
+        /// </summary>
+        private void GridLinesView_CustomDrawCell(object? sender, RowCellCustomDrawEventArgs e)
+        {
+            if (e.RowHandle < 0
+                || e.RowHandle >= _lines.Count
+                || !IsLineShortOfBalance(_lines[e.RowHandle]))
+            {
+                return;
+            }
+
+            e.Appearance.Options.UseBackColor = true;
+            e.Appearance.Options.UseForeColor = true;
+            e.Appearance.BackColor = SkinTheme.Tint(SkinTheme.Danger, 26);
+            e.Appearance.ForeColor = SkinTheme.Danger;
+            e.Appearance.FillRectangle(e.Cache, e.Bounds);
         }
 
         /// <summary>
@@ -1981,6 +2493,7 @@ private void DeleteSelectedLine()
 
             RecalculateGrandTotal();
             gridLinesView.RefreshData();
+            RebuildRecipeHintText();
         }
 
         private void RecalculateGrandTotal()
@@ -2594,6 +3107,8 @@ private void DeleteSelectedLine()
         /// </summary>
         private void LockAfterSave()
         {
+            ApplyRecipeHint(null);
+
             btnPrintSlip.Enabled = true;
             btnSaveDraft.Enabled = false;
             btnAddLine.Enabled = false;
@@ -2630,6 +3145,17 @@ private void DeleteSelectedLine()
             }
 
             base.OnFormClosing(e);
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            // Yanıp sönen etiketin zamanlayıcısı form kapandıktan sonra da
+            // çalışmaya devam ederse forma başvuruda bulunur; burada bırakılır.
+            _recipeBlinkTimer.Stop();
+            _recipeBlinkTimer.Tick -= RecipeBlinkTimer_Tick;
+            _recipeBlinkTimer.Dispose();
+
+            base.OnFormClosed(e);
         }
 
         private async void ShowPreviewAsync()
