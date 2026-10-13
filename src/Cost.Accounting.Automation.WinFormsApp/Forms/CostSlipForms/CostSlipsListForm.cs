@@ -581,7 +581,7 @@ protected override Task ShowSlipReportAsync(CostSlipListDto item)
                 item?.CostDate,
                 item?.CostDate,
                 showTypeSelector: false,
-                headerTitle: "Mamül Üretim Beyanı");
+                headerTitle: "Üretim Beyanı");
             if (dateForm.ShowDialog(this) != DialogResult.OK)
             {
                 return;
@@ -605,7 +605,7 @@ protected override Task ShowSlipReportAsync(CostSlipListDto item)
 
             if (rows.Count == 0)
             {
-                ToastHelper.Show("Seçilen tarih aralığında onaylı mamül fişi bulunamadı.", ToastType.Warning);
+                ToastHelper.Show("Seçilen tarih aralığında onaylı mamül veya hizmet fişi bulunamadı.", ToastType.Warning);
                 return;
             }
 

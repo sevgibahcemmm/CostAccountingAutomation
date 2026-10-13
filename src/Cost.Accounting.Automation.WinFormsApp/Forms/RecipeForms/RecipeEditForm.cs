@@ -25,6 +25,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.RecipeForms;
 public sealed partial class RecipeEditForm : XtraForm
 {
     private readonly RecipeListDto? _editing;
+    private readonly RecipeSlipSeed? _slipSeed;
     private readonly BindingList<RecipeItemDto> _lines = [];
     private readonly Dictionary<Guid, List<AtelierTransferProductDto>> _transferredByWorkshop = [];
     private List<ProductLookUpDto> _mamulProducts = [];
@@ -37,11 +38,22 @@ public sealed partial class RecipeEditForm : XtraForm
         public string Display => $"{Name} ({Code}) [{UnitTypeName}]";
     }
 
+    private sealed record RecipeSlipSeed(
+        Guid? WorkshopId,
+        Guid ProductId,
+        decimal OutputQuantity,
+        IReadOnlyCollection<RecipeSlipSeedRow> Rows);
+
+    public sealed record RecipeSlipSeedRow(Guid ProductId, string ProductName, string ProductUnitTypeName, decimal Quantity);
+
     public RecipeEditForm() : this(null) { }
 
-    public RecipeEditForm(RecipeListDto? existing)
+    public RecipeEditForm(RecipeListDto? existing) : this(existing, null) { }
+
+    private RecipeEditForm(RecipeListDto? existing, RecipeSlipSeed? slipSeed)
     {
         _editing = existing;
+        _slipSeed = slipSeed;
         InitializeComponent();
 
         Text = _editing is null ? "Yeni Reçete" : "Reçete Düzenle";
@@ -53,6 +65,18 @@ public sealed partial class RecipeEditForm : XtraForm
         WireEvents();
     }
 
+    /// <summary>
+    /// Maliyet pusulasındaki "reçete yok" akışı için reçete formunu dolu
+    /// olarak açar: atölye, mamül/hizmet ürünü, üretim miktarı ve slip
+    /// satırları kalem olarak taşınır.
+    /// </summary>
+    public static RecipeEditForm CreateFromCostSlip(
+        Guid? workshopId,
+        Guid productId,
+        decimal outputQuantity,
+        IReadOnlyCollection<RecipeSlipSeedRow> rows)
+        => new(null, new RecipeSlipSeed(workshopId, productId, outputQuantity, rows));
+
     private void WireEvents()
     {
         Load += RecipeEditForm_Load;
@@ -63,6 +87,7 @@ public sealed partial class RecipeEditForm : XtraForm
         gridLinesView.CellValueChanged += GridLinesView_CellValueChanged;
         lookUpWorkshop.EditValueChanged += LookUpWorkshop_EditValueChanged;
         lookUpProduct.EditValueChanged += LookUpProduct_EditValueChanged;
+        txtOutput.EditValueChanged += TxtOutput_EditValueChanged;
     }
 
     private async void RecipeEditForm_Load(object? sender, EventArgs e)
@@ -102,11 +127,16 @@ public sealed partial class RecipeEditForm : XtraForm
 
         if (_editing is not null)
         {
+            lookUpWorkshop.EditValue = _editing.WorkshopId;
             _suppressProductLoad = true;
             lookUpProduct.EditValue = _editing.ProductId;
             _suppressProductLoad = false;
             txtOutput.EditValue = _editing.OutputQuantity;
             await LoadRecipeItemsAsync();
+        }
+        else if (_slipSeed is not null)
+        {
+            ApplySlipSeed();
         }
         else
         {
@@ -114,6 +144,38 @@ public sealed partial class RecipeEditForm : XtraForm
         }
 
         RefreshMaterialLookup();
+    }
+
+    private void ApplySlipSeed()
+    {
+        if (_slipSeed is not { } seed)
+        {
+            return;
+        }
+
+        if (seed.WorkshopId is Guid seedWorkshopId)
+        {
+            lookUpWorkshop.EditValue = seedWorkshopId;
+        }
+
+        _suppressProductLoad = true;
+        lookUpProduct.EditValue = seed.ProductId;
+        _suppressProductLoad = false;
+
+        txtOutput.EditValue = seed.OutputQuantity;
+
+        foreach (RecipeSlipSeedRow row in seed.Rows)
+        {
+            _lines.Add(new RecipeItemDto
+            {
+                ProductId = row.ProductId,
+                ProductName = row.ProductName,
+                ProductUnitTypeName = row.ProductUnitTypeName,
+                Quantity = row.Quantity
+            });
+        }
+
+        RecalculateUnitQuantities();
     }
 
     private static async Task<List<ChartOfAccountLookUpDto>> LoadAccountsAsync()
@@ -209,8 +271,15 @@ public sealed partial class RecipeEditForm : XtraForm
             Increment = 1,
             DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n2" }
         };
+        RepositoryItemSpinEdit riUnitQuantity = new()
+        {
+            MinValue = 0.0001m,
+            MaxValue = 999999999,
+            Increment = 0.01m,
+            DisplayFormat = { FormatType = FormatType.Numeric, FormatString = "n4" }
+        };
 
-        gridLinesControl.RepositoryItems.AddRange([riProduct, riUnitName, riQuantity]);
+        gridLinesControl.RepositoryItems.AddRange([riProduct, riUnitName, riQuantity, riUnitQuantity]);
 
         GridColumn noColumn = new()
         {
@@ -249,8 +318,18 @@ public sealed partial class RecipeEditForm : XtraForm
             Width = 200,
             AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } }
         };
+        GridColumn unitQuantityColumn = new()
+        {
+            Caption = "Birim Miktar (1 ürün için)",
+            FieldName = nameof(RecipeItemDto.UnitQuantity),
+            ColumnEdit = riUnitQuantity,
+            Visible = true,
+            Width = 190,
+            ToolTip = "Bir birim mamül/hizmet üretimi için gereken malzeme miktarı. Reçete miktarıyla otomatik eşitlenir, elle de düzeltilebilir.",
+            AppearanceCell = { TextOptions = { HAlignment = HorzAlignment.Far } }
+        };
 
-gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityColumn]);
+gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityColumn, unitQuantityColumn]);
             GridColumnFactory.RegisterManualNumericColumns(gridLinesView);
             gridLinesView.CustomUnboundColumnData += GridLinesView_CustomUnboundColumnData;
 
@@ -470,14 +549,15 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
                 txtOutput.EditValue = recipe.OutputQuantity;
                 foreach (RecipeItemDto item in recipe.Items)
                 {
-                    _lines.Add(new RecipeItemDto
-                    {
-                        Id = item.Id,
-                        ProductId = item.ProductId,
-                        ProductName = item.ProductName,
-                        ProductUnitTypeName = item.ProductUnitTypeName,
-                        Quantity = item.Quantity
-                    });
+_lines.Add(new RecipeItemDto
+                {
+                    Id = item.Id,
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    ProductUnitTypeName = item.ProductUnitTypeName,
+                    Quantity = item.Quantity,
+                    UnitQuantity = item.UnitQuantity
+                });
                 }
             }
             else
@@ -548,8 +628,39 @@ gridLinesView.Columns.AddRange([noColumn, productColumn, unitColumn, quantityCol
             {
                 line.Quantity = 0;
             }
+
+            line.UnitQuantity = UnitQuantityFrom(line.Quantity, OutputValue);
+        }
+        else if (e.Column?.FieldName == nameof(RecipeItemDto.UnitQuantity))
+        {
+            if (line.UnitQuantity < 0)
+            {
+                line.UnitQuantity = 0;
+            }
+
+            line.Quantity = Math.Round(line.UnitQuantity * OutputValue, 4);
         }
     }
+
+    private void TxtOutput_EditValueChanged(object? sender, EventArgs e)
+        => RecalculateUnitQuantities();
+
+    private void RecalculateUnitQuantities()
+    {
+        decimal output = OutputValue;
+        foreach (RecipeItemDto line in _lines)
+        {
+            line.UnitQuantity = UnitQuantityFrom(line.Quantity, output);
+        }
+
+        gridLinesView.RefreshData();
+    }
+
+    private decimal OutputValue
+        => txtOutput.EditValue is decimal v ? v : 0m;
+
+    private static decimal UnitQuantityFrom(decimal quantity, decimal output)
+        => output > 0m ? Math.Round(quantity / output, 4) : quantity;
 
     private void AddEmptyLine()
     {

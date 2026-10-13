@@ -28,7 +28,8 @@ public sealed record ProductUpdateCommand(
     bool IsActive,
     Guid? SemiFinishedProductId,
     IReadOnlyCollection<ProductPriceRow> Prices,
-    IReadOnlyCollection<ProductImageRow> Images) : IRequest<Result<string>>;
+    IReadOnlyCollection<ProductImageRow> Images,
+    bool CreateSemiFinishedPair = false) : IRequest<Result<string>>;
 
 public sealed class ProductUpdateCommandValidator : AbstractValidator<ProductUpdateCommand>
 {
@@ -197,6 +198,7 @@ internal sealed class ProductUpdateCommandHandler(
 
         Product? companion = null;
         ChartOfAccount? companionNode = null;
+        bool companionIsNew = false;
 
         if (product.SemiFinishedProductId is { } semiId)
         {
@@ -212,6 +214,122 @@ internal sealed class ProductUpdateCommandHandler(
             if (yarimamul is not null)
             {
                 companion = await productRepository.GetByIdWithDetailsAsync(yarimamul.Id, cancellationToken);
+            }
+        }
+
+        // Düzenleme sırasında ürünün bağlı YARIMAMÜL kartı yoksa ve kullanıcı istediyse eksik
+        // yarımamül kartı burada açılır. İlk oluşturmadaki çift mantığıyla birebir aynıdır:
+        // 152 MAMÜL -> 151 YARIMAMÜL; 630 HİZMET -> aynı 630 yaprağında YARIMAMÜL.
+        if (request.CreateSemiFinishedPair && companion is null && product.SemiFinishedProductId is null)
+        {
+            bool mainIs152 = warehouse.Code.Value.StartsWith("152", StringComparison.Ordinal);
+            bool mainIsExpense = ProductCodeHelper.IsExpenseWarehouse(warehouse.Code.Value);
+
+            if (mainIs152 || mainIsExpense)
+            {
+                ChartOfAccount? semiWarehouse;
+                ChartOfAccount? semiCategory;
+
+                if (mainIsExpense)
+                {
+                    semiWarehouse = warehouse;
+                    semiCategory = category;
+                }
+                else
+                {
+                    string semiWarehouseCode = "151" + warehouse.Code.Value.Substring(3);
+                    string semiCategoryCode = "151" + category.Code.Value.Substring(3);
+
+                    semiWarehouse = accounts.FirstOrDefault(a =>
+                        a.Type == ChartOfAccountType.Warehouse &&
+                        !a.IsDeleted &&
+                        (a.Code.Value == semiWarehouseCode || a.Code.Value.StartsWith(semiWarehouseCode + ".")));
+
+                    semiCategory = semiWarehouse is null
+                        ? null
+                        : accounts.FirstOrDefault(a =>
+                            a.Type == ChartOfAccountType.Category &&
+                            !a.IsDeleted &&
+                            a.Code.Value == semiCategoryCode &&
+                            IsDescendantOf(a, semiWarehouse, accounts));
+                }
+
+                if (semiWarehouse is null || semiCategory is null)
+                {
+                    return Result<string>.Failure("151 karşılık depo veya kategori hesap planında bulunamadı");
+                }
+
+                List<string> semiProductCodes = (await productRepository.GetAllIncludingDeletedAsync(cancellationToken))
+                    .Select(p => p.ProductCode.Value)
+                    .ToList();
+                List<string> semiAccountCodes = accounts.Select(a => a.Code.Value).ToList();
+
+                (string semiProductCode, string semiNodeCode) =
+                    ProductCodeHelper.BuildNextCodes(semiCategory.Code.Value, semiProductCodes, semiAccountCodes);
+
+                string semiBaseName = request.Name.Trim();
+                if (semiBaseName.EndsWith(mamulSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    semiBaseName = semiBaseName[..^mamulSuffix.Length].TrimEnd();
+                }
+                else if (semiBaseName.EndsWith(hizmetSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    semiBaseName = semiBaseName[..^hizmetSuffix.Length].TrimEnd();
+                }
+                else if (semiBaseName.EndsWith(yarimamulSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    semiBaseName = semiBaseName[..^yarimamulSuffix.Length].TrimEnd();
+                }
+
+                string semiName = semiBaseName + yarimamulSuffix;
+
+                ChartOfAccount semiNode = new(
+                    new AccountCode(semiNodeCode),
+                    new Name(semiName),
+                    semiCategory.Level + 1,
+                    ChartOfAccountType.Stok);
+                semiNode.SetParent(semiCategory.Id);
+                await chartOfAccountRepository.AddAsync(semiNode, cancellationToken);
+
+                string semiGtin = barcodeGeneratorService.GenerateGtin(companyPrefix, semiProductCode);
+                string semiQr = ProductQrContentBuilder.Build(
+                    semiProductCode,
+                    semiGtin,
+                    semiName,
+                    taxRate.Rate,
+                    semiWarehouse.Name.Value,
+                    semiCategory.Name.Value,
+                    unitType.Name.Value);
+
+                Product semiFinished = new(
+                    new Name(semiName),
+                    new ProductCode(semiProductCode),
+                    new Barcode(semiGtin),
+                    new QRCode(semiQr),
+                    request.MinimumProductLevel,
+                    new IdentityId(request.TaxRateId),
+                    semiWarehouse.Id,
+                    semiCategory.Id,
+                    new IdentityId(request.ProductUnitTypeId),
+                    semiNode.Id,
+                    new Description(request.Description),
+                    request.IsActive);
+
+                semiFinished.ReplacePrices(request.Prices.Select(p => new ProductPrice(
+                    new Price(p.UnitPrice), p.PriceType, p.StartDate, p.EndDate)));
+
+                semiFinished.ReplaceImages(request.Images.Select(i => new Photo(
+                    System.IO.Path.GetFileName(i.Path),
+                    GetContentType(i.Path),
+                    i.Path,
+                    i.IsPrimary)));
+
+                semiFinished.SetSemiFinishedProduct(product.Id);
+                await productRepository.AddAsync(semiFinished, cancellationToken);
+
+                companion = semiFinished;
+                companionNode = semiNode;
+                companionIsNew = true;
             }
         }
 
@@ -293,7 +411,7 @@ internal sealed class ProductUpdateCommandHandler(
                 i.Path,
                 i.IsPrimary)));
 
-            if (companion.ChartOfAccountId is { } companionNodeId)
+            if (companion.ChartOfAccountId is { } companionNodeId && !companionIsNew)
             {
                 companionNode = accounts.FirstOrDefault(a => a.Id == companionNodeId);
             }
@@ -312,8 +430,11 @@ internal sealed class ProductUpdateCommandHandler(
                 chartOfAccountRepository.Update(node);
             }
 
-            if (companion is not null)
+            if (companion is not null && !companionIsNew)
             {
+                // Yeni oluşturulan eş (ürün ve hesap düğümü) zaten Added durumda;
+                // Update çağrılırsa Modified'a dönüp henüz INSERT edilmemiş satırı
+                // güncellemeye çalışır ve DbUpdateConcurrencyException fırlatır.
                 productRepository.Update(companion);
                 if (companionNode is not null)
                 {
@@ -345,5 +466,38 @@ internal sealed class ProductUpdateCommandHandler(
             ".webp" => "image/webp",
             _ => "application/octet-stream"
         };
+    }
+
+    private static bool IsDescendantOf(
+        ChartOfAccount? account,
+        ChartOfAccount? ancestor,
+        List<ChartOfAccount> accounts)
+    {
+        if (account is null || ancestor is null)
+        {
+            return false;
+        }
+
+        HashSet<Guid> visited = new();
+        while (account.ParentId is { } parentId)
+        {
+            if (parentId == ancestor.Id)
+            {
+                return true;
+            }
+
+            if (!visited.Add(parentId.Value))
+            {
+                return false;
+            }
+
+            account = accounts.FirstOrDefault(a => a.Id == parentId);
+            if (account is null)
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 }

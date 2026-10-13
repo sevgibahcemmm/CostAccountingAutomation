@@ -36,6 +36,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
         private List<TaxRateDto> _taxRates = [];
         private List<ChartOfAccountLookUpDto> _accounts = [];
         private List<SemiFinishedOption> _semiFinishedOptions = [];
+        private bool _hasSemiFinishedCounterpart;
         private string _productCode = string.Empty;
         private readonly bool _priceAndPhotosOnly;
         private readonly IDisposable? skinBinding;
@@ -441,6 +442,36 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             }
         }
 
+        /// <summary>
+        /// Düzenleme modunda, ürün 152 (MAMÜL) veya 630 (HİZMET) ise ve kendine bağlı bir
+        /// YARIMAMÜL kartı yoksa, eksik yarımamül kartını açmak için çift anahtarı gösterilir.
+        /// Kaydederken anahtar açık bırakılırsa yarımamül kartı oluşturulup bu karta bağlanır.
+        /// </summary>
+        private void ConfigureEditPairToggle(ProductDto full)
+        {
+            bool eligible =
+                full.SemiFinishedProductId is null &&
+                !_hasSemiFinishedCounterpart &&
+                (full.WarehouseCode.StartsWith("152", StringComparison.Ordinal)
+                    || ProductCodeHelper.IsExpenseWarehouse(full.WarehouseCode));
+
+            if (!eligible)
+            {
+                chkCreatePair.Visible = false;
+                chkCreatePair.IsOn = false;
+                return;
+            }
+
+            bool expense = ProductCodeHelper.IsExpenseWarehouse(full.WarehouseCode);
+            chkCreatePair.Visible = true;
+            chkCreatePair.IsOn = false;
+            chkCreatePair.Properties.OnText = expense ? "Yarımamül + Hizmet" : "Yarımamül + Mamül";
+            chkCreatePair.Properties.OffText = "Yarımamül kartı açma";
+            chkCreatePair.ToolTip = expense
+                ? "Aynı 630 yaprağında YARIMAMÜL kartı oluşturulur ve bu karta bağlanır"
+                : "151 deposunda YARIMAMÜL kartı oluşturulur ve bu karta bağlanır";
+        }
+
         private void LoadCategoriesForWarehouse(Guid warehouseId)
         {
             ChartOfAccountLookUpDto? warehouse = _accounts.FirstOrDefault(a => a.Id == warehouseId);
@@ -509,8 +540,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
                 return [];
             }
 
+            // Ürün kartları (Stok düğümleri) kategori altında açılır; kategoriyi
+            // "yaprak" saymamak ve ürün adlarının kategori listesine düşmemesi için
+            // yapısal olmayan Stok düğümleri hesaba katılmaz.
             Dictionary<Guid, List<ChartOfAccountLookUpDto>> childrenByParent = accounts
-                .Where(a => a.ParentId is Guid)
+                .Where(a => a.ParentId is Guid && a.Type != ChartOfAccountType.Stok)
                 .GroupBy(a => a.ParentId!.Value)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -596,6 +630,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             }
             memoDescription.Text = full.Description;
             chkActive.IsOn = full.IsActive;
+
+            _hasSemiFinishedCounterpart = full.HasSemiFinishedPair;
+            ConfigureEditPairToggle(full);
 
             _movements.AddRange(full.Movements);
             gridMovements.DataSource = _movements;
@@ -969,6 +1006,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
             Guid? categoryId = cmbCategory.EditValue as Guid?;
             Guid? unitTypeId = cmbUnitType.EditValue as Guid?;
             bool createPair = _editing is null && chkCreatePair.Visible && chkCreatePair.IsOn;
+            bool createSemiFinishedPair = _editing is not null && chkCreatePair.Visible && chkCreatePair.IsOn;
             Guid? semiFinishedProductId = _editing?.SemiFinishedProductId;
             bool isActive = chkActive.IsOn;
 
@@ -983,7 +1021,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms
 
             IRequest<Result<string>> command = _editing is null
                 ? new ProductCreateCommand(name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, createPair, priceRows, _images.Select(i => i.Path).ToList())
-                : new ProductUpdateCommand(_editing.Id, name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, semiFinishedProductId, priceRows, imageRows);
+                : new ProductUpdateCommand(_editing.Id, name, taxRateId.GetValueOrDefault(), minLevel, warehouseId.GetValueOrDefault(), categoryId.GetValueOrDefault(), unitTypeId.GetValueOrDefault(), description, isActive, semiFinishedProductId, priceRows, imageRows, createSemiFinishedPair);
 
             if (!RunApplicationValidator(command))
             {

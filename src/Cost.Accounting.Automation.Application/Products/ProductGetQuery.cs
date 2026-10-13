@@ -21,6 +21,10 @@ internal sealed class ProductGetQueryHandler(
             return Result<ProductDto>.Failure("Ürün bulunamadı");
         }
 
+        Product? semiFinishedPair = await productRepository.FirstOrDefaultAsync(
+            p => p.SemiFinishedProductId == product.Id,
+            cancellationToken);
+
         ProductDto dto = new()
         {
             Id = product.Id,
@@ -49,6 +53,7 @@ internal sealed class ProductGetQueryHandler(
             ChartOfAccountCode = product.ChartOfAccount?.Code.Value,
             SemiFinishedProductId = product.SemiFinishedProductId == null ? null : product.SemiFinishedProductId.Value,
             SemiFinishedProductName = product.SemiFinishedProduct?.Name.Value,
+            HasSemiFinishedPair = semiFinishedPair is not null,
             Description = product.Description.Value,
             IsActive = product.IsActive,
             CreatedAt = product.CreatedAt,

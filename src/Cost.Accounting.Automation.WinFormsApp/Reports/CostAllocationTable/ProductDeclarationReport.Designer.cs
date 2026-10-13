@@ -181,8 +181,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             // xrLabel2
             // 
             this.xrLabel2.ExpressionBindings.AddRange(new DevExpress.XtraReports.UI.ExpressionBinding[] {
-            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[WorkshopName] + \' Atölyesi Mamul Üretim Beyanı ( \' + [Parameters.parameterPeriod" +
-                    "Text] + \' )\'")});
+            new DevExpress.XtraReports.UI.ExpressionBinding("BeforePrint", "Text", "[WorkshopName] + \' Atölyesi \' + [DeclarationKind] + \' Üretim Beyanı ( \' + [Parameters.parameterPeriodText] + \' )\'")});
             this.xrLabel2.Font = new DevExpress.Drawing.DXFont("Arial", 12F, DevExpress.Drawing.DXFontStyle.Bold);
             this.xrLabel2.ForeColor = System.Drawing.Color.Red;
             this.xrLabel2.LocationFloat = new DevExpress.Utils.PointFloat(0F, 52.91665F);
@@ -491,7 +490,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             this.xrLabel1,
             this.xrTable1});
             this.GroupHeader.GroupFields.AddRange(new DevExpress.XtraReports.UI.GroupField[] {
-            new DevExpress.XtraReports.UI.GroupField("WorkshopName", DevExpress.XtraReports.UI.XRColumnSortOrder.Ascending)});
+            new DevExpress.XtraReports.UI.GroupField("DeclarationGroupKey", DevExpress.XtraReports.UI.XRColumnSortOrder.Ascending)});
             this.GroupHeader.HeightF = 122.0833F;
             this.GroupHeader.Name = "GroupHeader";
             // 

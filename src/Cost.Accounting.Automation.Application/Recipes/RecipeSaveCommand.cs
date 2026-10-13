@@ -87,9 +87,14 @@ internal sealed class RecipeSaveCommandHandler(
 
         Recipe? recipe = await recipeRepository.GetByProductIdAsync(productId, cancellationToken);
 
+        IdentityId? workshopId = request.WorkshopId == Guid.Empty
+            ? null
+            : new IdentityId(request.WorkshopId);
+
         if (recipe is not null)
         {
             recipe.SetOutputQuantity(request.OutputQuantity);
+            recipe.SetWorkshop(workshopId);
             recipe.ClearItems();
             foreach (RecipeItemRow row in request.Items)
             {
@@ -112,12 +117,14 @@ internal sealed class RecipeSaveCommandHandler(
             target.Restore();
             target.SetStatus(request.IsActive);
             target.SetOutputQuantity(request.OutputQuantity);
+            target.SetWorkshop(workshopId);
         }
         else
         {
             target = new Recipe(productId);
             target.SetStatus(request.IsActive);
             target.SetOutputQuantity(request.OutputQuantity);
+            target.SetWorkshop(workshopId);
         }
 
         target.ClearItems();

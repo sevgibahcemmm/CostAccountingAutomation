@@ -22,12 +22,18 @@ public sealed class RecipeItemDto
 
     /// <summary>Kalem miktarının tanımlı olduğu üretim miktarı (çıktı). Bu değer üst reçeteden gelir.</summary>
     public decimal OutputQuantity { get; set; }
+
+    /// <summary>Bir birim mamul/hizmet üretimi için gereken malzeme miktarı (Quantity / OutputQuantity).</summary>
+    public decimal UnitQuantity { get; set; }
 }
 
 public sealed class RecipeListDto : EntityDto
 {
     [Column("Mamül Ürün", Order = 10, Width = 260)]
     public string ProductName { get; set; } = default!;
+
+    [Column("Atölye", Order = 15, Width = 160)]
+    public string WorkshopName { get; set; } = string.Empty;
 
     [Column("Birim", Order = 20, Width = 90, Alignment = "Center")]
     public string ProductUnitTypeName { get; set; } = string.Empty;
@@ -41,6 +47,9 @@ public sealed class RecipeListDto : EntityDto
     [Column("Ürün Id", IsVisible = false)]
     public Guid ProductId { get; set; }
 
+    [Column("Atölye Id", IsVisible = false)]
+    public Guid? WorkshopId { get; set; }
+
     public List<RecipeItemDto> Items { get; set; } = [];
 }
 
@@ -49,6 +58,8 @@ public sealed class RecipeDto : EntityDto
     public Guid ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string ProductUnitTypeName { get; set; } = string.Empty;
+    public Guid? WorkshopId { get; set; }
+    public string WorkshopName { get; set; } = string.Empty;
     public decimal OutputQuantity { get; set; }
     public List<RecipeItemDto> Items { get; set; } = [];
 }
@@ -63,6 +74,8 @@ public static class RecipeExtensions
                 Id = s.Entity.Id,
                 ProductId = s.Entity.ProductId,
                 ProductName = s.Entity.Product == null ? string.Empty : s.Entity.Product.Name.Value,
+                WorkshopId = s.Entity.WorkshopId == null ? (Guid?)null : s.Entity.WorkshopId.Value,
+                WorkshopName = s.Entity.Workshop == null ? string.Empty : s.Entity.Workshop.Name.Value,
                 ProductUnitTypeName = s.Entity.Product == null || s.Entity.Product.ProductUnitType == null
                     ? string.Empty
                     : s.Entity.Product.ProductUnitType.Name.Value,
@@ -77,7 +90,10 @@ public static class RecipeExtensions
                         ? string.Empty
                         : i.Product.ProductUnitType.Name.Value,
                     Quantity = i.Quantity,
-                    OutputQuantity = s.Entity.OutputQuantity
+                    OutputQuantity = s.Entity.OutputQuantity,
+                    UnitQuantity = s.Entity.OutputQuantity <= 0
+                        ? i.Quantity
+                        : i.Quantity / s.Entity.OutputQuantity
                 }).ToList(),
                 IsActive = s.Entity.IsActive,
                 CreatedAt = s.Entity.CreatedAt,
@@ -98,6 +114,8 @@ public static class RecipeExtensions
             ProductId = recipe.ProductId,
             ProductName = recipe.Product?.Name.Value ?? string.Empty,
             ProductUnitTypeName = recipe.Product?.ProductUnitType?.Name.Value ?? string.Empty,
+            WorkshopId = recipe.WorkshopId?.Value,
+            WorkshopName = recipe.Workshop?.Name.Value ?? string.Empty,
             OutputQuantity = recipe.OutputQuantity,
             IsActive = recipe.IsActive,
             CreatedAt = recipe.CreatedAt,
@@ -112,7 +130,10 @@ public static class RecipeExtensions
                     ProductName = i.Product?.Name.Value ?? string.Empty,
                     ProductUnitTypeName = i.Product?.ProductUnitType?.Name.Value ?? string.Empty,
                     Quantity = i.Quantity,
-                    OutputQuantity = recipe.OutputQuantity
+                    OutputQuantity = recipe.OutputQuantity,
+                    UnitQuantity = recipe.OutputQuantity <= 0
+                        ? i.Quantity
+                        : i.Quantity / recipe.OutputQuantity
                 })
                 .ToList()
         };

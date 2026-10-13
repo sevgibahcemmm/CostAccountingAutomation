@@ -15,6 +15,26 @@ public sealed class ProductDeclarationRowDto
     public string WorkshopName { get; init; } = string.Empty;
 
     /// <summary>
+    /// Beyan türü: mamül pusulaları için "Mamul", hizmet pusulaları için
+    /// "Hizmet". Rapor başlığı bu alana göre dinamik yazılır.
+    /// </summary>
+    public string DeclarationKind { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Tür sıralaması (Mamul = 0, Hizmet = 1). Grup anahtarının başına
+    /// eklenerek aynı raporda önce mamül, sonra hizmet sayfalarının
+    /// sıralanmasını sağlar.
+    /// </summary>
+    public int DeclarationOrder { get; init; }
+
+    /// <summary>
+    /// Sayfa/grup anahtarı: tür sırası + atölye. Rapor atölye bazında
+    /// gruplanıp her grup yeni sayfaya taşındığı için aynı atölyenin
+    /// mamül ve hizmet beyanları ayrı sayfalara düşer.
+    /// </summary>
+    public string DeclarationGroupKey => $"{DeclarationOrder}|{WorkshopName}";
+
+    /// <summary>
     /// Atölyenin şefi. Beyan atölyeye göre gruplandığı için rapor bu alanı
     /// veri alanı olarak okur; parametre grup bazlı değişemez.
     /// </summary>

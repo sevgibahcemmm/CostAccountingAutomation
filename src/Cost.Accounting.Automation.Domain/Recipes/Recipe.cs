@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Cost.Accounting.Automation.Domain.Products;
 
 namespace Cost.Accounting.Automation.Domain.Recipes;
@@ -24,6 +25,10 @@ public sealed class Recipe : Entity
 
     public IdentityId ProductId { get; private set; } = default!;
     public Product? Product { get; private set; }
+
+    /// <summary>Reçetenin ait olduğu atölye (hesap planı düğümü). Eski kayıtlarda boş olabilir.</summary>
+    public IdentityId? WorkshopId { get; private set; }
+    public ChartOfAccount? Workshop { get; private set; }
 
     /// <summary>
     /// Reçetenin tanımlı olduğu üretim miktarı (çıktı). Kalem miktarları bu
@@ -57,6 +62,9 @@ public sealed class Recipe : Entity
         ProductId = productId ?? throw new ArgumentNullException(nameof(productId));
         ResolveDuplicateKey();
     }
+
+    public void SetWorkshop(IdentityId? workshopId)
+        => WorkshopId = workshopId;
 
     public void AddItem(RecipeItem item)
     {

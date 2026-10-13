@@ -21,7 +21,7 @@ public static class ProductCodeHelper
     public static bool IsExpenseWarehouse(string code)
         => string.Equals(code, ExpenseWarehouseCode, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>630.16.03 altında olan ve alt hesabı bulunmayan (en son kırılım) hesap.</summary>
+    /// <summary>630.16.03 altında olan ve yapısal alt hesabı bulunmayan (en son kırılım) hesap.</summary>
     public static bool IsExpenseCategoryLeaf(IEnumerable<ChartOfAccount> accounts, ChartOfAccount account)
     {
         if (account.IsDeleted || !IsUnderRoot(account.Code.Value, ExpenseCategoryRootCode))
@@ -29,7 +29,12 @@ public static class ProductCodeHelper
             return false;
         }
 
-        return !accounts.Any(a => !a.IsDeleted && a.ParentId == account.Id);
+        // Ürün kartları (Stok düğümleri) kategori altında açılır; bunlar hesabın
+        // "yaprak" olma özelliğini bozmaz. Yalnızca yapısal alt hesaplar dikkate alınır.
+        return !accounts.Any(a =>
+            !a.IsDeleted &&
+            a.ParentId == account.Id &&
+            a.Type != ChartOfAccountType.Stok);
     }
 
     public static (string ProductCode, string AccountCode) BuildNextCodes(

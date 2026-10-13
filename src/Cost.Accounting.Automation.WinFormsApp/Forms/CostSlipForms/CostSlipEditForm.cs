@@ -3025,36 +3025,29 @@ private void DeleteSelectedLine()
                 return true;
             }
 
-            RecipeMaterialCandidate[] candidates = materialLines
+            List<RecipeEditForm.RecipeSlipSeedRow> seedRows = materialLines
                 .Where(l => l.ProductId != null)
-                .Select(l => new RecipeMaterialCandidate(
+                .Select(l => new RecipeEditForm.RecipeSlipSeedRow(
                     l.ProductId!.Value,
                     l.ProductName ?? string.Empty,
                     l.ProductUnitTypeName ?? string.Empty,
                     l.Quantity))
-                .ToArray();
+                .ToList();
 
-            if (candidates.Length == 0)
+            if (seedRows.Count == 0)
             {
                 return true;
             }
 
-            using (var dialog = new RecipeMaterialSelectionForm(producedProductName, quantity, candidates))
+            using (RecipeEditForm dialog = RecipeEditForm.CreateFromCostSlip(
+                SelectedWorkshopId,
+                producedProductId,
+                quantity,
+                seedRows))
             {
-                if (dialog.ShowDialog(this) != DialogResult.OK)
-                {
-                    return true;
-                }
-
-                await CrudExecutor.ExecuteAsync(new RecipeSaveCommand(
-                    producedProductId,
-                    quantity,
-                    true,
-                    dialog.SelectedItems,
-                    SelectedWorkshopId ?? Guid.Empty));
+                dialog.ShowDialog(this);
             }
 
-            ToastHelper.Show("Reçete olarak kaydedildi.", ToastType.Success);
             return true;
         }
         catch (Exception ex)

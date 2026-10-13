@@ -9,7 +9,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
     {
         private Dictionary<string, (decimal Quantity, decimal Total)> _workshopTotals = new();
         private Dictionary<Guid, string> _workshopChiefs = new();
-        private string _currentWorkshop = "";
+        private string _currentGroupKey = "";
 
         public ProductDeclarationReport()
         {
@@ -51,8 +51,10 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
         {
             DataSource = rows;
 
+            // Gruplama anahtarı tür (mamül/hizmet) + atölyedir; aynı atölyenin
+            // mamül ve hizmet beyanları ayrı sayfalara düşer.
             _workshopTotals = rows
-                .GroupBy(r => r.WorkshopName)
+                .GroupBy(r => r.DeclarationGroupKey)
                 .ToDictionary(
                     g => g.Key,
                     g => (Quantity: (decimal)g.Sum(r => r.Quantity), Total: g.Sum(r => r.Total)));
@@ -81,13 +83,13 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
         {
             if (GetCurrentRow() is ProductDeclarationRowDto row)
             {
-                _currentWorkshop = row.WorkshopName;
+                _currentGroupKey = row.DeclarationGroupKey;
             }
         }
 
         private void GroupFooter_BeforePrint(object? sender, CancelEventArgs e)
         {
-            if (_workshopTotals.TryGetValue(_currentWorkshop, out var totals))
+            if (_workshopTotals.TryGetValue(_currentGroupKey, out var totals))
             {
                 xrTableCell12.Text = totals.Quantity.ToString("N0");
                 xrTableCell14.Text = totals.Total.ToString("N2");

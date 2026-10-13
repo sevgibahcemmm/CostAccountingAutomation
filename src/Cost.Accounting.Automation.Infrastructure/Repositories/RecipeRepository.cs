@@ -18,22 +18,31 @@ internal sealed class RecipeRepository : AuditableRepository<Recipe, Application
     /// </summary>
     protected override IQueryable<Recipe> ApplyDetailIncludes(IQueryable<Recipe> query)
         => query
+            .Include(x => x.Workshop)
             .Include(x => x.Product)
+                .ThenInclude(p => p!.ProductUnitType)
             .AsSplitQuery()
             .Include(x => x.Items)
-                .ThenInclude(i => i.Product);
+                .ThenInclude(i => i.Product)
+                    .ThenInclude(p => p!.ProductUnitType);
 
     public Task<Recipe?> GetByProductIdAsync(IdentityId productId, CancellationToken cancellationToken = default)
         => this.Context.Set<Recipe>()
+            .Include(x => x.Workshop)
             .Include(x => x.Product)
+                .ThenInclude(p => p!.ProductUnitType)
             .Include(x => x.Items)
                 .ThenInclude(i => i.Product)
+                    .ThenInclude(p => p!.ProductUnitType)
             .FirstOrDefaultAsync(x => x.ProductId == productId, cancellationToken);
 
     public Task<Recipe?> GetWithItemsAsync(IdentityId id, CancellationToken cancellationToken = default)
         => this.Context.Set<Recipe>()
+            .Include(x => x.Workshop)
             .Include(x => x.Product)
+                .ThenInclude(p => p!.ProductUnitType)
             .Include(x => x.Items)
                 .ThenInclude(i => i.Product)
+                    .ThenInclude(p => p!.ProductUnitType)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 }

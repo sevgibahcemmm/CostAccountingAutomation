@@ -121,6 +121,12 @@ public sealed class ProductDto : EntityDto
     [Column("Yarımamül Ürün Id", IsVisible = false)]
     public Guid? SemiFinishedProductId { get; set; }
 
+    /// <summary>
+    /// Bu ürüne bağlı bir YARIMAMÜL kartı var mı? Düzenleme ekranında eksik yarımamül
+    /// kartının açılıp açılamayacağını belirlemek için kullanılır.
+    /// </summary>
+    public bool HasSemiFinishedPair { get; set; }
+
     [Column("Yarımamül Karşılığı", Order = 25, Width = 220)]
     public string? SemiFinishedProductName
     {

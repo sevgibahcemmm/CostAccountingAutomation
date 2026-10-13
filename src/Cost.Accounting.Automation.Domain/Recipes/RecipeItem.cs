@@ -3,7 +3,7 @@ using Cost.Accounting.Automation.Domain.Products;
 
 namespace Cost.Accounting.Automation.Domain.Recipes;
 
-public sealed class RecipeItem : Entity
+public sealed class RecipeItem : Entity, IHardDeletable
 {
     private RecipeItem()
     {

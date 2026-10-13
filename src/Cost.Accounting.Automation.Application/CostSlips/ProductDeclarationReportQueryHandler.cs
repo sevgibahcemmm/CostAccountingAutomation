@@ -12,7 +12,10 @@ internal sealed class ProductDeclarationReportQueryHandler(
         CancellationToken cancellationToken)
     {
         return await costSlipRepository.GetAll()
-            .Where(s => s.CostSlipType == CostSlipType.Product)
+            // Beyan hem mamül hem hizmet pusulalarını kapsar; yarı mamül türleri
+            // kapsam dışıdır.
+            .Where(s => s.CostSlipType == CostSlipType.Product
+                || s.CostSlipType == CostSlipType.Service)
             .Where(s => s.Status == CostSlipStatus.Approved)
             .Where(s => !s.IsDeleted)
             .Where(s => s.CostDate >= request.StartDate && s.CostDate <= request.EndDate)
@@ -21,6 +24,8 @@ internal sealed class ProductDeclarationReportQueryHandler(
             {
                 WorkshopId = s.Workshop == null ? (Guid?)null : s.Workshop.Id.Value,
                 WorkshopName = s.Workshop == null ? string.Empty : s.Workshop.Name.Value,
+                DeclarationKind = s.CostSlipType == CostSlipType.Service ? "Hizmet" : "Mamul",
+                DeclarationOrder = s.CostSlipType == CostSlipType.Service ? 1 : 0,
                 ProductName = s.ProducedProduct!.Name.Value,
                 ProductUnitTypeName = s.ProducedProduct.ProductUnitType == null
                     ? string.Empty
@@ -30,11 +35,13 @@ internal sealed class ProductDeclarationReportQueryHandler(
                 Total = s.GrandTotal,
                 CreatedAt = s.CreatedAt
             })
-            // Sıra kuralı: önce gruplar (atölye), sonra kayıt tarihleri.
-            // Aynı atölye içinde en son kaydedilen pusula üstte; saat çakışması
-            // olmayan kayıtlarda istenmeyen bir sıra oluşmasın diye belge
-            // numarası son çare anahtarıdır.
-            .OrderBy(r => r.WorkshopName)
+            // Sıra kuralı: önce tür (mamül, sonra hizmet), sonra gruplar
+            // (atölye), sonra kayıt tarihleri. Aynı atölye içinde en son
+            // kaydedilen pusula üstte; saat çakışması olmayan kayıtlarda
+            // istenmeyen bir sıra oluşmasın diye belge numarası son çare
+            // anahtarıdır.
+            .OrderBy(r => r.DeclarationOrder)
+            .ThenBy(r => r.WorkshopName)
             .ThenByDescending(r => r.CreatedAt)
             .ThenBy(r => r.ProductName)
             .ToListAsync(cancellationToken);

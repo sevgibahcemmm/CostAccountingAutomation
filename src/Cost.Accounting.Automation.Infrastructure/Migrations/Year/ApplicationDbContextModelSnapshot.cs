@@ -1389,11 +1389,16 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("WorkshopId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DuplicateKey");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("WorkshopId");
 
                     b.ToTable("Recipes", (string)null);
                 });
@@ -2401,7 +2406,13 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "Workshop")
+                        .WithMany()
+                        .HasForeignKey("WorkshopId");
+
                     b.Navigation("Product");
+
+                    b.Navigation("Workshop");
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Recipes.RecipeItem", b =>
