@@ -19,6 +19,7 @@ public static class RolePermissionLabels
         ("company", "Şirket"),
         ("customer", "Müşteri"),
         ("supplier", "Tedarikçi"),
+        ("direct_procurement", "Doğrudan Temin"),
         ("chartofaccount", "Hesap Planı"),
         ("devir", "Devir"),
         ("current_account_movement", "Cari Hesap Hareketi"),

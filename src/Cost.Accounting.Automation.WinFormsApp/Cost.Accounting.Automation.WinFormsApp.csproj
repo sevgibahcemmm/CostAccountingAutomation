@@ -68,6 +68,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Kaynak sistemdeki TFrmYeniIhale penceresinin 32x32 PNG logosu.
+         DFM akisindan cikarilip gomulur; Resources/DirectProcurement klasorune
+         yeni gorsel eklenince bu giris el ile genisletilmeli. -->
+    <EmbeddedResource Include="Resources\DirectProcurement\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

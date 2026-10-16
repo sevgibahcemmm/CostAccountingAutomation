@@ -12,6 +12,7 @@ using Cost.Accounting.Automation.WinFormsApp.Forms.CostSlipForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CurrentAccountForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CustomerForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.CarryForwardForms;
+using Cost.Accounting.Automation.WinFormsApp.Forms.DirectProcurementForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.InvoiceForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.MessageForms;
 using Cost.Accounting.Automation.WinFormsApp.Forms.ProductForms;
@@ -67,8 +68,17 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             [6] = DxIcon.ChartAccounts,// Muhasebe
             [7] = DxIcon.Report,       // Raporlar
             [8] = DxIcon.Security,     // Sistem Yönetimi
-            [9] = DxIcon.Mail          // Mesajlaşma
+            [9] = DxIcon.Mail,         // Mesajlaşma
+            [10] = DxIcon.Contract     // Doğrudan Temin
         };
+
+        /// <summary>
+        /// Doğrudan Temin modülünün menü grubu. <c>HandleMenuClick</c> grup
+        /// başlığına tıklandığında öğeyi açar; grup başlığının kendi ikonu
+        /// <c>InitializeAccordion</c>'da <see cref="_groupIcons"/> sözlüğünden
+        /// atanır.
+        /// </summary>
+        private const int DirectProcurementTag = 10;
 
         private const int HomeTag = 0;
         private const int ExitTag = 99;
@@ -129,7 +139,12 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             ["elmUpdateHistory"] = DxIcon.Restore,           // actions_rollback: sürüm geçmişi
 
             // Mesajlaşma
-            ["elmMessages"] = DxIcon.WhatsApp        // yeşil konuşma balonu
+            ["elmMessages"] = DxIcon.WhatsApp,       // yeşil konuşma balonu
+
+            // Doğrudan Temin
+            ["elmDirectProcurementHome"] = DxIcon.Home,
+            ["elmDirectProcurementFiles"] = DxIcon.ListItems,
+            ["elmDirectProcurementNew"] = DxIcon.Add
         };
 
         private async Task ApplyUpdateMenuVisibilityAsync()
@@ -457,6 +472,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             element.Click += (s, e) => HandleMenuClick((AccordionControlElement)s!);
         }
 
+        /// <summary>
+        /// "Yeni Doğrudan Temin Girişi" menüsünden açılır. Kayıt girildiğinde
+        /// dosya listesi sekmesi doğrudan açılır; kullanıcı yeni kaydı boş bir
+        /// grid'de aramak zorunda kalmaz.
+        /// </summary>
+        private void OpenNewDirectProcurementFile()
+        {
+            using var form = new DirectProcurementFileEditForm();
+
+            if (form.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            MdiFormManager.Instance.OpenForm<DirectProcurementFilesListForm>(this, "Doğrudan Temin Dosyaları");
+        }
+
         private void BuildMenuActions()
         {
             _menuActions["elmUsers"] = () => MdiFormManager.Instance.OpenForm<UsersListForm>(this, "Kullanıcılar");
@@ -489,6 +521,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             _menuActions["elmUnitTypes"] = () => MdiFormManager.Instance.OpenForm<ProductUnitTypesListForm>(this, "Birim Cinsleri");
             _menuActions["elmTaxRates"] = () => MdiFormManager.Instance.OpenForm<TaxRatesListForm>(this, "KDV Oranları");
             _menuActions["elmMessages"] = () => OpenMessages();
+            _menuActions["elmDirectProcurementHome"] = () => MdiFormManager.Instance.OpenForm<DirectProcurementHomeForm>(this, "Doğrudan Temin");
+            _menuActions["elmDirectProcurementFiles"] = () => MdiFormManager.Instance.OpenForm<DirectProcurementFilesListForm>(this, "Doğrudan Temin Dosyaları");
+            _menuActions["elmDirectProcurementNew"] = OpenNewDirectProcurementFile;
             _menuActions["elmCreateUpdate"] = () => ShowCreateUpdateForm();
             _menuActions["elmUpdateHistory"] = () => MdiFormManager.Instance.OpenForm<UpdateHistoryForm>(this, "Sürüm Geçmişi");
         }

@@ -115,6 +115,14 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             grpMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             elmMessages = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             accordionControlSeparator29 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            grpDirectProcurement = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmDirectProcurementHome = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmDirectProcurementFiles = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            elmDirectProcurementNew = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            accordionControlSeparator44 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator45 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator46 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
+            accordionControlSeparator47 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             accordionControlSeparator40 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
             elmExit = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             accordionControlSeparator30 = new DevExpress.XtraBars.Navigation.AccordionControlSeparator();
@@ -222,7 +230,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // accordionControl
             // 
             accordionControl.Dock = DockStyle.Left;
-            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHome, accordionControlSeparator31, grpStockMaster, accordionControlSeparator32, grpStockOperations, accordionControlSeparator33, grpInvoices, accordionControlSeparator34, grpCurrentAccounts, accordionControlSeparator35, grpCosting, accordionControlSeparator36, grpAccounting, accordionControlSeparator37, grpReports, accordionControlSeparator38, grpSystem, accordionControlSeparator39, grpMessages, accordionControlSeparator40, elmExit, accordionControlSeparator30 });
+            accordionControl.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmHome, accordionControlSeparator31, grpStockMaster, accordionControlSeparator32, grpStockOperations, accordionControlSeparator33, grpInvoices, accordionControlSeparator34, grpCurrentAccounts, accordionControlSeparator35, grpCosting, accordionControlSeparator36, grpAccounting, accordionControlSeparator37, grpReports, accordionControlSeparator38, grpSystem, accordionControlSeparator39, grpMessages, accordionControlSeparator40, grpDirectProcurement, accordionControlSeparator47, elmExit, accordionControlSeparator30 });
             accordionControl.Location = new Point(0, 58);
             accordionControl.Margin = new Padding(3, 2, 3, 2);
             accordionControl.Name = "accordionControl";
@@ -710,7 +718,52 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             // accordionControlSeparator43
             // 
             accordionControlSeparator43.Name = "accordionControlSeparator43";
-            // 
+            //
+            // grpDirectProcurement
+            //
+            grpDirectProcurement.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] { elmDirectProcurementHome, accordionControlSeparator44, elmDirectProcurementFiles, accordionControlSeparator45, elmDirectProcurementNew, accordionControlSeparator46 });
+            grpDirectProcurement.Expanded = false;
+            grpDirectProcurement.Name = "grpDirectProcurement";
+            grpDirectProcurement.Tag = 10;
+            grpDirectProcurement.Text = "Doğrudan Temin";
+            //
+            // elmDirectProcurementHome
+            //
+            elmDirectProcurementHome.Name = "elmDirectProcurementHome";
+            elmDirectProcurementHome.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmDirectProcurementHome.Tag = 10;
+            elmDirectProcurementHome.Text = "Doğrudan Temin Ana Sayfa";
+            //
+            // accordionControlSeparator44
+            //
+            accordionControlSeparator44.Name = "accordionControlSeparator44";
+            //
+            // elmDirectProcurementFiles
+            //
+            elmDirectProcurementFiles.Name = "elmDirectProcurementFiles";
+            elmDirectProcurementFiles.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmDirectProcurementFiles.Tag = 10;
+            elmDirectProcurementFiles.Text = "Doğrudan Temin Listesi";
+            //
+            // accordionControlSeparator45
+            //
+            accordionControlSeparator45.Name = "accordionControlSeparator45";
+            //
+            // elmDirectProcurementNew
+            //
+            elmDirectProcurementNew.Name = "elmDirectProcurementNew";
+            elmDirectProcurementNew.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
+            elmDirectProcurementNew.Tag = 10;
+            elmDirectProcurementNew.Text = "Yeni Doğrudan Temin Girişi";
+            //
+            // accordionControlSeparator46
+            //
+            accordionControlSeparator46.Name = "accordionControlSeparator46";
+            //
+            // accordionControlSeparator47
+            //
+            accordionControlSeparator47.Name = "accordionControlSeparator47";
+            //
             // RibbonMainForm
             // 
             AutoScaleDimensions = new SizeF(6F, 13F);
@@ -800,6 +853,11 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlElement grpSystem;
         private DevExpress.XtraBars.Navigation.AccordionControlElement grpMessages;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmMessages;
+        // Doğrudan Temin modülü
+        private DevExpress.XtraBars.Navigation.AccordionControlElement grpDirectProcurement;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmDirectProcurementHome;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmDirectProcurementFiles;
+        private DevExpress.XtraBars.Navigation.AccordionControlElement elmDirectProcurementNew;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmCompanies;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmUsers;
         private DevExpress.XtraBars.Navigation.AccordionControlElement elmChangePassword;
@@ -855,5 +913,9 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator41;
         private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator42;
         private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator43;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator44;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator45;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator46;
+        private DevExpress.XtraBars.Navigation.AccordionControlSeparator accordionControlSeparator47;
     }
 }

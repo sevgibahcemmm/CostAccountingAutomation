@@ -3,6 +3,7 @@ using Cost.Accounting.Automation.Application.Companies;
 using Cost.Accounting.Automation.Application.CostSlips;
 using Cost.Accounting.Automation.Application.CurrentAccountMovements;
 using Cost.Accounting.Automation.Application.Customers;
+using Cost.Accounting.Automation.Application.DirectProcurement;
 using Cost.Accounting.Automation.Application.Employees;
 using Cost.Accounting.Automation.Application.Employees.SigningRoles;
 using Cost.Accounting.Automation.Application.Invoices;
@@ -109,7 +110,12 @@ public static class ModulePermissionCatalog
             ["elmSigningRoles"] = "employee:view",
 
             // Mesajlaşma
-            ["elmMessages"] = "message:view"
+            ["elmMessages"] = "message:view",
+
+            // Doğrudan Temin
+            ["elmDirectProcurementHome"] = "direct_procurement:view",
+            ["elmDirectProcurementFiles"] = "direct_procurement:view",
+            ["elmDirectProcurementNew"] = "direct_procurement:create"
         };
 
     /// <summary>
@@ -171,7 +177,18 @@ public static class ModulePermissionCatalog
                 "current_account_movement:create",
                 "current_account_movement:update",
                 "current_account_movement:delete",
-                Restore: "current_account_movement:restore")
+                Restore: "current_account_movement:restore"),
+            // Not: Onay yetkisi bilinçli tanımlanmadı. Onay belgesi akışı ikinci
+            // fazda eklendiğinde `Approve:` buraya ve ilgili komutlara
+            // `[Permission("direct_procurement:approve")]` ile birlikte
+            // eklenmelidir; şimdiden tanımlansaydı katalogda görünür ama hiçbir
+            // isteğe bağlı olmadığı için ölü bir izin olarak kalırdı.
+            [typeof(DirectProcurementFileGetAllQuery)] = new FormPermissionSet(
+                "direct_procurement:view",
+                "direct_procurement:create",
+                "direct_procurement:update",
+                "direct_procurement:delete",
+                Restore: "direct_procurement:delete")
         };
 
     /// <summary>

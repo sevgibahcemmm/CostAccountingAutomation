@@ -386,3 +386,6 @@ appsettings.Staging.json
 # Uygulama calisma artiklari
 logs/
 *.log
+
+# AMPDT kaynak analiz ciktilari (yerel arastirma, depoda tutulmaz)
+.ampdt-analysis/

@@ -560,6 +560,937 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementBudgetSelection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("AllocatedAmount")
+                        .HasColumnType("money");
+
+                    b.Property<Guid?>("ChartOfAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DirectProcurementFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<decimal?>("SpentAmount")
+                        .HasColumnType("money");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("VoucherType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartOfAccountId");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("DirectProcurementFileId", "Year");
+
+                    b.ToTable("DirectProcurementBudgetSelections", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("AcceptanceDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("AdvanceExplanation")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<decimal?>("Appropriation")
+                        .HasColumnType("money");
+
+                    b.Property<DateOnly?>("ApprovalDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ApprovalNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ApprovalOffice")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ApprovingPersonnel")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly?>("ApprovingPersonnelDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ApprovingPersonnelTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("ApproximateCost")
+                        .HasColumnType("money");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ChartOfAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConformityPersonnel")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly?>("ConformityPersonnelDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ConformityPersonnelTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("CostEstimationMethod")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("DecimalPlaces")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("DecisionDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("DecisionNote")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("DecisionNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("DeliveryDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DemandDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("FileNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("FileType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Flow")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("HasApproximateCost")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasAwardDocumentation")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasCommission")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasContract")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasCostEstimateTeam")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasMarketSurveyTeam")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasSpecification")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsBudgetApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDemo")
+                        .HasColumnType("bit");
+
+                    b.Property<DateOnly?>("OrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OtherExplanations")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("PriceDifferenceExplanation")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("ProjectNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PurchasingUnit")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RelatedPerson")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("RequireApprovedOffer2")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequireFinalOffer")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SingleSourceExplanation")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("SingleSourceExplanation2")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("SingleSourceOtherExplanation")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<int>("Stage")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("TenderPrice")
+                        .HasColumnType("money");
+
+                    b.Property<int>("UnitPriceDecimalPlaces")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("UseHistoryPurchases")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UseRequirementList")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("WorkName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("WorkNature")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("WorkQuantity")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<int>("WorkingYear")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartOfAccountId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("WorkingYear", "Stage");
+
+                    b.ToTable("DirectProcurementFiles", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("ApproximateCost")
+                        .HasColumnType("money");
+
+                    b.Property<Guid?>("BookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Definition")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<Guid>("DirectProcurementFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LineNo")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("MaterialGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("money");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("TaxRatePercent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("DirectProcurementFileId", "LineNo");
+
+                    b.ToTable("DirectProcurementItems", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementApprovedFirm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DirectProcurementFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DirectProcurementItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEligible")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("bit");
+
+                    b.Property<DateOnly?>("LetterDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("money");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DirectProcurementItemId");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("DirectProcurementFileId", "DirectProcurementItemId");
+
+                    b.ToTable("ProcurementApprovedFirms", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementAwardedFirm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("AcceptanceDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("money");
+
+                    b.Property<string>("Attachment")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("BudgetExpense")
+                        .HasColumnType("money");
+
+                    b.Property<string>("ChequeNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateOnly?>("ContractDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("DeductionTotal")
+                        .HasColumnType("money");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("DeliveryDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("DirectProcurementFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<DateOnly?>("InvoiceDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("InvoiceNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Memorandum")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NegotiationNote")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<decimal?>("PayableAmount")
+                        .HasColumnType("money");
+
+                    b.Property<DateOnly?>("PaymentDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("PaymentOrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("PaymentOrderNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PaymentOrderNo2")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<decimal?>("SpecialExpenseReduction")
+                        .HasColumnType("money");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("VatAmount")
+                        .HasColumnType("money");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DirectProcurementFileId");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("ProcurementAwardedFirms", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementAwardedFirmAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AccountNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("Credit")
+                        .HasColumnType("money");
+
+                    b.Property<decimal?>("Debit")
+                        .HasColumnType("money");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ProcurementAwardedFirmId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("ProcurementAwardedFirmId");
+
+                    b.ToTable("ProcurementAwardedFirmAccounts", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementHistoryPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("BaseIndex")
+                        .HasColumnType("money");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("Coefficient")
+                        .HasColumnType("money");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("CurrentIndex")
+                        .HasColumnType("money");
+
+                    b.Property<decimal?>("CurrentPrice")
+                        .HasColumnType("money");
+
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Definition")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<Guid>("DirectProcurementFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DirectProcurementItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<DateOnly?>("IndexDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("money");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("money");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SupplierName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("TaxRatePercent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DirectProcurementFileId");
+
+                    b.HasIndex("DirectProcurementItemId");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProcurementHistoryPurchases", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementQuotedFirm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DirectProcurementFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DirectProcurementItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<decimal?>("FinalPrice")
+                        .HasColumnType("money");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEligible")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("bit");
+
+                    b.Property<DateOnly?>("LetterDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("money");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("TotalOffer")
+                        .HasColumnType("money");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DirectProcurementItemId");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("DirectProcurementFileId", "DirectProcurementItemId");
+
+                    b.ToTable("ProcurementQuotedFirms", (string)null);
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementTeamMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DirectProcurementFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DuplicateKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PersonnelName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(8)
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("DirectProcurementFileId", "Role", "Sequence");
+
+                    b.ToTable("ProcurementTeamMembers", (string)null);
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.Employee", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1981,6 +2912,155 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementBudgetSelection", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("ChartOfAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", "File")
+                        .WithMany("BudgetSelections")
+                        .HasForeignKey("DirectProcurementFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("File");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.ChartOfAccounts.ChartOfAccount", "ChartOfAccount")
+                        .WithMany()
+                        .HasForeignKey("ChartOfAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Suppliers.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ChartOfAccount");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementItem", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", "File")
+                        .WithMany("Items")
+                        .HasForeignKey("DirectProcurementFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("File");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementApprovedFirm", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", "File")
+                        .WithMany("ApprovedFirms")
+                        .HasForeignKey("DirectProcurementFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("DirectProcurementItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Suppliers.Supplier", null)
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("File");
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementAwardedFirm", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", "File")
+                        .WithMany("AwardedFirms")
+                        .HasForeignKey("DirectProcurementFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Suppliers.Supplier", null)
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("File");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementAwardedFirmAccount", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementAwardedFirm", "AwardedFirm")
+                        .WithMany("Accounts")
+                        .HasForeignKey("ProcurementAwardedFirmId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AwardedFirm");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementHistoryPurchase", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", "File")
+                        .WithMany("HistoryPurchases")
+                        .HasForeignKey("DirectProcurementFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("DirectProcurementItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("File");
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementQuotedFirm", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", "File")
+                        .WithMany("QuotedFirms")
+                        .HasForeignKey("DirectProcurementFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("DirectProcurementItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Cost.Accounting.Automation.Domain.Suppliers.Supplier", null)
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("File");
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementTeamMember", b =>
+                {
+                    b.HasOne("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", "File")
+                        .WithMany("TeamMembers")
+                        .HasForeignKey("DirectProcurementFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("File");
+                });
+
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.Employee", b =>
                 {
                     b.OwnsOne("Cost.Accounting.Automation.Domain.Employees.ValueObjects.EmployeeTitle", "Title", b1 =>
@@ -2686,6 +3766,28 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.CostSlips.CostSlip", b =>
                 {
                     b.Navigation("CostSlipItems");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.DirectProcurementFile", b =>
+                {
+                    b.Navigation("ApprovedFirms");
+
+                    b.Navigation("AwardedFirms");
+
+                    b.Navigation("BudgetSelections");
+
+                    b.Navigation("HistoryPurchases");
+
+                    b.Navigation("Items");
+
+                    b.Navigation("QuotedFirms");
+
+                    b.Navigation("TeamMembers");
+                });
+
+            modelBuilder.Entity("Cost.Accounting.Automation.Domain.DirectProcurement.ProcurementAwardedFirm", b =>
+                {
+                    b.Navigation("Accounts");
                 });
 
             modelBuilder.Entity("Cost.Accounting.Automation.Domain.Employees.Employee", b =>
