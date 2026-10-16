@@ -6,16 +6,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Tools;
 public static class SalesPriceSuggestionCalculator
 {
     /// <summary>
-    /// Ürünün maliyet fiyatını bulur: önce en güncel alış fiyatı,
-    /// bulunamazsa giriş stok hareketlerinin ağırlıklı ortalama maliyeti.
-    /// </summary>
-    public static decimal? CostPriceOf(ProductDto product)
-        => CostPriceOf(product.Prices, product.Movements);
-
-    /// <summary>
     /// Fiyat ve stok hareketleri ayrı verildiğinde maliyet hesabı yapar.
-    /// Hareket listesi, fatura ekranında yalnızca ilgili ürün için tembel yüklenir.
     /// </summary>
+    /// <remarks>
+    /// İki liste ayrı ayrı verilir çünkü liste ekranları bu veriyi **toplu**
+    /// getirir: fiyatlar tek bir sorguda, hareketler yalnızca ilgili ürün
+    /// için tembel yüklenir. Ürün DTO'su üzerinden tek parametreli bir
+    /// aşırı yükleme, liste ekranında her ürünün tüm hareket geçmişini
+    /// belleğe taşımak anlamına gelirdi; bu yüzden bilinçli olarak yoktur.
+    /// </remarks>
     public static decimal? CostPriceOf(IReadOnlyCollection<ProductPriceDto> prices, IReadOnlyCollection<ProductMovementDto> movements)
     {
         ProductPriceDto? purchase = prices

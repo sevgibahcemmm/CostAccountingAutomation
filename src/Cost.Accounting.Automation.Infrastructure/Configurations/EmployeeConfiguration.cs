@@ -19,10 +19,18 @@ internal sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.HasKey(e => e.Id);
 
         builder.OwnsOne(e => e.FirstName, first =>
-            first.Property(x => x.Value).HasColumnName("FirstName").HasMaxLength(100).IsRequired());
+            first.Property(x => x.Value)
+                 .HasColumnName("FirstName")
+                 .HasColumnType("nvarchar(100)")
+                 .HasMaxLength(100)
+                 .IsRequired());
 
         builder.OwnsOne(e => e.LastName, last =>
-            last.Property(x => x.Value).HasColumnName("LastName").HasMaxLength(100).IsRequired());
+            last.Property(x => x.Value)
+                 .HasColumnName("LastName")
+                 .HasColumnType("nvarchar(100)")
+                 .HasMaxLength(100)
+                 .IsRequired());
 
         // TC kimlik no benzersizdir: aynı kişi iki kez kaydedilemez.
         // Value converter yerine OwnsOne kullanılmadı çünkü benzersiz indeks
@@ -92,7 +100,11 @@ internal sealed class EmployeeSigningRoleConfiguration : IEntityTypeConfiguratio
         builder.HasKey(r => r.Id);
 
         builder.OwnsOne(r => r.Name, name =>
-            name.Property(x => x.Value).HasColumnName("Name").HasMaxLength(120).IsRequired());
+            name.Property(x => x.Value)
+                .HasColumnName("Name")
+                .HasColumnType("nvarchar(120)")
+                .HasMaxLength(120)
+                .IsRequired());
 
         builder.Property(r => r.Description)
             .HasColumnName("Description")

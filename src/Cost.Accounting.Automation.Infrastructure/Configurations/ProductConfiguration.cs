@@ -14,8 +14,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.HasKey(p => p.Id);
 
+        // HasColumnType zorunlu: ConfigureConventions nvarchar(MAX) uygular ve
+        // HasMaxLength bunu ezmez. Ürün adı liste ekranında aranır ve
+        // sıralanır; nvarchar(MAX) indekslenemez.
         builder.OwnsOne(p => p.Name, name =>
-            name.Property(x => x.Value).HasColumnName("Name").HasMaxLength(300));
+            name.Property(x => x.Value).HasColumnName("Name").HasColumnType("nvarchar(300)").HasMaxLength(300));
 
         builder.OwnsOne(p => p.Description, description =>
             description.Property(x => x.Value).HasColumnName("Description"));

@@ -124,35 +124,32 @@ public sealed class CostSlipDto : EntityDto
 
 public static class CostSlipExtensions
 {
-    public static IQueryable<CostSlipListDto> MapTo(this IQueryable<EntityWithAuditDto<CostSlip>> entity)
+    public static IQueryable<CostSlipListDto> MapTo(this IQueryable<CostSlip> entity)
     {
         return entity
             .Select(s => new CostSlipListDto
             {
-                Id = s.Entity.Id,
-                SlipNumber = s.Entity.SlipNumber,
-                CostSlipType = s.Entity.CostSlipType,
-                Status = s.Entity.Status,
-                CostDate = s.Entity.CostDate,
-                WorkshopId = s.Entity.WorkshopId,
-                WorkshopName = s.Entity.Workshop == null ? string.Empty : s.Entity.Workshop.Name.Value,
-                ProducedProductId = s.Entity.ProducedProductId == null ? null : s.Entity.ProducedProductId.Value,
-                ProducedProductName = s.Entity.ProducedProduct == null ? string.Empty : s.Entity.ProducedProduct.Name.Value,
-                CustomerId = s.Entity.CustomerId == null ? null : s.Entity.CustomerId.Value,
-                CustomerName = s.Entity.Customer == null ? string.Empty : s.Entity.Customer.Name.Value,
-                Quantity = s.Entity.Quantity,
-                GrandTotal = s.Entity.GrandTotal,
-                Description = s.Entity.Description.Value,
+                Id = s.Id,
+                SlipNumber = s.SlipNumber,
+                CostSlipType = s.CostSlipType,
+                Status = s.Status,
+                CostDate = s.CostDate,
+                WorkshopId = s.WorkshopId,
+                WorkshopName = s.Workshop == null ? string.Empty : s.Workshop.Name.Value,
+                ProducedProductId = s.ProducedProductId == null ? null : s.ProducedProductId.Value,
+                ProducedProductName = s.ProducedProduct == null ? string.Empty : s.ProducedProduct.Name.Value,
+                CustomerId = s.CustomerId == null ? null : s.CustomerId.Value,
+                CustomerName = s.Customer == null ? string.Empty : s.Customer.Name.Value,
+                Quantity = s.Quantity,
+                GrandTotal = s.GrandTotal,
+                Description = s.Description.Value,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value
+            });
     }
 
     /// <summary>

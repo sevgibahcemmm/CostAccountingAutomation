@@ -39,31 +39,28 @@ public sealed class SupplierDto : EntityDto
 
 public static class SupplierExtensions
 {
-    public static IQueryable<SupplierDto> MapTo(this IQueryable<EntityWithAuditDto<Supplier>> entity)
+    public static IQueryable<SupplierDto> MapTo(this IQueryable<Supplier> entity)
     {
         return entity
             .Select(s => new SupplierDto
             {
-                Id = s.Entity.Id,
-                Name = s.Entity.Name.Value,
-                TaxOffice = s.Entity.TaxOffice.Value,
-                TaxNumber = s.Entity.TaxNumber.Value,
-                Description = s.Entity.Description.Value,
-                City = s.Entity.Address.City,
-                District = s.Entity.Address.District,
-                FullAddress = s.Entity.Address.FullAddress,
-                PhoneNumber1 = s.Entity.Contact.PhoneNumber1,
-                PhoneNumber2 = s.Entity.Contact.PhoneNumber2,
-                Email = s.Entity.Contact.Email,
+                Id = s.Id,
+                Name = s.Name.Value,
+                TaxOffice = s.TaxOffice.Value,
+                TaxNumber = s.TaxNumber.Value,
+                Description = s.Description.Value,
+                City = s.Address.City,
+                District = s.Address.District,
+                FullAddress = s.Address.FullAddress,
+                PhoneNumber1 = s.Contact.PhoneNumber1,
+                PhoneNumber2 = s.Contact.PhoneNumber2,
+                Email = s.Contact.Email,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 }

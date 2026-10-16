@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.StockIssues;
 using TS.MediatR;
@@ -14,19 +15,22 @@ public sealed record StockIssueGetAllQuery(
 }
 
 internal sealed class StockIssueGetAllQueryHandler(
-    IStockIssueRepository stockIssueRepository) : IRequestHandler<StockIssueGetAllQuery, IQueryable<StockIssueListDto>>
+    IStockIssueRepository stockIssueRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<StockIssueGetAllQuery, IQueryable<StockIssueListDto>>
 {
-    public Task<IQueryable<StockIssueListDto>> Handle(StockIssueGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<StockIssueListDto>> Handle(StockIssueGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<StockIssue>> source = request.OnlyDeleted
-            ? stockIssueRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : stockIssueRepository.GetAllWithAudit();
+        IQueryable<StockIssue> source = request.OnlyDeleted
+            ? stockIssueRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : stockIssueRepository.GetAllActive();
 
-        if (request.IssueType.HasValue)
+        if (request.IssueType is StockIssueType issueType)
         {
-            source = source.Where(i => i.Entity.IssueType == request.IssueType.Value);
+            source = source.Where(i => i.IssueType == issueType);
         }
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

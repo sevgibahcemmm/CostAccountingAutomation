@@ -148,84 +148,146 @@ public sealed class ProductDto : EntityDto
 
 public static class ProductExtensions
 {
-    public static IQueryable<ProductDto> MapTo(this IQueryable<EntityWithAuditDto<Product>> entity)
+    /// <summary>
+    /// Ürün LISTESİ için projeksiyon (veritabanında çalışır).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Liste ekranı satır başına yalnızca özet alanlar gösterir: stok
+    /// miktarı bir <b>toplam</b>dır, fiyat ve hareket listeleri gösterilmez.
+    /// Bu yüzden projeksiyon <c>Movements</c> ve <c>Prices</c> koleksiyonlarını
+    /// materyalize etmez.
+    /// </para>
+    /// <para>
+    /// Daha önce liste sorgusu her ürün için tüm hareket geçmişini ve tüm
+    /// fiyat kayıtlarını belleğe alıyordu. Taşınan veri ürün sayısıyla değil,
+    /// o ürüne bağlı <b>hareket sayısıyla</b> çarpılıyordu: yirmi ürün ve on bin
+    /// hareket, ürün listesini açmak için on bin satır okunması anlamına
+    /// geliyordu.
+    /// </para>
+    /// <para>
+    /// <b>Stok miktarı burada hesaplanmaz.</b> Atölye transferi girişinin
+    /// elenmesi kuralı bir C# yardımcı metoduna dayanır ve projeksiyon içinde
+    /// SQL'e çevrilemez. Bunun yerine <c>ProductGetAllQuery</c> tek bir
+    /// toplu <c>GROUP BY</c> sorgusuyla stokları getirip <see cref="StockQuantity"/>
+    /// alanını doldurur; hareket satırlarının hiçbiri belleğe gelmez.
+    /// </para>
+    /// </remarks>
+    public static IQueryable<ProductDto> MapTo(this IQueryable<Product> entity)
     {
         return entity
             .Select(s => new ProductDto
             {
-                Id = s.Entity.Id,
-                Name = s.Entity.Name.Value,
-                ProductCode = s.Entity.ProductCode.Value,
-                Barcode = s.Entity.Barcode.Value,
-                QRCode = s.Entity.QRCode.Value,
-                MinimumProductLevel = s.Entity.MinimumProductLevel,
-                TaxRateId = s.Entity.TaxRateId,
-                TaxRateName = s.Entity.TaxRate == null ? string.Empty : s.Entity.TaxRate.Name.Value,
-                TaxRateRate = s.Entity.TaxRate == null ? 0m : s.Entity.TaxRate.Rate,
+                Id = s.Id,
+                Name = s.Name.Value,
+                ProductCode = s.ProductCode.Value,
+                Barcode = s.Barcode.Value,
+                QRCode = s.QRCode.Value,
+                MinimumProductLevel = s.MinimumProductLevel,
+                TaxRateId = s.TaxRateId,
+                TaxRateName = s.TaxRate == null ? string.Empty : s.TaxRate.Name.Value,
+                TaxRateRate = s.TaxRate == null ? 0m : s.TaxRate.Rate,
 
-                WarehouseId = s.Entity.WarehouseId,
-                WarehouseCode = s.Entity.Warehouse == null ? string.Empty : s.Entity.Warehouse.Code.Value,
-                WarehouseName = s.Entity.Warehouse == null ? string.Empty : s.Entity.Warehouse.Name.Value,
+                WarehouseId = s.WarehouseId,
+                WarehouseCode = s.Warehouse == null ? string.Empty : s.Warehouse.Code.Value,
+                WarehouseName = s.Warehouse == null ? string.Empty : s.Warehouse.Name.Value,
 
-                CategoryId = s.Entity.CategoryId,
-                CategoryCode = s.Entity.Category == null ? string.Empty : s.Entity.Category.Code.Value,
-                CategoryName = s.Entity.Category == null ? string.Empty : s.Entity.Category.Name.Value,
+                CategoryId = s.CategoryId,
+                CategoryCode = s.Category == null ? string.Empty : s.Category.Code.Value,
+                CategoryName = s.Category == null ? string.Empty : s.Category.Name.Value,
 
-                ProductUnitTypeId = s.Entity.ProductUnitTypeId,
-                ProductUnitTypeName = s.Entity.ProductUnitType == null ? string.Empty : s.Entity.ProductUnitType.Name.Value,
+                ProductUnitTypeId = s.ProductUnitTypeId,
+                ProductUnitTypeName = s.ProductUnitType == null ? string.Empty : s.ProductUnitType.Name.Value,
 
-                ChartOfAccountId = s.Entity.ChartOfAccountId == null ? null : s.Entity.ChartOfAccountId.Value,
-                ChartOfAccountCode = s.Entity.ChartOfAccount == null ? null : s.Entity.ChartOfAccount.Code.Value,
-                SemiFinishedProductId = s.Entity.SemiFinishedProductId == null ? null : s.Entity.SemiFinishedProductId.Value,
-                SemiFinishedProductName = s.Entity.SemiFinishedProduct == null ? null : s.Entity.SemiFinishedProduct.Name.Value,
-                Description = s.Entity.Description.Value,
+                ChartOfAccountId = s.ChartOfAccountId == null ? null : s.ChartOfAccountId.Value,
+                ChartOfAccountCode = s.ChartOfAccount == null ? null : s.ChartOfAccount.Code.Value,
+                SemiFinishedProductId = s.SemiFinishedProductId == null ? null : s.SemiFinishedProductId.Value,
+                SemiFinishedProductName = s.SemiFinishedProduct == null ? null : s.SemiFinishedProduct.Name.Value,
+                Description = s.Description.Value,
 
-                // Atölye transferi girişi mülkiyet devridir, miktar yaratmaz; ürün
-                // artık atölyededir ve ürün stok toplamlarına dâhil edilmez
-                // (ProductStockBalanceHelper). Bu filtre uygulanmazsa ürün kartı
-                // "Mevcut Stok" ile ürün listesi aynı ürün için FARKLI stok
-                // gösterir: 500 alınan / 20 transfer edilen üründe kart 500,
-                // liste 480 der.
-                StockQuantity = s.Entity.Movements
-                    .Where(m => ProductStockBalanceHelper.CountsAsProductStock(m))
-                    .Sum(m => m.MovementType == ProductMovementType.Input
-                        ? m.Quantity
-                        : -m.Quantity),
-
-Images = s.Entity.Images.Select(i => new ProductImageDto
-                    {
-                        Id = i.Id,
-                        Path = i.Path,
-                        IsPrimary = i.IsDefault
-                    }).ToList(),
-
-                    Movements = s.Entity.Movements.Select(m => new ProductMovementDto
-                    {
-                        Id = m.Id,
-                        Date = m.Date,
-                        MovementType = m.MovementType,
-                        Quantity = m.Quantity,
-                        UnitPrice = m.UnitPrice == null ? null : m.UnitPrice.Value,
-                        ReferenceNo = m.ReferenceNo,
-                        Description = m.Description.Value
-                    }).ToList(),
-
-                Prices = s.Entity.Prices.Select(p => new ProductPriceDto
+                Images = s.Images.Select(i => new ProductImageDto
                 {
-                    Id = p.Id,
-                    PriceType = p.PriceType,
-                    UnitPrice = p.UnitPrice.Value,
-                    StartDate = p.StartDate,
-                    EndDate = p.EndDate
+                    Id = i.Id,
+                    Path = i.Path,
+                    IsPrimary = i.IsDefault
                 }).ToList(),
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value
+            });
     }
+
+    /// <summary>
+    /// Ürün DETAYI için projeksiyon: fiyat geçmişi ve hareket listesi de
+    /// materyalize edilir. Yalnızca tek ürünün açıldığı ekranlarda kullanılır.
+    /// </summary>
+    public static ProductDto MapToDetail(this Product product) => new()
+    {
+        Id = product.Id,
+        Name = product.Name.Value,
+        ProductCode = product.ProductCode.Value,
+        Barcode = product.Barcode.Value,
+        QRCode = product.QRCode.Value,
+        MinimumProductLevel = product.MinimumProductLevel,
+        TaxRateId = product.TaxRateId,
+        TaxRateName = product.TaxRate?.Name.Value ?? string.Empty,
+        TaxRateRate = product.TaxRate?.Rate ?? 0m,
+
+        WarehouseId = product.WarehouseId,
+        WarehouseCode = product.Warehouse?.Code.Value ?? string.Empty,
+        WarehouseName = product.Warehouse?.Name.Value ?? string.Empty,
+
+        CategoryId = product.CategoryId,
+        CategoryCode = product.Category?.Code.Value ?? string.Empty,
+        CategoryName = product.Category?.Name.Value ?? string.Empty,
+
+        ProductUnitTypeId = product.ProductUnitTypeId,
+        ProductUnitTypeName = product.ProductUnitType?.Name.Value ?? string.Empty,
+
+        ChartOfAccountId = product.ChartOfAccountId == null ? null : product.ChartOfAccountId.Value,
+        ChartOfAccountCode = product.ChartOfAccount?.Code.Value,
+        SemiFinishedProductId = product.SemiFinishedProductId == null ? null : product.SemiFinishedProductId.Value,
+        SemiFinishedProductName = product.SemiFinishedProduct?.Name.Value,
+        Description = product.Description.Value,
+
+        StockQuantity = product.Movements
+            .Where(m => ProductStockBalanceHelper.CountsAsProductStock(m))
+            .Sum(m => m.MovementType == ProductMovementType.Input ? m.Quantity : -m.Quantity),
+
+        Prices = [.. product.Prices.Select(p => new ProductPriceDto
+        {
+            Id = p.Id,
+            PriceType = p.PriceType,
+            UnitPrice = p.UnitPrice.Value,
+            StartDate = p.StartDate,
+            EndDate = p.EndDate
+        })],
+
+        Movements = [.. product.Movements.Select(m => new ProductMovementDto
+        {
+            Id = m.Id,
+            MovementType = m.MovementType,
+            Quantity = m.Quantity,
+            UnitPrice = m.UnitPrice?.Value,
+            Date = m.Date,
+            ReferenceNo = m.ReferenceNo,
+            Description = m.Description.Value
+        })],
+
+        Images = [.. product.Images.Select(i => new ProductImageDto
+        {
+            Id = i.Id,
+            Path = i.Path,
+            IsPrimary = i.IsDefault
+        })],
+
+        IsActive = product.IsActive,
+        CreatedAt = product.CreatedAt,
+        CreatedBy = product.CreatedBy,
+        UpdatedAt = product.UpdatedAt,
+        UpdatedBy = product.UpdatedBy == null ? null : product.UpdatedBy.Value
+    };
 }

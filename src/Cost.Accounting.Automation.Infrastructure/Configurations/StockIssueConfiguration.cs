@@ -32,6 +32,11 @@ internal sealed class StockIssueConfiguration : IEntityTypeConfiguration<StockIs
         builder.HasIndex(x => x.SourceWarehouseId);
         builder.HasIndex(x => x.TargetAccountId);
 
+        // Onay akışı ve raporlar belge durumuna göre filtreler. Global
+        // sorgu filtresi her satıra "IsDeleted = false" eklediği için durum
+        // indeksinin bu sütunla birlikte kullanılması seçiciliği korur.
+        builder.HasIndex(x => x.Status);
+
         builder.HasOne(x => x.SourceWarehouse)
             .WithMany()
             .HasForeignKey(x => x.SourceWarehouseId)

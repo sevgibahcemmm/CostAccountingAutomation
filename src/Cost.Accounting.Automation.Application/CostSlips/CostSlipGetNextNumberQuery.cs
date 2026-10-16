@@ -24,10 +24,13 @@ internal sealed class CostSlipGetNextNumberQueryHandler(
 
         string yearPrefix = $"{prefix}-{DateTime.Now:yyyy}-";
 
+        // Sayım doğrudan veritabanında yapılır. Daha önce liste sorgusu
+        // (tüm pusulalar + tüm navigasyonları) belleğe alınıp bellekte
+        // sayılıyordu; form açılışındaki bu tek sorgu tüm tabloyu taşıyordu.
         int count = await costSlipRepository
-            .GetAllWithAuditIncludingDeleted()
-            .CountAsync(i => i.Entity.CostSlipType == request.CostSlipType
-                && i.Entity.SlipNumber.StartsWith(yearPrefix),
+            .GetAllIncludingDeleted()
+            .CountAsync(i => i.CostSlipType == request.CostSlipType
+                && i.SlipNumber.StartsWith(yearPrefix),
                 cancellationToken);
 
         return Result<string>.Succeed($"{yearPrefix}{count + 1:00000}");

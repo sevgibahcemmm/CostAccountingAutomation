@@ -1,5 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Recipes;
 using TS.MediatR;
 
@@ -12,14 +12,17 @@ public sealed record RecipeGetAllQuery(bool OnlyDeleted = false) : IRequest<IQue
 }
 
 internal sealed class RecipeGetAllQueryHandler(
-    IRecipeRepository recipeRepository) : IRequestHandler<RecipeGetAllQuery, IQueryable<RecipeListDto>>
+    IRecipeRepository recipeRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<RecipeGetAllQuery, IQueryable<RecipeListDto>>
 {
-    public Task<IQueryable<RecipeListDto>> Handle(RecipeGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<RecipeListDto>> Handle(RecipeGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<Recipe>> source = request.OnlyDeleted
-            ? recipeRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : recipeRepository.GetAllWithAudit();
+        IQueryable<Recipe> source = request.OnlyDeleted
+            ? recipeRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : recipeRepository.GetAllActive();
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

@@ -116,13 +116,22 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
         int version = ++_reloadVersion;
         try
         {
-            _lblSub.Text = "Yevmiye kayıtları güncelleniyor...";
+            _lblSub.Text = "Hesap planı yükleniyor...";
 
+            // Bu ekran SALT OKUNURDUR. Burada yevmiye senkronizasyonu
+            // (ChartOfAccountLedgerSyncCommand) ÇALIŞTIRILMAZ.
+            //
+            // Senkronizasyon tüm stok hareketlerini ve tüm yevmiye kayıtlarını
+            // okuyup eksikleri YAZAN bir onarım komutudur; ekran her açıldığında
+            // çalıştırıldığı için yalnızca okunan bir listeye yazma işlemi
+            // karışıyor, açılış iki tam tablo taraması ve bir yazma maliyeti
+            // taşıyordu. Yevmiye kayıtları zaten belge onayında yazılır; bu
+            // komut yalnızca eski veriden gelen boşlukları kapatmak için elle
+            // çalıştırılır.
             List<ChartOfAccountDto> items = await Task.Run(async () =>
             {
                 using var scope = Program.Services.CreateScope();
                 ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-                await mediator.Send(new ChartOfAccountLedgerSyncCommand(), CancellationToken.None);
                 return (await mediator.Send(new ChartOfAccountGetAllQuery(), CancellationToken.None)).ToList();
             });
 
@@ -178,16 +187,60 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
     private static bool HasMovement(ChartOfAccountDto item)
         => item.DebitAmount != 0 || item.CreditAmount != 0 || item.DebitBalance != 0 || item.CreditBalance != 0;
 
+    /// <summary>
+    /// Görünen satırları ve alt toplamları hazırlar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Filtre ve toplamlar <b>çift geçiş</b> yerine <b>tek geçişte</b> hesaplanır.
+    /// Daha önce <c>_items</c> (binlerce hesap) beş kez taranıyordu: bir kez
+    /// filtre için, dört kez alt toplam için. Liste büyüdükçe ekran açılış
+    /// maliyeti doğrusal değil görünüyordu.
+    /// </para>
+    /// <para>
+    /// Ağaç ızgarası satırları görüntülediği için burada ekranı yeniden
+    /// kurmak zorunludur; ağacın düğüm sayısı binlerce olduğunda bu iş UI iş
+    /// parçacığında yapılır ve düğümlerin yalnızca ilk düzeyi genişletilir.
+    /// </para>
+    /// </remarks>
     private void ApplyTreeFilter()
     {
-        List<ChartOfAccountDto> display = _filterMoved
-            ? _items.Where(HasMovement).ToList()
-            : _items;
+        List<ChartOfAccountDto> display;
 
-        _totalDebit = display.Where(i => i.ParentId is null).Sum(i => i.DebitAmount);
-        _totalCredit = display.Where(i => i.ParentId is null).Sum(i => i.CreditAmount);
-        _totalDebitBalance = display.Where(i => i.ParentId is null).Sum(i => i.DebitBalance);
-        _totalCreditBalance = display.Where(i => i.ParentId is null).Sum(i => i.CreditBalance);
+        if (_filterMoved)
+        {
+            display = new List<ChartOfAccountDto>(_items.Count);
+            foreach (ChartOfAccountDto item in _items)
+            {
+                if (HasMovement(item))
+                {
+                    display.Add(item);
+                }
+            }
+        }
+        else
+        {
+            display = _items;
+        }
+
+        // Kökler alt toplamların tanımıdır; hepsini tek geçişte topluyoruz.
+        _totalDebit = 0m;
+        _totalCredit = 0m;
+        _totalDebitBalance = 0m;
+        _totalCreditBalance = 0m;
+
+        foreach (ChartOfAccountDto item in display)
+        {
+            if (item.ParentId is not null)
+            {
+                continue;
+            }
+
+            _totalDebit += item.DebitAmount;
+            _totalCredit += item.CreditAmount;
+            _totalDebitBalance += item.DebitBalance;
+            _totalCreditBalance += item.CreditBalance;
+        }
 
         _tree.BeginUpdate();
         try
@@ -195,7 +248,15 @@ public sealed partial class ChartOfAccountsListForm : XtraFormMdiBase
             _tree.DataSource = null;
             _tree.DataSource = display;
             _tree.ForceInitialize();
-            _tree.ExpandAll();
+
+            // Tüm ağacı genişletmek binlerce düğümü görünür kılar ve bu, UI
+            // iş parçacığında saniyeler sürebilir. Yalnızca kökler açık bırakılır;
+            // kullanıcı istediği dalı "Tümünü Genişlet" düğmesiyle açabilir.
+            foreach (TreeListNode root in _tree.Nodes)
+            {
+                root.Expanded = true;
+            }
+
             _tree.Refresh();
         }
         finally

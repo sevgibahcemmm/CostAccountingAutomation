@@ -117,14 +117,14 @@ internal sealed class RepairCostSlipLedgerCommandHandler(
         // çekilir. Tek taraflı eski kayıt tek taraflıydı; yeni kayıt iki
         // satırdır (borç + alacak) ve ikisi de aynı SourceId'yi taşır, bu
         // yüzden ikisi birden geri alınır.
-        var ledgerEntries = new List<ChartOfAccountLedger>();
-        foreach (ProductMovement movement in movements)
-        {
-            List<ChartOfAccountLedger> found = await ledgerRepository.GetBySourceAsync(
-                ConsumptionSourceType, movement.Id.Value, cancellationToken);
-
-            ledgerEntries.AddRange(found);
-        }
+        //
+        // Hareketler tek tek sorgulanmaz: N hareket için N sorgu yerine tek
+        // sorguda hepsi getirilir. (SourceId sütunu indeksli olduğu için
+        // IN listesi verimlidir.)
+        List<ChartOfAccountLedger> ledgerEntries = await ledgerRepository.GetBySourcesAsync(
+            ConsumptionSourceType,
+            movements.Select(m => m.Id.Value),
+            cancellationToken);
 
         // Aynı kaynak kimliği birden fazla kez dönebilir (aynı hareket için
         // birden çok yevmiye satırı); kimliğe göre tekilleştirilir.

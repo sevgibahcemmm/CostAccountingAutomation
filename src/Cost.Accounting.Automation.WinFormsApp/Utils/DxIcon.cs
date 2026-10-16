@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using DevExpress.Images;
 using DevExpress.Utils.Svg;
+using Cost.Accounting.Automation.WinFormsApp.Tools;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Utils
 {
@@ -21,8 +22,23 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
                 return cached;
             }
 
-            SvgImage image = ImageResourceCache.Default.GetSvgImage(resourceKey)
-                ?? ImageResourceCache.Default.GetSvgImage("svgimages/business%20objects/bo_list.svg");
+            SvgImage? found = ImageResourceCache.Default.GetSvgImage(resourceKey);
+
+            if (found is null)
+            {
+                // Sessizce yedek ikona düşmek, ekranda yanlış ikon göstermek
+                // demektir: geliştirici hatayı göremez. Bu yüzden günlüğe
+                // yazılır. Gerçekten olmayan bir yol yazıldığında buradan
+                // anlaşılır.
+                CrashLog.Write(
+                    "DxIcon",
+                    $"SVG kaynağı bulunamadı: '{resourceKey}'. " +
+                    "Yedek ikona düşüldü (bo_list.svg).");
+
+                found = ImageResourceCache.Default.GetSvgImage("svgimages/business%20objects/bo_list.svg");
+            }
+
+            SvgImage image = found;
 
             _cache.Add(resourceKey, image);
             return image;
@@ -139,5 +155,21 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
         public static SvgImage Swap => Icon("svgimages/icon%20builder/actions_refresh.svg");
         public static SvgImage Ledger => Icon("svgimages/business%20objects/bo_list.svg");
         public static SvgImage DoughnutChart => Icon("svgimages/icon%20builder/business_doughnutchart.svg");
+
+        /// <summary>
+        /// MDI sekmesindeki rapor/baskı önizleme ikonu.
+        /// </summary>
+        /// <remarks>
+        /// <c>Print</c> ve <c>Report</c> ayrı ayrı "yazdır" ve "rapor"
+        /// anlamına gelir; ikisi de bu sekmede yanıltıcıdır — sekme bir belgeyi
+        /// <b>gösteriyor</b>, yazdırmıyor. PDF görüntüleyicisinin yazdırma
+        /// ikonu ikisinin arasında kalır.
+        /// <para>
+        /// Yol doğrulanmıştır: <c>svgimages/pdf%20viewer/print-preview.svg</c>
+        /// DevExpress'te <b>yoktur</b>; <c>DxIcon.Icon</c> bulunamayan anahtarda
+        /// sessizce liste ikonuna düştüğü için bu tür yollar ölçülerek seçilir.
+        /// </para>
+        /// </remarks>
+        public static SvgImage PrintPreview => Icon("svgimages/pdf%20viewer/print.svg");
     }
 }

@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Employees;
 using Microsoft.EntityFrameworkCore;
@@ -21,23 +22,26 @@ public sealed record EmployeeGetAllQuery(
 }
 
 internal sealed class EmployeeGetAllQueryHandler(
-    IEmployeeRepository employeeRepository) : IRequestHandler<EmployeeGetAllQuery, IQueryable<EmployeeDto>>
+    IEmployeeRepository employeeRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<EmployeeGetAllQuery, IQueryable<EmployeeDto>>
 {
-    public Task<IQueryable<EmployeeDto>> Handle(
+    public async Task<IQueryable<EmployeeDto>> Handle(
         EmployeeGetAllQuery request,
         CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<Employee>> source = request.OnlyDeleted
-            ? employeeRepository.GetAllWithAuditIncludingDeleted().Where(e => e.Entity.IsDeleted)
-            : employeeRepository.GetAllWithAudit();
+        IQueryable<Employee> source = request.OnlyDeleted
+            ? employeeRepository.GetAllIncludingDeleted().Where(e => e.IsDeleted)
+            : employeeRepository.GetAllActive();
 
         if (request.WorkshopId is Guid workshopId)
         {
-            source = source.Where(e => e.Entity.Duties
-                .Any(d => d.WorkshopId == new IdentityId(workshopId) && !d.IsDeleted));
+            IdentityId id = new(workshopId);
+            source = source.Where(e => e.Duties.Any(d => d.WorkshopId == id && !d.IsDeleted));
         }
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }
 
@@ -51,24 +55,27 @@ public sealed record EmployeeGetQuery(Guid Id) : IRequest<Result<EmployeeDto>>;
 internal sealed class EmployeeGetQueryHandler(
     IEmployeeRepository employeeRepository) : IRequestHandler<EmployeeGetQuery, Result<EmployeeDto>>
 {
-    public Task<Result<EmployeeDto>> Handle(
+    public async Task<Result<EmployeeDto>> Handle(
         EmployeeGetQuery request,
         CancellationToken cancellationToken)
     {
-        // GetAllWithAuditIncludingDeleted sonucu belleğe materyalize edilip
-        // LINQ-to-Objects olarak döner; bu yüzden FirstOrDefaultAsync yerine
-        // FirstOrDefault kullanılır.
-        Employee? employee = employeeRepository
-            .GetAllWithAuditIncludingDeleted()
-            .Where(e => e.Entity.Id == new IdentityId(request.Id))
-            .Select(e => e.Entity)
-            .FirstOrDefault();
+        // Kimlik veritabanında filtrelenir. Daha önce liste sorgusu belleğe
+        // alınıp bellekte FirstOrDefault ile aranıyordu; "tek personel getir"
+        // isteği tüm personel tablosunu okuyor ve SENKRON çalışıyordu.
+        Employee? employee = await employeeRepository
+            .GetAllIncludingDeleted()
+            .Include(e => e.Duties)
+            .ThenInclude(d => d.SigningRole)
+            .Include(e => e.Duties)
+            .ThenInclude(d => d.Workshop)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(e => e.Id == new IdentityId(request.Id), cancellationToken);
 
         if (employee is null)
         {
-            return Task.FromResult(Result<EmployeeDto>.Failure(EmployeeMessages.NotFound));
+            return Result<EmployeeDto>.Failure(EmployeeMessages.NotFound);
         }
 
-        return Task.FromResult(Result<EmployeeDto>.Succeed(employee.ToDto()));
+        return employee.ToDto();
     }
 }

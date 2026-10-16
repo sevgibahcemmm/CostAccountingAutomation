@@ -1320,44 +1320,58 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.BaseForm
             }
         }
 
-        /// <summary>
-        /// Kolon genişliklerini içeriklere göre ayarlar; metin kolonları devasa büyümesin diye
-        /// tavan değer uygulanır. Sabit genişlikli (görsel) kolonlar etkilenmez.
-        /// </summary>
-        private void FitColumnsToContent()
+    /// <summary>
+    /// Kolon genişliklerini içeriklere göre ayarlar; metin kolonları devasa büyümesin diye
+    /// tavan değer uygulanır. Sabit genişlikli (görsel) kolonlar etkilenmez.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>BestFitColumns</c> <b>tüm satırları</b> UI iş parçacığında tarar ve her
+    /// hücreyi ölçer. Bu arayüz iş parçacığını bloke eder: birkaç yüz satırda
+    /// fark edilmez, on binlerce satırda ekran saniyelerce "donmuş" görünür.
+    /// </para>
+    /// <para>
+    /// Bu yüzden BestFit yalnızca küçük listelerde çalıştırılır. Büyük
+    /// listelerde <c>[Column]</c> özniteliğinde tanımlı sabit genişlikler
+    /// kullanılır; genişlikler <c>GridColumnFactory</c> tarafından zaten
+    /// uygulanmıştır. Bu yol bilinçlidir: sütun genişliği estetik bir karardır,
+    /// ekranın kullanılamaz hâle gelmesi değil.
+    /// </para>
+    /// </remarks>
+    private const int BestFitRowLimit = 500;
+
+    private void FitColumnsToContent()
+    {
+        if (_columnsFitted)
         {
-            if (_columnsFitted)
-            {
-                return;
-            }
-
-            // Çok satırlı listelerde (ör. stok hareketleri) BestFit tüm satırları taradığı için
-            // arayüz birkaç saniye kilitlenebilir; büyük listelerde kolon genişlikleri korunur.
-            if (_allItems.Count > 25000)
-            {
-                _columnsFitted = true;
-                return;
-            }
-
-            gridView.BeginUpdate();
-            try
-            {
-                foreach (GridColumn column in gridView.Columns)
-                {
-                    if (column.MaxWidth == 0)
-                    {
-                        column.MaxWidth = Math.Max(280, column.Width * 2);
-                    }
-                }
-
-                gridView.BestFitColumns();
-                _columnsFitted = true;
-            }
-            finally
-            {
-                gridView.EndUpdate();
-            }
+            return;
         }
+
+        _columnsFitted = true;
+
+        if (_allItems.Count > BestFitRowLimit)
+        {
+            return;
+        }
+
+        gridView.BeginUpdate();
+        try
+        {
+            foreach (GridColumn column in gridView.Columns)
+            {
+                if (column.MaxWidth == 0)
+                {
+                    column.MaxWidth = Math.Max(280, column.Width * 2);
+                }
+            }
+
+            gridView.BestFitColumns();
+        }
+        finally
+        {
+            gridView.EndUpdate();
+        }
+    }
 
         protected virtual TEditForm CreateEditEditor(TDto item)
             => (TEditForm)Activator.CreateInstance(typeof(TEditForm), item)!;

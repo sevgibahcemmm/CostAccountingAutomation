@@ -71,34 +71,31 @@ public sealed class CurrentAccountMovementDto : EntityDto
 
 public static class CurrentAccountMovementExtensions
 {
-    public static IQueryable<CurrentAccountMovementDto> MapTo(this IQueryable<EntityWithAuditDto<CurrentAccountMovement>> entity)
+    public static IQueryable<CurrentAccountMovementDto> MapTo(this IQueryable<CurrentAccountMovement> entity)
     {
         return entity
             .Select(s => new CurrentAccountMovementDto
             {
-                Id = s.Entity.Id,
-                CurrentAccountType = s.Entity.CurrentAccountType,
-                CustomerId = s.Entity.CustomerId == null ? null : s.Entity.CustomerId.Value,
-                CustomerName = s.Entity.Customer == null ? null : s.Entity.Customer.Name.Value,
-                SupplierId = s.Entity.SupplierId == null ? null : s.Entity.SupplierId.Value,
-                SupplierName = s.Entity.Supplier == null ? null : s.Entity.Supplier.Name.Value,
+                Id = s.Id,
+                CurrentAccountType = s.CurrentAccountType,
+                CustomerId = s.CustomerId == null ? null : s.CustomerId.Value,
+                CustomerName = s.Customer == null ? null : s.Customer.Name.Value,
+                SupplierId = s.SupplierId == null ? null : s.SupplierId.Value,
+                SupplierName = s.Supplier == null ? null : s.Supplier.Name.Value,
 
-                Date = s.Entity.Date,
-                MovementType = s.Entity.MovementType,
-                DocumentNo = s.Entity.DocumentNo,
-                Debit = s.Entity.Debit,
-                Credit = s.Entity.Credit,
-                Description = s.Entity.Description.Value,
-                InvoiceId = s.Entity.InvoiceId == null ? null : s.Entity.InvoiceId.Value,
+                Date = s.Date,
+                MovementType = s.MovementType,
+                DocumentNo = s.DocumentNo,
+                Debit = s.Debit,
+                Credit = s.Credit,
+                Description = s.Description.Value,
+                InvoiceId = s.InvoiceId == null ? null : s.InvoiceId.Value,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 }

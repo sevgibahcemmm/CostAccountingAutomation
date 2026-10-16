@@ -1,5 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Products.TaxRates;
 using TS.MediatR;
 
@@ -13,14 +13,17 @@ public sealed record TaxRateGetAllQuery(
 }
 
 internal sealed class TaxRateGetAllQueryHandler(
-    ITaxRateRepository taxRateRepository) : IRequestHandler<TaxRateGetAllQuery, IQueryable<TaxRateDto>>
+    ITaxRateRepository taxRateRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<TaxRateGetAllQuery, IQueryable<TaxRateDto>>
 {
-    public Task<IQueryable<TaxRateDto>> Handle(TaxRateGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<TaxRateDto>> Handle(TaxRateGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<TaxRate>> source = request.OnlyDeleted
-            ? taxRateRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : taxRateRepository.GetAllWithAudit();
+        IQueryable<TaxRate> source = request.OnlyDeleted
+            ? taxRateRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : taxRateRepository.GetAllActive();
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

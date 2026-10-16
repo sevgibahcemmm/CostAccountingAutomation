@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.StockMovements;
+using Cost.Accounting.Automation.Application.StockMovements;
 using DevExpress.XtraReports.UI;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListReports
@@ -119,12 +119,5 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListRepor
             };
         }
 
-        public void PrintReport()
-        {
-            using (ReportPrintTool tool = new ReportPrintTool(this))
-            {
-                tool.ShowRibbonPreviewDialog();
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.CostSlips;
+using Cost.Accounting.Automation.Application.CostSlips;
 using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using DevExpress.XtraPrinting;
@@ -106,12 +106,5 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             parameter.Value = value;
         }
 
-        public void PrintReport()
-        {
-            using (ReportPrintTool tool = new ReportPrintTool(this))
-            {
-                tool.ShowRibbonPreviewDialog();
-            }
-        }
     }
 }

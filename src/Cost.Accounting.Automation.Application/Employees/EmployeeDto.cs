@@ -76,48 +76,46 @@ public sealed class EmployeeDutyDto
 
 public static class EmployeeExtensions
 {
-    public static IQueryable<EmployeeDto> MapTo(this IQueryable<EntityWithAuditDto<Employee>> entity)
+    public static IQueryable<EmployeeDto> MapTo(this IQueryable<Employee> entity)
     {
         return entity
             .Select(e => new EmployeeDto
             {
-                Id = e.Entity.Id,
-                IdentityNumber = e.Entity.IdentityNumber.Value,
-                FirstName = e.Entity.FirstName.Value,
-                LastName = e.Entity.LastName.Value,
-                FullName = e.Entity.FirstName.Value + " " + e.Entity.LastName.Value,
-                Title = e.Entity.Title.Value,
-                PhoneNumber1 = e.Entity.PhoneNumber1,
-                PhoneNumber2 = e.Entity.PhoneNumber2,
-                Email = e.Entity.Email,
-                RegistryNumber = e.Entity.RegistryNumber,
-                PhotoPath = e.Entity.PhotoPath,
-                IsActive = e.Entity.IsActive,
+                Id = e.Id,
+                IdentityNumber = e.IdentityNumber.Value,
+                FirstName = e.FirstName.Value,
+                LastName = e.LastName.Value,
+                FullName = e.FirstName.Value + " " + e.LastName.Value,
+                Title = e.Title.Value,
+                PhoneNumber1 = e.PhoneNumber1,
+                PhoneNumber2 = e.PhoneNumber2,
+                Email = e.Email,
+                RegistryNumber = e.RegistryNumber,
+                PhotoPath = e.PhotoPath,
+                IsActive = e.IsActive,
 
-                SigningRoles = string.Join(", ", e.Entity.Duties
+                SigningRoles = string.Join(", ", e.Duties
                     .Where(d => !d.IsDeleted && d.SigningRole != null)
                     .Select(d => d.SigningRole!.Name.Value)
                     .OrderBy(n => n)),
 
-                Workshops = string.Join(", ", e.Entity.Duties
+                Workshops = string.Join(", ", e.Duties
                     .Where(d => !d.IsDeleted && d.Workshop != null)
                     .Select(d => d.Workshop!.Name.Value)
                     .OrderBy(n => n)),
 
-                DutyCount = e.Entity.Duties.Count(d => !d.IsDeleted),
+                DutyCount = e.Duties.Count(d => !d.IsDeleted),
 
-                CreatedAt = e.Entity.CreatedAt,
-                CreatedBy = e.Entity.CreatedBy,
-                UpdatedAt = e.Entity.UpdatedAt,
-                UpdatedBy = e.Entity.UpdatedBy == null ? null : e.Entity.UpdatedBy.Value,
-                CreatedFullName = e.CreatedUser.FullName.Value,
-                UpdatedFullName = e.UpdatedUser == null ? null : e.UpdatedUser.FullName.Value,
+                CreatedAt = e.CreatedAt,
+                CreatedBy = e.CreatedBy,
+                UpdatedAt = e.UpdatedAt,
+                UpdatedBy = e.UpdatedBy == null ? null : e.UpdatedBy.Value,
 
                 // Alt grid (master-detail) bu koleksiyondan besleniyor; önceden
                 // dolmazsa satır genişletildiğinde görev listesi boş görünür.
                 // Projeksiyon aynı zamanda SigningRoles/Workshops özet
                 // metinlerini de üretiyor; ikisi aynı Include zincirini paylaşır.
-                Duties = e.Entity.Duties
+                Duties = e.Duties
                     .Where(d => !d.IsDeleted)
                     .OrderBy(d => d.SigningRole!.SortOrder)
                     .ThenBy(d => d.SigningRole!.Name.Value)
@@ -134,8 +132,7 @@ public static class EmployeeExtensions
                         RequiresWorkshop = d.SigningRole != null && d.SigningRole.RequiresWorkshop
                     })
                     .ToList()
-            })
-            .AsQueryable();
+            });
     }
 
     /// <summary>

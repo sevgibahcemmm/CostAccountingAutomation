@@ -1,0 +1,38 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!--
+    System.Security.Cryptography.Pkcs denetim uyarilari.
+
+    Microsoft.Data.SqlClient 6.1.6, bu pakete ">= 9.0.11" alt siniri koyuyor ve NuGet
+    cozumlemesi 9.0.11'e dustugu icin asagidaki iki duyuru icin NU1902/NU1903
+    uretiliyor. TreatWarningsAsErrors bunlari derleme hatasina ceviriyor.
+
+    Duzeltilemiyor, cunku:
+      - Pakete dogrudan PackageReference eklenemez. .NET 10 SDK'si bu paketi
+        net10.0 icin "otomatik olarak kullanilabilir" sayip ayikladiigi icin
+        NU1510 hatasi veriyor.
+      - Microsoft.Data.SqlClient 7.1.1'e yukseltmek de cozum degil; net10.0
+        bagimlilik grubu olmadigi icin yine 9.0.18'e dustugu ve 9.0.0-9.0.20
+        araliginda kaldigi icin duyurulerden biri devam ediyor.
+
+    .NET 10 SDK'si paketi ayikladigi icin 9.0.11 bileseni ciktiya hic yazilmaz;
+    SignedCms / EnvelopedCms tipleri paylasilan cerceveden cozulur. Yani gercek
+    risk paylasilan cercevenin surumundedir ve duyurunun yamaladigi surum
+    10.0.13'tur.
+
+    Bu yuzden asil onlem .NET SDK/runtime'i 10.0.13+ surumune guncellemektir
+    (SDK 10.0.402).SDK ve runtime guncellendikten sonra bu iki satiri kaldirmak
+    uygun olur.
+  -->
+  <ItemGroup>
+    <!-- CVE-2026-84008 / GHSA-846f-f764-76mx - SignedCms.CheckSignature karesel CPU yiyor. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-846f-f764-76mx" />
+    <!-- CVE-2026-70162 / GHSA-2fmv-rv2c-59x7 - EnvelopedCms.Decode karesel CPU yiyor. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2fmv-rv2c-59x7" />
+  </ItemGroup>
+
+</Project>

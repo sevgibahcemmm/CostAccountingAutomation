@@ -63,39 +63,36 @@ public sealed class ProductMovementListDto : EntityDto
 
 public static class ProductMovementExtensions
 {
-    public static IQueryable<ProductMovementListDto> MapTo(this IQueryable<EntityWithAuditDto<ProductMovement>> entity)
+    public static IQueryable<ProductMovementListDto> MapTo(this IQueryable<ProductMovement> entity)
     {
         return entity
             .Select(s => new ProductMovementListDto
             {
-                Id = s.Entity.Id,
-                ProductId = s.Entity.ProductId,
-                ProductName = s.Entity.Product == null ? string.Empty : s.Entity.Product.Name.Value,
-                ProductCode = s.Entity.Product == null ? string.Empty : s.Entity.Product.ProductCode.Value,
-                Barcode = s.Entity.Product == null ? null : s.Entity.Product.Barcode.Value,
-                WarehouseName = s.Entity.Product == null || s.Entity.Product.Warehouse == null ? string.Empty : s.Entity.Product.Warehouse.Name.Value,
-                WarehouseGroup = s.Entity.Product == null || s.Entity.Product.Warehouse == null
+                Id = s.Id,
+                ProductId = s.ProductId,
+                ProductName = s.Product == null ? string.Empty : s.Product.Name.Value,
+                ProductCode = s.Product == null ? string.Empty : s.Product.ProductCode.Value,
+                Barcode = s.Product == null ? null : s.Product.Barcode.Value,
+                WarehouseName = s.Product == null || s.Product.Warehouse == null ? string.Empty : s.Product.Warehouse.Name.Value,
+                WarehouseGroup = s.Product == null || s.Product.Warehouse == null
                     ? string.Empty
-                    : $"{s.Entity.Product.Warehouse.Code.Value} - {s.Entity.Product.Warehouse.Name.Value}",
-                UnitTypeName = s.Entity.Product == null || s.Entity.Product.ProductUnitType == null ? string.Empty : s.Entity.Product.ProductUnitType.Name.Value,
+                    : $"{s.Product.Warehouse.Code.Value} - {s.Product.Warehouse.Name.Value}",
+                UnitTypeName = s.Product == null || s.Product.ProductUnitType == null ? string.Empty : s.Product.ProductUnitType.Name.Value,
 
-                MovementType = s.Entity.MovementType,
-                Reason = s.Entity.Reason,
-                Quantity = s.Entity.Quantity,
-                UnitPrice = s.Entity.UnitPrice == null ? null : s.Entity.UnitPrice.Value,
-                Date = s.Entity.Date,
-                ReferenceNo = s.Entity.ReferenceNo,
-                Description = s.Entity.Description.Value,
-                InvoiceId = s.Entity.InvoiceId == null ? null : s.Entity.InvoiceId.Value,
+                MovementType = s.MovementType,
+                Reason = s.Reason,
+                Quantity = s.Quantity,
+                UnitPrice = s.UnitPrice == null ? null : s.UnitPrice.Value,
+                Date = s.Date,
+                ReferenceNo = s.ReferenceNo,
+                Description = s.Description.Value,
+                InvoiceId = s.InvoiceId == null ? null : s.InvoiceId.Value,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 }

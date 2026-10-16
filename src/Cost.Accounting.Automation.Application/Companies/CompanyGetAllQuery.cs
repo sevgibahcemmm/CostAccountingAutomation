@@ -1,5 +1,5 @@
 ﻿using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Companies;
 using TS.MediatR;
 
@@ -12,14 +12,17 @@ public sealed record CompanyGetAllQuery(
 }
 
 internal sealed class CompanyGetAllQueryHandler(
-    ICompanyRepository CompanyRepository) : IRequestHandler<CompanyGetAllQuery, IQueryable<CompanyDto>>
+    ICompanyRepository CompanyRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<CompanyGetAllQuery, IQueryable<CompanyDto>>
 {
-    public Task<IQueryable<CompanyDto>> Handle(CompanyGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<CompanyDto>> Handle(CompanyGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<Company>> source = request.OnlyDeleted
-            ? CompanyRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : CompanyRepository.GetAllWithAudit();
+        IQueryable<Company> source = request.OnlyDeleted
+            ? CompanyRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : CompanyRepository.GetAllActive();
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

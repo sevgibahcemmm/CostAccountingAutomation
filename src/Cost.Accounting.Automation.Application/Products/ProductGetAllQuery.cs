@@ -1,6 +1,8 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
+using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 
 namespace Cost.Accounting.Automation.Application.Products;
@@ -14,20 +16,38 @@ public sealed record ProductGetAllQuery(
 }
 
 internal sealed class ProductGetAllQueryHandler(
-    IProductRepository productRepository) : IRequestHandler<ProductGetAllQuery, IQueryable<ProductDto>>
+    IProductRepository productRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<ProductGetAllQuery, IQueryable<ProductDto>>
 {
-    public Task<IQueryable<ProductDto>> Handle(ProductGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<ProductDto>> Handle(ProductGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<Product>> source = request.OnlyDeleted
-            ? productRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : productRepository.GetAllWithAudit();
+        IQueryable<Product> source = request.OnlyDeleted
+            ? productRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : productRepository.GetAllActive();
 
-        if (request.WarehouseId.HasValue)
+        if (request.WarehouseId is Guid warehouseId)
         {
-            IdentityId warehouseId = new(request.WarehouseId.Value);
-            source = source.Where(i => i.Entity.WarehouseId == warehouseId);
+            IdentityId id = new(warehouseId);
+            source = source.Where(i => i.WarehouseId == id);
         }
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        List<ProductDto> items = await source
+            .MapTo()
+            .ToListAsync(cancellationToken);
+
+        // Stok miktarları tek bir GROUP BY sorgusuyla gelir. Ürün başına
+        // korelasyonlu alt sorgu kurmak yerine toplu yapmak, sorgu sayısını
+        // ürün sayısından bağımsız tutar ve hareket satırlarını belleğe taşımaz.
+        Dictionary<Guid, decimal> stock = await productRepository
+            .GetStockByProductIdsAsync(items.Select(i => i.Id), cancellationToken);
+
+        foreach (ProductDto item in items)
+        {
+            item.StockQuantity = stock.GetValueOrDefault(item.Id);
+        }
+
+        await auditUserNames.FillAsync(items, cancellationToken);
+
+        return items.AsQueryable();
     }
 }

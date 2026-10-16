@@ -1,3 +1,4 @@
+using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Invoices;
 using Cost.Accounting.Automation.Infrastructure.Abstractions;
 using Cost.Accounting.Automation.Infrastructure.Context;
@@ -12,10 +13,11 @@ internal sealed class InvoiceRepository : AuditableRepository<Invoice, Applicati
     }
 
     /// <summary>
-    /// GetAllWithAudit sorgusu sonuçları belleğe materyalize ettiği için Include
-    /// uygulanmazsa navigasyonlar null gelir: "Cari Adı" boş kalır ve master-detail
-    /// satırı açılamaz. Bu yüzden cari/tedarikçi, kalemler ve kalem ürünleri
-    /// burada açıkça yüklenir.
+    /// Liste sorgusu artık SQL üzerinde projekte edildiği için projeksiyon
+    /// kendi JOIN'lerini kurar; burada ek bir Include zinciri gerekmez.
+    /// Yalnızca hâlâ bellek içi çalışan
+    /// <see cref="AuditableRepository{TEntity,TContext}.GetAllWithAudit"/>
+    /// çağrıları için navigasyonlar yüklenir.
     /// </summary>
     protected override IQueryable<Invoice> ApplyDetailIncludes(IQueryable<Invoice> query)
         => query
@@ -24,4 +26,33 @@ internal sealed class InvoiceRepository : AuditableRepository<Invoice, Applicati
             .Include(i => i.Supplier)
             .Include(i => i.Lines)
                 .ThenInclude(l => l.Product);
+
+    public async Task<List<InvoiceLine>> GetLinesByInvoiceIdsAsync(
+        IReadOnlyCollection<Guid> invoiceIds,
+        CancellationToken cancellationToken = default)
+    {
+        List<IdentityId> ids = [.. invoiceIds.Select(id => new IdentityId(id))];
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await this.Context.Set<InvoiceLine>()
+            .AsNoTracking()
+            .Where(l => ids.Contains(l.InvoiceId))
+            .Include(l => l.Product)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Invoice?> GetByIdWithLinesAsync(
+        IdentityId id,
+        CancellationToken cancellationToken = default)
+        => await this.Context.Set<Invoice>()
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(i => i.Customer)
+            .Include(i => i.Supplier)
+            .Include(i => i.Lines)
+                .ThenInclude(l => l.Product)
+            .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
 }

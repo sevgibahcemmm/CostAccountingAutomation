@@ -2,7 +2,6 @@ using Cost.Accounting.Automation.Application.Behaviors;
 using Cost.Accounting.Automation.Application.Helpers;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Invoices;
-using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 using TS.Result;
 
@@ -16,16 +15,16 @@ internal sealed class InvoiceGetByIdQueryHandler(
 {
     public async Task<Result<InvoiceDto>> Handle(InvoiceGetByIdQuery request, CancellationToken cancellationToken)
     {
-        var invoiceDto = await invoiceRepository.GetAllWithAudit()
-            .Where(i => i.Entity.Id == request.Id)
-            .MapTo()
-            .FirstOrDefaultSafeAsync(cancellationToken);
+        // Tek fatura: liste sorgusu üzerinden filtrelemek yerine doğrudan
+        // kimlikle okunur. Önceden liste belleğe alınıp bellekte aranıyordu.
+        Invoice? invoice = await invoiceRepository.GetByIdWithLinesAsync(
+            new IdentityId(request.Id), cancellationToken);
 
-        if (invoiceDto is null)
+        if (invoice is null)
         {
             return Result<InvoiceDto>.Failure("Fatura bulunamadı.");
         }
 
-        return Result<InvoiceDto>.Succeed(invoiceDto);
+        return Result<InvoiceDto>.Succeed(invoice.ToDto());
     }
 }

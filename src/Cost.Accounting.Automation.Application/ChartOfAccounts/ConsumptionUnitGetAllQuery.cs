@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using TS.MediatR;
@@ -22,31 +23,33 @@ public sealed record ConsumptionUnitGetAllQuery(
 }
 
 internal sealed class ConsumptionUnitGetAllQueryHandler(
-    IChartOfAccountRepository chartOfAccountRepository) : IRequestHandler<ConsumptionUnitGetAllQuery, IQueryable<ConsumptionUnitDto>>
+    IChartOfAccountRepository chartOfAccountRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<ConsumptionUnitGetAllQuery, IQueryable<ConsumptionUnitDto>>
 {
-    public Task<IQueryable<ConsumptionUnitDto>> Handle(ConsumptionUnitGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<ConsumptionUnitDto>> Handle(ConsumptionUnitGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<ChartOfAccount>> source = request.OnlyDeleted
-            ? chartOfAccountRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : chartOfAccountRepository.GetAllWithAudit();
+        // Tüketicim birimleri hesap planının çok küçük bir dilimi (yüzde bir
+        // civarı). Tip filtresi veritabanında uygulanır: eskiden 6.000'den fazla
+        // hesap belleğe alınıp filtreleniyordu.
+        IQueryable<ChartOfAccount> source = request.OnlyDeleted
+            ? chartOfAccountRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : chartOfAccountRepository.GetAllActive();
 
         IQueryable<ConsumptionUnitDto> query = source
-            .Where(i => i.Entity.Type == ChartOfAccountType.ConsumptionUnit)
+            .Where(i => i.Type == ChartOfAccountType.ConsumptionUnit)
             .Select(s => new ConsumptionUnitDto
             {
-                Id = s.Entity.Id,
-                Code = s.Entity.Code.Value,
-                Name = s.Entity.Name.Value,
+                Id = s.Id,
+                Code = s.Code.Value,
+                Name = s.Name.Value,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
             });
 
-        return Task.FromResult(query);
+        return await query.ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

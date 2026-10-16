@@ -1,5 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Products;
 using Cost.Accounting.Automation.Domain.Products.ProductUnitTypes;
 using TS.MediatR;
@@ -14,14 +14,17 @@ public sealed record ProductUnitTypeGetAllQuery(
 }
 
 internal sealed class ProductUnitTypeGetAllQueryHandler(
-    IProductUnitTypeRepository unitTypeRepository) : IRequestHandler<ProductUnitTypeGetAllQuery, IQueryable<ProductUnitTypeDto>>
+    IProductUnitTypeRepository unitTypeRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<ProductUnitTypeGetAllQuery, IQueryable<ProductUnitTypeDto>>
 {
-    public Task<IQueryable<ProductUnitTypeDto>> Handle(ProductUnitTypeGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<ProductUnitTypeDto>> Handle(ProductUnitTypeGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<ProductUnitType>> source = request.OnlyDeleted
-            ? unitTypeRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : unitTypeRepository.GetAllWithAudit();
+        IQueryable<ProductUnitType> source = request.OnlyDeleted
+            ? unitTypeRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : unitTypeRepository.GetAllActive();
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

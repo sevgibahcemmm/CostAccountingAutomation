@@ -17,23 +17,20 @@ public sealed class TaxRateDto : EntityDto
 
 public static class TaxRateExtensions
 {
-    public static IQueryable<TaxRateDto> MapTo(this IQueryable<EntityWithAuditDto<TaxRate>> entity)
+    public static IQueryable<TaxRateDto> MapTo(this IQueryable<TaxRate> entity)
     {
         return entity
             .Select(s => new TaxRateDto
             {
-                Id = s.Entity.Id,
-                Name = s.Entity.Name.Value,
-                Rate = s.Entity.Rate,
+                Id = s.Id,
+                Name = s.Name.Value,
+                Rate = s.Rate,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 }

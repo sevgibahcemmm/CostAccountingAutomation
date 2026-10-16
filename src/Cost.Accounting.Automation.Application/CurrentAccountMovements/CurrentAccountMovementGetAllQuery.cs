@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CurrentAccounts;
 using TS.MediatR;
@@ -17,36 +18,41 @@ public sealed record CurrentAccountMovementGetAllQuery(
 }
 
 internal sealed class CurrentAccountMovementGetAllQueryHandler(
-    ICurrentAccountMovementRepository currentAccountMovementRepository) : IRequestHandler<CurrentAccountMovementGetAllQuery, IQueryable<CurrentAccountMovementDto>>
+    ICurrentAccountMovementRepository currentAccountMovementRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<CurrentAccountMovementGetAllQuery, IQueryable<CurrentAccountMovementDto>>
 {
-    public Task<IQueryable<CurrentAccountMovementDto>> Handle(CurrentAccountMovementGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<CurrentAccountMovementDto>> Handle(
+        CurrentAccountMovementGetAllQuery request,
+        CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<CurrentAccountMovement>> source = request.OnlyDeleted
-            ? currentAccountMovementRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : currentAccountMovementRepository.GetAllWithAudit();
+        IQueryable<CurrentAccountMovement> source = request.OnlyDeleted
+            ? currentAccountMovementRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : currentAccountMovementRepository.GetAllActive();
 
-        if (request.AccountType.HasValue)
+        if (request.AccountType is CurrentAccountType accountType)
         {
-            source = source.Where(i => i.Entity.CurrentAccountType == request.AccountType.Value);
+            source = source.Where(i => i.CurrentAccountType == accountType);
         }
 
-        if (request.MovementTypes is { Length: > 0 })
+        if (request.MovementTypes is { Length: > 0 } movementTypes)
         {
-            source = source.Where(i => request.MovementTypes!.Contains(i.Entity.MovementType));
+            source = source.Where(i => movementTypes.Contains(i.MovementType));
         }
 
-        if (request.CustomerId.HasValue)
+        if (request.CustomerId is Guid customerId)
         {
-            IdentityId custId = new(request.CustomerId.Value);
-            source = source.Where(i => i.Entity.CustomerId == custId);
+            IdentityId id = new(customerId);
+            source = source.Where(i => i.CustomerId == id);
         }
 
-        if (request.SupplierId.HasValue)
+        if (request.SupplierId is Guid supplierId)
         {
-            IdentityId supId = new(request.SupplierId.Value);
-            source = source.Where(i => i.Entity.SupplierId == supId);
+            IdentityId id = new(supplierId);
+            source = source.Where(i => i.SupplierId == id);
         }
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

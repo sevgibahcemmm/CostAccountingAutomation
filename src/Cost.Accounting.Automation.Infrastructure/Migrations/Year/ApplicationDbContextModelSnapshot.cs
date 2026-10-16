@@ -246,7 +246,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.Property<string>("SourceType")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(MAX)");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -259,6 +259,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.HasIndex("ChartOfAccountId");
 
                     b.HasIndex("DuplicateKey");
+
+                    b.HasIndex("SourceType", "SourceId");
 
                     b.ToTable("ChartOfAccountLedger", (string)null);
                 });
@@ -455,8 +457,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DocumentNo")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(MAX)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("DuplicateKey")
                         .HasMaxLength(512)
@@ -1152,7 +1154,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                         .HasDefaultValueSql("1");
 
                     b.Property<string>("ReferenceNo")
-                        .HasColumnType("nvarchar(MAX)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -1176,6 +1179,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                     b.HasIndex("InvoiceId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("ReferenceNo");
 
                     b.HasIndex("StockIssueId");
 
@@ -1536,6 +1541,8 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                     b.HasIndex("SourceWarehouseId");
 
+                    b.HasIndex("Status");
+
                     b.HasIndex("TargetAccountId");
 
                     b.ToTable("StockIssues", (string)null);
@@ -1671,7 +1678,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(300)
-                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnType("nvarchar(300)")
                                 .HasColumnName("Name");
 
                             b1.HasKey("ChartOfAccountId");
@@ -1909,7 +1916,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(MAX)");
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("Name_Value");
 
                             b1.HasKey("CustomerId");
 
@@ -2001,7 +2010,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("FirstName");
 
                             b1.HasKey("EmployeeId");
@@ -2020,7 +2029,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("LastName");
 
                             b1.HasKey("EmployeeId");
@@ -2077,7 +2086,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(120)
-                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnType("nvarchar(120)")
                                 .HasColumnName("Name");
 
                             b1.HasKey("EmployeeSigningRoleId");
@@ -2239,7 +2248,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(300)
-                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnType("nvarchar(300)")
                                 .HasColumnName("Name");
 
                             b1.HasKey("ProductId");
@@ -2358,7 +2367,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(120)
-                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnType("nvarchar(120)")
                                 .HasColumnName("Name");
 
                             b1.HasKey("ProductUnitTypeId");
@@ -2383,7 +2392,7 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(120)
-                                .HasColumnType("nvarchar(MAX)")
+                                .HasColumnType("nvarchar(120)")
                                 .HasColumnName("Name");
 
                             b1.HasKey("TaxRateId");
@@ -2609,7 +2618,9 @@ namespace Cost.Accounting.Automation.Infrastructure.Migrations.Year
 
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(MAX)");
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("Name_Value");
 
                             b1.HasKey("SupplierId");
 

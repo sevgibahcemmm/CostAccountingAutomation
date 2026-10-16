@@ -12,7 +12,11 @@ internal sealed class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
 
         builder.HasKey(c => c.Id);
 
-        builder.OwnsOne(c => c.Name);
+        // HasColumnType zorunlu: ConfigureConventions nvarchar(MAX) uygular ve
+        // HasMaxLength bunu ezmez. Gerekçesi CustomerConfiguration ile aynıdır.
+        builder.OwnsOne(c => c.Name, name =>
+            name.Property(x => x.Value).HasColumnName("Name_Value").HasColumnType("nvarchar(200)").HasMaxLength(200));
+
         builder.OwnsOne(c => c.TaxOffice);
         builder.OwnsOne(c => c.TaxNumber);
         builder.OwnsOne(c => c.Contact);

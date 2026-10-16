@@ -15,19 +15,35 @@ internal sealed class ChartOfAccountLedgerRepository : IChartOfAccountLedgerRepo
         _context = context;
     }
 
-    public async Task AddAsync(ChartOfAccountLedger entry, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Yevmiye satırını değişiklik takibine ekler.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Burada <c>SaveChangesAsync</c> çağrılmaz.</b> Kayıt yazımı MediatR
+    /// işlem hattının sonunda (<c>TransactionBehavior</c>) tek seferde yapılır.
+    /// Satır başına kaydetme, bir belgede onlarca yevmiye satırı olduğunda
+    /// her satır için ayrı bir veritabanına gidiş-dönüş demekti; üstelik
+    /// vaat edilen "her şey ya da hiçbir şey" bütünlüğünü bozuyordu: on
+    /// satırlık bir belgede hata oluştuğunda ilk satırlar kayıtlı kalıyordu.
+    /// </para>
+    /// </remarks>
+    public Task AddAsync(ChartOfAccountLedger entry, CancellationToken cancellationToken = default)
     {
-        await _context.Set<ChartOfAccountLedger>().AddAsync(entry, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        _context.Set<ChartOfAccountLedger>().Add(entry);
+        return Task.CompletedTask;
     }
 
-    public async Task AddRangeAsync(IEnumerable<ChartOfAccountLedger> entries, CancellationToken cancellationToken = default)
+    public Task AddRangeAsync(IEnumerable<ChartOfAccountLedger> entries, CancellationToken cancellationToken = default)
     {
         List<ChartOfAccountLedger> list = entries.ToList();
-        if (list.Count == 0) return;
+        if (list.Count == 0)
+        {
+            return Task.CompletedTask;
+        }
 
-        await _context.Set<ChartOfAccountLedger>().AddRangeAsync(list, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        _context.Set<ChartOfAccountLedger>().AddRange(list);
+        return Task.CompletedTask;
     }
 
     public async Task<Dictionary<Guid, (decimal Debit, decimal Credit)>> GetTotalsByAccountAsync(CancellationToken cancellationToken = default)
@@ -51,6 +67,25 @@ internal sealed class ChartOfAccountLedgerRepository : IChartOfAccountLedgerRepo
         IdentityId id = new(sourceId);
         return await _context.Set<ChartOfAccountLedger>()
             .Where(x => x.SourceType == sourceType && x.SourceId == id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<ChartOfAccountLedger>> GetBySourcesAsync(
+        string sourceType,
+        IEnumerable<Guid> sourceIds,
+        CancellationToken cancellationToken = default)
+    {
+        // Nullable yabancı anahtar sütunu: EF'in IN listesini sütunun kendi
+        // tipinde (Guid?) yazması gerekir. Liste elemanlarına IdentityId
+        // sarmalamak SQL'e çevrilmez.
+        List<Guid?> ids = [.. sourceIds.Select(id => (Guid?)id)];
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await _context.Set<ChartOfAccountLedger>()
+            .Where(x => x.SourceType == sourceType && ids.Contains(x.SourceId!.Value))
             .ToListAsync(cancellationToken);
     }
 

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Cost.Accounting.Automation.Application.CostSlips;
 using DevExpress.XtraPrinting;
 using DevExpress.XtraReports.UI;
@@ -122,12 +122,5 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
             };
         }
 
-        public void PrintReport()
-        {
-            using (ReportPrintTool tool = new ReportPrintTool(this))
-            {
-                tool.ShowRibbonPreviewDialog();
-            }
-        }
     }
 }

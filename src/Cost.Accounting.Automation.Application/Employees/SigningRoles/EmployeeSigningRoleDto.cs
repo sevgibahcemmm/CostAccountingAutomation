@@ -21,27 +21,23 @@ public sealed class EmployeeSigningRoleDto : EntityDto
 
 public static class EmployeeSigningRoleExtensions
 {
-    public static IQueryable<EmployeeSigningRoleDto> MapTo(
-        this IQueryable<EntityWithAuditDto<EmployeeSigningRole>> entity)
+    public static IQueryable<EmployeeSigningRoleDto> MapTo(this IQueryable<EmployeeSigningRole> entity)
     {
         return entity
             .Select(e => new EmployeeSigningRoleDto
             {
-                Id = e.Entity.Id,
-                Name = e.Entity.Name.Value,
-                Description = e.Entity.Description,
-                RequiresWorkshop = e.Entity.RequiresWorkshop,
-                SortOrder = e.Entity.SortOrder,
+                Id = e.Id,
+                Name = e.Name.Value,
+                Description = e.Description,
+                RequiresWorkshop = e.RequiresWorkshop,
+                SortOrder = e.SortOrder,
 
-                CreatedAt = e.Entity.CreatedAt,
-                CreatedBy = e.Entity.CreatedBy,
-                IsActive = e.Entity.IsActive,
-                UpdatedAt = e.Entity.UpdatedAt,
-                UpdatedBy = e.Entity.UpdatedBy == null ? null : e.Entity.UpdatedBy.Value,
-                CreatedFullName = e.CreatedUser.FullName.Value,
-                UpdatedFullName = e.UpdatedUser == null ? null : e.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = e.CreatedAt,
+                CreatedBy = e.CreatedBy,
+                IsActive = e.IsActive,
+                UpdatedAt = e.UpdatedAt,
+                UpdatedBy = e.UpdatedBy == null ? null : e.UpdatedBy.Value,
+            });
     }
 }
 

@@ -38,12 +38,5 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockCountListReports
                 : "( ATÖLYE BAZINDA )";
         }
 
-        public void PrintReport()
-        {
-            using (ReportPrintTool tool = new ReportPrintTool(this))
-            {
-                tool.ShowRibbonPreviewDialog();
-            }
-        }
     }
 }

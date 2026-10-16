@@ -126,52 +126,102 @@ public sealed class InvoiceDto : EntityDto, IApprovalStatusDto
 
 public static class InvoiceExtensions
 {
-    public static IQueryable<InvoiceDto> MapTo(this IQueryable<EntityWithAuditDto<Invoice>> entity)
+    /// <summary>
+    /// Fatura LİSTESİ için projeksiyon (veritabanında çalışır).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Satırlar bilinçli olarak bu projeksiyonda <b>yer almaz</b>. Alt ızgara
+    /// satırları gösterir, ama satırları ana sorguya katmak her fatura için
+    /// satırları JOIN edip tek satıra indirger; bu kartesian çarpım sorguyu
+    /// üstel olarak şişirir (aynı sorun maliyet pusulasında 25 saniyelik bir
+    /// sorguya yol açmıştı).
+    /// </para>
+    /// <para>
+    /// Satırlar <c>InvoiceGetAllQuery</c> içinde ikinci bir sorguda, yalnızca
+    /// gelen faturalar için alınır.
+    /// </para>
+    /// </remarks>
+    public static IQueryable<InvoiceDto> MapTo(this IQueryable<Invoice> entity)
     {
         return entity
             .Select(s => new InvoiceDto
             {
-                Id = s.Entity.Id,
-                InvoiceNumber = s.Entity.InvoiceNumber,
-                InvoiceType = s.Entity.InvoiceType,
-                Status = s.Entity.Status,
-                Date = s.Entity.Date,
+                Id = s.Id,
+                InvoiceNumber = s.InvoiceNumber,
+                InvoiceType = s.InvoiceType,
+                Status = s.Status,
+                Date = s.Date,
 
-                CustomerId = s.Entity.CustomerId == null ? null : s.Entity.CustomerId.Value,
-                CustomerName = s.Entity.Customer == null ? null : s.Entity.Customer.Name.Value,
+                CustomerId = s.CustomerId == null ? null : s.CustomerId.Value,
+                CustomerName = s.Customer == null ? null : s.Customer.Name.Value,
 
-                SupplierId = s.Entity.SupplierId == null ? null : s.Entity.SupplierId.Value,
-                SupplierName = s.Entity.Supplier == null ? null : s.Entity.Supplier.Name.Value,
+                SupplierId = s.SupplierId == null ? null : s.SupplierId.Value,
+                SupplierName = s.Supplier == null ? null : s.Supplier.Name.Value,
 
-                Description = s.Entity.Description.Value,
-                SubTotal = s.Entity.SubTotal,
-                DiscountTotal = s.Entity.DiscountTotal,
-                TaxTotal = s.Entity.TaxTotal,
-                GrandTotal = s.Entity.GrandTotal,
+                Description = s.Description.Value,
+                SubTotal = s.SubTotal,
+                DiscountTotal = s.DiscountTotal,
+                TaxTotal = s.TaxTotal,
+                GrandTotal = s.GrandTotal,
 
-                Lines = s.Entity.Lines.Select(l => new InvoiceLineDto
-                {
-                    Id = l.Id,
-                    ProductId = l.ProductId,
-                    ProductName = l.Product == null ? string.Empty : l.Product.Name.Value,
-                    ProductCode = l.Product == null ? string.Empty : l.Product.ProductCode.Value,
-                    Quantity = l.Quantity,
-                    UnitPrice = l.UnitPrice,
-                    DiscountRate = l.DiscountRate,
-                    TaxRateRate = l.TaxRateRate,
-                    TaxAmount = l.TaxAmount,
-                    TotalAmount = l.TotalAmount,
-                    Description = l.Description.Value
-                }).ToList(),
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
+    }
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+    /// <summary>
+    /// Tek bir fatura kaydını liste DTO'suna çevirir; satırlar dahildir.
+    /// Yalnızca tek faturanın açıldığı ekranlar kullanır.
+    /// </summary>
+    public static InvoiceDto ToDto(this Invoice invoice)
+    {
+        InvoiceDto dto = new()
+        {
+            Id = invoice.Id,
+            InvoiceNumber = invoice.InvoiceNumber,
+            InvoiceType = invoice.InvoiceType,
+            Status = invoice.Status,
+            Date = invoice.Date,
+
+            CustomerId = invoice.CustomerId?.Value,
+            CustomerName = invoice.Customer?.Name.Value,
+
+            SupplierId = invoice.SupplierId?.Value,
+            SupplierName = invoice.Supplier?.Name.Value,
+
+            Description = invoice.Description?.Value ?? string.Empty,
+            SubTotal = invoice.SubTotal,
+            DiscountTotal = invoice.DiscountTotal,
+            TaxTotal = invoice.TaxTotal,
+            GrandTotal = invoice.GrandTotal,
+
+            IsActive = invoice.IsActive,
+            CreatedAt = invoice.CreatedAt,
+            CreatedBy = invoice.CreatedBy,
+            UpdatedAt = invoice.UpdatedAt,
+            UpdatedBy = invoice.UpdatedBy?.Value,
+            CreatedFullName = string.Empty
+        };
+
+        dto.Lines = [.. invoice.Lines.Select(l => new InvoiceLineDto
+        {
+            Id = l.Id,
+            ProductId = l.ProductId,
+            ProductName = l.Product?.Name.Value ?? string.Empty,
+            ProductCode = l.Product?.ProductCode.Value ?? string.Empty,
+            Quantity = l.Quantity,
+            UnitPrice = l.UnitPrice,
+            DiscountRate = l.DiscountRate,
+            TaxRateRate = l.TaxRateRate,
+            TaxAmount = l.TaxAmount,
+            TotalAmount = l.TotalAmount,
+            Description = l.Description.Value
+        })];
+
+        return dto;
     }
 }

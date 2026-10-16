@@ -102,31 +102,31 @@ public sealed class StockIssueDto : EntityDto
 
 public static class StockIssueExtensions
 {
-    public static IQueryable<StockIssueListDto> MapTo(this IQueryable<EntityWithAuditDto<StockIssue>> entity)
+    public static IQueryable<StockIssueListDto> MapTo(this IQueryable<StockIssue> entity)
     {
         return entity
             .Select(s => new StockIssueListDto
             {
-                Id = s.Entity.Id,
-                DocumentNumber = s.Entity.DocumentNumber,
-                Date = s.Entity.Date,
-                IssueType = s.Entity.IssueType,
-                Status = s.Entity.Status,
-                SourceWarehouseId = s.Entity.SourceWarehouseId,
-                SourceWarehouseName = s.Entity.SourceWarehouse == null ? string.Empty : s.Entity.SourceWarehouse.Name.Value,
-                TargetAccountId = s.Entity.TargetAccountId,
-                TargetAccountCode = s.Entity.TargetAccount == null ? string.Empty : s.Entity.TargetAccount.Code.Value,
-                TargetAccountName = s.Entity.TargetAccount == null ? string.Empty : s.Entity.TargetAccount.Name.Value,
+                Id = s.Id,
+                DocumentNumber = s.DocumentNumber,
+                Date = s.Date,
+                IssueType = s.IssueType,
+                Status = s.Status,
+                SourceWarehouseId = s.SourceWarehouseId,
+                SourceWarehouseName = s.SourceWarehouse == null ? string.Empty : s.SourceWarehouse.Name.Value,
+                TargetAccountId = s.TargetAccountId,
+                TargetAccountCode = s.TargetAccount == null ? string.Empty : s.TargetAccount.Code.Value,
+                TargetAccountName = s.TargetAccount == null ? string.Empty : s.TargetAccount.Name.Value,
                 // Kalem sayısı ürün adedidir, satır sayısı değil. Belge satırları giriş
                 // fiyatı başına birer katman olarak saklandığı için 174 adetlik
                 // tek bir ürün çıkışı 144 + 30 olmak üzere iki satır tutar;
                 // "Kalem" sütunu kullanıcıya 2 dememeli, 1 demelidir.
-                LineCount = s.Entity.Lines.Select(l => l.ProductId).Distinct().Count(),
+                LineCount = s.Lines.Select(l => l.ProductId).Distinct().Count(),
                 // Her satır gerçek bir katman olduğundan miktar × satır fiyatı
                 // toplamı belge gerçek maliyetini verir.
-                TotalAmount = s.Entity.Lines.Sum(l => l.Quantity * l.UnitCost.Value),
-                Description = s.Entity.Description.Value,
-                Lines = s.Entity.Lines
+                TotalAmount = s.Lines.Sum(l => l.Quantity * l.UnitCost.Value),
+                Description = s.Description.Value,
+                Lines = s.Lines
                     .Select(l => new StockIssueLineDto
                     {
                         Id = l.Id,
@@ -141,15 +141,12 @@ public static class StockIssueExtensions
                     })
                     .ToList(),
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 
     public static StockIssueDto ToDto(this StockIssue issue)

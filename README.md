@@ -220,6 +220,211 @@ src/
   Set-LocalSecrets.ps1                        Gizli anahtar üretir (ortam değişkenine yazar)
 ```
 
+## Liste ekranları nasıl sorgulanır
+
+Liste ekranlarının hepsi aynı deseni izler ve **filtreleme ile alan seçimi
+veritabanında** yapılır:
+
+```csharp
+IQueryable<Customer> source = customerRepository.GetAllActive();
+List<CustomerDto> items = await source.MapTo().ToListAsync(ct);
+await auditUserNames.FillAsync(items, ct);
+return items.AsQueryable();
+```
+
+`MapTo` bir `Select` ifadesidir. Kaynak sorgu gerçek bir SQL sorgusu olduğu
+için `.Where(...)`, `.Select(...)` ve indeks kullanımı veritabanında çalışır.
+
+### Denetim kullanıcı adları neden ayrı çözülüyor?
+
+Kayıtlar seçili **yıl** veritabanında, kullanıcılar **master** veritabanında
+durur. İki ayrı katalog olduğu için kullanıcı adı, kayıt sorgusuna `JOIN`
+ile eklenemez. `IAuditUserNameResolver` adları ikinci bir (küçük, önbellekli)
+sorguda çözer. Çözülen adlar `IMemoryCache` üzerinde iki dakika saklanır;
+kullanıcı sayısı az olduğu için liste ekranları master'a tekrar tekrar
+gitmez.
+
+`EntityDto.CreatedFullName` / `UpdatedFullName` bu yüzden **projeksiyonda
+doldurulmaz**, sonradan yazılır.
+
+### Koleksiyon navigasyonları listede yer almaz
+
+Liste projeksiyonlarına `Include` edilmiş koleksiyonlar konmaz. Örnek:
+`ProductDto` listesinde `Prices` ve `Movements` **boştur**; stok miktarı tek
+bir `GROUP BY` sorgusuyla (`GetStockByProductIdsAsync`) gelir. Satır bazında
+geçmiş gösteren ekranlar `MapToDetail` / `GetByIdWithDetailsAsync` kullanır.
+
+Aynı kural belge satırları için de geçerlidir: maliyet pusulası satırları
+`GetItemsAsync`, fatura satırları `GetLinesByInvoiceIdsAsync` ile **ayrı
+sorguda** gelir. Satırları ana listeye katmak kartesian çarpım üretir —
+maliyet pusulasında bu, ölçüldüğü üzere 25 saniyelik bir sorguya yol
+açmıştı.
+
+### `GetAllWithAudit` ne zaman kullanılır?
+
+`GetAllWithAudit` kayıtları **belleğe alıp** LINQ-to-Objects olarak döndürür;
+filtreleri SQL'e indirmez. Yalnızca hâlâ bellek içi çalışan ve sonuç
+sayısının küçük olduğu yollarda kullanılmalıdır. Yeni yazılan liste sorguları
+`GetAllActive()` / `GetAllIncludingDeleted()` ile SQL tabanlı çalışır.
+
+### String sütun tipleri
+
+`AuditedDbContext.ConfigureConventions` tüm string sütunlara açıkça
+`nvarchar(MAX)` uygular. Bu bir **kolon tipi** atamasıdır ve yalnızca
+`HasMaxLength` yazmak onu ezmez. Arama, sıralama veya indeks gerektiren bir
+sütunu daraltmak için **tip de açıkça sabitlenmelidir**:
+
+```csharp
+builder.Property(x => x.ReferenceNo)
+    .HasColumnType("nvarchar(100)")   // bu satır olmadan sütun nvarchar(MAX) kalır
+    .HasMaxLength(100);
+```
+
+`nvarchar(MAX)` kolonlar SQL Server'da indekslenemez; indeks tanımlanmadan
+önce tipi daraltın.
+
+## Ölçülen liste ekranı performansı
+
+Aşağıdaki değerler, kurulu geliştirme veritabanı üzerinde gerçek sorgularla
+ölçülmüştür (bilgisayar başına yedi çalıştırmanın ortancası). "SQL" sütunu
+sunucuya giden komut sayısıdır ve gürültüden etkilenmez.
+
+| Ekran | Önce (SQL / ms) | Sonra (SQL / ms) |
+|---|---|---|
+| Tüketim birimi listesi | 2 / 194,6 | 1 / 5,3 |
+| Hesap planı listesi | 3 / 242,3 | 2 / 51,9 |
+| Fatura listesi | 3 / 43,4 | 2 / 3,0 |
+| Stok belgesi listesi | 3 / 36,1 | 1 / 2,6 |
+| Personel listesi | 1 / 31,9 | 1 / 2,7 |
+| Stok belgesi numarası | 3 / 34,0 | 1 / 1,8 |
+| Ürün listesi | 5 / 106,9 | 2 / 5,2 |
+| Maliyet pusulası listesi | 3 / 11,3 | 2 / 4,9 |
+| Stok hareketi listesi | 2 / 15,7 | 1 / 2,7 |
+| Sonraki pusula numarası | 2 / 19,8 | 1 / 1,9 |
+| Müşteri tek kayıt | 4 / 11,8 | 2 / 3,1 |
+| **Toplam (19 ekran)** | **54 / 831,0** | **23 / 103,0** |
+
+Tüketim birimi listesi en çarpıcı örnektir: eskiden 6.293 hesabın tamamı
+belleğe alınıp filtreleniyordu (yüzde biri gereken ~50 kayıt için); şimdi
+tip filtresi SQL'e iniyor ve yalnızca o satırlar geliyor.
+
+## Raporlar
+
+Raporlar **MDI sekmesi** olarak açılır — ayrı bir pencere değil. Kullanıcı
+rapor açıkken liste ekranına dönüp başka bir belge açabilir ve sekmeler
+arasında geçebilir.
+
+| Parça | Nerede | Görevi |
+| --- | --- | --- |
+| `ReportPreviewHelper.PrintAsync` | `WinFormsApp/Tools` | Belgeyi üretir, DevExpress önizleme penceresini sekme açar |
+| `MdiFormManager.OpenExistingForm` | `WinFormsApp/Utils` | Hazır bir pencereyi MDI sekmesine çevirir |
+
+### Önizleme penceresi değiştirilmez
+
+Sektir, `ShowRibbonPreviewDialog()` ile gördüğünüz pencerenin **aynen aynısıdır**:
+Türkçe menüler, yazdırma, PDF/Excel/HTML kaydetme, yakınlaştırma, sayfa yapısı,
+sayfa gezinme ve bulma çubuğu dâhil her komut aynen çalışır. Yeni bir rapor
+görüntüleyici formu **yazılmaz**.
+
+DevExpress'in `PrintPreviewRibbonFormEx` penceresi zaten `RibbonForm` →
+`XtraForm` → `Form` zincirinden iniyor; yani MDI çocuğu olabilmeye uygundur.
+Yapılan tek şey `MdiParent` atayıp sekmeye dönüştürmektir.
+
+### Akış
+
+```
+Yazdır düğmesi
+  -> ReportPreviewHelper.PrintAsync(report, caption)
+     1. LoadingHelper ile report.CreateDocumentAsync()      (bekleme penceresi)
+     2. ReportPrintTool + tool.PreviewRibbonForm
+     3. MdiFormManager.OpenExistingForm(preview, container, başlık)
+```
+
+Belge **önce** üretilir, sekme **sonra** açılır. DevExpress belgeyi arayüz iş
+parçacığında senkron üretir; bu ayrım olmazsa ekran donar ve bekleme penceresi
+araya giremez.
+
+### Sekme davranışı
+
+| Konu | Davranış |
+|---|---|
+| Aynı rapor iki kez | İki ayrı sekme açılır. Karşılaştırma için gerekli. |
+| Sekme başlığı | Rapor sınıfının adından türetilir (`CostSlipProductReport` → `CostSlipProduct`). |
+| Sekme ikonu | `RibbonMainForm`'in `UseFormIconAsPageImage` ayarı ile forma yansıtılır. |
+| Kenarlık | `FormBorderStyle.None`; tek başlık kaynağı sekme başlığıdır. |
+| Rapor nesnesinin sahipliği | **Sekmeye devredilir.** Sekme kapanınca yazdırma aracı ve rapor serbest bırakılır. Çağıran taraf raporu `using` ile sarmalamamalıdır — sekme, çağıran koddan sonra yaşamaya devam eder. |
+
+`ReportPrintTool` pencerenin sahibidir; sekme kapanınca araç serbest bırakılır,
+araç da pencereyi kapatır. Bu zincir iki kez tetiklenebileceği için
+`ReleaseQuietly` iki `Dispose` çağrısını da ayrı ayrı koruma altına alır.
+
+### Sekme başlığı ve ikonu
+
+Sekme başlığı raporun sınıf adından **türetilmez** (`CostSlipProductReport` →
+`CostSlipProduct` kullanıcıya hiçbir şey anlatmaz). `ReportCatalog` her rapor
+sınıfı için Türkçe ad tanımlar:
+
+| Rapor sınıfı | Sekme başlığı |
+|---|---|
+| `CostSlipProductReport` | Mamül Maliyet Baskı Önizleme |
+| `CostSlipServiceReport` | Hizmet Maliyet Baskı Önizleme |
+| `ProductCostAllocationTableReport` | Mamül Maliyet Dağıtım Tablosu Baskı Önizleme |
+| `ServiceCostAllocationTable` | Hizmet Maliyet Dağıtım Tablosu Baskı Önizleme |
+| `ProductDeclarationReport` | Üretim Beyannamesi Baskı Önizleme |
+| `MovableAssetTransactionSlipReport` | Taşınır Varlık Fişi Baskı Önizleme |
+| `StockCountListReport` | Stok Sayım Listesi Baskı Önizleme |
+| `StockMovementsListReport` | Stok Hareket Listesi Baskı Önizleme |
+
+Yeni rapor eklenirken `ReportCatalog`'a bir satır eklenmesi yeterlidir.
+Kayıtsız bir rapor sınıf adıyla gösterilir **ve** `crash.log`'a uyarı düşer;
+böylece eksik kayıt sessizce geçmez.
+
+### Aynı rapor birden çok kez açılırsa
+
+Aynı rapor defalarca açılabilir (iki dönem karşılaştırmak gibi). İlk sekmede
+numara gösterilmez, sonrakilerde sıra numarası eklenir:
+
+```
+Stok Hareket Listesi Baskı Önizleme
+Stok Hareket Listesi Baskı Önizleme (2)
+Stok Hareket Listesi Baskı Önizleme (3)
+```
+
+`MdiFormManager.NextTabTitle` bunu üretir. **"Say + 1" değil, "kullanılmayan
+en küçük numara"** kullanılır: ortadaki bir sekme kapatılırsa numaralar
+boşluklu kalır, `say + 1` yöntemiyle `[Liste, Liste (3)]` durumunda yeni sekmeye
+yine `(3)` verilir ve iki sekme aynı adı taşır. Boşluk seçildiğinde adlar
+her zaman benzersiz kalır (numaralar sıra dışı görünebilir, çakışmaz).
+
+Belge adının kendisi parantez içeriyorsa (`Mamül Maliyet (2026) Baskı Önizleme`)
+sayım bozulmaz: yalnızca **tamamen rakam** olan ekler soyulur.
+
+### İkon kaynakları ölçülür, varsayılmaz
+
+`DxIcon.Icon` bulunamayan bir SVG yolunda **sessizce** yedek ikona düşüyordu;
+ekranda yanlış ikon görünür ve geliştirici hatayı fark edemezdi. Artık:
+
+- yol bulunamazsa `crash.log`'a yazılır,
+- `DxIcon.PrintPreview` ölçülmüş bir yol kullanır
+  (`svgimages/pdf%20viewer/print.svg` — `print-preview.svg` DevExpress'te
+  **yoktur**).
+
+### Doğrulama
+
+Bu davranış çalıştırılarak sınanmıştır (58 kontrol):
+
+```
+PrintPreviewRibbonFormEx -> PrintPreviewRibbonFormExBase -> RibbonForm
+  -> XtraForm -> ... -> Form          (MDI çocuğu olabilir)
+
+MDI çocuk / sekme sayısı : 1 / 1
+DevExpress ribbon         : mevcut (Türkçe: "Sayfa")
+forma ikon atandı        : EVET
+katalog: 8 rapor         : hepsi Türkçe başlık + ikon
+tekrar açma sayacı       : benzersiz (çakışma senaryosu dâhil)
+çift serbest bırakma    : hatasız
+```
+
 ## Mesajlaşma
 
 Kullanıcılar birbirine yazabilir, yönetici rolü herkese duyuru gönderebilir.

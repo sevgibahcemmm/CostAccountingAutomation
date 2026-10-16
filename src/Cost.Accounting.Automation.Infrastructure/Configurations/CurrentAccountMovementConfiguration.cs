@@ -12,8 +12,12 @@ internal sealed class CurrentAccountMovementConfiguration : IEntityTypeConfigura
 
         builder.HasKey(x => x.Id);
 
+        // HasColumnType zorunlu: ConfigureConventions nvarchar(MAX) uygular ve
+        // bunu HasMaxLength ezmez. Mevcut kayıtlarda en uzun belge numarası
+        // 12 karakter; 50 seçilmiştir.
         builder.Property(x => x.DocumentNo)
-            .HasMaxLength(100);
+            .HasColumnType("nvarchar(50)")
+            .HasMaxLength(50);
 
         builder.Property(x => x.Debit)
             .HasColumnType("money");

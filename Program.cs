@@ -36,3 +36,86 @@ internal static class P
         }
     }
 }
+}
+}
+    /// <summary>
+    /// Raporun gerçekten sayfa ürettiğini ve sekmenin yazdırma düğmelerinin
+    /// AYNI belgeyi gösterdiğini doğrular.
+    ///
+    /// <para>
+    /// Doğrulama görüntüleyicinin <c>Document</c> özelliği üzerinden değil,
+    /// yazdırma sistemi üzerinden yapılır: DevExpress belge yerleşimini ancak
+    /// pencere bir handle kazandığında tamamlar, dolayısıyla gösterilmeyen bir
+    /// sekmede <c>viewer.Document</c> boş görünür — bu bir hata değildir.
+    /// Gerçek risk şudur: izleyici ile yazdırma aracı FARKLI belgeler
+    /// taşıyabilir; o zaman ekranda görünen ile kâğıda çıkan farklılaşır.
+    /// </para>
+    /// </summary>
+    private static void VerifyDocumentRendering(ref int failures)
+    {
+        Console.WriteLine();
+        Console.WriteLine("--- Belge uretimi ---");
+
+        try
+        {
+            // Projede gercekten kullanilan bir rapor sinifi: sablonu, bantlari
+            // ve stil dosyasiyla birlikte yuklenir.
+            using StockMovementsListReport report = new();
+
+            // Uretim akisi: belge ONCE bekleyece penceresiyle uretilir, sonra
+            // sekme acilir. Burada da ayni sirayi izliyoruz.
+            report.CreateDocument();
+
+            ReportViewerMdiForm form = new(report, "BelgeTesti");
+
+            Invoke(form, "OnLoad", () => typeof(ReportViewerMdiForm)
+                .GetMethod("OnLoad", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                .Invoke(form, [new EventArgs()]));
+
+            DocumentViewer? viewer = FindViewer(form);
+
+            if (viewer is null)
+            {
+                Fail("belge izleyici bulunamadi", ref failures);
+                return;
+            }
+
+            int pages = viewer.PrintingSystem.Document?.Pages.Count ?? 0;
+
+            Console.WriteLine($"  yazdirma sistemi sayfasi     : {pages}");
+
+            if (pages <= 0)
+            {
+                Fail("belge uretilmedi (0 sayfa)", ref failures);
+            }
+            else
+            {
+                Console.WriteLine("  belge uretildi              : OK");
+            }
+
+            // Izleyici ile yazdirma araci ayni yazdirma sistemini paylasmali;
+            // aksi halde ekrandaki ile yazdirilan farklilasir.
+            object? tool = typeof(ReportViewerMdiForm)
+                .GetField("_printTool", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(form);
+
+            var toolSystem = (tool as DevExpress.XtraReports.UI.ReportPrintTool)?.PrintingSystem;
+
+            bool shared = ReferenceEquals(toolSystem, viewer.PrintingSystem);
+
+            Console.WriteLine($"  izleyici/yazdirma ayni mi   : {(shared ? "EVET" : "HAYIR")}");
+
+            if (!shared)
+            {
+                Fail("izleyici ve yazdirma araci farkli belgeleri gosteriyor", ref failures);
+            }
+
+            form.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Fail("belge uretilemedi: " + ex.Message, ref failures);
+        }
+    }
+
+}

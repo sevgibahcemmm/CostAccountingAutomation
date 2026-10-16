@@ -66,22 +66,22 @@ public sealed class RecipeDto : EntityDto
 
 public static class RecipeExtensions
 {
-    public static IQueryable<RecipeListDto> MapTo(this IQueryable<EntityWithAuditDto<Recipe>> entity)
+    public static IQueryable<RecipeListDto> MapTo(this IQueryable<Recipe> entity)
     {
         return entity
             .Select(s => new RecipeListDto
             {
-                Id = s.Entity.Id,
-                ProductId = s.Entity.ProductId,
-                ProductName = s.Entity.Product == null ? string.Empty : s.Entity.Product.Name.Value,
-                WorkshopId = s.Entity.WorkshopId == null ? (Guid?)null : s.Entity.WorkshopId.Value,
-                WorkshopName = s.Entity.Workshop == null ? string.Empty : s.Entity.Workshop.Name.Value,
-                ProductUnitTypeName = s.Entity.Product == null || s.Entity.Product.ProductUnitType == null
+                Id = s.Id,
+                ProductId = s.ProductId,
+                ProductName = s.Product == null ? string.Empty : s.Product.Name.Value,
+                WorkshopId = s.WorkshopId == null ? (Guid?)null : s.WorkshopId.Value,
+                WorkshopName = s.Workshop == null ? string.Empty : s.Workshop.Name.Value,
+                ProductUnitTypeName = s.Product == null || s.Product.ProductUnitType == null
                     ? string.Empty
-                    : s.Entity.Product.ProductUnitType.Name.Value,
-                OutputQuantity = s.Entity.OutputQuantity,
-                ItemsCount = s.Entity.Items.Count,
-                Items = s.Entity.Items.Select(i => new RecipeItemDto
+                    : s.Product.ProductUnitType.Name.Value,
+                OutputQuantity = s.OutputQuantity,
+                ItemsCount = s.Items.Count,
+                Items = s.Items.Select(i => new RecipeItemDto
                 {
                     Id = i.Id,
                     ProductId = i.ProductId,
@@ -90,20 +90,17 @@ public static class RecipeExtensions
                         ? string.Empty
                         : i.Product.ProductUnitType.Name.Value,
                     Quantity = i.Quantity,
-                    OutputQuantity = s.Entity.OutputQuantity,
-                    UnitQuantity = s.Entity.OutputQuantity <= 0
+                    OutputQuantity = s.OutputQuantity,
+                    UnitQuantity = s.OutputQuantity <= 0
                         ? i.Quantity
-                        : i.Quantity / s.Entity.OutputQuantity
+                        : i.Quantity / s.OutputQuantity
                 }).ToList(),
-                IsActive = s.Entity.IsActive,
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                IsActive = s.IsActive,
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 
     public static RecipeDto ToDto(this Recipe recipe)

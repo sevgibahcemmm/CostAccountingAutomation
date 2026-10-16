@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.ChartOfAccounts;
 using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
@@ -10,15 +11,20 @@ public sealed record ChartOfAccountGetAllQuery() : IRequest<IQueryable<ChartOfAc
 
 internal sealed class ChartOfAccountGetAllQueryHandler(
     IChartOfAccountRepository chartOfAccountRepository,
-    IChartOfAccountLedgerRepository ledgerRepository)
+    IChartOfAccountLedgerRepository ledgerRepository,
+    IAuditUserNameResolver auditUserNames)
     : IRequestHandler<ChartOfAccountGetAllQuery, IQueryable<ChartOfAccountDto>>
 {
     public async Task<IQueryable<ChartOfAccountDto>> Handle(ChartOfAccountGetAllQuery request, CancellationToken cancellationToken)
     {
+        // Hesap planı binlerce satırdır: liste doğrudan veritabanında projekte
+        // edilir. Daha önce tüm tablo belleğe alınıp sonra DTO'ya çevriliyordu.
         List<ChartOfAccountDto> items = await chartOfAccountRepository
-            .GetAllWithAudit()
+            .GetAllActive()
             .MapTo()
             .ToListAsync(cancellationToken);
+
+        await auditUserNames.FillAsync(items, cancellationToken);
 
         Dictionary<Guid, (decimal Debit, decimal Credit)> totals =
             await ledgerRepository.GetTotalsByAccountAsync(cancellationToken);
@@ -32,6 +38,8 @@ internal sealed class ChartOfAccountGetAllQueryHandler(
             }
         }
 
+        // Yukarıdan aşağıya toplulaştırma ağacın tamamını gezmek zorunda; bu
+        // veritabanında değil bellekte, O(n) maliyetle yapılır.
         ChartOfAccountBalanceCalculator.RollUp(items);
 
         return items.AsQueryable();

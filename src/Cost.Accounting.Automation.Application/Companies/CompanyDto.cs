@@ -1,4 +1,4 @@
-﻿
+
 
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Companies;
@@ -70,46 +70,43 @@ public sealed class CompanyDto : EntityDto
 
 public static class CompanyExtensions
 {
-    public static IQueryable<CompanyDto> MapTo(this IQueryable<EntityWithAuditDto<Company>> entity)
+    public static IQueryable<CompanyDto> MapTo(this IQueryable<Company> entity)
     {
         return entity
             .Select(s => new CompanyDto
             {
-                Id = s.Entity.Id,
-                Name = s.Entity.Name.Value,
-                TaxOffice = s.Entity.TaxOffice.Value,
-                TaxNumber = s.Entity.TaxNumber.Value,
-                Description = s.Entity.Description.Value,
-                Invoiceinformation = s.Entity.Invoiceinformation.Value,
-                Letterhead = s.Entity.Letterhead.Value,
-                CompanyPrefix = s.Entity.CompanyPrefix.Value,
+                Id = s.Id,
+                Name = s.Name.Value,
+                TaxOffice = s.TaxOffice.Value,
+                TaxNumber = s.TaxNumber.Value,
+                Description = s.Description.Value,
+                Invoiceinformation = s.Invoiceinformation.Value,
+                Letterhead = s.Letterhead.Value,
+                CompanyPrefix = s.CompanyPrefix.Value,
 
                 // --- Yeni Alanların Mapping İşlemi ---
                 // ExpenditureUnit.Value ve AccountingUnit.Name kullanılarak eşlendi
-                ExpenditureUnitName = s.Entity.ExpenditureUnit.Value,
-                ExpenditureUnitCode = s.Entity.ExpenditureUnit.Code,
-                AccountingUnitName = s.Entity.AccountingUnit.Name,
-                AccountingUnitCode = s.Entity.AccountingUnit.Code,
+                ExpenditureUnitName = s.ExpenditureUnit.Value,
+                ExpenditureUnitCode = s.ExpenditureUnit.Code,
+                AccountingUnitName = s.AccountingUnit.Name,
+                AccountingUnitCode = s.AccountingUnit.Code,
 
-                Address = s.Entity.Address,
-                Contact = s.Entity.Contact,
+                Address = s.Address,
+                Contact = s.Contact,
 
                 // --- Flat alanların doldurulması (client için) ---
-                City = s.Entity.Address.City,
-                District = s.Entity.Address.District,
-                FullAddress = s.Entity.Address.FullAddress,
-                PhoneNumber1 = s.Entity.Contact.PhoneNumber1,
-                PhoneNumber2 = s.Entity.Contact.PhoneNumber2,
-                Email = s.Entity.Contact.Email,
+                City = s.Address.City,
+                District = s.Address.District,
+                FullAddress = s.Address.FullAddress,
+                PhoneNumber1 = s.Contact.PhoneNumber1,
+                PhoneNumber2 = s.Contact.PhoneNumber2,
+                Email = s.Contact.Email,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 }

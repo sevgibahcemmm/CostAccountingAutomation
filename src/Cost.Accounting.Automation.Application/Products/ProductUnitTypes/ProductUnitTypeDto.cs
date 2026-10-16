@@ -11,22 +11,19 @@ public sealed class ProductUnitTypeDto : EntityDto
 
 public static class ProductUnitTypeExtensions
 {
-    public static IQueryable<ProductUnitTypeDto> MapTo(this IQueryable<EntityWithAuditDto<ProductUnitType>> entity)
+    public static IQueryable<ProductUnitTypeDto> MapTo(this IQueryable<ProductUnitType> entity)
     {
         return entity
             .Select(s => new ProductUnitTypeDto
             {
-                Id = s.Entity.Id,
-                Name = s.Entity.Name.Value,
+                Id = s.Id,
+                Name = s.Name.Value,
 
-                CreatedAt = s.Entity.CreatedAt,
-                CreatedBy = s.Entity.CreatedBy,
-                IsActive = s.Entity.IsActive,
-                UpdatedAt = s.Entity.UpdatedAt,
-                UpdatedBy = s.Entity.UpdatedBy == null ? null : s.Entity.UpdatedBy.Value,
-                CreatedFullName = s.CreatedUser.FullName.Value,
-                UpdatedFullName = s.UpdatedUser == null ? null : s.UpdatedUser.FullName.Value
-            })
-            .AsQueryable();
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                IsActive = s.IsActive,
+                UpdatedAt = s.UpdatedAt,
+                UpdatedBy = s.UpdatedBy == null ? null : s.UpdatedBy.Value,
+            });
     }
 }

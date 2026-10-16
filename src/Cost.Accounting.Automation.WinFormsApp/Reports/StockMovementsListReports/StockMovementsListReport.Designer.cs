@@ -318,7 +318,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.StockMovementsListRepor
             this.xrLabel1.Multiline = true;
             this.xrLabel1.Name = "xrLabel1";
             this.xrLabel1.Padding = new DevExpress.XtraPrinting.PaddingInfo(2F, 2F, 0F, 0F, 100F);
-            this.xrLabel1.SizeF = new System.Drawing.SizeF(298.3333F, 78.20835F);
+            this.xrLabel1.SizeF = new System.Drawing.SizeF(503.5417F, 78.20835F);
             this.xrLabel1.StylePriority.UseFont = false;
             this.xrLabel1.StylePriority.UseTextAlignment = false;
             this.xrLabel1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;

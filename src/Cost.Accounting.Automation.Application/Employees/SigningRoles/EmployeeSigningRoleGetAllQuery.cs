@@ -1,5 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
-using Cost.Accounting.Automation.Domain.Abstractions;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Employees;
 using TS.MediatR;
 
@@ -16,18 +16,21 @@ public sealed record EmployeeSigningRoleGetAllQuery(
 }
 
 internal sealed class EmployeeSigningRoleGetAllQueryHandler(
-    IEmployeeSigningRoleRepository repository)
+    IEmployeeSigningRoleRepository repository,
+    IAuditUserNameResolver auditUserNames)
     : IRequestHandler<EmployeeSigningRoleGetAllQuery, IQueryable<EmployeeSigningRoleDto>>
 {
-    public Task<IQueryable<EmployeeSigningRoleDto>> Handle(
+    public async Task<IQueryable<EmployeeSigningRoleDto>> Handle(
         EmployeeSigningRoleGetAllQuery request,
         CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<EmployeeSigningRole>> source = request.OnlyDeleted
-            ? repository.GetAllWithAuditIncludingDeleted().Where(r => r.Entity.IsDeleted)
-            : repository.GetAllWithAudit();
+        IQueryable<EmployeeSigningRole> source = request.OnlyDeleted
+            ? repository.GetAllIncludingDeleted().Where(r => r.IsDeleted)
+            : repository.GetAllActive();
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }
 

@@ -7,6 +7,7 @@ using DevExpress.XtraTabbedMdi;
 using Cost.Accounting.Automation.WinFormsApp.Tools;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Linq;
 
 namespace Cost.Accounting.Automation.WinFormsApp.Utils
@@ -194,6 +195,31 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
 
         public TForm OpenForm<TForm>(XtraForm parentForm, string? formTitle, Func<TForm>? factory = null)
             where TForm : XtraForm
+            => OpenForm<TForm>(parentForm, formTitle, factory, reuseExisting: true);
+
+        /// <summary>
+        /// MDI sekmesi açar.
+        /// </summary>
+        /// <param name="parentForm">Asıl MDI kapsayıcısı.</param>
+        /// <param name="formTitle">Sekme başlığı; null ise formun kendi başlığı.</param>
+        /// <param name="factory">Formu üreten fabrika; null ise varsayılan yapıcı.</param>
+        /// <param name="reuseExisting">
+        /// <c>true</c> ise aynı tür ve başlığa sahip açık bir sekme varsa yenisi
+        /// oluşturulmaz, mevcut sekme öne getirilir. <c>false</c> ise her çağrı
+        /// yeni bir sekme üretir.
+        /// </param>
+        /// <remarks>
+        /// Raporlar <c>false</c> ile açılır: aynı rapor iki kez açılabilmeli
+        /// (iki dönem karşılaştırmak için) ve sekme başlıkları ayırt edilebilir
+        /// kalmalıdır. Liste ekranları <c>true</c> kullanır: aynı kayıt listesi
+        /// iki kez açılmamalıdır.
+        /// </remarks>
+        public TForm OpenForm<TForm>(
+            XtraForm parentForm,
+            string? formTitle,
+            Func<TForm>? factory,
+            bool reuseExisting)
+            where TForm : XtraForm
         {
             if (_mdiManager is null)
             {
@@ -202,12 +228,15 @@ namespace Cost.Accounting.Automation.WinFormsApp.Utils
 
             string key = formTitle ?? GetDefaultTitle<TForm>();
 
-            TForm? existing = parentForm.MdiChildren.OfType<TForm>()
-                .FirstOrDefault(f => !f.IsDisposed && string.Equals(f.Text, key, StringComparison.Ordinal));
-            if (existing is not null)
+            if (reuseExisting)
             {
-                ActivateForm(existing);
-                return existing;
+                TForm? existing = parentForm.MdiChildren.OfType<TForm>()
+                    .FirstOrDefault(f => !f.IsDisposed && string.Equals(f.Text, key, StringComparison.Ordinal));
+                if (existing is not null)
+                {
+                    ActivateForm(existing);
+                    return existing;
+                }
             }
 
             TForm form = factory?.Invoke() ?? Activator.CreateInstance<TForm>()!;
@@ -267,6 +296,173 @@ public TForm OpenForm<TForm>(XtraForm parentForm, Func<TForm>? factory = null)
             ApplyPageChrome(form);
 
             return form;
+        }
+
+        /// <summary>
+        /// Zaten oluşturulmuş bir formu MDI sekmesi olarak açar.
+        /// </summary>
+        /// <param name="form">
+        /// Açılacak form. DevExpress'in kendi pencere sınıfları
+        /// (<c>PrintPreviewRibbonForm</c> gibi) yalnızca kendi yazdırma aracı
+        /// üzerinden üretilebildiği için bu aşama zorunludur.
+        /// </param>
+        /// <param name="container">Asıl MDI kapsayıcısı.</param>
+        /// <param name="title">Sekme başlığı.</param>
+        /// <remarks>
+        /// Rapor önizlemesi bu yolu kullanır: kullanıcı, <c>ShowRibbonPreviewDialog</c>
+        /// ile gördüğü pencerenin aynısını sekme olarak görür — tüm Türkçe
+        /// menüler, kaydetme, yakınlaştırma ve yazdırma komutları aynen çalışır.
+        /// </remarks>
+        public TForm OpenExistingForm<TForm>(TForm form, XtraForm container, string title)
+            where TForm : XtraForm
+        {
+            ArgumentNullException.ThrowIfNull(form);
+            ArgumentNullException.ThrowIfNull(container);
+
+            if (_mdiManager is null)
+            {
+                throw new InvalidOperationException("MdiFormManager.Initialize çağrılmadı.");
+            }
+
+            form.Text = title;
+
+            ApplyMdiMetadata(form);
+
+            // MDI çocuk form başka bir MDI çocuğu doğuramaz; bu yüzden daima asıl
+            // MDI kapsayıcı hedeflenir.
+            form.MdiParent = container;
+            form.Show();
+            ApplyPageChrome(form);
+
+            return form;
+        }
+
+        /// <summary>
+        /// Aynı belgeden ikinci kez açılışta sekme başlığına sıra numarası ekler.
+        /// </summary>
+        /// <param name="container">MDI kapsayıcısı.</param>
+        /// <param name="baseTitle">Sırasız taban başlık.</param>
+        /// <returns>
+        /// Sırasız başlık varsa onun kendisi ("Liste"); yoksa en küçük
+        /// <b>boş</b> numara ("Liste (2)", "Liste (3)"...).
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// Aynı rapor defalarca açılabilir (iki dönem karşılaştırmak gibi).
+        /// Sırasız başlıklar kullanıcıyı hangi sekmenin hangisi olduğunu
+        /// ayırmakta zorlayacağı için numara verilir. İlk sekmede numara
+        /// gösterilmez: her rapor ilk açılışta da "(1)" taşıması asıl belgeyi
+        /// gizlerdi.
+        /// </para>
+        /// <para>
+        /// <b>Neden "say + 1" değil:</b> Ortadaki bir sekme kapatılırsa
+        /// numaralar boşluklu kalır. Örneğin açık sekmeler
+        /// <c>[Liste, Liste (3)]</c> iken "say + 1" yöntemi yeni sekmeye yine
+        /// "(3)" verir ve iki sekme aynı adı taşır. Kullanılmayan en küçük
+        /// numara seçildiği için adlar her zaman benzersiz kalır.
+        /// </para>
+        /// </remarks>
+        public static string NextTabTitle(XtraForm container, string baseTitle)
+        {
+            ArgumentNullException.ThrowIfNull(container);
+
+            if (string.IsNullOrWhiteSpace(baseTitle))
+            {
+                return baseTitle;
+            }
+
+            bool hasPlain = false;
+            var used = new HashSet<int>();
+
+            foreach (Form child in container.MdiChildren)
+            {
+                if (child.IsDisposed
+                    || !string.Equals(StripCounter(child.Text), baseTitle, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (TryReadCounter(child.Text, out int number))
+                {
+                    used.Add(number);
+                }
+                else
+                {
+                    hasPlain = true;
+                }
+            }
+
+            // Bu belgeden hiç sekme yok: yeni sekme numarasız açılır.
+            if (!hasPlain && used.Count == 0)
+            {
+                return baseTitle;
+            }
+
+            // En küçük boş numara seçilir. "say + 1" yerine bunu seçmek,
+            // ortadaki bir sekme kapatıldığında iki sekmenin aynı adı taşımasını
+            // (örn. [Liste, Liste (3)] iken yeni "(3)" olması) engeller.
+            int candidate = 2;
+            while (used.Contains(candidate))
+            {
+                candidate++;
+            }
+
+            return $"{baseTitle} ({candidate})";
+        }
+
+        /// <summary>
+        /// Başlıktaki sıra numarası ekini kaldırır: "Liste (3)" -> "Liste".
+        /// </summary>
+        private static string StripCounter(string? text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return string.Empty;
+            }
+
+            if (!text.EndsWith(')'))
+            {
+                return text;
+            }
+
+            int open = text.LastIndexOf(" (", StringComparison.Ordinal);
+
+            if (open < 0)
+            {
+                return text;
+            }
+
+            string digits = text[(open + 2)..^1];
+
+            // Yalnızca tamamen rakam olan ekler soyulur. Belgenin kendi adında
+            // parantez varsa ("Mamül Maliyet (2026) Baskı Önizleme") bozulmaz.
+            return digits.Length > 0 && digits.All(char.IsAsciiDigit)
+                ? text[..open]
+                : text;
+        }
+
+        /// <summary>Başlıktaki sıra numarasını okur; yoksa <c>false</c> döner.</summary>
+        private static bool TryReadCounter(string? text, out int number)
+        {
+            number = 0;
+
+            if (string.IsNullOrEmpty(text) || !text.EndsWith(')'))
+            {
+                return false;
+            }
+
+            int open = text.LastIndexOf(" (", StringComparison.Ordinal);
+
+            if (open < 0)
+            {
+                return false;
+            }
+
+            return int.TryParse(
+                text.AsSpan(open + 2, text.Length - open - 3),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out number);
         }
 
         private static string GetDefaultTitle<TForm>() where TForm : XtraForm

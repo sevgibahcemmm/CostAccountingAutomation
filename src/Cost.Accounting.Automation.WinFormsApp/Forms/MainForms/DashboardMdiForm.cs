@@ -10,6 +10,7 @@ using DevExpress.XtraCharts;
 using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Grid;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -34,6 +35,7 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
         private readonly System.Windows.Forms.Timer _refreshTimer;
 
         private CancellationTokenSource? _loadCts;
+        private readonly Stopwatch _loadStopwatch = new();
         private bool _refreshing;
         private bool _hasLoadedOnce;
         private bool _tableColumnsConfigured;
@@ -261,47 +263,69 @@ namespace Cost.Accounting.Automation.WinFormsApp.Forms.MainForms
             CancellationToken token =
                 cts.Token;
 
+            _loadStopwatch.Restart();
+
             string loadedSummary = string.Empty;
 
             // Bekleme penceresi yalnızca kullanıcıya görünür yüklemelerde açılır;
             // 30 saniyelik arka plan yenilemesi sessizdir. Tüm KPI, tablo ve
             // grafikler uygulandıktan SONRA "tüm veriler yüklendi" onayı
             // gösterilir.
-            Func<Task> loadTask = async () =>
-            {
-                try
+Func<Task> loadTask = async () =>
                 {
-                    TS.Result.Result<DashboardSnapshot> result =
-                        await _sender.Send(
-                            new DashboardGetOverviewQuery(forceRefresh),
-                            token);
-
-                    if (result.IsSuccessful && result.Data is DashboardSnapshot snapshot)
+                    try
                     {
-                        // İptal edildiyse veya form kapanmışsa sonucu uygulama.
-                        if (token.IsCancellationRequested
-                            || IsDisposed
-                            || Disposing)
+                        Stopwatch queryWatch = Stopwatch.StartNew();
+
+                        TS.Result.Result<DashboardSnapshot> result =
+                            await _sender.Send(
+                                new DashboardGetOverviewQuery(forceRefresh),
+                                token);
+
+                        queryWatch.Stop();
+
+                        CrashLog.Write(
+                            "PageLoad",
+                            $"{GetType().Name} DB(Query) {queryWatch.Elapsed.TotalMilliseconds:N0} ms");
+
+                        if (result.IsSuccessful && result.Data is DashboardSnapshot snapshot)
                         {
-                            return;
+                            // İptal edildiyse veya form kapanmışsa sonucu uygulama.
+                            if (token.IsCancellationRequested
+                                || IsDisposed
+                                || Disposing)
+                            {
+                                return;
+                            }
+
+                            SetKpis(snapshot);
+
+                            string fingerprint = BuildFingerprint(snapshot);
+
+                            // Veri değişmediyse grafikler yeniden çizilmez; bu, 30 saniyelik
+                            // otomatik yenilemede gereksiz yeniden boyamayı engeller.
+                            if (fingerprint != _lastFingerprint)
+                            {
+                                _lastFingerprint = fingerprint;
+
+                                Stopwatch renderWatch = Stopwatch.StartNew();
+                                RenderDashboard(snapshot);
+                                renderWatch.Stop();
+
+                                CrashLog.Write(
+                                    "PageLoad",
+                                    $"{GetType().Name} Cizim {renderWatch.Elapsed.TotalMilliseconds:N0} ms");
+                            }
+
+                            _hasLoadedOnce = true;
+                            loadedSummary = BuildLoadedSummary(snapshot);
+
+                            // Veri hazır: kullanıcı artık beklemiyor.
+                            CrashLog.Write(
+                                "PageLoad",
+                                $"{GetType().Name} Ready Toplam {_loadStopwatch.Elapsed.TotalMilliseconds:N0} ms");
                         }
-
-                        SetKpis(snapshot);
-
-                        string fingerprint = BuildFingerprint(snapshot);
-
-                        // Veri değişmediyse grafikler yeniden çizilmez; bu, 30 saniyelik
-                        // otomatik yenilemede gereksiz yeniden boyamayı engeller.
-                        if (fingerprint != _lastFingerprint)
-                        {
-                            _lastFingerprint = fingerprint;
-                            RenderDashboard(snapshot);
-                        }
-
-                        _hasLoadedOnce = true;
-                        loadedSummary = BuildLoadedSummary(snapshot);
                     }
-                }
                 catch (OperationCanceledException)
                 {
                     // Beklenen: yeni bir yenileme bu isteği iptal etti.

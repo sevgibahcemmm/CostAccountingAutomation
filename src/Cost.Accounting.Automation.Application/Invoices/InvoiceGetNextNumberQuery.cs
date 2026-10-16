@@ -37,20 +37,21 @@ internal sealed class InvoiceGetNextNumberQueryHandler(
         string year = DateTime.Today.Year.ToString();
         string beginsWith = $"{prefix}{year}";
 
+        // Numara sonundaki sıra genişliği değişebildiği ve rakam mı diye
+        // denetlenmesi gerektiği için en büyük sırayı veritabanında MAX ile
+        // almak mümkün değil. Ancak yıl önekine uyan kayıtları veritabanında
+        // filtrelemek, yıllar boyunca biriken tüm fatura numaralarını belleğe
+        // almak yerine yalnızca bu yılın numaralarını getirir.
         List<string> numbers = await invoiceRepository
-            .GetAllWithAuditIncludingDeleted()
-            .Where(i => i.Entity.InvoiceType == InvoiceType.Sales || i.Entity.InvoiceType == InvoiceType.SalesReturn)
-            .Select(i => i.Entity.InvoiceNumber)
-            .ToListSafeAsync(cancellationToken);
+            .GetAllIncludingDeleted()
+            .Where(i => (i.InvoiceType == InvoiceType.Sales || i.InvoiceType == InvoiceType.SalesReturn)
+                && i.InvoiceNumber.StartsWith(beginsWith))
+            .Select(i => i.InvoiceNumber)
+            .ToListAsync(cancellationToken);
 
         long maxSequence = 0;
         foreach (string number in numbers)
         {
-            if (!number.StartsWith(beginsWith, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
             string tail = number[beginsWith.Length..];
             if (tail.Length > 0 && tail.All(char.IsDigit) && long.TryParse(tail, out long sequence))
             {

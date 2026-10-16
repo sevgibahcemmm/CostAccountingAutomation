@@ -14,9 +14,10 @@ internal sealed class StockIssueGetNextNumberQueryHandler(
 {
     public async Task<Result<string>> Handle(StockIssueGetNextNumberQuery request, CancellationToken cancellationToken)
     {
+        // Sayım veritabanında yapılır; liste sorgusu belleğe alınmaz.
         int count = await stockIssueRepository
-            .GetAllWithAuditIncludingDeleted()
-            .CountAsync(i => i.Entity.IssueType == request.IssueType, cancellationToken);
+            .GetAllIncludingDeleted()
+            .CountAsync(i => i.IssueType == request.IssueType, cancellationToken);
 
         string prefix = request.IssueType == StockIssueType.Consumption ? "TUK" : "ATL";
 

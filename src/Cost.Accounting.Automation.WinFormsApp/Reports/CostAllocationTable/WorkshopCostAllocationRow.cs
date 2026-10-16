@@ -1,4 +1,4 @@
-﻿using Cost.Accounting.Automation.Application.CostSlips;
+using Cost.Accounting.Automation.Application.CostSlips;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using DevExpress.XtraReports.UI;
 
@@ -76,7 +76,6 @@ namespace Cost.Accounting.Automation.WinFormsApp.Reports.CostAllocationTable
 
         void SetSignatoryNames(string accountingOfficer, string accountingClerk);
 
-        void PrintReport();
     }
 
     internal static class CostAllocationHeaderFormatter

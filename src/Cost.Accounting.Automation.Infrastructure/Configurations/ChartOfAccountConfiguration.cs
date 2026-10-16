@@ -14,7 +14,15 @@ internal sealed class ChartOfAccountConfiguration : IEntityTypeConfiguration<Cha
 
         builder.OwnsOne(c => c.Name, name =>
         {
-            name.Property(x => x.Value).HasColumnName("Name").HasMaxLength(300);
+            name.Property(x => x.Value)
+                .HasColumnName("Name")
+                // HasColumnType zorunlu: ConfigureConventions tüm string
+                // sütunlara nvarchar(MAX) uygular ve bunu HasMaxLength ezmez.
+                // Hesap planı binlerce satır olduğundan sıralama ve arama
+                // sütunu üzerinde çalışır; nvarchar(MAX) indekslenemez.
+                // Mevcut kayıtlarda en uzun ad 109 karakter; 300 seçilmiştir.
+                .HasColumnType("nvarchar(300)")
+                .HasMaxLength(300);
         });
 
         builder.Property(c => c.Code)

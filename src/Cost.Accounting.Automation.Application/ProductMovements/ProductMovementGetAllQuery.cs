@@ -1,4 +1,5 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.Products;
 using TS.MediatR;
@@ -16,31 +17,39 @@ public sealed record ProductMovementGetAllQuery(
 }
 
 internal sealed class ProductMovementGetAllQueryHandler(
-    IProductMovementRepository productMovementRepository) : IRequestHandler<ProductMovementGetAllQuery, IQueryable<ProductMovementListDto>>
+    IProductMovementRepository productMovementRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<ProductMovementGetAllQuery, IQueryable<ProductMovementListDto>>
 {
-    public Task<IQueryable<ProductMovementListDto>> Handle(ProductMovementGetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IQueryable<ProductMovementListDto>> Handle(
+        ProductMovementGetAllQuery request,
+        CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<ProductMovement>> source = request.OnlyDeleted
-            ? productMovementRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : productMovementRepository.GetAllWithAudit();
+        // Stok hareketi en hızlı büyüyen tablodur: her fatura satırı, her pusula
+        // kalemi ve her stok belgesi satırı buraya yazar. Bu yüzden filtreler
+        // veritabanında uygulanmalıdır.
+        IQueryable<ProductMovement> source = request.OnlyDeleted
+            ? productMovementRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : productMovementRepository.GetAllActive();
 
-        if (request.ProductId.HasValue)
+        if (request.ProductId is Guid productId)
         {
-            IdentityId prodId = new(request.ProductId.Value);
-            source = source.Where(i => i.Entity.ProductId == prodId);
+            IdentityId id = new(productId);
+            source = source.Where(i => i.ProductId == id);
         }
 
-        if (request.MovementType.HasValue)
+        if (request.MovementType is ProductMovementType movementType)
         {
-            source = source.Where(i => i.Entity.MovementType == request.MovementType.Value);
+            source = source.Where(i => i.MovementType == movementType);
         }
 
-        if (request.WarehouseId.HasValue)
+        if (request.WarehouseId is Guid warehouseId)
         {
-            IdentityId warehouseId = new(request.WarehouseId.Value);
-            source = source.Where(i => i.Entity.Product != null && i.Entity.Product.WarehouseId == warehouseId);
+            IdentityId id = new(warehouseId);
+            source = source.Where(i => i.Product != null && i.Product.WarehouseId == id);
         }
 
-        return Task.FromResult(source.MapTo().AsQueryable());
+        return await source
+            .MapTo()
+            .ToAuditedListAsync(auditUserNames, cancellationToken);
     }
 }

@@ -1,7 +1,9 @@
 using Cost.Accounting.Automation.Application.Behaviors;
+using Cost.Accounting.Automation.Application.Services;
 using Cost.Accounting.Automation.Domain.Abstractions;
 using Cost.Accounting.Automation.Domain.CostSlips;
 using Cost.Accounting.Automation.Domain.CostSlips.CostSlipItems;
+using Microsoft.EntityFrameworkCore;
 using TS.MediatR;
 
 namespace Cost.Accounting.Automation.Application.CostSlips;
@@ -16,7 +18,8 @@ public sealed record CostSlipGetAllQuery(
 }
 
 internal sealed class CostSlipGetAllQueryHandler(
-    ICostSlipRepository costSlipRepository) : IRequestHandler<CostSlipGetAllQuery, IQueryable<CostSlipListDto>>
+    ICostSlipRepository costSlipRepository,
+    IAuditUserNameResolver auditUserNames) : IRequestHandler<CostSlipGetAllQuery, IQueryable<CostSlipListDto>>
 {
     /// <summary>
     /// Ana pusula kayıtlarını ve satırlarını <b>iki ayrı ve basit</b> sorguda
@@ -33,21 +36,25 @@ internal sealed class CostSlipGetAllQueryHandler(
     /// </remarks>
     public async Task<IQueryable<CostSlipListDto>> Handle(CostSlipGetAllQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<EntityWithAuditDto<CostSlip>> source = request.OnlyDeleted
-            ? costSlipRepository.GetAllWithAuditIncludingDeleted().Where(i => i.Entity.IsDeleted)
-            : costSlipRepository.GetAllWithAudit();
+        IQueryable<CostSlip> source = request.OnlyDeleted
+            ? costSlipRepository.GetAllIncludingDeleted().Where(i => i.IsDeleted)
+            : costSlipRepository.GetAllActive();
 
-        if (request.CostSlipType.HasValue)
+        if (request.CostSlipType is CostSlipType slipType)
         {
-            source = source.Where(i => i.Entity.CostSlipType == request.CostSlipType.Value);
+            source = source.Where(i => i.CostSlipType == slipType);
         }
 
-        if (request.Status.HasValue)
+        if (request.Status is CostSlipStatus status)
         {
-            source = source.Where(i => i.Entity.Status == request.Status.Value);
+            source = source.Where(i => i.Status == status);
         }
 
-        List<CostSlipListDto> slips = source.MapTo().ToList();
+        List<CostSlipListDto> slips = await source
+            .MapTo()
+            .ToListAsync(cancellationToken);
+
+        await auditUserNames.FillAsync(slips, cancellationToken);
 
         if (slips.Count > 0)
         {

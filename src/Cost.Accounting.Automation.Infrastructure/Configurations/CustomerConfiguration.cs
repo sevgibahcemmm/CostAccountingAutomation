@@ -12,7 +12,13 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.HasKey(c => c.Id);
 
-        builder.OwnsOne(c => c.Name);
+        // HasColumnType zorunlu: ConfigureConventions nvarchar(MAX) uygular ve
+        // HasMaxLength bunu ezmez. nvarchar(MAX) indekslenemez ve ad üzerinde
+        // arama/sıralama yapılan bir liste ekranı vardır. Mevcut kayıtlarda
+        // en uzun ad 24 karakter; 200 seçilmiştir.
+        builder.OwnsOne(c => c.Name, name =>
+            name.Property(x => x.Value).HasColumnName("Name_Value").HasColumnType("nvarchar(200)").HasMaxLength(200));
+
         builder.OwnsOne(c => c.TaxOffice);
         builder.OwnsOne(c => c.TaxNumber);
         builder.OwnsOne(c => c.Contact);

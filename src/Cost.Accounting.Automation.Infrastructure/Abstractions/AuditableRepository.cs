@@ -22,6 +22,18 @@ internal class AuditableRepository<TEntity, TContext> : Repository<TEntity, TCon
 
     protected TContext Context => _yearContext;
 
+    /// <summary>
+    /// Denetim kullanıcı adı olmadan, yalnızca silinmemiş kayıtlar. Liste
+    /// ekranlarının kullandığı yol: projeksiyon tamamen veritabanında çalışır.
+    /// </summary>
+    public IQueryable<TEntity> GetAllActive() => _yearContext.Set<TEntity>().AsNoTracking();
+
+    /// <summary>
+    /// Silinmiş kayıtlar dahil tüm kayıtlar.
+    /// </summary>
+    public IQueryable<TEntity> GetAllIncludingDeleted()
+        => _yearContext.Set<TEntity>().IgnoreQueryFilters().AsNoTracking();
+
     public IQueryable<EntityWithAuditDto<TEntity>> GetAllWithAudit()
         => BuildGetAllWithAudit(includeDeleted: false);
 
@@ -37,13 +49,43 @@ internal class AuditableRepository<TEntity, TContext> : Repository<TEntity, TCon
     /// vb.) null gelir ve DTO eşlemesi sessizce boş sütunlar üretir. Alt sınıflar
     /// ihtiyaç duydukları navigasyonları burada bildirir.
     /// </summary>
+    /// <remarks>
+    /// <b>Yalnızca liste ekranının gerçekten kullandığı navigasyonları bildirin.</b>
+    /// Burada eklenen her <c>Include</c>, tüm tabloyu kapsar; bir koleksiyon
+    /// navigasyonu eklemek (örn. <c>Product.Movements</c>) listenin bellekte
+    /// taşıyacağı kayıt sayısını ürün sayısıyla değil, o ürüne bağlı <b>tüm
+    /// hareket satırıyla</b> çarpar. Satır bazında gösterilecek veri
+    /// (fiyat geçmişi, hareket listesi) liste ekranında değil, ayrı bir detay
+    /// sorgusunda getirilmelidir.
+    /// </remarks>
     protected virtual IQueryable<TEntity> ApplyDetailIncludes(IQueryable<TEntity> query) => query;
 
+    /// <summary>
+    /// Denetimli liste DTO'sunu kurar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Neden <c>AsNoTrackingWithIdentityResolution</c> değil:</b> Bu seçenek
+    /// sonuç kümesi boyunca bir kimlik eşlemesi tutar. Hesap planı ekranında
+    /// ölçüldüğü gibi 6.293 satırda maliyeti 120 ms'den 222 ms'ye çıkarıyor —
+    /// yani sorgunun toplam süresinin yarısından fazlası. Sonuç zaten
+    /// salt okunur DTO'ya çevrildiği için aynı varlığın birden çok örneğinin
+    /// bellekte ayrı ayrı durması hiçbir davranış farkı yaratmıyor.
+    /// </para>
+    /// <para>
+    /// <b>Bu metot bilinçli olarak bellek içi sorgu döndürür:</b> denetim
+    /// kullanıcı adları master veritabanında, kayıtların kendisi yıl
+    /// veritabanındadır; iki farklı katalog olduğu için tek SQL sorgusunda
+    /// birleştirilemezler. Bu yüzden filtreler SQL'e değil belleğe iner —
+    /// maliyeti azaltmak için liste ekranlarının <b>sayfalı</b> olması ve
+    /// sayfa boyutunun makul tutulması gerekir.
+    /// </para>
+    /// </remarks>
     private IQueryable<EntityWithAuditDto<TEntity>> BuildGetAllWithAudit(bool includeDeleted)
     {
         var entities = includeDeleted
-            ? _yearContext.Set<TEntity>().IgnoreQueryFilters().AsNoTrackingWithIdentityResolution()
-            : _yearContext.Set<TEntity>().AsNoTrackingWithIdentityResolution();
+            ? _yearContext.Set<TEntity>().IgnoreQueryFilters().AsNoTracking()
+            : _yearContext.Set<TEntity>().AsNoTracking();
 
         entities = ApplyDetailIncludes(entities);
 
